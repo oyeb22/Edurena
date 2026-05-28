@@ -4,20 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Edurena — Secure Exam</title>
-  <script src="edurena-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#080b14; --surface:#0e1221; --surface2:#161929; --surface3:#1e2235;
+      --bg:#080C16; --surface:#0F1523; --surface2:#151D2E; --surface3:#1C2840;
       --border:#252a42; --border2:#2e3450;
-      --accent:#5b6ef5; --accent2:#818cf8; --accent-glow:rgba(91,110,245,0.25);
+      --accent:#F97316; --accent2:#FB923C; --accent-glow:rgba(249,115,22,0.25);
       --green:#2dd4a0; --green-glow:rgba(45,212,160,0.2);
       --red:#f06b6b; --red-glow:rgba(240,107,107,0.2);
       --yellow:#f5c842; --yellow-glow:rgba(245,200,66,0.2);
       --text:#e8eaf4; --text2:#9ba3c0; --muted:#5c6480;
-      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+      --font:'Plus Jakarta Sans',sans-serif; --mono:'JetBrains Mono',monospace;
       --radius:14px; --radius-sm:9px;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -282,79 +281,6 @@
     .tts-test-btn:hover{background:rgba(91,110,245,.25);}
     .tts-auto-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
     .tts-hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
-
-    /* ══ MOBILE RESPONSIVE — EXAM ══ */
-
-    /* Touch targets: every tappable element minimum 44px */
-    button, .option-btn, .flag-btn, .start-btn, .vio-btn, .back-btn,
-    .tts-test-btn, .tts-toggle, .ai-explain-btn {
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    .option-btn { min-height: 52px; }
-    .start-btn  { min-height: 52px; }
-    .back-btn   { min-height: 48px; }
-
-    /* Safe area insets for notched devices */
-    #preExam, #examScreen, #resultsScreen {
-      padding-bottom: max(20px, env(safe-area-inset-bottom));
-      padding-left:   max(0px, env(safe-area-inset-left));
-      padding-right:  max(0px, env(safe-area-inset-right));
-    }
-
-    @media (max-width: 480px) {
-      /* Pre-exam check grid: 1 column on small screens */
-      .check-grid { grid-template-columns: 1fr !important; gap: 10px; padding: 0 12px; }
-      .pre-hero { padding: 20px 12px 14px; }
-      .pre-hero h2 { font-size: clamp(16px,5vw,22px); }
-      .rules-box, .pre-start { padding: 0 12px 24px; }
-      .start-btn { width: 100%; max-width: none; font-size: 14px; }
-      .locked-notice, .tts-setup { padding: 0 12px; }
-
-      /* Exam header */
-      .exam-header-top { padding: 8px 12px; }
-      .exam-title-main { font-size: 13px; }
-      .timer { font-size: clamp(18px,5vw,24px); }
-
-      /* Question body */
-      .q-body { padding: 12px 12px 80px; }
-      .option-btn { padding: 12px 14px; font-size: 13px; }
-      .q-image img { max-height: 180px; }
-
-      /* Nav bar */
-      .exam-nav-bar { padding: 10px 12px; gap: 8px; }
-      .nav-btn { padding: 10px 12px; font-size: 12px; }
-
-      /* Results */
-      .results-card { padding: 20px 16px; border-radius: 14px; }
-      .result-score { font-size: clamp(36px,9vw,48px); }
-      .result-stats { grid-template-columns: repeat(3,1fr); gap: 8px; }
-      .rstat { padding: 10px 6px; }
-      .rstat-val { font-size: clamp(14px,4vw,18px); }
-
-      /* Review list */
-      .review-item { font-size: 12px; padding: 12px; }
-
-      /* TTS row wrap */
-      .tts-row { gap: 8px; }
-      .tts-voice-select { min-width: 140px; }
-
-      /* Options image */
-      .option-images-grid { grid-template-columns: 1fr 1fr !important; }
-    }
-
-    @media (max-width: 360px) {
-      .result-stats { grid-template-columns: 1fr 1fr; }
-      .rstat:last-child { grid-column: span 2; }
-      .exam-status-strip { padding: 4px 10px 6px; gap: 4px; }
-    }
-
-    /* Landscape phone: constrain video height */
-    @media (max-height: 500px) and (orientation: landscape) {
-      .video-box { aspect-ratio: 16/9; }
-      .check-grid { grid-template-columns: 1fr 1fr; }
-      .pre-hero { padding: 12px 20px 8px; }
-    }
   </style>
 </head>
 <body>
@@ -542,6 +468,11 @@
     <button class="nav-btn nav-submit hidden" id="submitBtn" onclick="confirmSubmit()">Submit Exam ✓</button>
     <button class="nav-btn nav-next" id="nextBtn" onclick="nextQ()">Next →</button>
   </div>
+  <div id="submitRetryBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10000;background:#7c3aed;color:#fff;padding:12px 20px;text-align:center;font-size:14px;font-family:var(--font);display:none;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+    <span>⚠️ Submission failed — your answers are saved locally.</span>
+    <button onclick="retrySubmit()" style="background:#fff;color:#7c3aed;border:none;padding:7px 18px;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px;">↺ Retry Submit</button>
+    <button onclick="document.getElementById('submitRetryBanner').style.display='none'" style="background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.4);padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12px;">Dismiss</button>
+  </div>
 </div>
 
 <!-- VIOLATION MODAL -->
@@ -627,24 +558,35 @@
 })();
 
 // ================================================================
-// CONFIG & STATE — powered by edurena-config.js
+// CONFIG & STATE
 // ================================================================
 var CFG = { MAX_VIOLATIONS: 3, NO_FACE_THRESHOLD: 10, MULTI_FACE_THRESHOLD: 5 };
 
-// EDURENA global is set by edurena-config.js (loaded in <head>)
-var PARAMS     = EDURENA.params;
-var SCRIPT_URL = EDURENA.scriptUrl;  // resolved from ?script= or sessionStorage
-var SUPABASE_URL  = EDURENA.SUPABASE_URL;
-var SUPABASE_ANON = EDURENA.SUPABASE_ANON;
+var PARAMS = (function(){
+  var p={};
+  window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi,function(m,k,v){p[k]=decodeURIComponent(v);});
+  return p;
+})();
 
-function supabaseGet(table, filters, select) {
-  return EDURENA.supabaseGet(table, filters, select);
+var SCRIPT_URL = PARAMS.script || '';
+var SUPABASE_URL  = 'https://hrslazwxaciooqowvzcy.supabase.co'; // replace
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyc2xhend4YWNpb29xb3d2emN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDk3NzksImV4cCI6MjA5MzM4NTc3OX0.UbEko3d0zyHguOq9w5Zy-_89OhAbQaV7Z6uBw_nS_yk';           // replace — safe to expose
+
+async function supabaseGet(table, filters, select) {
+  var url = SUPABASE_URL + '/rest/v1/' + table + '?select=' + (select || '*');
+  Object.keys(filters || {}).forEach(function(k) {
+    url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(filters[k]);
+  });
+  var resp = await fetch(url, {
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
+  });
+  if (!resp.ok) throw new Error('Supabase error: ' + resp.status);
+  return resp.json();
 }
-
-var student = {
-  email:    PARAMS.email    || '',
-  examCode: (PARAMS.code    || '').toUpperCase()
-};
+console.log('[DEBUG] PARAMS:', JSON.stringify(PARAMS));
+console.log('[DEBUG] SCRIPT_URL:', SCRIPT_URL);
+console.log('[DEBUG] student:', JSON.stringify(student));
+var student    = { email: PARAMS.email || '', examCode: (PARAMS.code || '').toUpperCase() };
 
 var quizMeta      = null;
 var questions     = [];
@@ -1079,11 +1021,8 @@ function showScreen(id){
 function safeText(id,val){ var el=document.getElementById(id); if(el)el.textContent=val; }
 
 function post(action,data,cb){
-  // Keep SCRIPT_URL in sync in case EDURENA resolved it after page load
-  if(!SCRIPT_URL && EDURENA.scriptUrl) SCRIPT_URL = EDURENA.scriptUrl;
-  EDURENA.post(action, data)
-    .then(function(r){ if(cb) cb(null,r); })
-    .catch(function(e){ if(cb) cb(e,null); });
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},data||{}))})
+    .then(function(r){return r.json();}).then(function(r){if(cb)cb(null,r);}).catch(function(e){if(cb)cb(e,null);});
 }
 
 function setMobileBadge(id,okClass,text){
@@ -1102,46 +1041,66 @@ function setBadge(id,warn,text){
 // ================================================================
 window.addEventListener('load',function(){
   ttsLoadVoices();
-  // Wait for edurena-config.js to resolve the GAS URL before proceeding
-  EDURENA.ready.then(function() {
-    SCRIPT_URL = EDURENA.scriptUrl;
-    if(!student.email||!student.examCode){
-      safeText('preTitle','Invalid exam link'); safeText('camText','Missing student credentials.'); return;
-    }
-    if(!SCRIPT_URL){
-      safeText('preTitle','Configuration error');
-      safeText('camText','Server URL missing — open this page from the student portal.');
+  if(!student.email||!student.examCode){
+    safeText('preTitle','Invalid exam link'); safeText('camText','Missing credentials.'); return;
+  }
+  if(!SCRIPT_URL){
+    safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.'); return;
+  }
+ showLoading('Verifying exam access...');
+  validateExamDirect(student.examCode, student.email).then(function(result) {
+    hideLoading();
+    if (!result.ok) {
+      safeText('preTitle', 'Access Denied');
+      safeText('camText', result.message || 'Validation failed');
       return;
     }
-    showLoading('Verifying exam access...');
-    validateExamDirect(student.examCode, student.email).then(function(result) {
-      hideLoading();
-      if (!result.ok) {
-        safeText('preTitle', 'Access Denied');
-        safeText('camText', result.message || 'Validation failed');
-        return;
+    quizMeta    = result.quizData;
+    faceEnabled = quizMeta.faceDetection !== false;
+    // Restore any autosaved answers (e.g. after network drop during submit)
+    try {
+      var _asKey = 'qf_as_'+student.examCode+'_'+(student.email||'').toLowerCase();
+      var _saved = localStorage.getItem(_asKey);
+      if (_saved) {
+        var _sd = JSON.parse(_saved);
+        var _age = Date.now() - (_sd.savedAt||0);
+        if (_sd.answers && _age < 6*60*60*1000) { // within 6 hours
+          answers = _sd.answers;
+          console.log('[Edurena] Restored autosaved answers, age:', Math.round(_age/60000)+'m');
+        }
       }
-      quizMeta    = result.quizData;
-      faceEnabled = quizMeta.faceDetection !== false;
-      safeText('preTitle', quizMeta.title);
-      safeText('bannerCode', student.examCode);
-      fetchStudentInfo();
-      initMedia();
-      CFG.MAX_VIOLATIONS = quizMeta.maxViolations || 3;
-      if (quizMeta.enableTTS) {
-        post('getTeacherVoiceProfileForExam', { examCode: student.examCode }, function(e2, r2) {
-          if (!e2 && r2 && r2.status === 'success' && r2.data && r2.data.voiceProfile) {
-            TTS._teacherVoiceProfile = r2.data.voiceProfile;
-          }
-        });
+    } catch(_){}
+    // Restore any autosaved answers (e.g. after network drop during submit)
+    try {
+      var _asKey = 'qf_as_'+student.examCode+'_'+(student.email||'').toLowerCase();
+      var _saved = localStorage.getItem(_asKey);
+      if (_saved) {
+        var _sd = JSON.parse(_saved);
+        var _age = Date.now() - (_sd.savedAt||0);
+        if (_sd.answers && _age < 6*60*60*1000) { // within 6 hours
+          answers = _sd.answers;
+          console.log('[Edurena] Restored autosaved answers, age:', Math.round(_age/60000)+'m');
+        }
       }
-    }).catch(function(e) {
-      hideLoading();
-      safeText('preTitle', 'Access Denied');
-      safeText('camText', 'Validation error: ' + e.message);
-    });
+    } catch(_){}
+    safeText('preTitle', quizMeta.title);
+    safeText('bannerCode', student.examCode);
+    fetchStudentInfo();
+    initMedia();
+    CFG.MAX_VIOLATIONS = quizMeta.maxViolations || 3;
+    if (quizMeta.enableTTS) {
+      post('getTeacherVoiceProfileForExam', { examCode: student.examCode }, function(e2, r2) {
+        if (!e2 && r2 && r2.status === 'success' && r2.data && r.data.voiceProfile) {
+                 TTS._teacherVoiceProfile = r2.data.voiceProfile;
+        }
+      });
+    }
+   }).catch(function(e) {
+    hideLoading();
+    safeText('preTitle', 'Access Denied');
+    safeText('camText', 'Validation error: ' + e.message);
   });
-});
+});   // ← ADD THIS: closes the load event listener callback
 
 function fetchStudentInfo(){
   var email=student.email;
@@ -1375,27 +1334,15 @@ function startExam(){
         updateCandidateDisplays({Name:res.data.name||studentInfo.name,Class:res.data.className||'',School:res.data.school||'',locked:res.data.locked||false});
       }
     });
-    // ── Start photo: use checkVideo (already visible & streaming) ──
-    // examVideo may not be ready yet at this point since exam just started.
-    // checkVideo has been streaming since media init — it's always ready.
-    (function takeStartPhoto() {
-      var cv = document.getElementById('checkVideo');
-      if (cv && cv.srcObject && cv.readyState >= 2) {
-        // Capture immediately from the pre-exam video (guaranteed ready)
-        capturePhotoFromVideo(cv, 'start');
-      } else if (cv && cv.srcObject) {
-        // Video element exists but not decoded yet — short wait
-        cv.addEventListener('loadeddata', function onReady() {
-          cv.removeEventListener('loadeddata', onReady);
-          capturePhotoFromVideo(cv, 'start');
-        });
-        // Safety timeout — try anyway after 3s
-        setTimeout(function() { capturePhotoFromVideo(cv, 'start'); }, 3000);
+    function waitForVideoAndSnap() {
+      var v = document.getElementById('examVideo');
+      if (v && v.readyState >= 2 && v.srcObject) {
+        setTimeout(function(){ capturePhoto('start'); }, 500);
       } else {
-        // No stream yet — retry briefly then give up gracefully
-        setTimeout(takeStartPhoto, 600);
+        setTimeout(waitForVideoAndSnap, 500);
       }
-    })();
+    }
+    waitForVideoAndSnap();
     }).catch(function(e) {
     hideLoading();
     alert('Failed to load questions: ' + e.message);
@@ -1557,17 +1504,36 @@ function togglePassagePanel(header){
   if(icon)icon.classList.toggle('open',!isOpen);
 }
 
+function _autosaveKey(){return 'qf_as_'+student.examCode+'_'+(student.email||'').toLowerCase();}
+function autosaveLocal(){
+  try{
+    localStorage.setItem(_autosaveKey(),JSON.stringify({
+      answers:answers,
+      timeSpent:examStart?Math.floor((Date.now()-examStart)/1000):0,
+      savedAt:Date.now()
+    }));
+  }catch(e){}
+}
+function clearAutosave(){try{localStorage.removeItem(_autosaveKey());}catch(e){}}
+function retrySubmit(){
+  var banner=document.getElementById('submitRetryBanner');
+  if(banner)banner.style.display='none';
+  doSubmit(true);
+}
+
 function selectAns(qId,letter,el){
   answers[qId]=letter;
   var parent=el.closest('.options');
   if(parent)parent.querySelectorAll('.option').forEach(function(o){o.classList.remove('selected');});
   el.classList.add('selected');
   updateDots(); updateVioDisplay();
+  autosaveLocal();
 }
 
 function saveShort(){
   var q=questions[qIndex]; if(!q||q.type!=='SHORT')return;
   var el=document.getElementById('short_'+q.id); if(el)answers[q.id]=el.value.trim();
+  autosaveLocal();
 }
 function prevQ(){ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}}
 function nextQ(){ttsStop();saveShort();if(qIndex<questions.length-1){qIndex++;renderQuestion();}}
@@ -1675,81 +1641,46 @@ function logSec(msg,cls){
 }
 
 // ================================================================
-// PHOTO CAPTURE
+// PHOTO
 // ================================================================
-
-/**
- * Capture a frame from a specific video element and POST to savePhoto.
- * @param {HTMLVideoElement} video — must have srcObject and readyState >= 2
- * @param {string} reason — label stored in photo_logs (e.g. 'start', 'violation_tab_switch')
- */
-function capturePhotoFromVideo(video, reason) {
+function capturePhoto(reason) {
   try {
-    if (!video || !video.srcObject) {
-      console.warn('[photo] No stream on video element for reason:', reason);
+    // Try examVideo first, fall back to checkVideo
+    var video = document.getElementById('examVideo');
+    var hasStream = video && video.srcObject && video.readyState >= 2;
+    if (!hasStream) {
+      video = document.getElementById('checkVideo');
+      hasStream = video && video.srcObject && video.readyState >= 2;
+    }
+    if (!hasStream || !video) {
+      // Stream not ready — queue a retry in 2s
+      setTimeout(function(){ capturePhoto(reason); }, 2000);
       return;
     }
-    var w = Math.min(video.videoWidth  || 640, 640);
-    var h = Math.min(video.videoHeight || 480, 480);
-    if (w < 4 || h < 4) {
-      console.warn('[photo] Video dimensions too small, skipping:', w, h);
-      return;
-    }
-    var c   = document.createElement('canvas');
-    c.width = w; c.height = h;
+    var c = document.createElement('canvas');
+    c.width  = Math.min(video.videoWidth  || 320, 640);
+    c.height = Math.min(video.videoHeight || 240, 480);
     var ctx = c.getContext('2d');
-    // Un-mirror: CSS mirrors the preview but we want natural orientation for ID
+    // Mirror correction (video is CSS-mirrored, canvas should be natural)
     ctx.save();
-    ctx.translate(w, 0);
+    ctx.translate(c.width, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, w, h);
+    ctx.drawImage(video, 0, 0, c.width, c.height);
     ctx.restore();
-    var dataUrl = c.toDataURL('image/jpeg', 0.6);
-    if (!dataUrl || dataUrl.length < 200) {
-      console.warn('[photo] Canvas produced empty image for reason:', reason);
-      return;
-    }
+    var dataUrl = c.toDataURL('image/jpeg', 0.55);
     post('savePhoto', {
       studentEmail: student.email,
       examCode:     student.examCode,
       reason:       reason || 'unknown',
       imageBase64:  dataUrl
     }, function(e, r) {
-      if (r && r.status === 'success' && r.data) {
-        var url = r.data.url || (r.data.fileId ? 'https://drive.google.com/uc?id=' + r.data.fileId : '');
-        if (url) photos.push(url);
-        console.log('[photo] Saved:', reason, '— shareOk:', r.data.shareOk);
-      } else {
-        console.warn('[photo] savePhoto failed for reason:', reason, e ? e.message : (r && r.message));
+      if (r && r.status === 'success' && r.data && r.data.fileId) {
+        photos.push('https://drive.google.com/uc?id=' + r.data.fileId);
       }
     });
-  } catch(err) {
-    console.warn('[photo] capturePhotoFromVideo error:', reason, err.message);
+  } catch(e) {
+    console.warn('[capturePhoto]', e.message);
   }
-}
-
-/**
- * Capture a photo for violation events — tries examVideo first, falls back to checkVideo.
- * @param {string} reason
- */
-function capturePhoto(reason) {
-  var video = document.getElementById('examVideo');
-  if (video && video.srcObject && video.readyState >= 2 && video.videoWidth > 4) {
-    capturePhotoFromVideo(video, reason);
-    return;
-  }
-  // Fall back to checkVideo (pre-exam camera)
-  var cv = document.getElementById('checkVideo');
-  if (cv && cv.srcObject && cv.readyState >= 2 && cv.videoWidth > 4) {
-    capturePhotoFromVideo(cv, reason);
-    return;
-  }
-  // Neither ready — retry once after 1.5s (don't loop forever)
-  setTimeout(function() {
-    var v2 = document.getElementById('examVideo') || document.getElementById('checkVideo');
-    if (v2 && v2.srcObject) capturePhotoFromVideo(v2, reason);
-    else console.warn('[photo] Could not capture photo for reason:', reason, '— no video stream');
-  }, 1500);
 }
 
 // ================================================================
@@ -1776,16 +1707,22 @@ function doSubmit(forced){
   releaseWakeLock();
   stopNoSleepFallback();
   saveShort();
+  autosaveLocal(); // ensure latest answers saved before submit
   var spent=examStart?Math.floor((Date.now()-examStart)/1000):0;
   showLoading('Submitting exam — please wait...');
   post('submitExam',{studentEmail:student.email,examCode:student.examCode,answers:answers,timeSpent:spent,violations:violations,photos:photos},
     function(e,r){
       hideLoading();
-      if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
       if(e||!r||r.status!=='success'){
-        alert('Submission failed: '+((r&&r.message)||'Unknown error')+'\n\nPlease contact your teacher immediately and do NOT close this window.');
+        // Don't lock the student out — allow retry
+        examSubmitted=false;
+        var banner=document.getElementById('submitRetryBanner');
+        if(banner){banner.style.display='flex';}
+        // Keep media stream alive so camera proctoring continues
         return;
       }
+      if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
+      clearAutosave(); // success — clear saved answers
       showResults(r.data);
     });
 }
