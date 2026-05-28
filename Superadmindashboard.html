@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  
+  <base target="_top">
   <meta charset="UTF-8">
-  <script src="edurena-dash.js"></script>
-  <link rel="stylesheet" href="edurena-dash-design.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edurena — Super Admin</title>
+  <title>Edurena — Founder Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#080c14; --surf:#0e1321; --surf2:#161c2d; --surf3:#1c2338;
-      --bdr:#242b3d; --bdr2:#2c3550;
-      --acc:#3b6ef5; --acc2:#7c9ef8; --acc-glow:rgba(59,110,245,0.18);
-      --grn:#29c98a; --grn-glow:rgba(41,201,138,0.14);
-      --red:#f0645a; --red-glow:rgba(240,100,90,0.14);
-      --yel:#f5c026; --yel-glow:rgba(245,192,38,0.14);
-      --pur:#a78bfa; --pur-glow:rgba(167,139,250,0.14);
-      --txt:#edf0f7; --txt2:#8b93ad; --muted:#4d566e;
-      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
-      --r:12px; --rs:8px;
+  --bg:#080C16; --surf:#0F1523; --surf2:#151D2E; --surf3:#1C2840;
+  --bdr:#1E2A3F; --bdr2:#253350;
+  --acc:#F97316; --acc2:#FB923C; --acc-glow:rgba(249,115,22,0.18);
+  --grn:#10B981; --grn-glow:rgba(16,185,129,0.14);
+  --red:#EF4444; --red-glow:rgba(239,68,68,0.14);
+  --yel:#F59E0B; --yel-glow:rgba(245,158,11,0.14);
+  --pur:#A78BFA; --pur-glow:rgba(167,139,250,0.14);
+  --txt:#F1F5F9; --txt2:#94A3B8; --muted:#4D6280;
+  --font:'Plus Jakarta Sans',sans-serif; --mono:'JetBrains Mono',monospace;
+  --r:12px; --rs:8px;
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
     }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;}
@@ -168,7 +167,7 @@
     <div class="sb-logo">
       <div class="sb-logo-row">
         <div class="logo-box">👑</div>
-        <div class="logo-txt"><h1>Super Admin</h1><p>Edurena Platform</p></div>
+        <div class="logo-txt"><h1>Founder View</h1><p>Platform Admin</p></div>
       </div>
     </div>
     <div class="sb-profile">
@@ -471,6 +470,24 @@
 <div class="ts-stack" id="toasts"></div>
 
 <script>
+var SCRIPT_URL = (function(){
+  var s = '<?= ScriptApp.getService().getUrl() ?>';
+  if (!s) {
+    var m = window.location.search.match(/[?&]script=([^&]+)/);
+    if (m) s = decodeURIComponent(m[1]);
+  }
+  return s;
+})();
+if (!SCRIPT_URL) {
+  document.addEventListener('DOMContentLoaded', function() {
+    var g = document.getElementById('gate-msg');
+    var b = document.getElementById('gate-btn');
+    var gate = document.getElementById('gate');
+    if (gate) gate.classList.add('on');
+    if (g) g.textContent = 'Server not configured. Add ?script=YOUR_APPS_SCRIPT_URL to the URL.';
+    if (b) b.style.display = 'none';
+  });
+}
 var S = { token:'', email:'', name:'Founder' };
 var schoolsAll = [], schoolsDisplay = [];
 var _editingSchool = null;
@@ -478,7 +495,7 @@ var _planChart = null;
 
 // ── UTILS ──────────────────────────────────────────────────────
 function callRaw(action, data, cb) {
-  fetch(DASH.scriptUrl, {
+  fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify(Object.assign({ action: action }, data || {}))
   }).then(function(r){ return r.json(); })
@@ -531,7 +548,7 @@ function authFail(msg) {
   setText('gate-msg', msg + ' Please log in.');
   document.getElementById('gate-btn').style.display = 'inline-block';
 }
-function goLogin() { DASH.goLogin(); }
+function goLogin() { window.location.href = SCRIPT_URL + '?page=login'; }
 
 function boot() {
   document.getElementById('gate').classList.remove('on');
