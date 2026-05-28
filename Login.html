@@ -515,12 +515,12 @@
 
 <script>
 // ── EDURENA config ──────────────────────────────────────────────────
-var SCRIPT_URL       = EDURENA.scriptUrl;
+var SCRIPT_URL       = DASH.scriptUrl;
 var SUPERADMIN_EMAIL = '';  // fetched from GAS after login (never hard-coded)
 var _resetToken      = '';
 
 // Sync SCRIPT_URL once config resolves (handles sessionStorage case)
-EDURENA.ready.then(function(cfg) {
+DASH.ready.then(function(cfg) {
   SCRIPT_URL = cfg.scriptUrl || SCRIPT_URL;
   if (!SCRIPT_URL) showScriptUrlPrompt();
   else hideScriptUrlPrompt();
@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadSchools();
 
   // Handle password reset token in URL
-  var params = EDURENA.params;
+  var params = DASH.params;
   if (params.action === 'reset' && params.token) {
     showTab('login');
     showSubscreen('ss-reset');
@@ -667,8 +667,21 @@ function doLogin() {
   var email = (document.getElementById('l-email').value || '').trim();
   var pass  = (document.getElementById('l-pass').value  || '');
   if (!email || !pass) { setMsg('l-err','err','Please enter your email and password.'); return; }
-  if (!SCRIPT_URL) { setMsg('l-err','err','Server not configured. Check URL parameters.'); return; }
   spinBtn('loginBtn', true, 'Signing in…');
+  // Wait for DASH to resolve script URL before posting
+  DASH.ready.then(function() {
+    SCRIPT_URL = DASH.scriptUrl;
+    if (!SCRIPT_URL) {
+      spinBtn('loginBtn', false, 'Sign in');
+      showScriptUrlPrompt();
+      setMsg('l-err','err','Server not connected. Paste your GAS URL in the setup box above.');
+      return;
+    }
+    _doLoginPost(email, pass);
+  });
+}
+
+function _doLoginPost(email, pass) {
   post('teacherLogin', { email: email, password: pass }, function(e, r) {
     spinBtn('loginBtn', false, 'Sign in');
     if (e) {
