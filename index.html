@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edurena</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:     #03060f;
+      --amber:  #f5a623;
+      --white:  #f0f4ff;
+      --muted:  #7a8db0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    /* Ambient glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 400px;
+      background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .msg {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px; height: 64px;
+      background: var(--amber);
+      border-radius: 18px;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--bg);
+      margin-bottom: 1.25rem;
+      box-shadow: 0 0 40px rgba(245,166,35,0.25);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 40px rgba(245,166,35,0.25); }
+      50%       { box-shadow: 0 0 60px rgba(245,166,35,0.45); }
+    }
+    .brand-name {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.5rem;
+    }
+    .brand-name span { color: var(--amber); }
+    .msg p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      line-height: 1.6;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid rgba(245,166,35,0.2);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-top: 1.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .portal-link {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.7rem 1.5rem;
+      background: var(--amber);
+      color: var(--bg);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .portal-link:hover { background: #ffc144; }
+  </style>
+</head>
+<body>
+<div class="msg">
+  <div class="brand-mark">E</div>
+  <div class="brand-name">edu<span>rena</span></div>
+  <p id="status-msg">Redirecting to your exam…</p>
+  <div class="spinner" id="spinner"></div>
+  <a href="Webapp.html" class="portal-link" id="portal-link" style="display:none">
+    Go to Student Portal →
+  </a>
+</div>
+
+<script>
+  /**
+   * Edurena index.html — Gateway redirect
+   *
+   * This page lives at oyeb22.github.io/EDURENA/
+   * It receives exam links in the format:
+   *   .../EDURENA/?email=student@school.edu&code=ENG401&script=https://...
+   * and immediately forwards all URL params to Exam.html.
+   *
+   * If no params are present, it redirects to the Student Portal (Webapp.html).
+   *
+   * This keeps the root URL clean and lets teachers share short exam links
+   * without exposing Exam.html in the address bar.
+   */
+
+  var params = window.location.search;
+  var hash   = window.location.hash;
+
+  if (params && params.length > 1) {
+    // Has URL params — forward to Exam.html
+    var parsed = {};
+    params.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m, k, v) {
+      parsed[k] = decodeURIComponent(v);
+    });
+
+    if (parsed.email || parsed.code || parsed.script) {
+      // Exam link — go straight to Exam.html
+      window.location.replace('Exam.html' + params + (hash || ''));
+    } else if (parsed.room || parsed.session) {
+      // Live game link
+      var gameType = parsed.game || 'quiz';
+      var target   = gameType === 'race' ? 'race.html' : 'Kahoot.html';
+      window.location.replace(target + params);
+    } else {
+      // Unknown params — go to portal
+      showPortalLink();
+    }
+  } else {
+    // No params — not an exam link, go to Student Portal
+    showPortalLink('Welcome to Edurena. Head to the student portal to join an exam or live game.');
+  }
+
+  function showPortalLink(msg) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('portal-link').style.display = 'inline-block';
+    if (msg) document.getElementById('status-msg').textContent = msg;
+    else document.getElementById('status-msg').textContent = 'Open the student portal to begin.';
+  }
+</script>
+</body>
+</html>
