@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Edurena — Sign In</title>
+  <script src="edurena-dash.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #03060f;
+      --surface: #060d1e;
+      --card:    #0a1428;
+      --bdr:     #112040;
+      --bdr2:    #1a3060;
+      --amber:   #f5a623;
+      --amber-b: #ffc144;
+      --amber-g: rgba(245,166,35,0.12);
+      --amber-g2:rgba(245,166,35,0.06);
+      --white:   #f0f4ff;
+      --muted:   #7a8db0;
+      --faint:   #3a4a6a;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --font:    'Sora', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16,1,0.3,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(245,166,35,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Noise texture */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.02;
+      pointer-events: none;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      z-index: 1;
+      animation: fade-up 0.6s var(--ease) both;
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Brand */
+    .brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px; height: 52px;
+      background: var(--amber);
+      border-radius: 14px;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--bg);
+      margin-bottom: 1rem;
+      box-shadow: 0 0 32px rgba(245,166,35,0.3);
+    }
+    .brand-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--white);
+    }
+    .brand-name span { color: var(--amber); }
+    .brand-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--bdr);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,166,35,0.04);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--bdr);
+    }
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .tab::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--amber);
+      border-radius: 2px 2px 0 0;
+      transform: scaleX(0);
+      transition: transform 0.3s var(--ease);
+    }
+    .tab.on { color: var(--white); }
+    .tab.on::after { transform: scaleX(1); }
+    .tab:hover { background: rgba(255,255,255,0.02); color: var(--white); }
+
+    /* Panels */
+    .panel { display: none; padding: 1.75rem; }
+    .panel.on { display: block; animation: panel-in 0.35s var(--ease); }
+    @keyframes panel-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-screens (login / forgot / reset) */
+    .ss { display: none; }
+    .ss.on { display: block; }
+
+    /* Form elements */
+    .fg { margin-bottom: 1.1rem; }
+    .fg label {
+      display: block;
+      font-size: 0.73rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+    .fi-wrap { position: relative; }
+    .fg input, .fg select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--bdr);
+      border-radius: 10px;
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+    .fg input:focus, .fg select:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.1);
+    }
+    .fg select option { background: var(--card); }
+    .fg input[type="password"] { padding-right: 3rem; }
+
+    /* Password toggle */
+    .pw-toggle {
+      position: absolute;
+      right: 0.75rem; top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px; min-height: 32px;
+    }
+    .pw-toggle:hover { color: var(--white); }
+
+    /* Password strength */
+    .pw-bar-wrap {
+      height: 3px;
+      background: var(--bdr);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .pw-bar { height: 100%; width: 0; border-radius: 2px; transition: width 0.3s, background 0.3s; }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 0.9rem 1.5rem;
+      background: var(--amber);
+      border: none;
+      border-radius: 10px;
+      color: var(--bg);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.2s, transform 0.15s;
+      min-height: 50px;
+    }
+    .btn:hover:not(:disabled) { background: var(--amber-b); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      width: 100%;
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: 1px solid var(--bdr);
+      border-radius: 10px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      min-height: 46px;
+      margin-top: 0.6rem;
+    }
+    .btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* Spinner */
+    .spin {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(3,6,15,0.3);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Messages */
+    .msg {
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+    .msg.on { display: block; }
+    .msg.err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+    .msg.ok  { background: rgba(34,197,94,0.1);  border: 1px solid rgba(34,197,94,0.25);  color: #86efac; }
+    .msg.info{ background: var(--amber-g2);       border: 1px solid rgba(245,166,35,0.2);  color: var(--amber); }
+
+    /* Links */
+    .link-btn {
+      background: none; border: none;
+      color: var(--amber); font-family: var(--font);
+      font-size: 0.82rem; cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      padding: 0;
+    }
+    .link-btn:hover { color: var(--amber-b); }
+
+    .forgot-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1.1rem;
+      margin-top: -0.5rem;
+    }
+
+    /* Section label */
+    .ss-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+    }
+    .ss-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .ss-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    /* Pending notice */
+    .notice {
+      background: var(--amber-g);
+      border: 1px solid rgba(245,166,35,0.25);
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      color: var(--amber);
+      margin-top: 1rem;
+    }
+    .notice strong { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; }
+    .hidden { display: none !important; }
+
+    /* Footer */
+    .foot {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--faint);
+      padding: 1rem 1.75rem 1.25rem;
+      border-top: 1px solid var(--bdr);
+    }
+
+    /* Superadmin link */
+    .sa-link {
+      text-align: center;
+      margin-top: 1.25rem;
+    }
+    .sa-link button {
+      background: none; border: none;
+      color: var(--faint); font-family: var(--font);
+      font-size: 0.78rem; cursor: pointer;
+      transition: color 0.2s;
+    }
+    .sa-link button:hover { color: var(--amber); }
+
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      body { padding: 16px; align-items: flex-start; padding-top: 32px; }
+      .panel { padding: 1.25rem; }
+      .foot { padding: 0.75rem 1.25rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-mark">E</div>
+    <div class="brand-name">edu<span>rena</span></div>
+    <div class="brand-sub">School staff sign in</div>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab on" id="t-login"    onclick="showTab('login')">Sign In</button>
+      <button class="tab"    id="t-register" onclick="showTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div class="panel on" id="p-login">
+
+      <!-- Sub: Login form -->
+      <div class="ss on" id="ss-login">
+        <div class="fg">
+          <label>Email address</label>
+          <input type="email" id="l-email" placeholder="you@school.edu" autocomplete="email"
+                 onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div class="fg">
+          <label>Password</label>
+          <div class="fi-wrap">
+            <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"
+                   onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="pw-toggle" onclick="togglePw('l-pass',this)" aria-label="Toggle password">👁</button>
+          </div>
+        </div>
+        <div class="forgot-row">
+          <button class="link-btn" onclick="showSubscreen('ss-forgot')">Forgot password?</button>
+        </div>
+        <button class="btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+        <div class="msg" id="l-err"></div>
+      </div>
+
+      <!-- Sub: Forgot password -->
+      <div class="ss" id="ss-forgot">
+        <div class="ss-title">Reset your password</div>
+        <div class="ss-sub">Enter the email address linked to your account and we'll send a reset link.</div>
+        <div class="fg">
+          <label>Email address</label>
+          <input type="email" id="fp-email" placeholder="you@school.edu" autocomplete="email"
+                 onkeydown="if(event.key==='Enter')doForgotPassword()">
+        </div>
+        <button class="btn" id="fpBtn" onclick="doForgotPassword()">Send reset link</button>
+        <button class="btn-ghost" onclick="showSubscreen('ss-login')">← Back to sign in</button>
+        <div class="msg" id="fp-err"></div>
+        <div class="msg" id="fp-ok"></div>
+      </div>
+
+      <!-- Sub: Reset password -->
+      <div class="ss" id="ss-reset">
+        <div class="ss-title">Set a new password</div>
+        <div class="ss-sub" id="reset-sub">Validating your reset link…</div>
+        <div class="fg">
+          <label>New password</label>
+          <div class="fi-wrap">
+            <input type="password" id="rp-new" placeholder="Min. 8 characters"
+                   onkeyup="checkStrength(this.value,'pw-bar')"
+                   onkeydown="if(event.key==='Enter')doResetPassword()">
+            <button class="pw-toggle" onclick="togglePw('rp-new',this)" aria-label="Toggle password">👁</button>
+          </div>
+          <div class="pw-bar-wrap"><div class="pw-bar" id="pw-bar"></div></div>
+        </div>
+        <div class="fg">
+          <label>Confirm new password</label>
+          <div class="fi-wrap">
+            <input type="password" id="rp-cnf" placeholder="Re-enter password"
+                   onkeydown="if(event.key==='Enter')doResetPassword()">
+            <button class="pw-toggle" onclick="togglePw('rp-cnf',this)" aria-label="Toggle password">👁</button>
+          </div>
+        </div>
+        <button class="btn" id="rpBtn" onclick="doResetPassword()">Set new password</button>
+        <div class="msg" id="rp-err"></div>
+        <div class="msg" id="rp-ok"></div>
+      </div>
+
+    </div><!-- /p-login -->
+
+    <!-- REGISTER PANEL -->
+    <div class="panel" id="p-register">
+      <div class="ss-sub" style="margin-bottom:1.25rem;">Register as a teacher. Your school admin will approve your account.</div>
+      <div class="fg">
+        <label>Full name</label>
+        <input type="text" id="r-name" placeholder="Amara Okonkwo" autocomplete="name">
+      </div>
+      <div class="fg">
+        <label>Email address</label>
+        <input type="email" id="r-email" placeholder="you@school.edu" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label>School</label>
+        <select id="r-school">
+          <option value="">Loading schools…</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="fi-wrap">
+          <input type="password" id="r-pass" placeholder="Min. 8 characters"
+                 onkeyup="checkStrength(this.value,'r-pw-bar')"
+                 onkeydown="if(event.key==='Enter')doRegister()">
+          <button class="pw-toggle" onclick="togglePw('r-pass',this)" aria-label="Toggle password">👁</button>
+        </div>
+        <div class="pw-bar-wrap"><div class="pw-bar" id="r-pw-bar"></div></div>
+      </div>
+      <div class="fg">
+        <label>Confirm password</label>
+        <div class="fi-wrap">
+          <input type="password" id="r-confirm" placeholder="Re-enter password"
+                 onkeydown="if(event.key==='Enter')doRegister()">
+          <button class="pw-toggle" onclick="togglePw('r-confirm',this)" aria-label="Toggle password">👁</button>
+        </div>
+      </div>
+      <button class="btn" id="regBtn" onclick="doRegister()">Submit registration</button>
+      <div class="msg" id="r-err"></div>
+      <div class="notice hidden" id="r-pending">
+        <strong>📧 Registration submitted</strong>
+        Check your email to verify your address. Your account will be active once an administrator approves it.
+      </div>
+    </div><!-- /p-register -->
+
+    <div class="foot">
+  For authorised school staff only · Edurena v5.1<br>
+  <span style="color:var(--faint);font-size:0.68rem;">
+    Tip: bookmark your school's login link from your admin dashboard for direct access.
+  </span>
+</div>
+  </div><!-- /card -->
+
+  <div class="sa-link hidden" id="sa-link">
+    <button onclick="goSuperadmin()">👑 Super Admin Dashboard</button>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── EDURENA config ──────────────────────────────────────────────────
+var SCRIPT_URL       = EDURENA.scriptUrl;
+var SUPERADMIN_EMAIL = '';  // fetched from GAS after login (never hard-coded)
+var _resetToken      = '';
+
+// Sync SCRIPT_URL once config resolves (handles sessionStorage case)
+EDURENA.ready.then(function(cfg) {
+  SCRIPT_URL = cfg.scriptUrl || SCRIPT_URL;
+  if (!SCRIPT_URL) showScriptUrlPrompt();
+  else hideScriptUrlPrompt();
+});
+
+// ── Init ────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  loadSchools();
+
+  // Handle password reset token in URL
+  var params = EDURENA.params;
+  if (params.action === 'reset' && params.token) {
+    showTab('login');
+    showSubscreen('ss-reset');
+    _resetToken = params.token;
+    validateResetToken(params.token);
+  }
+
+  // Show superadmin shortcut if already logged in as admin
+  try {
+    var stored = JSON.parse(sessionStorage.getItem('qf_teacher') || '{}');
+    if (stored.role === 'admin' || stored.role === 'superadmin') {
+      document.getElementById('sa-link').classList.remove('hidden');
+    }
+  } catch(_) {}
+});
+
+function loadSchools() {
+  DASH.post('getSchoolsPublic', {}).then(function(r) {
+    var sel = document.getElementById('r-school');
+    if (!r || r.status !== 'success' || !r.data || !r.data.length) {
+      sel.innerHTML = '<option value="">— No schools found —</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">— Select your school —</option>' +
+      r.data.map(function(s) {
+        return '<option value="' + esc(s.schoolName) + '">' + esc(s.schoolName) + '</option>';
+      }).join('');
+  }).catch(function() { document.getElementById('r-school').innerHTML = '<option value="">— No schools found —</option>'; });
+}
+
+// ── Navigation ───────────────────────────────────────────────────────
+function showTab(name) {
+  ['login','register'].forEach(function(n) {
+    document.getElementById('t-'+n).classList.toggle('on', n === name);
+    document.getElementById('p-'+n).classList.toggle('on', n === name);
+  });
+  if (name === 'login') showSubscreen('ss-login');
+  clearAllMsgs();
+}
+
+function showSubscreen(id) {
+  ['ss-login','ss-forgot','ss-reset'].forEach(function(ss) {
+    var el = document.getElementById(ss);
+    if (el) el.classList.toggle('on', ss === id);
+  });
+  clearAllMsgs();
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function setMsg(id, type, text) {
+  var el = document.getElementById(id); if (!el) return;
+  el.className = 'msg ' + type + ' on';
+  el.textContent = text;
+}
+function clearMsg(id) { var el = document.getElementById(id); if (el) el.className = 'msg'; }
+function clearAllMsgs() {
+  ['l-err','fp-err','fp-ok','rp-err','rp-ok','r-err'].forEach(clearMsg);
+}
+
+function togglePw(id, btn) {
+  var el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+function checkStrength(pw, barId) {
+  var bar = document.getElementById(barId); if (!bar) return;
+  var score = 0;
+  if (pw.length >= 8)           score++;
+  if (pw.length >= 12)          score++;
+  if (/[A-Z]/.test(pw))         score++;
+  if (/[0-9]/.test(pw))         score++;
+  if (/[^A-Za-z0-9]/.test(pw))  score++;
+  var widths  = ['0%','20%','40%','70%','100%'];
+  var colors  = ['','#ef4444','#f59e0b','#22c55e','#16a34a'];
+  bar.style.width      = widths[score]  || '0%';
+  bar.style.background = colors[score]  || '';
+}
+
+function spinBtn(id, loading, label) {
+  var btn = document.getElementById(id); if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spin"></span> ' + label : label;
+}
+
+function post(action, data, cb) {
+  if (!SCRIPT_URL) SCRIPT_URL = DASH.scriptUrl;
+  DASH.post(action, data)
+    .then(function(r) { if (cb) cb(null, r); })
+    .catch(function(e) { if (cb) cb(e, null); });
+}
+
+
+// ── Server URL setup (shown when ?script= is missing) ───────────────
+function showScriptUrlPrompt() {
+  var existing = document.getElementById('script-url-prompt');
+  if (existing) { existing.style.display = 'block'; return; }
+  var prompt = document.createElement('div');
+  prompt.id = 'script-url-prompt';
+  prompt.style.cssText = 'background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;';
+  prompt.innerHTML = '<div style="font-size:0.78rem;font-weight:700;color:#f5a623;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em;">⚙️ One-time Setup</div>'
+    + '<div style="font-size:0.8rem;color:#7a8db0;margin-bottom:0.75rem;line-height:1.5;">Paste your Edurena GAS deployment URL to connect this login page to your server.</div>'
+    + '<input id="gas-url-inp" type="url" placeholder="https://script.google.com/macros/s/.../exec"'
+    + ' style="width:100%;padding:0.65rem 0.85rem;background:#06060f;border:1px solid rgba(245,166,35,0.25);border-radius:8px;color:#f0f4ff;font-size:0.8rem;outline:none;margin-bottom:0.6rem;" />'
+    + '<button onclick="saveGasUrl()" style="padding:0.55rem 1.1rem;background:#f5a623;border:none;border-radius:8px;color:#050810;font-weight:700;font-size:0.8rem;cursor:pointer;">Save & Connect</button>';
+  var card = document.querySelector('.card');
+  if (card) card.insertBefore(prompt, card.firstChild);
+}
+
+function hideScriptUrlPrompt() {
+  var el = document.getElementById('script-url-prompt');
+  if (el) el.style.display = 'none';
+}
+
+function saveGasUrl() {
+  var val = (document.getElementById('gas-url-inp').value || '').trim();
+  if (!val || !val.includes('script.google.com')) {
+    alert('Please enter a valid GAS deployment URL (starts with https://script.google.com)');
+    return;
+  }
+  SCRIPT_URL = val;
+  sessionStorage.setItem('edurena_script_url', val);
+  hideScriptUrlPrompt();
+  loadSchools();
+  setMsg('l-err','info','✓ Server connected. You can now sign in.');
+}
+
+// ── Login ─────────────────────────────────────────────────────────────
+function doLogin() {
+  clearMsg('l-err');
+  var email = (document.getElementById('l-email').value || '').trim();
+  var pass  = (document.getElementById('l-pass').value  || '');
+  if (!email || !pass) { setMsg('l-err','err','Please enter your email and password.'); return; }
+  if (!SCRIPT_URL) { setMsg('l-err','err','Server not configured. Check URL parameters.'); return; }
+  spinBtn('loginBtn', true, 'Signing in…');
+  post('teacherLogin', { email: email, password: pass }, function(e, r) {
+    spinBtn('loginBtn', false, 'Sign in');
+    if (e) {
+      setMsg('l-err','err','Network error — could not reach server. Check your connection.');
+      return;
+    }
+    if (!r || r.status !== 'success') {
+      // Show the actual server message (wrong password, pending, etc.)
+      var msg = (r && r.message) || 'Login failed. Please try again.';
+      setMsg('l-err','err', msg);
+      return;
+    }
+    try {
+      sessionStorage.setItem('qf_token', r.data.token);
+      sessionStorage.setItem('qf_teacher', JSON.stringify(r.data));
+    } catch(_) {}
+
+    var role = r.data.role || 'teacher';
+    // Save token so dashboards can pick it up immediately
+    try {
+      sessionStorage.setItem('qf_token', r.data.token);
+      sessionStorage.setItem('qf_teacher', JSON.stringify(r.data));
+    } catch(_) {}
+
+    // Redirect to the right GitHub dashboard page with ?script= preserved
+    if (role === 'superadmin' || role === 'admin') {
+      window.location.href = DASH.pageUrl('SuperAdminDashboard.html');
+    } else if (role === 'school_admin') {
+      window.location.href = DASH.pageUrl('SchoolAdminDashboard.html');
+    } else {
+      window.location.href = DASH.pageUrl('TeacherDashboard.html');
+    }
+  });
+}
+
+// ── Forgot password ────────────────────────────────────────────────────
+function doForgotPassword() {
+  clearMsg('fp-err'); clearMsg('fp-ok');
+  var email = (document.getElementById('fp-email').value || '').trim();
+  if (!email || !email.includes('@')) { setMsg('fp-err','err','Please enter a valid email address.'); return; }
+  spinBtn('fpBtn', true, 'Sending…');
+  post('requestPasswordReset', { email: email }, function(e, r) {
+    spinBtn('fpBtn', false, 'Send reset link');
+    if (e || !r || r.status !== 'success') {
+      setMsg('fp-err','err', (r && r.message) || 'Something went wrong. Please try again.');
+      return;
+    }
+    setMsg('fp-ok','ok', (r.data && r.data.message) || 'If that email exists, a reset link has been sent. Check your inbox.');
+    document.getElementById('fp-email').value = '';
+  });
+}
+
+// ── Reset token validation ─────────────────────────────────────────────
+function validateResetToken(token) {
+  var sub = document.getElementById('reset-sub');
+  post('validateResetToken', { token: token }, function(e, r) {
+    if (e || !r || r.status !== 'success') {
+      if (sub) sub.textContent = '';
+      setMsg('rp-err','err', (r && r.message) || 'This reset link is invalid or expired. Request a new one.');
+      ['rp-new','rp-cnf'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.disabled = true;
+      });
+      var btn = document.getElementById('rpBtn'); if (btn) btn.disabled = true;
+      return;
+    }
+    if (sub) sub.textContent = 'Set a new password for ' + (r.data.email || 'your account');
+  });
+}
+
+// ── Reset password ────────────────────────────────────────────────────
+function doResetPassword() {
+  clearMsg('rp-err'); clearMsg('rp-ok');
+  var nw  = document.getElementById('rp-new').value || '';
+  var cnf = document.getElementById('rp-cnf').value || '';
+  if (!nw)           { setMsg('rp-err','err','Please enter a new password.'); return; }
+  if (nw.length < 8) { setMsg('rp-err','err','Password must be at least 8 characters.'); return; }
+  if (nw !== cnf)    { setMsg('rp-err','err','Passwords do not match.'); return; }
+  if (!_resetToken)  { setMsg('rp-err','err','Reset token missing. Use the link from your email.'); return; }
+  spinBtn('rpBtn', true, 'Setting password…');
+  post('resetPassword', { token: _resetToken, newPassword: nw }, function(e, r) {
+    spinBtn('rpBtn', false, 'Set new password');
+    if (e || !r || r.status !== 'success') {
+      setMsg('rp-err','err', (r && r.message) || 'Password reset failed. Please try again.');
+      return;
+    }
+    document.getElementById('rp-new').value = '';
+    document.getElementById('rp-cnf').value = '';
+    setMsg('rp-ok','ok','Password reset successfully. Taking you to sign in…');
+    document.getElementById('rpBtn').style.display = 'none';
+    _resetToken = '';
+    setTimeout(function() { showSubscreen('ss-login'); clearMsg('rp-ok'); }, 2500);
+  });
+}
+
+// ── Register ──────────────────────────────────────────────────────────
+function doRegister() {
+  clearMsg('r-err');
+  var name    = (document.getElementById('r-name').value    || '').trim();
+  var email   = (document.getElementById('r-email').value   || '').trim();
+  var school  = (document.getElementById('r-school').value  || '').trim();
+  var pass    = (document.getElementById('r-pass').value    || '');
+  var confirm = (document.getElementById('r-confirm').value || '');
+  if (!name)                     { setMsg('r-err','err','Please enter your full name.'); return; }
+  if (!email||!email.includes('@')){ setMsg('r-err','err','Please enter a valid email address.'); return; }
+  if (!school)                   { setMsg('r-err','err','Please select your school.'); return; }
+  if (pass.length < 8)           { setMsg('r-err','err','Password must be at least 8 characters.'); return; }
+  if (pass !== confirm)          { setMsg('r-err','err','Passwords do not match.'); return; }
+  spinBtn('regBtn', true, 'Submitting…');
+  post('teacherRegister', { name:name, email:email, password:pass, school:school }, function(e, r) {
+    spinBtn('regBtn', false, 'Submit registration');
+    if (e || !r || r.status !== 'success') {
+      setMsg('r-err','err', (r && r.message) || 'Registration failed. Please try again.');
+      return;
+    }
+    // Hide form fields on success
+    ['r-name','r-email','r-school','r-pass','r-confirm'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.closest('.fg')) el.closest('.fg').style.display = 'none';
+    });
+    document.getElementById('r-pass').value    = '';
+    document.getElementById('r-confirm').value = '';
+    document.getElementById('regBtn').style.display = 'none';
+    document.getElementById('r-pending').classList.remove('hidden');
+  });
+}
+
+// ── Superadmin ────────────────────────────────────────────────────────
+function goSuperadmin() {
+  if (!SCRIPT_URL) { alert('Server URL not configured.'); return; }
+  window.location.href = DASH.pageUrl('SuperAdminDashboard.html');
+}
+</script>
+</body>
+</html>
