@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <base target="_top">
+  
   <meta charset="UTF-8">
+  <script src="edurena-dash.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edurena Live — Host</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Edurena — Live Host</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#080C16;--surf:#0F1523;--surf2:#151D2E;--bdr:#1E2A3F;
-      --acc:#F97316;--grn:#1fc98e;--red:#ff5f5f;--yel:#ffcc00;--pur:#A78BFA;
+      --bg:#0a0c15;--surf:#10142a;--surf2:#181d36;--bdr:#232a45;
+      --acc:#4f78ff;--grn:#1fc98e;--red:#ff5f5f;--yel:#ffcc00;--pur:#a78bfa;
       --txt:#f0f2ff;--txt2:#8892b0;
-      --f:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+      --f:'Sora',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
     }
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh;padding:24px;display:flex;align-items:center;justify-content:center}
@@ -206,7 +207,7 @@
         </button>
         <button class="mode-card kahoot" id="mc-kahoot">
           <span class="mc-icon">&#x1F3AF;</span>
-          <span class="mc-title">Blitz Quiz</span>
+          <span class="mc-title">Kahoot Quiz</span>
           <span class="mc-desc">Timed questions &middot; instant feedback &middot; timer auto-advances</span>
         </button>
       </div>
@@ -218,7 +219,7 @@
         <select id="sel-quiz"><option value="">Loading quizzes&hellip;</option></select>
       </div>
       <div class="fg" id="time-row" style="display:none">
-        <label>Seconds per question (Blitz only)</label>
+        <label>Seconds per question (Kahoot only)</label>
         <input type="number" id="sel-time" value="20" min="5" max="120">
       </div>
     </div>
@@ -339,7 +340,8 @@
 (function(){
 'use strict';
 
-var SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>';
+var SCRIPT_URL = DASH.scriptUrl;
+DASH.ready.then(function(cfg){ SCRIPT_URL = cfg.scriptUrl || DASH.scriptUrl; });
 var RACE_URL   = 'https://oyeb22.github.io/QUIZFLOW/race.html';
 var KAHOOT_URL = 'https://oyeb22.github.io/QUIZFLOW/kahoot.html';
 
@@ -530,7 +532,7 @@ function showLobby(){
   var isRace=mode==='race';
   _joinUrl=(isRace?RACE_URL:KAHOOT_URL)+'?script='+encodeURIComponent(SCRIPT_URL);
   el('lby-tag').className  ='lobby-mode-tag '+(isRace?'race':'kahoot');
-  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Blitz';
+  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Kahoot';
   el('lby-code').textContent=sessionCode;
   el('lby-url').textContent=_joinUrl;
   el('lby-count').textContent='0';
@@ -997,7 +999,7 @@ function doKahootFinal(){
   if(khPropagationRaf){cancelAnimationFrame(khPropagationRaf);khPropagationRaf=null;}
   el('kh-propagation-bar').classList.remove('on');
   khDb.ref('kahoot/'+sessionCode+'/state').update({phase:'final'});
-  el('done-msg').textContent='Blitz complete! Students see the final podium. Code: '+sessionCode;
+  el('done-msg').textContent='Kahoot complete! Students see the final podium. Code: '+sessionCode;
   cleanupKahoot();
   show('s-done');
 }
