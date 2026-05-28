@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="UTF-8">
+  <script src="edurena-dash.js"></script>
+  <link rel="stylesheet" href="edurena-dash-design.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edurena — Teacher Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --surface2: #f3f2ef;
+  --surface3: #eeede9;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #111110;
+  --text2: #6b6b68;
+  --text3: #9b9b97;
+  --accent: #1a56db;
+  --accent-bg: #eff4ff;
+  --accent-border: #c3d5ff;
+  --accent-text: #1e3a8a;
+  --success: #166534;
+  --success-bg: #f0fdf4;
+  --success-border: #86efac;
+  --danger: #991b1b;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --warn: #92400e;
+  --warn-bg: #fffbeb;
+  --warn-border: #fde68a;
+  --purple: #4c1d95;
+  --purple-bg: #f5f3ff;
+  --purple-border: #ddd6fe;
+  --font: 'Geist', system-ui, sans-serif;
+  --mono: 'Geist Mono', monospace;
+  --r: 10px;
+  --r-sm: 7px;
+  --sb-w: 220px;
+}
+body.dark {
+  --bg: #07090f;
+  --surface: #0d1117;
+  --surface2: #131923;
+  --surface3: #182030;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8ecf4;
+  --text2: #7a8599;
+  --text3: #3d4d63;
+  --accent: #4d7cfe;
+  --accent-bg: rgba(77,124,254,0.12);
+  --accent-border: rgba(77,124,254,0.3);
+  --accent-text: #7ea3ff;
+  --success: #23d18b;
+  --success-bg: rgba(35,209,139,0.1);
+  --success-border: rgba(35,209,139,0.25);
+  --danger: #ff5c5c;
+  --danger-bg: rgba(255,92,92,0.1);
+  --danger-border: rgba(255,92,92,0.25);
+  --warn: #ffb547;
+  --warn-bg: rgba(255,181,71,0.1);
+  --warn-border: rgba(255,181,71,0.25);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,0.1);
+  --purple-border: rgba(167,139,250,0.25);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13.5px; }
+
+/* GATE */
+#gate { display: none; position: fixed; inset: 0; z-index: 10000; background: var(--bg); align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+#gate.on { display: flex; }
+.gate-spin { width: 32px; height: 32px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+#gate-msg { color: var(--text2); font-size: 13px; }
+.gate-btn { padding: 8px 18px; background: var(--accent); border: none; border-radius: var(--r-sm); color: #fff; font-size: 13px; font-weight: 500; font-family: var(--font); cursor: pointer; display: none; margin-top: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── DESKTOP SIDEBAR ── */
+.sb {
+  width: var(--sb-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+}
+.sb-logo { padding: 16px 14px 12px; border-bottom: 1px solid var(--border); }
+.sb-logo-row { display: flex; align-items: center; gap: 8px; }
+.logo-box { width: 26px; height: 26px; background: var(--text); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; color: var(--bg); }
+.logo-txt h1 { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
+.logo-txt p { font-size: 10.5px; color: var(--text3); margin-top: 1px; }
+
+.sb-profile { margin: 8px; padding: 9px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer; transition: border-color .15s; }
+.sb-profile:hover { border-color: var(--border2); }
+.sp-row { display: flex; align-items: center; gap: 8px; }
+.sp-av { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--accent-text); flex-shrink: 0; overflow: hidden; }
+.sp-av img { width: 100%; height: 100%; object-fit: cover; }
+.sp-info { flex: 1; min-width: 0; }
+.sp-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-role { font-size: 10.5px; color: var(--text3); margin-top: 1px; text-transform: capitalize; }
+
+nav { padding: 6px 7px; flex: 1; overflow-y: auto; }
+.nsec { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; padding: 9px 8px 3px; }
+.ni { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: var(--r-sm); cursor: pointer; color: var(--text2); font-size: 12.5px; font-weight: 400; transition: all .12s; margin-bottom: 1px; border: none; background: none; width: 100%; text-align: left; }
+.ni:hover { background: var(--surface2); color: var(--text); }
+.ni.on { background: var(--surface2); color: var(--text); font-weight: 500; }
+.ni .ico { font-size: 13px; width: 15px; text-align: center; flex-shrink: 0; opacity: .7; }
+.ni.on .ico { opacity: 1; }
+.ni .nbadge { margin-left: auto; font-size: 10px; background: var(--danger-bg); color: var(--danger); padding: 1px 5px; border-radius: 5px; font-weight: 600; display: none; }
+.ni .nbadge.vis { display: inline; }
+
+.admin-only { display: none !important; }
+body.is-admin .admin-only { display: flex !important; }
+.superadmin-only { display: none !important; }
+body.is-superadmin .superadmin-only { display: flex !important; }
+
+.sb-foot { padding: 8px; border-top: 1px solid var(--border); }
+.btn-sys { width: 100%; padding: 6px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); border-radius: var(--r-sm); cursor: pointer; font-size: 11px; font-family: var(--font); transition: all .15s; margin-bottom: 4px; }
+.btn-sys:hover { border-color: var(--border2); color: var(--text); }
+.btn-out { width: 100%; padding: 6px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); border-radius: var(--r-sm); cursor: pointer; font-size: 11px; font-family: var(--font); transition: all .15s; }
+.btn-out:hover { background: #fee2e2; }
+
+/* ── MOBILE NAV BAR (bottom) ── */
+.mob-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  padding: 0 4px 2px;
+  padding-bottom: calc(2px + env(safe-area-inset-bottom));
+}
+.mob-nav-inner { display: flex; overflow-x: auto; scrollbar-width: none; gap: 2px; }
+.mob-nav-inner::-webkit-scrollbar { display: none; }
+.mob-ni { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 10px 5px; border: none; background: none; cursor: pointer; border-radius: var(--r-sm); color: var(--text3); font-size: 10px; font-family: var(--font); font-weight: 400; transition: all .12s; min-width: 56px; position: relative; }
+.mob-ni.on { color: var(--accent); background: var(--accent-bg); }
+.mob-ni .mico { font-size: 18px; line-height: 1; }
+.mob-ni .mlbl { font-size: 9.5px; white-space: nowrap; }
+.mob-ni .mbadge { position: absolute; top: 5px; right: 8px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; display: none; }
+.mob-ni .mbadge.vis { display: block; }
+
+/* ── MOBILE HEADER ── */
+.mob-header {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.mob-hamburger { width: 34px; height: 34px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; flex-shrink: 0; }
+.mob-title-wrap { flex: 1; min-width: 0; }
+.mob-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mob-sub { font-size: 10.5px; color: var(--text3); }
+.mob-av { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--accent-text); flex-shrink: 0; cursor: pointer; overflow: hidden; }
+.mob-av img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ── SLIDE-OUT DRAWER (mobile) ── */
+.sb-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 90; }
+.sb-overlay.on { display: block; }
+.sb.drawer-open { transform: translateX(0) !important; }
+
+/* ── MAIN CONTENT ── */
+.main { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.topbar { padding: 11px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface); position: sticky; top: 0; z-index: 10; }
+.tb-title { font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+.tb-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.content { padding: 18px 20px; flex: 1; width: 100%; }
+.tp { display: none; } .tp.on { display: block; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+.ct { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; }
+
+/* STATS */
+.sgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+.sc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+.sv { font-size: 22px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.5px; }
+.sl { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.cgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.cw { height: 160px; position: relative; }
+
+/* TABLE */
+.tw { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 480px; }
+thead th { text-align: left; padding: 8px 10px; font-size: 10.5px; font-weight: 500; color: var(--text2); border-bottom: 1px solid var(--border); letter-spacing: .2px; white-space: nowrap; }
+tbody td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:hover td { background: var(--surface2); }
+tbody tr:last-child td { border-bottom: none; }
+.er td { text-align: center; color: var(--text2); padding: 22px; font-size: 13px; }
+code { font-family: var(--mono); font-size: 11px; background: var(--surface2); padding: 2px 5px; border-radius: 4px; color: var(--text2); }
+
+/* BADGES */
+.bdg { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.bg  { background: var(--success-bg); color: var(--success); }
+.br  { background: var(--danger-bg);  color: var(--danger); }
+.by  { background: var(--warn-bg);    color: var(--warn); }
+.bp  { background: var(--purple-bg);  color: var(--purple); }
+.bb  { background: var(--accent-bg);  color: var(--accent-text); }
+
+/* BUTTONS */
+.btn { padding: 5px 11px; border: 1px solid var(--border2); border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 500; font-family: var(--font); transition: all .12s; white-space: nowrap; background: var(--surface); color: var(--text); }
+.btn:hover { background: var(--surface2); }
+.btn-p { background: var(--text); color: var(--bg); border-color: var(--text); }
+.btn-p:hover { opacity: .85; background: var(--text); }
+.btn-d { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+.btn-d:hover { background: #fee2e2; }
+.btn-ok { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.btn-ok:hover { background: #dcfce7; }
+.btn-live { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent-border); }
+.btn-live:hover { background: #dbeafe; }
+.btn-sm { padding: 3px 8px; font-size: 11px; }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* FORMS */
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fgrid.c3 { grid-template-columns: 1fr 1fr 1fr; }
+.fgrid.c1 { grid-template-columns: 1fr; }
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .3px; }
+.fg input, .fg select, .fg textarea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 9px; color: var(--text); font-size: 12.5px; font-family: var(--font); outline: none; transition: border-color .15s; }
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--border2); }
+.fg select option { background: var(--surface); }
+.fg input[type="datetime-local"] { color-scheme: light; }
+
+/* TOGGLES */
+.tr-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.tr-row:last-child { border-bottom: none; }
+.tl { font-size: 12.5px; font-weight: 500; }
+.td { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.tog { width: 34px; height: 18px; background: var(--surface3); border-radius: 9px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; border: 1px solid var(--border2); }
+.tog.on { background: var(--text); border-color: var(--text); }
+.tog::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: #fff; border-radius: 50%; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.tog.on::after { left: 18px; }
+
+/* SUBJECT INPUTS */
+.si { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.si:last-child { border-bottom: none; }
+.sn { font-weight: 500; font-size: 12.5px; }
+.sa { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.sinput { width: 62px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 5px; color: var(--text); font-family: var(--mono); font-size: 13px; outline: none; }
+.sinput:focus { border-color: var(--border2); }
+
+/* QB */
+.qbi { padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); margin-bottom: 6px; }
+.qbi-meta { display: flex; gap: 4px; margin-bottom: 5px; flex-wrap: wrap; }
+.qbi-q { font-size: 12.5px; font-weight: 500; margin-bottom: 3px; }
+.qbi-a { font-size: 11.5px; color: var(--success); }
+.dz { border: 1.5px dashed var(--border2); border-radius: var(--r); padding: 24px; text-align: center; cursor: pointer; transition: all .15s; color: var(--text2); }
+.dz:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.di { font-size: 24px; margin-bottom: 6px; display: block; }
+
+/* MODALS */
+.mo { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.mo.on { display: flex; }
+.mbox { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.12); }
+.mh { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.mh-title { font-size: 13px; font-weight: 600; }
+.mc { cursor: pointer; color: var(--text2); font-size: 15px; padding: 3px; border: none; background: none; line-height: 1; }
+.mc:hover { color: var(--text); }
+.mb { padding: 18px; overflow-y: auto; flex: 1; }
+.mtabs { display: flex; gap: 2px; margin-bottom: 14px; background: var(--surface2); border-radius: 8px; padding: 3px; overflow-x: auto; scrollbar-width: none; }
+.mtabs::-webkit-scrollbar { display: none; }
+.mtab { flex-shrink: 0; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; font-family: var(--font); background: transparent; color: var(--text2); transition: all .12s; text-align: center; }
+.mtab.on { background: var(--surface); color: var(--text); }
+
+/* PROFILES */
+.prof-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+.prof-av-wrap { position: relative; flex-shrink: 0; }
+.prof-av { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; }
+.prof-av img { width: 100%; height: 100%; object-fit: cover; }
+.av-upload { position: absolute; bottom: 0; right: 0; width: 18px; height: 18px; background: var(--text); border: none; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; color: var(--bg); }
+.pname { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 2px; }
+.prole { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; background: var(--surface2); color: var(--text2); display: inline-block; }
+.pemail { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* TAG INPUT */
+.tw-wrap { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); min-height: 36px; align-items: center; cursor: text; }
+.tw-wrap:focus-within { border-color: var(--border2); }
+.tag { display: inline-flex; align-items: center; gap: 3px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-size: 11.5px; padding: 2px 7px; border-radius: 10px; }
+.trm { cursor: pointer; color: var(--text3); font-size: 12px; line-height: 1; border: none; background: none; }
+.trm:hover { color: var(--danger); }
+.tinput { border: none; background: transparent; color: var(--text); font-size: 12px; font-family: var(--font); outline: none; min-width: 90px; flex: 1; }
+
+/* TEACHER CARDS */
+.tc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.tc-av { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; overflow: hidden; }
+.tc-av img { width: 100%; height: 100%; object-fit: cover; }
+.tc-info { flex: 1; min-width: 0; }
+.tc-name { font-size: 12.5px; font-weight: 500; }
+.tc-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.tc-act { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; }
+.pc { background: var(--surface); border: 1px solid var(--warn-border); border-radius: var(--r); padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.pc-info { flex: 1; min-width: 0; }
+.pc-name { font-size: 12.5px; font-weight: 500; }
+.pc-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.pc-act { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; }
+
+/* CLASS GRID */
+.cls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin-top: 8px; }
+.cls-item { display: flex; align-items: center; gap: 6px; padding: 7px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer; transition: border-color .12s; }
+.cls-item:hover { border-color: var(--border2); }
+.cls-item input[type="checkbox"] { accent-color: var(--text); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+.cls-item label { font-size: 12px; cursor: pointer; font-weight: 500; }
+
+/* TOASTS */
+.ts-stack { position: fixed; top: 14px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
+.tst { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 12px; font-size: 12.5px; max-width: 300px; pointer-events: all; display: flex; align-items: flex-start; gap: 7px; box-shadow: 0 4px 16px rgba(0,0,0,.08); animation: si .18s ease; }
+.tst.success { border-color: var(--success-border); }
+.tst.error   { border-color: var(--danger-border); }
+@keyframes si { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* SPINNER */
+.sp-ov { display: none; position: fixed; inset: 0; background: rgba(255,255,255,.6); z-index: 500; align-items: center; justify-content: center; }
+.sp-ov.on { display: flex; }
+.sp-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 20px 28px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.sp { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 8px; }
+#sp-txt { font-size: 12px; color: var(--text2); }
+
+/* INLINE TABLE */
+.inline-cell { width: 100%; min-height: 28px; padding: 5px 6px; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 12px; resize: none; }
+.inline-cell:focus { background: var(--accent-bg); }
+.inline-select { width: 100%; padding: 5px 6px; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 12px; cursor: pointer; }
+
+/* PHOTO */
+.photo-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.photo-thumb { width: 74px; height: 74px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); cursor: pointer; transition: transform .14s; }
+.photo-thumb:hover { transform: scale(1.06); border-color: var(--border2); }
+.photo-item { display: flex; flex-direction: column; align-items: center; width: 74px; }
+.photo-reason { font-size: 9.5px; font-weight: 600; padding: 1px 5px; border-radius: 4px; margin-top: 2px; }
+.photo-reason.start { background: var(--success-bg); color: var(--success); }
+.photo-reason.violation { background: var(--danger-bg); color: var(--danger); }
+#photo-lb { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.88); align-items: center; justify-content: center; flex-direction: column; gap: 10px; }
+#photo-lb.on { display: flex; }
+#photo-lb img { max-width: 90vw; max-height: 80vh; border-radius: 8px; }
+#photo-lb-close { position: absolute; top: 14px; right: 18px; font-size: 20px; color: #fff; cursor: pointer; opacity: .7; background: none; border: none; }
+#photo-lb-close:hover { opacity: 1; }
+#photo-lb-cap { font-size: 12px; color: rgba(255,255,255,.6); }
+
+/* ANSWER REVIEW */
+.ar-item { padding: 10px 12px; border-radius: var(--r-sm); border: 1px solid var(--border); margin-bottom: 6px; }
+.ar-item.correct { border-color: var(--success-border); background: var(--success-bg); }
+.ar-item.wrong   { border-color: var(--danger-border);  background: var(--danger-bg); }
+.ar-item.skipped { border-color: var(--warn-border);    background: var(--warn-bg); }
+.ar-q  { font-weight: 500; font-size: 12.5px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 7px; }
+.ar-row { display: flex; gap: 7px; align-items: flex-start; margin-top: 3px; }
+.ar-lbl { font-size: 10.5px; font-weight: 500; color: var(--text2); min-width: 70px; text-transform: uppercase; letter-spacing: .3px; flex-shrink: 0; }
+.ar-val { font-size: 12px; }
+.ar-val.ok  { color: var(--success); }
+.ar-val.bad { color: var(--danger); }
+.ar-bdg { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
+.ar-bdg.ok   { background: var(--success-bg); color: var(--success); }
+.ar-bdg.bad  { background: var(--danger-bg);  color: var(--danger); }
+.ar-bdg.skip { background: var(--warn-bg);    color: var(--warn); }
+
+/* MISC */
+.pg-btn { padding: 3px 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text2); font-size: 11.5px; cursor: pointer; font-family: var(--font); transition: all .12s; }
+.pg-btn:hover, .pg-btn.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.dbw { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+.dbb { flex: 1; height: 4px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.dbf { height: 100%; border-radius: 3px; transition: width .4s; }
+.dp  { font-size: 10.5px; font-family: var(--mono); min-width: 30px; text-align: right; }
+.hi  { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); margin-bottom: 6px; }
+.hi.pass { border-left: 2.5px solid var(--success); }
+.hi.fail  { border-left: 2.5px solid var(--danger); }
+.sh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.sh h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.div { height: 1px; background: var(--border); margin: 10px 0; }
+.fx  { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.hidden { display: none !important; }
+.type-chk-label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text2); transition: all .12s; }
+.type-chk-label:hover { border-color: var(--border2); color: var(--text); }
+.type-chk-label:has(input:checked) { border-color: var(--border2); color: var(--text); background: var(--surface); }
+.type-chk-label input[type="checkbox"] { accent-color: var(--text); width: 13px; height: 13px; }
+.live-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; display: inline-block; margin-right: 4px; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.passage-preview { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px; margin-top: 8px; }
+#import-status { margin-top: 10px; font-size: 12px; color: var(--text2); display: none; }
+#inline-import-status { margin-top: 8px; font-size: 12px; display: none; }
+#bulk-preview { display: none; margin-top: 10px; }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤900px): collapse sidebar to drawer ── */
+@media (max-width: 900px) {
+  .sb {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100%;
+    z-index: 95;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,.12);
+  }
+  .sb.drawer-open { transform: translateX(0); }
+  .mob-header { display: flex; }
+  .topbar { display: none; }
+  .main { padding-bottom: 62px; }
+  .mob-nav { display: block; }
+  .content { padding: 14px; }
+  .sgrid { grid-template-columns: repeat(2, 1fr); }
+  .cgrid { grid-template-columns: 1fr; }
+  .fgrid { grid-template-columns: 1fr; }
+  .fgrid.c3 { grid-template-columns: 1fr 1fr; }
+  .ts-stack { top: 56px; right: 10px; }
+}
+
+/* ── Mobile (≤520px): tighter layout ── */
+@media (max-width: 520px) {
+  .content { padding: 10px; }
+  .card { padding: 12px; }
+  .sgrid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .sv { font-size: 20px; }
+  .fgrid.c3 { grid-template-columns: 1fr; }
+  .mbox { width: 96vw !important; max-height: 92vh; border-radius: 12px; }
+  .mb { padding: 14px; }
+  .sh h2 { font-size: 14px; }
+  .btn { padding: 5px 9px; font-size: 11.5px; }
+  table { font-size: 12px; }
+  thead th { padding: 7px 8px; }
+  tbody td { padding: 7px 8px; }
+  .tc { flex-wrap: wrap; }
+  .mob-header { padding: 9px 12px; }
+}
+
+/* ── Very small (≤360px) ── */
+@media (max-width: 360px) {
+  .sgrid { grid-template-columns: 1fr; }
+  .mob-ni { min-width: 50px; padding: 7px 8px 5px; }
+}
+  </style>
+</head>
+<body>
+
+<div id="gate" class="on">
+  <div class="gate-spin"></div>
+  <div id="gate-msg">Verifying session…</div>
+  <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
+</div>
+
+<!-- Overlay for mobile drawer -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<div class="app" id="shell" style="display:none">
+
+  <!-- ── SIDEBAR (desktop / mobile drawer) ── -->
+  <aside class="sb" id="sb">
+    <div class="sb-logo">
+      <div class="sb-logo-row">
+        <div class="logo-box">⚡</div>
+        <div class="logo-txt"><h1>Edurena</h1><p>v5.1 Dashboard</p></div>
+      </div>
+    </div>
+    <div class="sb-profile" onclick="nav('profile',null);closeSidebar()">
+      <div class="sp-row">
+        <div class="sp-av" id="sb-av"></div>
+        <div class="sp-info">
+          <div class="sp-name" id="sb-name">…</div>
+          <div class="sp-role" id="sb-role">teacher</div>
+        </div>
+      </div>
+    </div>
+    <nav>
+      <div class="nsec">Main</div>
+      <button class="ni on"         onclick="nav('overview',this);closeSidebar()"><span class="ico">◻</span>Overview</button>
+      <button class="ni"            onclick="nav('create',this);closeSidebar()"><span class="ico">+</span>Create Quiz</button>
+      <button class="ni"            onclick="nav('manage',this);closeSidebar()"><span class="ico">≡</span>Manage Quizzes</button>
+      <button class="ni"            onclick="nav('archive',this);closeSidebar()"><span class="ico">◷</span>Archived</button>
+      <button class="ni"            onclick="nav('questions',this);closeSidebar()"><span class="ico">?</span>Question Bank</button>
+      <button class="ni"            onclick="nav('students',this);closeSidebar()"><span class="ico">◉</span>Students<span class="nbadge" id="pend-badge">0</span></button>
+      <div class="nsec admin-only">Admin</div>
+      <button class="ni admin-only" onclick="nav('teachers',this);closeSidebar()"><span class="ico">♟</span>Teachers</button>
+      <button class="ni admin-only" onclick="nav('classes',this);closeSidebar()"><span class="ico">▣</span>Classes</button>
+      <button class="ni superadmin-only" onclick="nav('settings',this);closeSidebar()"><span class="ico">⚙</span>Settings</button>
+      <div class="nsec">Account</div>
+      <button class="ni"            onclick="nav('profile',this);closeSidebar()"><span class="ico">◯</span>My Profile</button>
+    </nav>
+    <div class="sb-foot">
+      <button class="btn-sys" onclick="runInit()">Initialize System</button>
+      <button class="btn-out" onclick="doLogout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+
+    <!-- ── MOBILE HEADER ── -->
+    <div class="mob-header" id="mob-header">
+      <button class="mob-hamburger" onclick="openSidebar()" aria-label="Open menu">☰</button>
+      <div class="mob-title-wrap">
+        <div class="mob-title" id="mob-title">Overview</div>
+        <div class="mob-sub"   id="mob-sub"></div>
+      </div>
+      <button id="mob-theme-btn" onclick="toggleTheme()"
+        style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);cursor:pointer;font-size:13px;font-family:var(--font);color:var(--text2);margin-right:4px">🌙</button>
+      <div class="mob-av" id="mob-av" onclick="nav('profile',null);closeSidebar()"></div>
+    </div>
+
+    <!-- ── DESKTOP TOPBAR ── -->
+    <div class="topbar">
+      <div>
+        <div class="tb-title" id="tb-title">Overview</div>
+        <div class="tb-sub"   id="tb-sub"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--text3)" id="tb-right"></span>
+        <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light mode"
+          style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);cursor:pointer;font-size:13px;line-height:1;font-family:var(--font);color:var(--text2);transition:all .15s">
+          🌙
+        </button>
+      </div>
+    </div>
+
+    <!-- ── PAGE CONTENT ── -->
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="tp on" id="tp-overview">
+        <div class="sgrid">
+          <div class="sc"><div class="sv" id="s-tot">—</div><div class="sl">Total Quizzes</div></div>
+          <div class="sc"><div class="sv" id="s-act">—</div><div class="sl">Active Now</div></div>
+          <div class="sc"><div class="sv" id="s-cls">—</div><div class="sl">My Classes</div></div>
+          <div class="sc"><div class="sv" id="s-qs">—</div><div class="sl">Questions</div></div>
+        </div>
+        <div class="cgrid">
+          <div class="card"><div class="ct">Quiz Status</div><div class="cw"><canvas id="ch-status"></canvas></div></div>
+          <div class="card"><div class="ct">Questions per Class</div><div class="cw"><canvas id="ch-cls"></canvas></div></div>
+        </div>
+        <div class="card" style="padding:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px">
+            <span class="ct" style="margin-bottom:0">Recent Quizzes</span>
+          </div>
+          <div class="tw"><table id="t-recent">
+            <thead><tr><th>Title</th><th>Code</th><th>Class</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- CREATE QUIZ -->
+      <div class="tp" id="tp-create">
+        <div class="sh"><h2>Create New Quiz</h2></div>
+        <div class="card">
+          <div class="ct">Basic Info</div>
+          <div class="fgrid" style="margin-bottom:10px">
+            <div class="fg"><label>Quiz Title *</label><input type="text" id="c-title" placeholder="e.g. Week 1 Maths Exam"></div>
+            <div class="fg"><label>Exam Code *</label><input type="text" id="c-code" placeholder="e.g. MATH7A-W1" style="font-family:var(--mono)"></div>
+          </div>
+          <div class="fgrid c3">
+            <div class="fg"><label>Class *</label><select id="c-class" onchange="onClassChange()"><option value="">— Select —</option></select></div>
+            <div class="fg"><label>Week *</label><select id="c-week" onchange="onWeekChange()" disabled><option value="">— Select —</option></select></div>
+            <div class="fg"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
+          </div>
+          <div class="fgrid" style="margin-top:10px">
+            <div class="fg"><label>Session (optional)</label><input type="text" id="c-session" list="session-list" placeholder="e.g. 2024/2025"><datalist id="session-list"><option value="2024/2025"><option value="2025/2026"></datalist></div>
+            <div class="fg"><label>Term (optional)</label><input type="text" id="c-term" list="term-list" placeholder="e.g. First Term"><datalist id="term-list"><option value="First Term"><option value="Second Term"><option value="Third Term"></datalist></div>
+          </div>
+          <div id="week-mode-row" style="display:none;margin-top:10px">
+            <div class="tr-row">
+              <div><div class="tl">Cumulative weeks</div><div class="td" id="week-mode-desc">Include questions from all weeks up to and including selected week</div></div>
+              <div class="tog on" id="tog-week-mode" onclick="toggleWeekMode()"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Schedule</div>
+          <div class="fgrid">
+            <div class="fg"><label>Start Time *</label><input type="datetime-local" id="c-start"></div>
+            <div class="fg"><label>End / Deadline *</label><input type="datetime-local" id="c-end"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Options</div>
+          <div class="tr-row">
+            <div><div class="tl">AI Face Detection Proctoring</div><div class="td">Camera-based absence and multi-person detection</div></div>
+            <div class="tog on" id="tog-face" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Show Correct Answers After Exam</div><div class="td">Students can review their answers once submitted</div></div>
+            <div class="tog" id="tog-ans" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Allow Retakes</div><div class="td">Students can retake this quiz; all attempts are recorded</div></div>
+            <div class="tog" id="tog-retakes" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Enable Read-Aloud (TTS)</div><div class="td">Show text-to-speech accessibility panel on the exam page</div></div>
+            <div class="tog" id="tog-tts" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+  <div>
+    <div class="tl">Maximum Violations (Strikes)</div>
+    <div class="td">How many violations before auto-submit. Default is 3.</div>
+  </div>
+  <input type="number" id="c-max-violations" value="3" min="1" max="10"
+    style="width:56px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;outline:none">
+</div>
+        </div>
+        <div class="card" id="rubric-card">
+          <div class="ct">Grading Rubric <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— define score ranges and comments</span></div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Set percentage ranges and labels for student results.</p>
+          <div id="rubric-ranges"></div>
+          <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="addRubricRange()">+ Add Range</button>
+            <button class="btn btn-sm" onclick="resetRubricRanges()">↺ Reset to Default</button>
+          </div>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--r-sm);font-size:11.5px;color:var(--text2);line-height:1.7">
+            <strong>Example:</strong> 80–100 = "Excellent" / Pass &nbsp;·&nbsp; 50–79 = "Very Good" / Pass &nbsp;·&nbsp; 0–49 = "Needs Improvement" / Review
+          </div>
+        </div>
+        <div class="card hidden" id="subj-card">
+          <div class="ct">Question Type Filter</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+            <label class="type-chk-label"><input type="checkbox" class="type-chk" value="MCQ" checked onchange="onTypeChange()"><span>Multiple Choice</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="type-chk" value="TF"  checked onchange="onTypeChange()"><span>True / False</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="type-chk" value="SHORT" checked onchange="onTypeChange()"><span>Short Answer</span></label>
+          </div>
+          <div class="div" style="margin:0 0 12px"></div>
+          <div class="ct">Question Allocation <span id="type-hint" style="color:var(--warn);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px"></span></div>
+          <div id="subj-list"><p style="color:var(--text2);font-size:13px;padding:12px 0">Select a week to see available questions.</p></div>
+          <div class="div"></div>
+          <div class="fx" style="justify-content:flex-end">
+            <span style="color:var(--text2);font-size:12px">Total questions:</span>
+            <strong id="tot-q" style="font-family:var(--mono);margin-left:5px">0</strong>
+          </div>
+        </div>
+        <div class="card hidden" id="passage-card">
+          <div class="ct">Comprehension Passages (Optional)</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Bundle a passage and all its linked questions into this quiz.</p>
+          <div class="fg" style="margin-bottom:10px">
+            <label>Available Passages</label>
+            <select id="passage-select" onchange="onPassageSelect()" disabled>
+              <option value="">— Select class & week first —</option>
+            </select>
+          </div>
+          <div id="passage-preview" class="passage-preview" style="display:none">
+            <div style="font-weight:600;font-size:12.5px;margin-bottom:4px" id="passage-title"></div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4;max-height:60px;overflow:hidden" id="passage-preview-text"></div>
+            <div style="font-size:12px;color:var(--accent-text);font-weight:500">Includes <strong id="passage-qcount">0</strong> linked questions</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:5px;flex-wrap:wrap">
+          <button class="btn" onclick="resetCreate()">Reset</button>
+          <button class="btn btn-p" onclick="doCreate()">Create Quiz →</button>
+        </div>
+      </div>
+
+      <!-- MANAGE QUIZZES -->
+      <div class="tp" id="tp-manage">
+        <div class="sh">
+          <h2>All Quizzes</h2>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn" onclick="openBroadsheet()">Broadsheet</button>
+            <button class="btn" onclick="loadQuizzes()">↻ Refresh</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="tw"><table id="t-manage">
+            <thead><tr><th>Title</th><th>Code</th><th>Class</th><th>Wk</th><th>Dur</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody><tr class="er"><td colspan="7">Loading…</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ARCHIVED -->
+      <div class="tp" id="tp-archive">
+        <div class="sh"><h2>Archived Quizzes</h2><button class="btn" onclick="loadArchived()">↻ Refresh</button></div>
+        <p style="font-size:12.5px;color:var(--text2);margin-bottom:10px">Archived quizzes are not accessible to students.</p>
+        <div class="card" style="padding:0">
+          <div class="tw"><table id="t-archive">
+            <thead><tr><th>Title</th><th>Code</th><th>Class</th><th>Wk</th><th>Session</th><th>Term</th><th>Archived By</th><th>Date</th><th>Reason</th></tr></thead>
+            <tbody><tr class="er"><td colspan="9">Loading…</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- QUESTION BANK -->
+      <div class="tp" id="tp-questions">
+        <div class="card" style="margin-bottom:10px">
+          <div class="sh" style="margin-bottom:10px">
+            <div><div class="ct" style="margin-bottom:2px">Inline Question Entry</div><div style="font-size:12px;color:var(--text2)">Fill rows, tab between cells, then click Import.</div></div>
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+              <select id="inline-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none"><option value="">— Select class —</option></select>
+              <button class="btn btn-sm" onclick="addInlineRow()">+ Row</button>
+              <button class="btn btn-sm" onclick="clearInlineTable()">Clear</button>
+              <button class="btn btn-p btn-sm" onclick="importInlineTable()">Import →</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);-webkit-overflow-scrolling:touch">
+            <table id="inline-qb-table" style="border-collapse:collapse;width:100%;min-width:1100px;font-size:12px">
+              <thead>
+                <tr style="background:var(--surface2)">
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:30px">#</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:110px">Subject *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:55px">Week *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:75px">Type *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:220px">Question *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option A</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option B</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option C</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option D</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">A Img URL</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">B Img URL</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">C Img URL</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">D Img URL</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:130px">Correct Answer *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:45px">Pts</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:140px">Explanation</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:100px">Session</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:100px">Term</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:center;color:var(--text2);font-weight:500;font-size:10.5px;min-width:40px">Del</th>
+                </tr>
+              </thead>
+              <tbody id="inline-qb-body"></tbody>
+            </table>
+          </div>
+          <div id="inline-import-status"></div>
+          <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text2)">
+            <span>Type: MCQ · TF · SHORT</span>
+            <span>Correct Answer: full text matching an option, or True/False, or text for SHORT</span>
+            <span>SHORT variants: separate with | e.g. <code>6|six|Six</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Import Questions (CSV / JSON)</div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-wrap:wrap;gap:7px">
+              <div>
+                <span style="font-size:12.5px;font-weight:500">CSV Format</span>
+                <span style="font-size:11px;color:var(--text3);margin-left:6px">— all columns</span>
+              </div>
+              <button class="btn btn-sm" onclick="copyCSVFormat()">Copy Headers</button>
+            </div>
+            <code id="csv-format-display" style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all;cursor:pointer" onclick="copyCSVFormat()" title="Click to copy">subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id</code>
+          </div>
+
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-wrap:wrap;gap:7px">
+              <span style="font-size:12.5px;font-weight:500">JSON Format</span>
+              <button class="btn btn-sm" onclick="copyJSONFormat()">Copy Schema</button>
+            </div>
+            <code style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all">[{ "subject":"Mathematics","week":1,"type":"MCQ","question":"What is 2+2?","option_A":"3","option_B":"4","option_C":"5","option_D":"6","correct_answer":"4","points":1,"explanation":"","session":"2025/2026","term":"First Term","image_url":"","passage_id":"" }]</code>
+          </div>
+
+          <div class="fg" style="margin-bottom:10px">
+            <label>Assign to Class *</label>
+            <select id="imp-class"><option value="">— Select class —</option></select>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <div class="dz" onclick="document.getElementById('csv-file').click()" style="flex:1;min-width:140px">
+              <div class="di">📄</div>
+              <div style="font-weight:500">Import CSV</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px">Click or drag .csv file</div>
+            </div>
+            <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="doImportCSV(event)">
+            <div class="dz" onclick="document.getElementById('json-file').click()" style="flex:1;min-width:140px">
+              <div class="di">📦</div>
+              <div style="font-weight:500">Import JSON File</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px">.json file from AI output</div>
+            </div>
+            <input type="file" id="json-file" accept=".json" style="display:none" onchange="doImportJSON(event)">
+          </div>
+          <div style="margin-top:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:5px">
+              <div class="ct" style="margin-bottom:0">Paste JSON Directly</div>
+              <span style="font-size:11px;color:var(--text3)">No size limit</span>
+            </div>
+            <textarea id="json-paste" placeholder="Paste JSON array from AI here…"
+              style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:11.5px;outline:none;width:100%;min-height:100px;resize:vertical;line-height:1.6;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--border2)'"
+              onblur="this.style.borderColor='var(--border)'"
+            ></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px;flex-wrap:wrap;gap:7px">
+              <span id="json-paste-count" style="font-size:11px;color:var(--text3)"></span>
+              <button class="btn btn-p btn-sm" onclick="importJSONFromPaste()">Import JSON →</button>
+            </div>
+          </div>
+          <div id="import-status"></div>
+        </div>
+
+        <div class="card">
+          <div class="sh" style="margin-bottom:10px">
+  <div class="ct" style="margin-bottom:0">Browse Questions</div>
+  <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+    <input type="text" id="qb-search" placeholder="Search…" oninput="renderQBPage(0)"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;width:140px">
+    <select id="fil-class" onchange="loadQB()"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none">
+      <option value="">All My Classes</option>
+    </select>
+    <select id="fil-subject" onchange="renderQBPage(0)"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none">
+      <option value="">All Subjects</option>
+    </select>
+    <select id="fil-week" onchange="renderQBPage(0)"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none">
+      <option value="">All Weeks</option>
+    </select>
+    <button class="btn btn-sm" id="qb-select-all-btn" onclick="toggleSelectAllQB()" style="display:none">☐ Select All</button>
+    <button class="btn btn-d btn-sm" id="qb-bulk-delete-btn" onclick="bulkDeleteSelected()" style="display:none">🗑 Delete Selected (<span id="qb-sel-count">0</span>)</button>
+    <button class="btn btn-d btn-sm" onclick="openBulkDeleteModal()">🗑 Bulk Wipe</button>
+  </div>
+</div>
+          <div id="qb-list"><p style="text-align:center;color:var(--text2);padding:22px;font-size:13px">Select a class above to browse questions.</p></div>
+          <div id="qb-pagination" style="display:flex;gap:5px;justify-content:center;align-items:center;margin-top:10px;flex-wrap:wrap"></div>
+        </div>
+        <div class="mo" id="bulk-delete-mo">
+  <div class="mbox" style="width:420px;max-width:96vw">
+    <div class="mh"><span class="mh-title">Bulk Delete Questions</span><button class="mc" onclick="closeMo('bulk-delete-mo')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">Delete all questions matching the selected filters. This <strong style="color:var(--danger)">cannot be undone</strong>.</p>
+      <div class="fg" style="margin-bottom:10px"><label>Class *</label>
+        <select id="bd-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">
+          <option value="">— All classes —</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label>Subject (optional)</label>
+        <input type="text" id="bd-subject" placeholder="Leave blank to delete all subjects">
+      </div>
+      <div class="fg" style="margin-bottom:14px"><label>Week (optional)</label>
+        <input type="text" id="bd-week" placeholder="Leave blank to delete all weeks">
+      </div>
+      <div style="background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--danger);margin-bottom:14px">
+        ⚠️ This will permanently delete ALL questions matching your filters.
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap">
+        <button class="btn" onclick="closeMo('bulk-delete-mo')">Cancel</button>
+        <button class="btn btn-d" onclick="doBulkWipe()">Delete All Matching</button>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="tp" id="tp-students">
+        <div class="sh">
+          <h2>Student Register</h2>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn" onclick="loadStudents()">↻ Refresh</button>
+            <button class="btn btn-p btn-sm" onclick="openAddStudentModal()">+ Add Student</button>
+          </div>
+        </div>
+        <div class="sgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+          <div class="sc"><div class="sv" id="st-total">—</div><div class="sl">Total Students</div></div>
+          <div class="sc"><div class="sv" id="st-classes">—</div><div class="sl">Classes Covered</div></div>
+          <div class="sc"><div class="sv" id="st-locked">—</div><div class="sl">Locked</div></div>
+        </div>
+        <div class="card" style="padding:11px 13px;margin-bottom:8px">
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="st-search" placeholder="Search name or email…" oninput="filterStudentTable()"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;flex:1;min-width:140px">
+            <select id="st-filter-class" onchange="filterStudentTable()"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none">
+              <option value="">All Classes</option>
+            </select>
+            <button class="btn btn-sm" onclick="downloadStudentCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="tw">
+            <table id="t-students">
+              <thead><tr><th>Name</th><th>Email / ID</th><th>Class</th><th>School</th><th>Profile</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="6">Click Refresh to load students.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <div class="ct">Bulk Register Students</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">Paste a JSON array. Existing unlocked profiles are updated.</p>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-bottom:10px;font-family:var(--mono);font-size:10.5px;color:var(--text2);line-height:1.7">
+            <div style="color:var(--accent-text);font-weight:500;margin-bottom:3px;font-family:var(--font)">Format:</div>
+[{ "name": "Adisa Oyebola", "email": "adisa@gmail.com", "class": "SS2A", "school": "Sunrise Academy" }]
+          </div>
+          <div class="fgrid" style="margin-bottom:9px">
+            <div class="fg"><label>Override School</label><select id="bulk-school" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Use school from JSON —</option></select></div>
+            <div class="fg"><label>Override Class</label><select id="bulk-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Use class from JSON —</option></select></div>
+          </div>
+          <div class="fg" style="margin-bottom:10px">
+            <label>JSON Data</label>
+            <textarea id="bulk-json" rows="5" placeholder='[{ "name": "Student Name", "email": "email@gmail.com", "class": "SS2A", "school": "School Name" }]'
+              style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:100%;resize:vertical;line-height:1.6"></textarea>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--text2)" id="bulk-preview-count"></span>
+            <div style="display:flex;gap:7px">
+              <button class="btn" onclick="previewBulkJSON()">Preview</button>
+              <button class="btn btn-p" onclick="doBulkRegister()">Register All →</button>
+            </div>
+          </div>
+          <div id="bulk-preview">
+            <div class="ct" style="margin-bottom:7px;margin-top:12px">Preview <span id="bulk-preview-n" style="color:var(--success)"></span></div>
+            <div class="tw"><table id="t-bulk-preview">
+              <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Class</th><th>School</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEACHERS -->
+      <div class="tp" id="tp-teachers">
+        <div class="card" id="pending-section">
+          <div class="ct">Pending Approvals <span id="pend-count" style="color:var(--warn)"></span></div>
+          <div id="pend-list"><p style="color:var(--text2);font-size:13px;text-align:center;padding:14px">Loading…</p></div>
+        </div>
+        <div class="sh" style="margin-top:4px"><h2>Active Teachers</h2></div>
+        <div id="teacher-list" style="display:grid;gap:6px"><p style="color:var(--text2);font-size:13px;text-align:center;padding:22px">Loading…</p></div>
+      </div>
+
+      <!-- CLASSES -->
+      <div class="tp" id="tp-classes">
+        <div class="sh"><h2>Classes</h2></div>
+        <div class="card">
+          <div class="ct">Add Class</div>
+          <div class="fgrid" style="margin-bottom:10px">
+            <div class="fg"><label>Class ID</label><input type="text" id="nc-id" placeholder="e.g. SS2A"></div>
+            <div class="fg"><label>Description</label><input type="text" id="nc-desc" placeholder="e.g. Senior Secondary 2A"></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end"><button class="btn btn-p" onclick="doAddClass()">Add Class</button></div>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="tw"><table id="t-classes">
+            <thead><tr><th>Class ID</th><th>Description</th><th>Actions</th></tr></thead>
+            <tbody><tr class="er"><td colspan="3">Loading…</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="tp" id="tp-settings">
+        <div class="sh"><h2>Platform Settings</h2></div>
+        <div class="card">
+          <div class="ct">AI Answer Explanations</div>
+          <div class="tr-row">
+            <div><div class="tl">Global AI Explanations</div><div class="td">When enabled, all schools can use AI explanations</div></div>
+            <div class="tog" id="tog-ai-global" onclick="toggleAiGlobal()"></div>
+          </div>
+          <div style="margin-top:10px;padding:9px 12px;background:var(--surface2);border-radius:var(--r-sm);font-size:11.5px;color:var(--text2);line-height:1.7">
+            ~$0.0005 per explanation · 30 students · 8 wrong answers ≈ $0.12/day
+          </div>
+        </div>
+        <div class="sh" style="margin-top:4px">
+          <h2>School Whitelist</h2>
+          <button class="btn btn-p btn-sm" onclick="openAddSchoolModal()">+ Add School</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="tw">
+            <table id="t-schools">
+              <thead><tr><th>School Name</th><th>Contact</th><th>Plan</th><th>AI Access</th><th>Notes</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="6">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="tp" id="tp-profile">
+        <div class="sh"><h2>My Profile</h2></div>
+        <div class="card">
+          <div class="prof-hero">
+            <div class="prof-av-wrap">
+              <div class="prof-av" id="prof-av"></div>
+              <button class="av-upload" onclick="document.getElementById('av-file').click()" title="Upload photo">↑</button>
+              <input type="file" id="av-file" accept="image/*" style="display:none" onchange="doUploadPhoto(event)">
+            </div>
+            <div>
+              <div class="pname" id="prof-name">—</div>
+              <span class="prole" id="prof-role">teacher</span>
+              <div class="pemail" id="prof-email">—</div>
+            </div>
+          </div>
+          <div class="ct">Personal Info</div>
+          <div class="fgrid" style="margin-bottom:10px">
+            <div class="fg"><label>Full Name</label><input type="text" id="pf-name" placeholder="Your full name"></div>
+            <div class="fg"><label>Phone</label><input type="text" id="pf-phone" placeholder="+234 …"></div>
+          </div>
+          <div class="fg" style="margin-bottom:10px"><label>School</label><input type="text" id="pf-school" placeholder="School name"></div>
+          <div class="ct" style="margin-top:12px">Subjects I Teach</div>
+          <div class="tw-wrap" id="subj-tags" onclick="document.getElementById('tag-inp').focus()">
+            <input type="text" id="tag-inp" class="tinput" placeholder="Type subject and press Enter…">
+          </div>
+          <div class="ct" style="margin-top:12px">Assigned Classes</div>
+          <div id="prof-cls" style="color:var(--text2);font-size:12.5px;margin-bottom:10px">Loading…</div>
+          <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-p" onclick="saveProfile()">Save Profile</button>
+          </div>
+          <div class="card" id="voice-profile-card">
+  <div class="ct">Teacher Voice Profile for TTS</div>
+  <p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+    Record a short sample of your voice. Edurena will match it to the closest system voice so students hear a familiar tone during read-aloud.
+  </p>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px">
+    <div style="font-size:12px;font-weight:500;margin-bottom:8px">Step 1 — Read this sample text aloud:</div>
+    <div id="vp-sample-text" style="font-size:13px;color:var(--accent-text);font-style:italic;line-height:1.7;background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:var(--r-sm);padding:10px 12px">
+      "Good morning students. Today we will be completing an important assessment. Please read each question carefully before selecting your answer. Take your time and do your best."
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+    <button class="btn btn-p btn-sm" id="vp-record-btn" onclick="startVoiceRecording()">🎙 Start Recording</button>
+    <button class="btn btn-sm" id="vp-stop-btn" onclick="stopVoiceRecording()" style="display:none">⏹ Stop</button>
+    <span id="vp-status" style="font-size:12px;color:var(--text2)">Not recorded yet</span>
+    <div id="vp-audio-wrap" style="display:none"><audio id="vp-playback" controls style="height:32px;max-width:200px"></audio></div>
+  </div>
+  <div id="vp-match-section" style="display:none">
+    <div style="font-size:12px;font-weight:500;margin-bottom:8px">Step 2 — Matching voices…</div>
+    <div id="vp-match-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
+  </div>
+  <div id="vp-current-profile" style="display:none;background:var(--success-bg);border:1px solid var(--success-border);border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;color:var(--success);margin-bottom:10px"></div>
+  <div style="display:flex;justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="clearVoiceProfile()">Clear Profile</button>
+    <button class="btn btn-p" id="vp-save-btn" onclick="saveVoiceProfile()" style="display:none">Save Voice Profile</button>
+  </div>
+</div>
+        </div>
+        <div class="card">
+          <div class="ct">Change Password</div>
+          <div class="fgrid c3">
+            <div class="fg"><label>Current Password</label><input type="password" id="pw-cur" placeholder="••••••••"></div>
+            <div class="fg"><label>New Password</label><input type="password" id="pw-new" placeholder="Min 8 chars"></div>
+            <div class="fg"><label>Confirm New</label><input type="password" id="pw-cnf" placeholder="••••••••"></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:9px">
+            <button class="btn" onclick="doChangePw()">Update Password</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- ── MOBILE BOTTOM NAV ── -->
+  <nav class="mob-nav" id="mob-nav" aria-label="Mobile navigation">
+    <div class="mob-nav-inner">
+      <button class="mob-ni on" onclick="nav('overview',this)" data-page="overview">
+        <span class="mico">◻</span><span class="mlbl">Overview</span>
+      </button>
+      <button class="mob-ni" onclick="nav('create',this)" data-page="create">
+        <span class="mico">＋</span><span class="mlbl">Create</span>
+      </button>
+      <button class="mob-ni" onclick="nav('manage',this)" data-page="manage">
+        <span class="mico">≡</span><span class="mlbl">Quizzes</span>
+      </button>
+      <button class="mob-ni" onclick="nav('questions',this)" data-page="questions">
+        <span class="mico">？</span><span class="mlbl">Questions</span>
+      </button>
+      <button class="mob-ni" onclick="nav('students',this)" data-page="students">
+        <span class="mico">◉</span><span class="mlbl">Students<span class="mbadge" id="mob-pend-badge"></span></span>
+      </button>
+      <button class="mob-ni admin-only" onclick="nav('teachers',this)" data-page="teachers">
+        <span class="mico">♟</span><span class="mlbl">Teachers</span>
+      </button>
+      <button class="mob-ni" onclick="nav('profile',this)" data-page="profile">
+        <span class="mico">◯</span><span class="mlbl">Profile</span>
+      </button>
+      <button class="mob-ni" onclick="doLogout()" style="color:var(--danger)">
+        <span class="mico">⎋</span><span class="mlbl">Sign Out</span>
+      </button>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="mo" id="details-mo">
+  <div class="mbox" style="width:860px;max-width:96vw;max-height:90vh">
+    <div class="mh">
+      <span class="mh-title" id="mo-title">Results</span>
+      <div style="display:flex;gap:7px;align-items:center">
+        <button class="btn btn-sm" id="mo-csv-btn" onclick="exportQuizCSV()" style="display:none">⬇ Export CSV</button>
+        <button class="mc" onclick="closeMo('details-mo')">✕</button>
+      </div>
+    </div>
+    <div class="mb" id="mo-body"></div>
+  </div>
+</div>
+
+<div class="mo" id="approve-mo">
+  <div class="mbox" style="width:400px;max-width:96vw">
+    <div class="mh"><span class="mh-title">Approve Teacher</span><button class="mc" onclick="closeMo('approve-mo')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;margin-bottom:12px">Assign classes to <strong id="app-name"></strong> before approving:</p>
+      <div class="ct">Select Classes (optional)</div>
+      <div class="cls-grid" id="app-cls-grid"></div>
+      <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn" onclick="closeMo('approve-mo')">Cancel</button>
+        <button class="btn btn-ok" onclick="confirmApprove()">✓ Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="assign-mo">
+  <div class="mbox" style="width:400px;max-width:96vw">
+    <div class="mh"><span class="mh-title">Assign Classes</span><button class="mc" onclick="closeMo('assign-mo')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;margin-bottom:12px">Select classes for <strong id="asgn-name"></strong>:</p>
+      <div class="cls-grid" id="asgn-cls-grid"></div>
+      <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn" onclick="closeMo('assign-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="confirmAssign()">Save Classes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="school-mo">
+  <div class="mbox" style="width:440px;max-width:96vw">
+    <div class="mh"><span class="mh-title" id="school-mo-title">Add School</span><button class="mc" onclick="closeMo('school-mo')">✕</button></div>
+    <div class="mb">
+      <div class="fg" style="margin-bottom:10px"><label>School Name *</label><input type="text" id="sch-name" placeholder="e.g. Sunrise Academy"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Contact Email</label><input type="email" id="sch-email" placeholder="admin@school.edu"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Plan</label><select id="sch-plan" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="standard">Standard</option><option value="premium">Premium</option><option value="trial">Trial</option></select></div>
+      <div class="fg" style="margin-bottom:10px"><label>Notes (optional)</label><input type="text" id="sch-notes" placeholder="e.g. Paid until Dec 2025"></div>
+      <div class="tr-row" style="margin-bottom:14px">
+        <div><div class="tl">Enable AI Explanations</div></div>
+        <div class="tog" id="tog-sch-ai" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap">
+        <button class="btn" onclick="closeMo('school-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="saveSchool()">Save School</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="schedule-mo">
+  <div class="mbox" style="width:360px;max-width:96vw">
+    <div class="mh"><span class="mh-title">Schedule Live Quiz</span><button class="mc" onclick="closeMo('schedule-mo')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Set when this quiz goes live. The Live button still launches it manually at any time.</p>
+      <div class="fg" style="margin-bottom:14px"><label>Live Date & Time</label><input type="datetime-local" id="sched-live-dt"></div>
+      <div style="display:flex;justify-content:space-between;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-d" onclick="doCancelScheduledLive()" id="sched-cancel-btn" style="display:none">Remove Schedule</button>
+        <div style="display:flex;gap:7px;margin-left:auto">
+          <button class="btn" onclick="closeMo('schedule-mo')">Cancel</button>
+          <button class="btn btn-p" onclick="doScheduleLive()">Save Schedule</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="student-mo">
+  <div class="mbox" style="width:420px;max-width:96vw">
+    <div class="mh"><span class="mh-title" id="student-mo-title">Add Student</span><button class="mc" onclick="closeMo('student-mo')">✕</button></div>
+    <div class="mb">
+      <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Adisa Oyebola"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Email / Student ID *</label><input type="text" id="st-email" placeholder="e.g. student@gmail.com or ADM/2025/001"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Class *</label><select id="st-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Select class —</option></select></div>
+      <div class="fg" style="margin-bottom:10px"><label>School *</label><select id="st-school" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Select school —</option></select></div>
+      <div style="background:var(--surface2);border-radius:var(--r-sm);padding:9px 11px;font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">Profile locks after first exam submission.</div>
+      <div style="display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap">
+        <button class="btn" onclick="closeMo('student-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="saveStudent()">Save Student</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="broadsheet-mo">
+  <div class="mbox" style="width:98vw;max-height:92vh">
+    <div class="mh">
+      <span class="mh-title" id="bs-title">Class Broadsheet</span>
+      <div style="display:flex;gap:7px;align-items:center">
+        <button class="btn btn-sm" onclick="downloadBroadsheet()">⬇ CSV</button>
+        <button class="mc" onclick="closeMo('broadsheet-mo')">✕</button>
+      </div>
+    </div>
+    <div class="mb" id="bs-body" style="overflow:auto"><p style="color:var(--text2);text-align:center;padding:28px">Loading broadsheet…</p></div>
+  </div>
+</div>
+
+<div class="mo" id="live-mo">
+  <div class="mbox" style="width:500px;max-width:96vw">
+    <div class="mh">
+      <div>
+        <span class="mh-title">Launch Live Quiz</span>
+        <div style="margin-top:3px;font-size:11px;color:var(--success);font-weight:500"><span class="live-dot"></span>Live Session</div>
+      </div>
+      <button class="mc" onclick="closeMo('live-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:var(--text2);margin-bottom:16px;line-height:1.6">Students join with a room code and wait in the lobby until you start.</p>
+      <div style="display:none" id="live-room-display">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;margin-bottom:16px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:500">Room Code</div>
+          <div style="font-family:var(--mono);font-size:28px;font-weight:600;letter-spacing:6px" id="live-room-code">———</div>
+          <div style="font-size:11.5px;color:var(--text2);margin-top:6px">Share this with students</div>
+        </div>
+      </div>
+      <div id="live-config-section">
+        <div class="fgrid" style="margin-bottom:12px">
+          <div class="fg"><label>Exam Code</label><input type="text" id="live-exam-code" readonly style="background:var(--surface2);cursor:default"></div>
+          <div class="fg"><label>Seconds per Question</label><input type="number" id="live-time-per-q" value="20" min="5" max="120"></div>
+        </div>
+        <div class="tr-row" style="margin-bottom:14px">
+          <div><div class="tl">Save results to gradebook</div></div>
+          <div class="tog on" id="tog-save-results" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:14px;line-height:1.6">
+        Firebase config must be set in LiveHost.html and Liveplay.html before this will work.
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap">
+        <button class="btn" onclick="closeMo('live-mo')">Cancel</button>
+        <button class="btn btn-live" onclick="goLiveQuiz()">Open Live Host →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="photo-lb">
+  <button id="photo-lb-close" onclick="closeLightbox()">✕</button>
+  <img id="photo-lb-img" src="" alt="Proctoring photo">
+  <div id="photo-lb-cap"></div>
+</div>
+
+<div class="sp-ov" id="sp-ov"><div class="sp-box"><div class="sp"></div><div id="sp-txt">Working…</div></div></div>
+<div class="ts-stack" id="toasts"></div>
+
+<script>
+/* ── State ── */
+var S = { token:'', email:'', name:'', role:'', classes:[], subjects:[], photoUrl:'', school:'', phone:'' };
+var allQuizzes=[], allClasses=[], allQuestions=[], subjectTags=[];
+var chStatus=null, chCls=null;
+var pendingApproveTarget=null, pendingAssignTarget=null;
+var _selectedPassageId='';
+var _currentCode='', _currentResponses=[];
+var _qbPage=0, _qbPageSize=30;
+var _schoolsList=[], _editingSchoolIdx=-1;
+var _broadsheetData=null, _broadsheetClass='';
+var _scheduleTarget='', _liveExamCode='';
+var _allStudents=[], _editingStudentEmail=null;
+var SUPERADMIN_EMAIL = DASH.superadminEmail || '';
+
+/* ── Mobile sidebar ── */
+function openSidebar(){
+  document.getElementById('sb').classList.add('drawer-open');
+  document.getElementById('sb-overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
+  document.getElementById('sb').classList.remove('drawer-open');
+  document.getElementById('sb-overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+
+/* ── Auth Gate ── */
+document.addEventListener('DOMContentLoaded', function() {
+  var token = '';
+  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  if (!token) { authFail('No active session.'); return; }
+  callRaw('validateSession', { token: token }, function(e, r) {
+    if (e || !r || r.status !== 'success') { authFail((r && r.message) || 'Session invalid.'); return; }
+    S = Object.assign(S, r.data, { token: token });
+    try { sessionStorage.setItem('qf_teacher', JSON.stringify(S)); } catch(_) {}
+    boot();
+  });
+  var inp = document.getElementById('tag-inp');
+  if (inp) inp.addEventListener('keydown', function(e) {
+    if ((e.key === 'Enter' || e.key === ',') && this.value.trim()) {
+      e.preventDefault();
+      var v = this.value.trim().replace(/,/g,'');
+      if (v && !subjectTags.includes(v)) { subjectTags.push(v); renderTags(); }
+      this.value = '';
+    }
+  });
+});
+
+function authFail(msg) {
+  document.getElementById('gate-msg').textContent = msg + ' Please log in.';
+  document.getElementById('gate-btn').style.display = 'inline-block';
+}
+function goLogin() { DASH.goLogin(); }
+
+function boot() {
+  autoTheme();
+  document.getElementById('gate').classList.remove('on');
+  document.getElementById('shell').style.display = 'flex';
+
+  if (S.role === 'school_admin') {
+    window.location.href = DASH.scriptUrl + '?page=schooladmin';
+    return;
+  }
+
+  var isAdmin = (S.role === 'admin' || S.role === 'superadmin' || S.role === 'school_admin');
+  var isSuperadmin = (S.role === 'superadmin' || S.role === 'admin') &&
+                     (S.email || '').toLowerCase() === (SUPERADMIN_EMAIL || '').toLowerCase();
+  if (isAdmin)      document.body.classList.add('is-admin');
+  if (isSuperadmin) document.body.classList.add('is-superadmin');
+
+  setText('sb-name', S.name || S.email);
+  setText('sb-role', formatRole(S.role));
+  if (S.photoUrl) { setAv('sb-av', S.photoUrl); setAv('mob-av', S.photoUrl); }
+  else { setText('sb-av', initials(S.name || S.email)); setText('mob-av', initials(S.name || S.email)); }
+  setText('tb-right', S.email);
+  setDefaultTimes();
+  loadClasses(function() {
+    loadOverview();
+    if (isAdmin) refreshPendingBadge();
+  });
+}
+
+function formatRole(r) {
+  var map = { teacher:'Teacher', admin:'Administrator', superadmin:'Super Admin', school_admin:'School Admin' };
+  return map[r] || (r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Teacher');
+}
+function initials(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(/\s+/);
+  return parts.length >= 2 ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase() : name.substring(0,2).toUpperCase();
+}
+
+/* ── Core Utilities ── */
+function callRaw(action, data, cb) {
+  fetch(DASH.scriptUrl, {
+    method: 'POST', body: JSON.stringify(Object.assign({ action: action }, data || {}))
+  }).then(function(r){ return r.json(); })
+    .then(function(r){ if (cb) cb(null, r); })
+    .catch(function(e){ if (cb) cb(e, null); });
+}
+
+function call(fn, args, onOk, onFail) {
+  spin(true);
+  callRaw(fn, Object.assign({ token: S.token }, args || {}), function(e, r) {
+    spin(false);
+    if (!r) { var m = fn + ' no response'; toast('error', m); if (onFail) onFail(m); return; }
+    if (r.status === 'error') {
+      if (r.message && r.message.toLowerCase().indexOf('session') !== -1) { goLogin(); return; }
+      toast('error', r.message || 'Error'); if (onFail) onFail(r.message); return;
+    }
+    if (onOk) onOk(r.data);
+  });
+}
+
+function toast(type, msg) {
+  var s = document.getElementById('toasts'), el = document.createElement('div');
+  el.className = 'tst ' + type;
+  el.innerHTML = '<span>' + (type==='success'?'✓':'✗') + '</span><span>' + esc(msg) + '</span>';
+  s.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 5000);
+}
+function spin(on, t) {
+  document.getElementById('sp-ov').classList.toggle('on', on);
+  if (t) document.getElementById('sp-txt').textContent = t;
+}
+function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+function setAv(id, url) { var e = document.getElementById(id); if (!e) return; e.innerHTML = '<img src="'+url+'" alt="av">'; }
+function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+function closeMo(id) { document.getElementById(id).classList.remove('on'); }
+function p2(n) { return String(n).padStart(2,'0'); }
+
+var TAB_NAMES = {
+  overview:'Overview', create:'Create Quiz', manage:'Manage Quizzes', archive:'Archived Quizzes',
+  questions:'Question Bank', students:'Student Register', teachers:'Teachers', classes:'Classes',
+  profile:'My Profile', settings:'Platform Settings'
+};
+
+/* ── Theme ── */
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  var icons = dark ? '☀️' : '🌙';
+  ['theme-btn','mob-theme-btn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.textContent=icons; });
+  try { localStorage.setItem('qf_theme', dark ? 'dark' : 'light'); } catch(_) {}
+}
+function toggleTheme() {
+  applyTheme(!document.body.classList.contains('dark'));
+  try { sessionStorage.setItem('qf_theme_manual', '1'); } catch(_) {}
+}
+function autoTheme() {
+  try {
+    var manual = sessionStorage.getItem('qf_theme_manual');
+    if (manual) return;
+    var saved = localStorage.getItem('qf_theme');
+    if (saved) { applyTheme(saved === 'dark'); return; }
+  } catch(_) {}
+  var h = new Date().getHours();
+  applyTheme(h >= 19 || h < 6);
+}
+setInterval(function() {
+  try { if (!sessionStorage.getItem('qf_theme_manual')) autoTheme(); } catch(_) {}
+}, 300000);
+
+function nav(name, el) {
+  document.querySelectorAll('.tp').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('.ni').forEach(function(n){ n.classList.remove('on'); });
+  document.querySelectorAll('.mob-ni').forEach(function(n){ n.classList.remove('on'); });
+
+  var tp = document.getElementById('tp-'+name);
+  if (tp) tp.classList.add('on');
+  if (el && el.classList) el.classList.add('on');
+
+  // sync mobile bottom nav
+  document.querySelectorAll('.mob-ni[data-page="'+name+'"]').forEach(function(b){ b.classList.add('on'); });
+
+  var label = TAB_NAMES[name] || name;
+  setText('tb-title', label);
+  setText('tb-sub', '');
+  setText('mob-title', label);
+  setText('mob-sub', '');
+
+  if (name==='overview')  loadOverview();
+  if (name==='manage')    loadQuizzes();
+  if (name==='archive')   loadArchived();
+  if (name==='classes')   loadClassesTab();
+  if (name==='questions') loadQBTab();
+  if (name==='create')    loadCreateTab();
+  if (name==='teachers')  loadTeachersTab();
+  if (name==='students')  loadStudentsTab();
+  if (name==='profile')   populateProfile();
+  if (name==='settings')  loadSettingsTab();
+
+  // scroll main back to top
+  var main = document.querySelector('.main');
+  if (main) main.scrollTop = 0;
+}
+
+function setDefaultTimes() {
+  var now  = new Date(Date.now() - 120000);
+  var end  = new Date(Date.now() + 86400000);
+  var fmt  = function(d) {
+    return d.getFullYear() + '-' + p2(d.getMonth()+1) + '-' + p2(d.getDate())
+      + 'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  };
+  var s = document.getElementById('c-start'), e = document.getElementById('c-end');
+  if (s) s.value = fmt(now);
+  if (e) e.value = fmt(end);
+}
+
+/* ── Classes ── */
+function loadClasses(cb) {
+  call('getClasses', {}, function(cls){ allClasses=cls||[]; populateClassDropdowns(); if(cb)cb(); }, function(){ allClasses=[]; if(cb)cb(); });
+}
+function populateClassDropdowns() {
+  var ids=['c-class','imp-class','fil-class','st-filter-class','st-class','bulk-class','inline-class'];
+  ids.forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    var first=el.options[0];
+    el.innerHTML='';
+    if(first) el.appendChild(first.cloneNode(true));
+    allClasses.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.id+(c.description?' — '+c.description:''); el.appendChild(o); });
+  });
+}
+function loadClassesTab() { loadClasses(renderClassesTable); }
+function renderClassesTable() {
+  var tb=document.querySelector('#t-classes tbody'); if(!tb) return;
+  if(!allClasses.length){ tb.innerHTML='<tr class="er"><td colspan="3">No classes yet.</td></tr>'; return; }
+  tb.innerHTML=allClasses.map(function(c){
+    return '<tr><td><code>'+esc(c.id)+'</code></td><td>'+esc(c.description)+'</td><td><button class="btn btn-d btn-sm" onclick="doDelClass(\''+esc(c.id)+'\')">Delete</button></td></tr>';
+  }).join('');
+}
+function doAddClass() {
+  var id=(document.getElementById('nc-id').value||'').trim(), desc=(document.getElementById('nc-desc').value||'').trim();
+  if(!id||!desc){ toast('error','Fill both fields'); return; }
+  call('addClass',{classId:id,description:desc},function(){ toast('success','Class "'+id+'" added'); document.getElementById('nc-id').value=''; document.getElementById('nc-desc').value=''; loadClasses(renderClassesTable); });
+}
+function doDelClass(id) {
+  if(!confirm('Delete class "'+id+'"?')) return;
+  call('deleteClass',{classId:id},function(){ toast('success','Class deleted'); loadClasses(renderClassesTable); });
+}
+
+/* ── Overview ── */
+function loadOverview() {
+  var done=0; function check(){ done++; if(done===2) renderCharts(); }
+  call('getAllQuizzes',{},function(qs){
+    allQuizzes=qs||[];
+    var now=new Date();
+    setText('s-tot',allQuizzes.length); setText('s-cls',allClasses.length);
+    setText('s-act',allQuizzes.filter(function(q){ return new Date(q.endTime)>now&&q.status==='active'; }).length);
+    renderRecentTable(); check();
+  },function(){ check(); });
+  if(allQuestions.length){ setText('s-qs',allQuestions.length); check(); }
+  else { call('getQuestionBank',{classId:allClasses.length?allClasses[0].id:''}, function(qq){ allQuestions=qq||[]; setText('s-qs',allQuestions.length); check(); }, function(){ check(); }); }
+}
+function renderCharts() {
+  var now=new Date();
+  var act=allQuizzes.filter(function(q){ return new Date(q.endTime)>now&&q.status==='active'; }).length;
+  var exp=allQuizzes.filter(function(q){ return new Date(q.endTime)<=now; }).length;
+  var sc=document.getElementById('ch-status'); if(!sc) return;
+  if(chStatus) chStatus.destroy();
+  chStatus=new Chart(sc,{type:'doughnut',data:{labels:['Active','Expired'],datasets:[{data:[act,exp],backgroundColor:['rgba(22,101,52,.8)','rgba(0,0,0,.08)'],borderColor:['#166534','rgba(0,0,0,.12)'],borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b6b68',font:{size:11,family:'Geist'}}}}}});
+  var counts={};
+  allQuestions.forEach(function(q){ counts[q.classId]=(counts[q.classId]||0)+1; });
+  var cc=document.getElementById('ch-cls'); if(!cc) return;
+  if(chCls) chCls.destroy();
+  chCls=new Chart(cc,{type:'bar',data:{labels:Object.keys(counts),datasets:[{label:'Questions',data:Object.values(counts),backgroundColor:'rgba(26,86,219,.65)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b68'},grid:{color:'rgba(0,0,0,.06)'}},y:{ticks:{color:'#6b6b68'},grid:{color:'rgba(0,0,0,.06)'},beginAtZero:true}}}});
+}
+function renderRecentTable() {
+  var tb=document.querySelector('#t-recent tbody'); if(!tb) return;
+  var recent=allQuizzes.slice(0,8);
+  if(!recent.length){ tb.innerHTML='<tr class="er"><td colspan="5">No quizzes yet.</td></tr>'; return; }
+  tb.innerHTML=recent.map(function(q){
+    return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>'+sbadge(q)+'</td><td><button class="btn btn-sm" onclick="viewDetails(\''+esc(q.examCode)+'\')">Results</button></td></tr>';
+  }).join('');
+}
+
+/* ── Manage Quizzes ── */
+function loadQuizzes() { call('getAllQuizzes',{},function(qs){ allQuizzes=qs||[]; renderManageTable(); }); }
+function renderManageTable() {
+  var tb=document.querySelector('#t-manage tbody'); if(!tb) return;
+  if(!allQuizzes.length){ tb.innerHTML='<tr class="er"><td colspan="7">No quizzes.</td></tr>'; return; }
+  tb.innerHTML=allQuizzes.map(function(q){
+    var ec=q.examCode;
+    return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(ec)+'</code></td><td>'+esc(q.classId)+'</td><td>Wk '+esc(q.week)+'</td><td>'+esc(q.duration)+'m</td><td>'+sbadge(q)+'</td>' +
+      '<td class="fx"><button class="btn btn-sm" onclick="viewDetails(\''+esc(ec)+'\')">Results</button> <button class="btn btn-live btn-sm" onclick="openLiveMo(\''+esc(ec)+'\')">⚡ Live</button> <button class="btn btn-d btn-sm" onclick="doDelQuiz(\''+esc(ec)+'\')">Del</button></td></tr>';
+  }).join('');
+}
+function sbadge(q) {
+  return new Date(q.endTime)<=new Date() ? '<span class="bdg by">Expired</span>' : '<span class="bdg bg">Active</span>';
+}
+function doDelQuiz(code) {
+  if(!confirm('Delete quiz "'+code+'"?\n\nThis permanently removes all questions and student results.')) return;
+  call('deleteQuiz',{examCode:code},function(){ toast('success','Quiz deleted'); loadQuizzes(); });
+}
+
+/* ── Live ── */
+function openLiveMo(examCode) {
+  _liveExamCode=examCode;
+  var el=document.getElementById('live-exam-code'); if(el) el.value=examCode;
+  document.getElementById('live-room-display').style.display='none';
+  document.getElementById('live-config-section').style.display='block';
+  document.getElementById('live-mo').classList.add('on');
+}
+function goLiveQuiz() {
+  var timePerQ=parseInt(document.getElementById('live-time-per-q').value)||20;
+  var saveRes=document.getElementById('tog-save-results').classList.contains('on');
+  var url=DASH.scriptUrl+'?page=livehost&examCode='+encodeURIComponent(_liveExamCode)+'&timePerQ='+timePerQ+'&saveResults='+saveRes;
+  window.open(url,'_blank'); closeMo('live-mo');
+}
+
+/* ── Archived ── */
+function loadArchived() {
+  call('getArchivedQuizzes',{},function(list){
+    var tb=document.querySelector('#t-archive tbody'); if(!tb) return;
+    if(!list||!list.length){ tb.innerHTML='<tr class="er"><td colspan="9">No archived quizzes yet.</td></tr>'; return; }
+    tb.innerHTML=list.map(function(q){
+      return '<tr><td>'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>Wk '+esc(q.week)+'</td><td style="font-size:11.5px">'+esc(q.session||'—')+'</td><td style="font-size:11.5px">'+esc(q.term||'—')+'</td><td style="font-size:11.5px">'+esc(q.archivedBy||'—')+'</td><td style="font-size:11.5px">'+(q.archivedAt?q.archivedAt.substring(0,10):'—')+'</td><td style="font-size:11.5px;color:var(--text2)">'+esc(q.archiveReason||'—')+'</td></tr>';
+    }).join('');
+  });
+}
+
+/* ── Quiz Details Modal ── */
+function viewDetails(code) {
+  var q=allQuizzes.find(function(x){ return x.examCode===code; });
+  setText('mo-title',q?q.title+' — Results':code);
+  _currentCode=code;
+  document.getElementById('mo-csv-btn').style.display='inline-flex';
+  document.getElementById('mo-body').innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">Loading…</p>';
+  document.getElementById('details-mo').classList.add('on');
+  call('getQuizDetails',{examCode:code},function(d){ renderDetails(code,d); });
+}
+function exportQuizCSV() {
+  if(!_currentCode) return;
+  call('exportQuizResults',{examCode:_currentCode},function(d){
+    if(!d.rows||!d.rows.length){ toast('error','No results to export'); return; }
+    var lines=[d.headers.map(function(h){ return '"'+String(h).replace(/"/g,'""')+'"'; }).join(',')];
+    d.rows.forEach(function(row){ lines.push(row.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',')); });
+    var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='results_'+_currentCode+'_'+new Date().toISOString().substring(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url);
+    toast('success','Results exported');
+  });
+}
+function renderDetails(code,d) {
+  var an=d.analytics||{}, rs=d.responses||[], qs=d.questionStats||[];
+  var rubric=d.rubric||null, allowRetakes=d.allowRetakes||false;
+  _currentResponses=rs;
+
+  var part='<div class="sgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"><div class="sc"><div class="sv">'+esc(an.totalStudents)+'</div><div class="sl">Submissions</div></div><div class="sc"><div class="sv">'+esc(an.averageScore)+'%</div><div class="sl">Avg Score</div></div><div class="sc"><div class="sv">'+esc(an.passRate)+'%</div><div class="sl">Pass Rate</div></div></div>';
+  if(allowRetakes) part+='<div style="background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:var(--r-sm);padding:8px 12px;font-size:12px;color:var(--accent-text);margin-bottom:10px">↻ Retakes enabled — all attempts shown.</div>';
+  if(!rs.length){ part+='<p style="text-align:center;color:var(--text2);padding:14px">No submissions yet.</p>'; }
+  else {
+    part+='<div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Class</th><th>School</th><th>Score</th><th>%</th><th>Grade</th><th>Att</th><th>Strikes</th><th>Actions</th></tr></thead><tbody>'+
+      rs.map(function(r,ri){
+        return '<tr><td style="font-weight:500">'+esc(r.name||'—')+'</td><td style="font-size:11px">'+esc(r.email)+'</td><td>'+esc(r.className||'—')+'</td><td>'+esc(r.school||'—')+'</td><td style="font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="font-family:var(--mono)">'+esc(r.percentage)+'</td><td><span class="bdg '+(r.status==='Pass'?'bg':r.status==='Review'?'by':'br')+'">'+esc(r.rubricComment||r.status)+'</span></td><td style="text-align:center;font-family:var(--mono)">#'+esc(r.attemptNumber||1)+'</td><td style="text-align:center">'+esc(r.violations)+'</td><td class="fx"><button class="btn btn-sm" onclick="viewAnswerReview('+ri+')">Answers</button><button class="btn btn-sm" onclick="viewStudentPhotosTab(\''+esc(r.email)+'\',\''+esc(code)+'\')">Photos</button><button class="btn btn-sm" onclick="viewHistory(\''+esc(r.email)+'\')">History</button></td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+
+  var diff=qs.length?qs.map(function(q,i){
+    var p=parseInt(q.missRate)||0, col=p>=70?'var(--danger)':p>=40?'var(--warn)':'var(--success)';
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12.5px;font-weight:500">Q'+(i+1)+'. '+esc(q.questionText)+'</span><span class="bdg" style="color:'+col+';background:transparent">'+esc(q.missed)+'/'+esc(q.total)+'</span></div><div class="dbw"><div class="dbb"><div class="dbf" style="width:'+p+'%;background:'+col+'"></div></div><span class="dp" style="color:'+col+'">'+esc(q.missRate)+'</span></div>'+(q.missedBy.length?'<div style="font-size:10.5px;color:var(--text2);margin-top:2px">Missed by: '+q.missedBy.map(function(m){ return esc(m.name||m.email); }).join(', ')+'</div>':'')+'</div>';
+  }).join(''):'<p style="text-align:center;color:var(--text2);padding:12px">No data.</p>';
+
+  var hist='<div style="display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap"><input type="email" id="hist-inp" placeholder="Student email…" style="flex:1;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12.5px;outline:none"><button class="btn btn-p" onclick="loadHistory()">Search</button></div><div id="hist-res"></div>';
+  var review='<div style="margin-bottom:10px"><select id="review-student-sel" onchange="renderAnswerReviewTab()" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">'+(rs.length?rs.map(function(r,i){ return '<option value="'+i+'">'+esc(r.name||r.email)+' — '+esc(r.percentage)+' (Attempt #'+(r.attemptNumber||1)+')</option>'; }).join(''):'<option>No submissions</option>')+'</select></div><div id="review-answer-body"></div>';
+  var photos='<div style="margin-bottom:10px"><select id="photos-student-sel" onchange="loadPhotosForSelected(\''+esc(code)+'\')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">'+(rs.length?rs.map(function(r){ return '<option value="'+esc(r.email)+'">'+esc(r.name||r.email)+'</option>'; }).join(''):'<option>No submissions</option>')+'</select></div><div id="photos-body"><p style="text-align:center;color:var(--text2);padding:14px">Select a student above.</p></div>';
+
+  var rubricTab='<div id="rubric-display">';
+  if(rubric&&rubric.ranges&&rubric.ranges.length){
+    rubricTab+='<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px"><div class="ct" style="margin-bottom:8px">Grading Scale</div>';
+    rubricTab+=rubric.ranges.map(function(r){ var col=r.status==='Pass'?'var(--success)':r.status==='Review'?'var(--warn)':'var(--danger)'; return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap"><span style="font-family:var(--mono);font-size:12px;min-width:90px;color:var(--text2)">'+esc(r.min)+'% – '+esc(r.max)+'%</span><span style="font-weight:600;color:'+col+';flex:1">'+esc(r.comment||r.label||'')+'</span><span class="bdg" style="color:'+col+';background:transparent;border-color:'+col+'">'+esc(r.status)+'</span></div>'; }).join('');
+    rubricTab+='</div>';
+  } else { rubricTab+='<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;font-size:12.5px;color:var(--text2);margin-bottom:12px">No custom rubric. Using default: ≥50% = Pass.</div>'; }
+  rubricTab+=part+'</div>';
+
+  document.getElementById('mo-body').innerHTML=
+    '<div class="mtabs"><button class="mtab on" id="mt-1" onclick="switchMTab(1,6)">Participants</button><button class="mtab" id="mt-2" onclick="switchMTab(2,6)">Difficulty</button><button class="mtab" id="mt-3" onclick="switchMTab(3,6)">History</button><button class="mtab" id="mt-4" onclick="switchMTab(4,6);renderAnswerReviewTab()">Answers</button><button class="mtab" id="mt-5" onclick="switchMTab(5,6)">Photos</button><button class="mtab" id="mt-6" onclick="switchMTab(6,6)">Rubric</button></div>'+
+    '<div id="mp-1">'+rubricTab+'</div><div id="mp-2" style="display:none">'+diff+'</div><div id="mp-3" style="display:none">'+hist+'</div><div id="mp-4" style="display:none">'+review+'</div><div id="mp-5" style="display:none">'+photos+'</div><div id="mp-6" style="display:none"><div id="rubric-standalone">'+rubricTab+'</div></div>';
+
+  if(rs.length) setTimeout(function(){ renderAnswerReviewTab(); },50);
+}
+
+function switchMTab(n,total){ for(var i=1;i<=total;i++){ var t=document.getElementById('mt-'+i),p=document.getElementById('mp-'+i); if(t)t.classList.toggle('on',i===n); if(p)p.style.display=i===n?'block':'none'; } }
+function viewHistory(email){ switchMTab(3,5); var inp=document.getElementById('hist-inp'); if(inp){ inp.value=email; loadHistory(); } }
+function viewAnswerReview(ri){ switchMTab(4,5); var sel=document.getElementById('review-student-sel'); if(sel) sel.value=ri; renderAnswerReviewTab(); }
+function renderAnswerReviewTab() {
+  var sel=document.getElementById('review-student-sel'), body=document.getElementById('review-answer-body');
+  if(!sel||!body) return;
+  var ri=parseInt(sel.value)||0, r=_currentResponses[ri];
+  if(!r){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:12px">No data.</p>'; return; }
+  var answers=r.answers||[];
+  if(!answers.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:12px">No answer data stored for this student.</p>'; return; }
+  var html='<div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><div style="font-weight:600;font-size:13px">'+esc(r.name||r.email)+'</div><div style="font-size:11px;color:var(--text2);margin-top:2px">'+esc(r.className||'—')+' · '+esc(r.school||'—')+'</div></div><div style="text-align:right"><div style="font-family:var(--mono);font-weight:600;font-size:15px">'+esc(r.score)+'/'+esc(r.totalPoints)+'</div><span class="bdg '+(r.status==='Pass'?'bg':'br')+'" style="margin-top:2px">'+esc(r.status)+'</span></div></div>';
+  html+=answers.map(function(a,i){
+    var skipped=!a.studentAnswer||a.studentAnswer==='(no answer)';
+    var cls=skipped?'skipped':(a.isCorrect?'correct':'wrong');
+    var bdg=skipped?'<span class="ar-bdg skip">Skipped</span>':a.isCorrect?'<span class="ar-bdg ok">✓ Correct</span>':(a.partialMode&&a.pointsEarned>0)?'<span class="ar-bdg" style="background:var(--warn-bg);color:var(--warn)">Partial '+a.pointsEarned+'/'+a.maxPoints+'pt</span>':'<span class="ar-bdg bad">✗ Wrong</span>';
+    var partialInfo='';
+    if(a.partialMode&&a.matchedItems&&a.matchedItems.length){ partialInfo='<div class="ar-row"><span class="ar-lbl">Got Right</span><span class="ar-val ok">✓ '+a.matchedItems.map(function(m){ return esc(m); }).join(', ')+'</span></div><div class="ar-row"><span class="ar-lbl">Missed</span><span class="ar-val bad">✗ '+(a.missedItems||[]).map(function(m){ return esc(m); }).join(', ')+'</span></div>'; }
+    return '<div class="ar-item '+cls+'"><div class="ar-q"><span>Q'+(i+1)+'. '+esc(a.questionText||'Q'+(i+1))+'</span>'+bdg+'</div><div class="ar-row"><span class="ar-lbl">Picked</span><span class="ar-val '+(a.isCorrect?'ok':skipped?'':'bad')+'">'+esc(a.studentAnswer||'(no answer)')+'</span></div>'+(!a.isCorrect&&!a.partialMode?'<div class="ar-row"><span class="ar-lbl">Correct</span><span class="ar-val ok">'+esc(a.correctAnswer)+'</span></div>':'')+partialInfo+'<div class="ar-row"><span class="ar-lbl">Points</span><span class="ar-val">'+esc(a.pointsEarned)+'/'+esc(a.maxPoints)+'</span></div>'+(a.explanation?'<div class="ar-row"><span class="ar-lbl">Explanation</span><span class="ar-val" style="color:var(--accent-text);line-height:1.5">'+esc(a.explanation)+'</span></div>':'')+'</div>';
+  }).join('');
+  body.innerHTML=html;
+}
+function viewStudentPhotosTab(email,code){ switchMTab(5,5); var sel=document.getElementById('photos-student-sel'); if(sel) sel.value=email; loadPhotosForSelected(code); }
+function loadPhotosForSelected(code) {
+  var sel=document.getElementById('photos-student-sel'), body=document.getElementById('photos-body');
+  if(!sel||!body) return;
+  var email=sel.value;
+  if(!email){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:12px">Select a student.</p>'; return; }
+  body.innerHTML='<p style="text-align:center;color:var(--text2);padding:12px">Loading photos…</p>';
+  call('getStudentPhotos',{email:email,examCode:code||_currentCode},function(d){ renderPhotosGrid(d.photos||[],body,d.email); });
+}
+function renderPhotosGrid(photos,container,email) {
+  if(!photos.length){ container.innerHTML='<p style="text-align:center;color:var(--text2);padding:18px">No photos found.</p>'; return; }
+  var html='<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">'+photos.length+' photo(s) · '+esc(email)+'</div><div class="photo-grid">'+
+    photos.map(function(p,i){ var reason=String(p.reason||'').toLowerCase(); var isStart=reason.indexOf('start')!==-1; var caption=(p.time?p.time.substring(0,16).replace('T',' '):'')+(p.reason?' · '+p.reason:''); return '<div class="photo-item"><img class="photo-thumb" src="'+esc(p.url)+'" alt="Photo '+(i+1)+'" onclick="openLightbox(\''+esc(p.url)+'\',\''+esc(caption)+'\')"><span class="photo-reason '+(isStart?'start':'violation')+'">'+(isStart?'Start':'Violation')+'</span>'+(p.time?'<span style="font-size:9.5px;color:var(--text3);text-align:center">'+p.time.substring(11,16)+'</span>':'')+'</div>'; }).join('')+'</div>';
+  container.innerHTML=html;
+}
+function loadAllStudentPhotos(email,container){
+  if(!container||!email) return;
+  container.innerHTML='<p style="text-align:center;color:var(--text2);padding:10px">Loading photos…</p>';
+  call('getStudentAllPhotos',{email:email},function(photos){ renderPhotosGrid(photos||[],container,email); });
+}
+function openLightbox(url,caption){
+  var lb=document.getElementById('photo-lb'),img=document.getElementById('photo-lb-img'),cap=document.getElementById('photo-lb-cap');
+  if(lb) lb.classList.add('on'); if(img) img.src=url; if(cap) cap.textContent=caption||'';
+}
+function closeLightbox(){ var lb=document.getElementById('photo-lb'); if(lb) lb.classList.remove('on'); }
+function loadHistory() {
+  var email=(document.getElementById('hist-inp').value||'').trim();
+  if(!email){ toast('error','Enter a student email'); return; }
+  var res=document.getElementById('hist-res');
+  res.innerHTML='<p style="text-align:center;color:var(--text2);padding:12px">Loading…</p>';
+  call('getStudentHistory',{email:email},function(d){ renderHistory(d,res,email); });
+}
+function renderHistory(d,el,searchedEmail) {
+  var st=d.student||{}, h=d.history||[], studentEmail=st.email||searchedEmail||'';
+  var html='<div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px;margin-bottom:11px"><div style="font-weight:600;font-size:13px">'+esc(st.name||'—')+'</div><div style="font-size:11px;color:var(--text2);margin-top:2px">'+esc(st.className||'—')+' · '+esc(st.school||'—')+'</div></div>';
+  if(!h.length){ html+='<p style="text-align:center;color:var(--text2);padding:12px">No history.</p>'; }
+  else {
+    var tot=h.length, pass=h.filter(function(x){ return x.status==='Pass'; }).length;
+    var avg=tot>0?(h.reduce(function(s,x){ return s+(parseFloat(x.percentage)||0); },0)/tot).toFixed(1):0;
+    html+='<div class="sgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px"><div class="sc"><div class="sv">'+tot+'</div><div class="sl">Taken</div></div><div class="sc"><div class="sv">'+pass+'</div><div class="sl">Passed</div></div><div class="sc"><div class="sv">'+avg+'%</div><div class="sl">Average</div></div></div>';
+    html+=h.map(function(x){ return '<div class="hi '+(x.status==='Pass'?'pass':'fail')+'"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><div><div style="font-weight:600;font-size:13px">'+esc(x.title)+'</div><div style="font-size:10.5px;color:var(--text2);margin-top:1px">'+esc(x.submitTime)+' · '+esc(x.examCode)+'</div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--mono);font-weight:600;font-size:13px">'+esc(x.score)+'/'+esc(x.totalPoints)+'</div><span class="bdg '+(x.status==='Pass'?'bg':'br')+'" style="margin-top:2px">'+esc(x.status)+'</span></div></div>'+(x.violations>0?'<div style="font-size:10.5px;color:var(--danger);margin-top:3px">⚠ '+esc(x.violations)+' violation(s)</div>':'')+'</div>'; }).join('');
+  }
+  var photoDivId='hist-photos-'+Date.now();
+  html+='<div style="margin-top:14px"><div class="ct" style="margin-bottom:7px">Proctoring Photos (all exams)</div><div id="'+photoDivId+'"></div></div>';
+  el.innerHTML=html;
+  if(studentEmail){ var photoDiv=document.getElementById(photoDivId); if(photoDiv) loadAllStudentPhotos(studentEmail,photoDiv); }
+}
+
+/* ── QB ── */
+function loadQBTab() {
+  loadClasses(function(){
+    populateClassDropdowns();
+    var inlineSel=document.getElementById('inline-class');
+    if(inlineSel){
+      inlineSel.innerHTML='<option value="">— Select class —</option>';
+      allClasses.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.id+(c.description?' — '+c.description:''); inlineSel.appendChild(o); });
+    }
+    if(!document.getElementById('inline-qb-body').children.length){ addInlineRow(); addInlineRow(); addInlineRow(); }
+    var fc=document.getElementById('fil-class');
+    if(fc&&fc.value) loadQB();
+    var jpArea=document.getElementById('json-paste'), jpCount=document.getElementById('json-paste-count');
+    if(jpArea&&jpCount&&!jpArea._countBound){
+      jpArea._countBound=true;
+      jpArea.addEventListener('input',function(){ var val=this.value.trim(); if(!val){ jpCount.textContent=''; return; } var count=0; try{ var arr=JSON.parse(val); if(Array.isArray(arr)) count=arr.length; }catch(_){} jpCount.textContent=count?count+' question(s) detected':'Paste valid JSON array'; jpCount.style.color=count?'var(--success)':'var(--text3)'; });
+    }
+  });
+}
+
+function loadQB() {
+  var cid=(document.getElementById('fil-class')||{}).value||'';
+  var list=document.getElementById('qb-list'), weekSel=document.getElementById('fil-week');
+  var subjSel=document.getElementById('fil-subject');
+  if(!cid){ if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">Select a class above to browse questions.</p>'; var pg=document.getElementById('qb-pagination'); if(pg) pg.innerHTML=''; if(weekSel) weekSel.innerHTML='<option value="">All Weeks</option>'; if(subjSel) subjSel.innerHTML='<option value="">All Subjects</option>'; allQuestions=[]; hideBulkQBControls(); return; }
+  if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">Loading…</p>';
+  call('getQuestionBank',{classId:cid},function(qs){
+    allQuestions=qs||[];
+    // Build week filter
+    if(weekSel){ var weeks={}; allQuestions.forEach(function(q){ if(q.week) weeks[q.week]=true; }); var sortedWeeks=Object.keys(weeks).sort(function(a,b){ return parseInt(a)-parseInt(b); }); weekSel.innerHTML='<option value="">All Weeks</option>'; sortedWeeks.forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; weekSel.appendChild(o); }); }
+    // Build subject filter
+    if(subjSel){ var subjs={}; allQuestions.forEach(function(q){ if(q.subject) subjs[q.subject]=true; }); var sortedSubjs=Object.keys(subjs).sort(); subjSel.innerHTML='<option value="">All Subjects</option>'; sortedSubjs.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; subjSel.appendChild(o); }); }
+    if(!allQuestions.length){ if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">No questions found for this class.</p>'; var pg=document.getElementById('qb-pagination'); if(pg) pg.innerHTML=''; hideBulkQBControls(); return; }
+    // Populate bulk delete class dropdown too
+    var bdCls=document.getElementById('bd-class'); if(bdCls){ bdCls.innerHTML='<option value="">— All classes —</option>'; allClasses.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.id; bdCls.appendChild(o); }); bdCls.value=cid; }
+    renderQBPage(0); toast('success',allQuestions.length+' question(s) loaded');
+    showBulkQBControls();
+  });
+}
+
+var _selectedQBIds = {};
+
+function hideBulkQBControls(){
+  var b1=document.getElementById('qb-select-all-btn'), b2=document.getElementById('qb-bulk-delete-btn');
+  if(b1) b1.style.display='none'; if(b2) b2.style.display='none';
+  _selectedQBIds={};
+}
+function showBulkQBControls(){
+  var b1=document.getElementById('qb-select-all-btn'), b2=document.getElementById('qb-bulk-delete-btn');
+  if(b1) b1.style.display='inline-flex'; if(b2) b2.style.display='inline-flex';
+}
+function updateBulkSelCount(){
+  var count=Object.keys(_selectedQBIds).filter(function(k){ return _selectedQBIds[k]; }).length;
+  var el=document.getElementById('qb-sel-count'); if(el) el.textContent=count;
+}
+function toggleQBSelect(id,checked){ _selectedQBIds[id]=checked; updateBulkSelCount(); }
+function toggleSelectAllQB(){
+  var filtered=getQBFiltered();
+  var allSelected=filtered.every(function(q){ return _selectedQBIds[q.id]; });
+  filtered.forEach(function(q){ _selectedQBIds[q.id]=!allSelected; });
+  updateBulkSelCount(); renderQBPage(_qbPage);
+}
+function bulkDeleteSelected(){
+  var ids=Object.keys(_selectedQBIds).filter(function(k){ return _selectedQBIds[k]; });
+  if(!ids.length){ toast('error','No questions selected'); return; }
+  if(!confirm('Delete '+ids.length+' selected question(s)? This cannot be undone.')) return;
+  call('deleteQuestion',{bulkIds:ids},function(){ toast('success',ids.length+' question(s) deleted'); _selectedQBIds={}; updateBulkSelCount(); loadQB(); });
+}
+function openBulkDeleteModal(){ document.getElementById('bulk-delete-mo').classList.add('on'); }
+function doBulkWipe(){
+  var cls=(document.getElementById('bd-class').value||'').trim();
+  var subj=(document.getElementById('bd-subject').value||'').trim();
+  var week=(document.getElementById('bd-week').value||'').trim();
+  if(!cls&&!subj&&!week){ toast('error','Select at least a class, subject, or week'); return; }
+  var desc='ALL questions'+(cls?' in class '+cls:'')+(subj?' with subject "'+subj+'"':'')+(week?' in week '+week:'');
+  if(!confirm('⚠️ PERMANENTLY DELETE '+desc+'?\n\nThis cannot be undone.')) return;
+  call('deleteQuestion',{deleteAll:true,classId:cls||undefined,subject:subj||undefined,week:week||undefined},function(){ toast('success','Bulk delete complete'); closeMo('bulk-delete-mo'); loadQB(); });
+}
+
+function doDeleteQuestion(btn) {
+  var question=btn.getAttribute('data-question'), classId=btn.getAttribute('data-class'), subject=btn.getAttribute('data-subject'), week=btn.getAttribute('data-week');
+  if(!confirm('Delete this question?\n\n"'+question.slice(0,80)+(question.length>80?'…':'')+'"')) return;
+  btn.disabled=true; btn.textContent='…';
+  call('deleteQuestion',{questionText:question,classId:classId,subject:subject,week:week},function(){ toast('success','Question deleted'); var card=btn.closest('.qbi'); if(card){ card.style.opacity='0'; card.style.transition='opacity 0.2s'; setTimeout(function(){ card.remove(); },200); } },function(err){ btn.disabled=false; btn.textContent='Delete'; toast('error',err||'Could not delete question'); });
+}
+function getQBFiltered() {
+  var term=((document.getElementById('qb-search')||{}).value||'').trim().toLowerCase();
+  var week=((document.getElementById('fil-week')||{}).value||'').trim();
+  var subj=((document.getElementById('fil-subject')||{}).value||'').trim();
+  var filtered=allQuestions;
+  if(week) filtered=filtered.filter(function(r){ return String(r.week||'').trim()===week; });
+  if(subj) filtered=filtered.filter(function(r){ return String(r.subject||'').trim()===subj; });
+  if(!term) return filtered;
+  return filtered.filter(function(r){ return (r.question&&r.question.toLowerCase().indexOf(term)!==-1)||(r.subject&&r.subject.toLowerCase().indexOf(term)!==-1)||(r.correctAnswer&&r.correctAnswer.toLowerCase().indexOf(term)!==-1); });
+}
+function renderQBPage(page) {
+  _qbPage=page||0;
+  var filtered=getQBFiltered(), total=filtered.length;
+  var start=_qbPage*_qbPageSize, end=Math.min(start+_qbPageSize,total);
+  var pageItems=filtered.slice(start,end);
+  var c=document.getElementById('qb-list'); if(!c) return;
+  if(!total){ c.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">No questions found.</p>'; renderQBPagination(total); return; }
+  var term=((document.getElementById('qb-search')||{}).value||'').trim().toLowerCase();
+  function hl(str){ if(!term||!str) return esc(str||''); var idx=str.toLowerCase().indexOf(term); if(idx===-1) return esc(str); return esc(str.substring(0,idx))+'<mark style="background:rgba(26,86,219,.15);border-radius:2px">'+esc(str.substring(idx,idx+term.length))+'</mark>'+esc(str.substring(idx+term.length)); }
+  c.innerHTML=pageItems.map(function(r,i){
+    var isSelected=!!_selectedQBIds[r.id];
+    var delData='data-question="'+esc(r.question)+'" data-class="'+esc(r.classId)+'" data-subject="'+esc(r.subject)+'" data-week="'+esc(r.week)+'"';
+    return '<div class="qbi" style="'+(isSelected?'border-color:var(--accent);background:var(--accent-bg)':'')+'"><div class="qbi-meta" style="justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center"><input type="checkbox" '+(isSelected?'checked':'')+'  onchange="toggleQBSelect(\''+esc(r.id)+'\',this.checked)" style="accent-color:var(--text);width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-right:4px"><span class="bdg bp">'+esc(r.type)+'</span><span class="bdg by">'+esc(r.subject)+'</span><span class="bdg">Wk '+esc(r.week)+'</span><span class="bdg">'+esc(r.classId)+'</span></div><button class="btn btn-d btn-sm" style="flex-shrink:0;margin-left:8px" '+delData+' onclick="doDeleteQuestion(this)">Delete</button></div><div class="qbi-q">Q'+(start+i+1)+': '+hl(r.question)+'</div>'+(r.type==='MCQ'?'<div style="font-size:11.5px;color:var(--text2);margin:2px 0">A: '+esc(r.optionA)+' · B: '+esc(r.optionB)+' · C: '+esc(r.optionC)+' · D: '+esc(r.optionD)+'</div>':'')+'<div class="qbi-a">✓ '+hl(r.correctAnswer)+' · '+esc(r.points)+' pt'+(r.points!=1?'s':'')+'</div>'+(r.explanation?'<div style="font-size:11.5px;color:var(--accent-text);margin-top:3px;line-height:1.5">'+esc(r.explanation)+'</div>':'')+'</div>';
+  }).join('');
+  renderQBPagination(total);
+}
+
+function renderQBPagination(total) {
+  var pg=document.getElementById('qb-pagination'); if(!pg) return;
+  var pages=Math.ceil(total/_qbPageSize);
+  if(pages<=1){ pg.innerHTML='<span style="font-size:12px;color:var(--text2)">'+total+' question(s)</span>'; return; }
+  var html='<span style="font-size:12px;color:var(--text2)">'+total+' questions</span>';
+  for(var i=0;i<pages;i++){ html+='<button class="pg-btn'+(i===_qbPage?' on':'')+'" onclick="renderQBPage('+i+')">'+(i+1)+'</button>'; }
+  pg.innerHTML=html;
+}
+
+/* ── Inline QB Table ── */
+function buildInlineCell(type,value,placeholder,extraStyle){
+  var base='background:transparent;border:none;outline:none;width:100%;color:var(--text);font-family:var(--font);font-size:12px;padding:5px 6px;min-height:28px;resize:none;';
+  if(extraStyle) base+=extraStyle;
+  if(type==='select-type') return '<select onchange="onInlineTypeChange(this)" style="'+base+'cursor:pointer"><option value="MCQ">MCQ</option><option value="TF">TF</option><option value="SHORT">SHORT</option></select>';
+  return '<textarea rows="1" placeholder="'+placeholder+'" style="'+base+'" oninput="this.style.height=\'auto\';this.style.height=Math.max(28,this.scrollHeight)+\'px\'" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){var tbody=document.getElementById(\'inline-qb-body\');var rows=tbody.querySelectorAll(\'tr\');var myRow=this.closest(\'tr\');if(myRow===rows[rows.length-1]){event.preventDefault();addInlineRow();}}">'+(value||'')+'</textarea>';
+}
+function onInlineTypeChange(sel){ var row=sel.closest('tr'), type=sel.value; var optCells=row.querySelectorAll('.opt-cell textarea'); optCells.forEach(function(ta){ ta.closest('td').style.opacity=(type==='SHORT')?'0.35':'1'; ta.closest('td').style.pointerEvents=(type==='SHORT')?'none':''; }); if(type==='TF'){ var optAs=row.querySelectorAll('.opt-cell'); if(optAs.length>=2){ optAs[0].querySelector('textarea').value='True'; optAs[1].querySelector('textarea').value='False'; if(optAs[2]) optAs[2].querySelector('textarea').value=''; if(optAs[3]) optAs[3].querySelector('textarea').value=''; } } }
+function addInlineRow(){
+  var tbody=document.getElementById('inline-qb-body'), idx=tbody.querySelectorAll('tr').length+1;
+  var tr=document.createElement('tr'); tr.style.borderBottom='1px solid var(--border)';
+  tr.innerHTML='<td style="padding:4px 6px;border:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;vertical-align:top;padding-top:9px">'+idx+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','e.g. Mathematics')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:48px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('select-type','','')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Question text here')+'</td>'+
+    '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option A')+'</td>'+
+    '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option B')+'</td>'+
+    '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option C')+'</td>'+
+    '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option D')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Full text of correct option')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:38px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Why this is correct')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','2025/2026')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','First Term')+'</td>'+
+    '<td style="padding:4px 6px;border:1px solid var(--border);text-align:center;vertical-align:top"><button class="btn btn-d btn-sm" style="padding:2px 7px;font-size:11px" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+  tbody.appendChild(tr);
+  var firstInput=tr.querySelector('textarea'); if(firstInput) setTimeout(function(){ firstInput.focus(); },50);
+}
+function clearInlineTable(){ document.getElementById('inline-qb-body').innerHTML=''; }
+function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),correct_answer:cv(13),points:cv(14)||'1',explanation:cv(15),session:cv(16),term:cv(17) }; }
+function importInlineTable(){
+  var cid=(document.getElementById('inline-class')||{}).value||'';
+  if(!cid){ toast('error','Select a class first'); return; }
+  var tbody=document.getElementById('inline-qb-body'), rows=tbody.querySelectorAll('tr');
+  if(!rows.length){ toast('error','No rows to import'); return; }
+  var questions=[],skipped=0,skippedMsgs=[];
+  rows.forEach(function(tr,i){ var d=getInlineRowData(tr); if(!d.question&&!d.subject&&!d.correct_answer) return; if(!d.question){ skipped++; skippedMsgs.push('Row '+(i+1)+': missing question'); return; } if(!d.correct_answer){ skipped++; skippedMsgs.push('Row '+(i+1)+': missing correct answer'); return; } questions.push(d); });
+  if(!questions.length){ toast('error','No valid rows found.'); showInlineStatus('No valid rows: '+skippedMsgs.slice(0,3).join(' · '),'error'); return; }
+  showInlineStatus('Importing '+questions.length+' question(s)…','info');
+  call('importJSON',{classId:cid,questions:questions},function(result){ toast('success',result.message||'Imported '+questions.length+' question(s)'); showInlineStatus(result.message+(skipped?' · '+skipped+' row(s) skipped':''),result.skipped>0?'warn':'success'); if(!result.skipped&&!skipped) clearInlineTable(); loadQB(); },function(err){ showInlineStatus('Import failed: '+err,'error'); });
+}
+function showInlineStatus(msg,type){ var el=document.getElementById('inline-import-status'); if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color=type==='success'?'var(--success)':type==='error'?'var(--danger)':type==='warn'?'var(--warn)':'var(--text2)'; if(type==='success') setTimeout(function(){ el.style.display='none'; },5000); }
+
+/* ── Import ── */
+function copyCSVFormat() {
+  var h='subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
+  navigator.clipboard.writeText(h).then(function(){ toast('success','CSV headers copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=h; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','CSV headers copied'); });
+}
+function copyJSONFormat() {
+  var schema=JSON.stringify([{subject:"Mathematics",week:1,type:"MCQ",question:"Question text here?",option_A:"Option A",option_B:"Option B",option_C:"Option C",option_D:"Option D",option_A_image:"",option_B_image:"",option_C_image:"",option_D_image:"",correct_answer:"Option B",points:1,explanation:"Why this answer is correct",session:"2025/2026",term:"First Term",image_url:"",passage_id:""}],null,2);
+  navigator.clipboard.writeText(schema).then(function(){ toast('success','JSON schema copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=schema; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','JSON schema copied'); });
+}
+function doImportCSV(event){ var file=event.target.files[0]; if(!file) return; var cid=(document.getElementById('imp-class')||{}).value||''; if(!cid){ toast('error','Select a class first'); event.target.value=''; return; } showImportStatus('Reading CSV…','info'); var reader=new FileReader(); reader.onload=function(e){ call('importCSV',{classId:cid,csvData:e.target.result},function(d){ showImportStatus(d.message,d.skipped>0?'warn':'success'); loadQB(); },function(err){ showImportStatus('Import failed: '+err,'error'); }); }; reader.readAsText(file); event.target.value=''; }
+function doImportJSON(event){ var file=event.target.files[0]; if(!file) return; var cid=(document.getElementById('imp-class')||{}).value||''; if(!cid){ toast('error','Select a class first'); event.target.value=''; return; } showImportStatus('Reading JSON…','info'); var reader=new FileReader(); reader.onload=function(e){ importFromJSON(e.target.result,cid); }; reader.readAsText(file); event.target.value=''; }
+function importJSONFromPaste(){ var raw=(document.getElementById('json-paste')||{}).value||''; if(!raw.trim()){ toast('error','Paste some JSON first'); return; } var cid=(document.getElementById('imp-class')||{}).value||''; if(!cid){ toast('error','Select a class first'); return; } importFromJSON(raw,cid); var el=document.getElementById('json-paste'); if(el) el.value=''; }
+function importFromJSON(jsonData,classId){ var parsed; try{ parsed=JSON.parse(jsonData); if(!Array.isArray(parsed)&&parsed.questions) parsed=parsed.questions; if(!Array.isArray(parsed)) throw new Error('Expected an array'); }catch(e){ showImportStatus('Invalid JSON: '+e.message,'error'); toast('error','Invalid JSON'); return; } call('importJSON',{classId:classId,questions:parsed},function(d){ showImportStatus(d.message||'Imported '+parsed.length+' questions','success'); toast('success',d.message||'Import complete'); loadQB(); },function(err){ showImportStatus('Import failed: '+err,'error'); }); }
+function showImportStatus(msg,type){ var el=document.getElementById('import-status'); if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color=type==='success'?'var(--success)':type==='error'?'var(--danger)':type==='warn'?'var(--warn)':'var(--text2)'; if(type==='success') setTimeout(function(){ el.style.display='none'; },5000); }
+
+/* ── Create Quiz ── */
+function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); },100); }); }
+function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
+function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
+function onTypeChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
+function getWeekMode(){ var tog=document.getElementById('tog-week-mode'); return (tog&&tog.classList.contains('on'))?'cumulative':'single'; }
+function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
+function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
+function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
+function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
+function renderSubjAlloc(subjs,wk,weekMode){ if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode(); var tot=0,types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):''; var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk; document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e){ var subjectName=e[0],available=e[1],suggested=Math.min(available,20); tot+=suggested; var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5); return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+'</div></div><input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjectName.replace(/"/g,'&quot;')+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()"></div>'; }).join(''); setText('tot-q',tot); }
+function updateTot(){ var t=0; document.querySelectorAll('.sinput').forEach(function(el){ t+=parseInt(el.value)||0; }); setText('tot-q',t); }
+function doCreate(){
+  var title=(document.getElementById('c-title').value||'').trim(), code=(document.getElementById('c-code').value||'').trim().toUpperCase(), cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, dur=document.getElementById('c-dur').value, st=document.getElementById('c-start').value, en=document.getElementById('c-end').value;
+  if(!title||!code||!cid||!wk||!st||!en){ toast('error','Fill all required fields'); return; }
+  var sc={}; document.querySelectorAll('.sinput').forEach(function(el){ var s=el.getAttribute('data-subject'),c=parseInt(el.value)||0; if(s&&c>0) sc[s]=c; });
+  if(!Object.keys(sc).length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
+  var rubric=collectRubricData(); if(!rubric){ return; }
+  spin(true,'Creating quiz…');
+  function localToISO(v){ if(!v) return ''; return new Date(v).toISOString(); }
+  call('createQuiz', {
+    title:               title,
+    examCode:            code,
+    classId:             cid,
+    week:                wk,
+    subjectCounts:       sc,
+    duration:            dur,
+    startTime:           localToISO(st),
+    endTime:             localToISO(en),
+    questionTypes:       getSelectedTypes(),
+    weekMode:            getWeekMode(),
+    session:             document.getElementById('c-session').value,
+    term:                document.getElementById('c-term').value,
+    faceDetection:       document.getElementById('tog-face').classList.contains('on'),
+    showCorrectAnswers:  document.getElementById('tog-ans').classList.contains('on'),
+    allowRetakes:        document.getElementById('tog-retakes').classList.contains('on'),
+    enableTTS:           document.getElementById('tog-tts').classList.contains('on'),
+    gradingRubric:       rubric ? JSON.stringify(rubric) : null,
+    passageId:           _selectedPassageId || '',
+    maxViolations:       parseInt(document.getElementById('c-max-violations').value) || 3
+  }, function(d) {
+    toast('success', 'Quiz created — ' + d.count + ' questions — Code: ' + d.examCode);
+    resetCreate();
+    loadQuizzes();
+    nav('manage', null);
+  });
+}
+function resetCreate(){
+  ['c-title','c-code'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('c-dur').value='30'; var cl=document.getElementById('c-class'); if(cl) cl.value='';
+  var wk=document.getElementById('c-week'); if(wk){ wk.innerHTML='<option value="">— Select —</option>'; wk.disabled=true; }
+  document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden');
+  document.getElementById('tog-face').classList.add('on'); document.getElementById('tog-ans').classList.remove('on');
+  document.getElementById('tog-retakes').classList.remove('on'); document.getElementById('tog-tts').classList.remove('on');
+  document.querySelectorAll('.type-chk').forEach(function(cb){ cb.checked=true; });
+  var mv = document.getElementById('c-max-violations'); if(mv) mv.value = '3';
+  var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.add('on');
+  var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display='none';
+  setDefaultTimes();
+  var ps=document.getElementById('passage-select'); if(ps){ ps.innerHTML='<option value="">— Select class & week first —</option>'; ps.disabled=true; }
+  var pp=document.getElementById('passage-preview'); if(pp) pp.style.display='none';
+  _selectedPassageId=''; resetRubricRanges();
+}
+
+/* ── Grading Rubric ── */
+var _defaultRubricRanges=[{min:80,max:100,status:'Pass',comment:'Excellent'},{min:50,max:79,status:'Pass',comment:'Very Good'},{min:0,max:49,status:'Review',comment:'Needs Improvement'}];
+function resetRubricRanges(){ renderRubricBuilder(JSON.parse(JSON.stringify(_defaultRubricRanges))); }
+function addRubricRange(){ var current=getRubricRangesFromDOM(); current.push({min:0,max:0,status:'Review',comment:''}); renderRubricBuilder(current); }
+function renderRubricBuilder(ranges){
+  var container=document.getElementById('rubric-ranges'); if(!container) return;
+  if(!ranges||!ranges.length){ container.innerHTML='<p style="font-size:12.5px;color:var(--text2);padding:6px 0">No ranges defined.</p>'; return; }
+  container.innerHTML=ranges.map(function(r,i){
+    return '<div class="rubric-row" id="rr_'+i+'" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">'
+      +'<div style="display:flex;align-items:center;gap:5px;flex-shrink:0">'
+        +'<input type="number" min="0" max="100" value="'+r.min+'" placeholder="Min%" style="width:60px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;text-align:center" class="rr-min">'
+        +'<span style="color:var(--text3);font-size:12px">–</span>'
+        +'<input type="number" min="0" max="100" value="'+r.max+'" placeholder="Max%" style="width:60px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;text-align:center" class="rr-max">'
+        +'<span style="color:var(--text3);font-size:11px">%</span>'
+      +'</div>'
+      +'<input type="text" value="'+esc(r.comment||'')+'" placeholder="Label (e.g. Excellent)" style="flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none" class="rr-comment">'
+      +'<select class="rr-status" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none">'
+        +'<option value="Pass"'+(r.status==='Pass'?' selected':'')+'>Pass</option>'
+        +'<option value="Review"'+(r.status==='Review'?' selected':'')+'>Review</option>'
+        +'<option value="Fail"'+(r.status==='Fail'?' selected':'')+'>Fail</option>'
+      +'</select>'
+      +'<button class="btn btn-d btn-sm" onclick="removeRubricRow('+i+')" style="flex-shrink:0">✕</button>'
+    +'</div>';
+  }).join('');
+}
+function removeRubricRow(i){ var current=getRubricRangesFromDOM(); current.splice(i,1); renderRubricBuilder(current); }
+function getRubricRangesFromDOM(){ var rows=document.querySelectorAll('#rubric-ranges .rubric-row'), result=[]; rows.forEach(function(row){ result.push({min:parseInt(row.querySelector('.rr-min').value)||0,max:parseInt(row.querySelector('.rr-max').value)||0,comment:(row.querySelector('.rr-comment').value||'').trim(),status:row.querySelector('.rr-status').value||'Review'}); }); return result; }
+function collectRubricData(){
+  var ranges=getRubricRangesFromDOM();
+  if(!ranges.length) return {ranges:[]};
+  for(var i=0;i<ranges.length;i++){
+    if(ranges[i].min>ranges[i].max){ toast('error','Rubric row '+(i+1)+': Min cannot be greater than Max'); return null; }
+    if(!ranges[i].comment){ toast('error','Rubric row '+(i+1)+': Please enter a label/comment'); return null; }
+  }
+  for(var i=0;i<ranges.length;i++) for(var j=i+1;j<ranges.length;j++) if(ranges[i].min<=ranges[j].max&&ranges[j].min<=ranges[i].max){ toast('error','Rubric rows '+(i+1)+' and '+(j+1)+' overlap.'); return null; }
+  return {ranges:ranges};
+}
+
+/* ── Teachers ── */
+function loadTeachersTab(){ loadPending(); loadActiveTeachers(); }
+function refreshPendingBadge(){
+  call('getPendingTeachers',{},function(list){ var n=(list||[]).length; ['pend-badge','mob-pend-badge'].forEach(function(id){ var b=document.getElementById(id); if(b){ b.textContent=n; b.classList.toggle('vis',n>0); } }); });
+}
+function loadPending(){
+  call('getPendingTeachers',{},function(list){ var el=document.getElementById('pend-list'),ct=document.getElementById('pend-count'); if(!list||!list.length){ el.innerHTML='<p style="color:var(--text2);font-size:13px;text-align:center;padding:10px">No pending registrations.</p>'; setText('pend-count',''); refreshPendingBadge(); return; } setText('pend-count','('+list.length+')'); refreshPendingBadge(); el.innerHTML=list.map(function(t){ return '<div class="pc"><div class="pc-info"><div class="pc-name">'+esc(t.name)+'</div><div class="pc-meta">'+esc(t.email)+' · Registered: '+(t.createdAt?t.createdAt.substring(0,10):'—')+'</div></div><div class="pc-act"><button class="btn btn-ok btn-sm" onclick="openApprove(\''+esc(t.email)+'\',\''+esc(t.name)+'\')">✓ Approve</button><button class="btn btn-d btn-sm" onclick="doReject(\''+esc(t.email)+'\')">✗ Reject</button></div></div>'; }).join(''); });
+}
+function openApprove(email,name){ pendingApproveTarget=email; setText('app-name',name); var grid=document.getElementById('app-cls-grid'); grid.innerHTML=allClasses.length?allClasses.map(function(c){ return '<div class="cls-item"><input type="checkbox" id="ap_'+esc(c.id)+'" value="'+esc(c.id)+'"><label for="ap_'+esc(c.id)+'">'+esc(c.id)+(c.description?' — '+esc(c.description):'')+'</label></div>'; }).join(''):'<p style="font-size:12px;color:var(--text2)">No classes exist yet.</p>'; document.getElementById('approve-mo').classList.add('on'); }
+function confirmApprove(){ if(!pendingApproveTarget) return; var classes=[]; document.querySelectorAll('#app-cls-grid input:checked').forEach(function(cb){ classes.push(cb.value); }); call('approveTeacher',{targetEmail:pendingApproveTarget,classes:classes},function(){ toast('success','Teacher approved'); closeMo('approve-mo'); pendingApproveTarget=null; loadTeachersTab(); }); }
+function doReject(email){ if(!confirm('Reject registration for '+email+'?')) return; call('rejectTeacher',{targetEmail:email},function(){ toast('success','Registration rejected'); loadTeachersTab(); }); }
+function loadActiveTeachers(){ call('getTeachers',{},function(teachers){ var el=document.getElementById('teacher-list'); if(!teachers||!teachers.length){ el.innerHTML='<p style="color:var(--text2);font-size:13px;text-align:center;padding:22px">No active teachers yet.</p>'; return; } el.innerHTML=teachers.map(function(t){ var av=t.photoUrl?'<img src="'+esc(t.photoUrl)+'" alt="av">':initials(t.name); var cls=(t.classes||[]).map(function(c){ return '<span class="bdg bb" style="margin-right:2px">'+esc(c)+'</span>'; }).join(''); return '<div class="tc"><div class="tc-av">'+av+'</div><div class="tc-info"><div class="tc-name">'+esc(t.name)+' <span class="bdg '+(t.role==='admin'?'bp':'bb')+'">'+formatRole(t.role)+'</span></div><div class="tc-meta">'+esc(t.email)+'</div><div style="margin-top:4px">'+cls+'</div></div><div class="tc-act"><button class="btn btn-sm" onclick="openAssign(\''+esc(t.email)+'\',\''+esc(t.name)+'\')">Classes</button><button class="btn btn-d btn-sm" onclick="doDelTeacher(\''+esc(t.email)+'\')">Remove</button></div></div>'; }).join(''); }); }
+function openAssign(email,name){ pendingAssignTarget=email; setText('asgn-name',name); call('getTeachers',{},function(list){ var teacher=list.find(function(t){ return t.email===email; }); var assigned=(teacher&&teacher.classes)||[]; var grid=document.getElementById('asgn-cls-grid'); grid.innerHTML=allClasses.length?allClasses.map(function(c){ var chk=assigned.includes(c.id)?'checked':''; return '<div class="cls-item"><input type="checkbox" id="as_'+esc(c.id)+'" value="'+esc(c.id)+'" '+chk+'><label for="as_'+esc(c.id)+'">'+esc(c.id)+(c.description?' — '+esc(c.description):'')+'</label></div>'; }).join(''):'<p style="font-size:12px;color:var(--text2)">No classes exist yet.</p>'; document.getElementById('assign-mo').classList.add('on'); }); }
+function confirmAssign(){ if(!pendingAssignTarget) return; var classes=[]; document.querySelectorAll('#asgn-cls-grid input:checked').forEach(function(cb){ classes.push(cb.value); }); call('assignClassToTeacher',{targetEmail:pendingAssignTarget,classes:classes},function(){ toast('success','Classes updated'); closeMo('assign-mo'); pendingAssignTarget=null; loadActiveTeachers(); }); }
+function doDelTeacher(email){ if(!confirm('Remove teacher "'+email+'"?')) return; call('deleteTeacher',{targetEmail:email},function(){ toast('success','Teacher removed'); loadTeachersTab(); }); }
+
+/* ── Students ── */
+function loadStudentsTab(){
+  populateClassDropdowns();
+  // Use public endpoint so non-admin teachers can still see the school list
+  call('getSchoolsPublic',{},function(schools){
+    ['bulk-school','st-school'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      var first=el.options&&el.options[0]?el.options[0].cloneNode(true):null;
+      el.innerHTML='';
+      if(first) el.appendChild(first);
+      (schools||[]).forEach(function(s){
+        var o=document.createElement('option');
+        o.value=s.schoolName;
+        o.textContent=s.schoolName;
+        el.appendChild(o);
+      });
+      // Ensure the teacher's own school is always available as an option
+      if(S.school){
+        var exists=Array.from(el.options).some(function(o){ return o.value===S.school; });
+        if(!exists){
+          var o=document.createElement('option');
+          o.value=S.school; o.textContent=S.school;
+          el.appendChild(o);
+        }
+      }
+    });
+  });
+  loadStudents();
+}
+function loadStudents(){ var cid=(document.getElementById('st-filter-class')||{}).value||''; call('getStudents',{classId:cid},function(data){ _allStudents=data||[]; renderStudentTable(_allStudents); var classes=_allStudents.map(function(s){ return s.className; }).filter(Boolean); var uniqueClasses=classes.filter(function(v,i,a){ return a.indexOf(v)===i; }); var locked=_allStudents.filter(function(s){ return s.locked; }).length; setText('st-total',_allStudents.length); setText('st-classes',uniqueClasses.length); setText('st-locked',locked); }); }
+function renderStudentTable(students){ var tb=document.querySelector('#t-students tbody'); if(!tb) return; if(!students.length){ tb.innerHTML='<tr class="er"><td colspan="6">No students registered yet.</td></tr>'; return; } tb.innerHTML=students.map(function(s){ var lockedBadge=s.locked?'<span class="bdg bg" style="font-size:10px">Locked</span>':'<span class="bdg by" style="font-size:10px">Unlocked</span>'; return '<tr><td style="font-weight:500">'+esc(s.name||'—')+'</td><td style="font-size:12px;color:var(--text2)">'+esc(s.email)+'</td><td><span class="bdg bb">'+esc(s.className||'—')+'</span></td><td style="font-size:12px">'+esc(s.school||'—')+'</td><td>'+lockedBadge+'</td><td class="fx"><button class="btn btn-sm" onclick="openEditStudent(\''+esc(s.email)+'\')">'+(s.locked?'View':'Edit')+'</button><button class="btn btn-d btn-sm" onclick="doDeleteStudent(\''+esc(s.email)+'\')">Del</button></td></tr>'; }).join(''); }
+function filterStudentTable(){ var search=(document.getElementById('st-search').value||'').trim().toLowerCase(), cls=(document.getElementById('st-filter-class').value||'').trim(); var filtered=_allStudents.filter(function(s){ var ms=!search||(s.name&&s.name.toLowerCase().indexOf(search)!==-1)||(s.email&&s.email.toLowerCase().indexOf(search)!==-1); var mc=!cls||s.className===cls; return ms&&mc; }); renderStudentTable(filtered); }
+function openAddStudentModal(){
+  _editingStudentEmail=null;
+  setText('student-mo-title','Add Student');
+  document.getElementById('st-name').value='';
+  document.getElementById('st-email').value='';
+  document.getElementById('st-email').disabled=false;
+  document.getElementById('st-class').value='';
+  // Pre-fill the teacher's own school and lock the field
+  var stSchool=document.getElementById('st-school');
+  if(stSchool && S.school){
+    stSchool.value=S.school;
+    stSchool.disabled=true;
+  } else if(stSchool) {
+    stSchool.disabled=false;
+  }
+  ['st-name','st-class'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.disabled=false;
+  });
+  document.getElementById('student-mo').classList.add('on');
+}
+function openEditStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!s) return; _editingStudentEmail=email; setText('student-mo-title',s.locked?'View Student (Locked)':'Edit Student'); document.getElementById('st-name').value=s.name||''; document.getElementById('st-email').value=s.email||''; document.getElementById('st-email').disabled=true; document.getElementById('st-class').value=s.className||''; document.getElementById('st-school').value=s.school||''; ['st-name','st-class','st-school'].forEach(function(id){ var el=document.getElementById(id); if(el) el.disabled=!!s.locked; }); document.getElementById('student-mo').classList.add('on'); }
+function saveStudent(){ var name=(document.getElementById('st-name').value||'').trim(), email=(document.getElementById('st-email').value||'').trim(), cls=(document.getElementById('st-class').value||'').trim(), school=(document.getElementById('st-school').value||'').trim(); if(!name){ toast('error','Name is required'); return; } if(!email||email.length<2){ toast('error','Email or Student ID is required'); return; } if(!cls){ toast('error','Class is required'); return; } if(!school){ toast('error','School is required'); return; } call('upsertStudent',{name:name,email:email,className:cls,school:school},function(){ toast('success',(_editingStudentEmail?'Student updated':'Student added')+' — '+name); closeMo('student-mo'); loadStudents(); }); }
+function doDeleteStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!confirm('Remove student "'+(s?s.name:email)+'"?\n\nExam results are kept.')) return; call('deleteStudent',{email:email},function(){ toast('success','Student removed'); loadStudents(); }); }
+function parseBulkJSON(){ var raw=(document.getElementById('bulk-json').value||'').trim(); if(!raw){ toast('error','Paste JSON data first'); return null; } var parsed; try{ parsed=JSON.parse(raw); }catch(e){ toast('error','Invalid JSON: '+e.message); return null; } if(!Array.isArray(parsed)){ toast('error','JSON must be an array [ ... ]'); return null; } var overrideSchool=(document.getElementById('bulk-school').value||'').trim(), overrideClass=(document.getElementById('bulk-class').value||'').trim(); var valid=[],errors=[]; parsed.forEach(function(row,i){ var name=String(row.name||row.Name||'').trim(), email=String(row.email||row.Email||'').trim().toLowerCase(), cls=overrideClass||String(row.class||row.Class||row.className||'').trim(), school=overrideSchool||String(row.school||row.School||'').trim(); if(!name){ errors.push('Row '+(i+1)+': missing name'); return; } if(!email||email.length<2){ errors.push('Row '+(i+1)+': missing email/ID'); return; } if(!cls){ errors.push('Row '+(i+1)+': missing class'); return; } if(!school){ errors.push('Row '+(i+1)+': missing school'); return; } valid.push({name:name,email:email,className:cls,school:school}); }); if(errors.length){ toast('error',errors.slice(0,4).join('\n')); if(!valid.length) return null; } return valid; }
+function previewBulkJSON(){ var students=parseBulkJSON(); if(!students) return; var preview=document.getElementById('bulk-preview'), tb=document.querySelector('#t-bulk-preview tbody'); var existingEmails=_allStudents.map(function(s){ return s.email.toLowerCase(); }); tb.innerHTML=students.map(function(s,i){ var isNew=existingEmails.indexOf(s.email.toLowerCase())===-1; return '<tr><td>'+(i+1)+'</td><td>'+esc(s.name)+'</td><td style="font-size:11.5px">'+esc(s.email)+'</td><td>'+esc(s.className)+'</td><td>'+esc(s.school)+'</td><td><span class="bdg '+(isNew?'bg':'by')+'">'+(isNew?'New':'Update')+'</span></td></tr>'; }).join(''); setText('bulk-preview-n','('+students.length+' students)'); setText('bulk-preview-count',students.length+' student(s) ready'); if(preview) preview.style.display='block'; }
+function doBulkRegister(){ var students=parseBulkJSON(); if(!students) return; if(!confirm('Register / update '+students.length+' student(s)?')) return; call('bulkUpsertStudents',{students:students},function(result){ toast('success',(result.added||0)+' added, '+(result.updated||0)+' updated'+(result.skipped?', '+result.skipped+' skipped':'')); document.getElementById('bulk-json').value=''; var preview=document.getElementById('bulk-preview'); if(preview) preview.style.display='none'; setText('bulk-preview-count',''); loadStudents(); }); }
+function downloadStudentCSV(){ if(!_allStudents.length){ toast('error','No students to export'); return; } var lines=[['Name','Email','Class','School','Locked'].join(',')]; _allStudents.forEach(function(s){ lines.push(['"'+(s.name||'').replace(/"/g,'""')+'"','"'+(s.email||'')+'"','"'+(s.className||'')+'"','"'+(s.school||'')+'"',s.locked?'Yes':'No'].join(',')); }); var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='students_'+new Date().toISOString().substring(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url); toast('success','Student list exported'); }
+
+/* ── Profile ── */
+function populateProfile(){ setText('prof-name',S.name||'—'); setText('prof-email',S.email||'—'); setText('prof-role',formatRole(S.role)); var n=document.getElementById('pf-name'); if(n) n.value=S.name||''; var p=document.getElementById('pf-phone'); if(p) p.value=S.phone||''; var sc=document.getElementById('pf-school'); if(sc) sc.value=S.school||''; if(S.photoUrl){ setAv('prof-av',S.photoUrl); }else{ var av=document.getElementById('prof-av'); if(av) av.textContent=initials(S.name||S.email); } subjectTags=S.subjects||[]; renderTags(); var ci=document.getElementById('prof-cls'); if(ci) ci.textContent=S.classes&&S.classes.length?'Assigned: '+S.classes.join(', '):'No classes assigned. Contact your administrator.'; loadVoiceProfileCard();}
+function renderTags(){ var wrap=document.getElementById('subj-tags'); if(!wrap) return; var inp=document.getElementById('tag-inp'); wrap.querySelectorAll('.tag').forEach(function(t){ t.remove(); }); subjectTags.forEach(function(s){ var t=document.createElement('div'); t.className='tag'; t.innerHTML=esc(s)+'<button class="trm" onclick="removeTag(\''+esc(s)+'\')">×</button>'; wrap.insertBefore(t,inp); }); }
+function removeTag(s){ subjectTags=subjectTags.filter(function(t){ return t!==s; }); renderTags(); }
+function saveProfile(){ var name=(document.getElementById('pf-name').value||'').trim(), phone=(document.getElementById('pf-phone').value||'').trim(), school=(document.getElementById('pf-school').value||'').trim(); if(!name){ toast('error','Name is required'); return; } call('updateTeacherProfile',{name:name,phone:phone,school:school,subjects:subjectTags},function(){ S.name=name; S.phone=phone; S.school=school; S.subjects=subjectTags; try{ sessionStorage.setItem('qf_teacher',JSON.stringify(S)); }catch(_){} setText('prof-name',name); setText('sb-name',name); toast('success','Profile saved'); }); }
+function doChangePw(){ var cur=document.getElementById('pw-cur').value||'', nw=document.getElementById('pw-new').value||'', cnf=document.getElementById('pw-cnf').value||''; if(!cur||!nw){ toast('error','Fill all password fields'); return; } if(nw!==cnf){ toast('error','New passwords do not match'); return; } if(nw.length<8){ toast('error','Password must be at least 8 characters'); return; } call('changePassword',{currentPassword:cur,newPassword:nw},function(){ toast('success','Password changed'); ['pw-cur','pw-new','pw-cnf'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; }); }); }
+function doUploadPhoto(event){ var file=event.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(e){ call('uploadProfilePhoto',{imageBase64:e.target.result},function(d){ S.photoUrl=d.photoUrl; try{ sessionStorage.setItem('qf_teacher',JSON.stringify(S)); }catch(_){} setAv('prof-av',d.photoUrl); setAv('sb-av',d.photoUrl); setAv('mob-av',d.photoUrl); toast('success','Photo updated'); }); }; reader.readAsDataURL(file); event.target.value=''; }
+function doLogout(){ callRaw('teacherLogout',{token:S.token},function(){}); try{ sessionStorage.clear(); }catch(_){} goLogin(); }
+function runInit(){ if(!confirm('Initialize / repair system?')) return; call('initializeSystem',{},function(msg){ toast('success',msg||'Done'); loadClasses(loadOverview); }); }
+
+/* ── Broadsheet ── */
+function openBroadsheet(){ var classes=allQuizzes.map(function(q){ return q.classId; }).filter(function(v,i,a){ return a.indexOf(v)===i; }); if(!classes.length){ toast('error','No quizzes to build broadsheet from.'); return; } if(classes.length===1){ _broadsheetClass=classes[0]; loadBroadsheet(classes[0]); } else{ var cls=prompt('Enter class ID:\n\nAvailable: '+classes.join(', ')); if(!cls) return; _broadsheetClass=cls.trim(); loadBroadsheet(cls.trim()); } }
+function loadBroadsheet(classId){ document.getElementById('bs-title').textContent='Broadsheet — '+classId; document.getElementById('bs-body').innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">Loading…</p>'; document.getElementById('broadsheet-mo').classList.add('on'); call('getBroadsheet',{classId:classId},function(d){ _broadsheetData=d; renderBroadsheet(d); }); }
+function renderBroadsheet(d){ var body=document.getElementById('bs-body'); if(!d||!d.quizzes||!d.quizzes.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No quizzes found.</p>'; return; } if(!d.rows||!d.rows.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No student submissions yet.</p>'; return; } var html='<table style="border-collapse:collapse;width:100%;font-size:12px;min-width:600px"><thead><tr style="background:var(--surface2)"><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);min-width:130px;position:sticky;left:0;background:var(--surface2);z-index:2">Student</th><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);white-space:nowrap">Class</th>'+d.quizzes.map(function(q){ return '<th style="padding:7px 9px;text-align:center;border:1px solid var(--border);min-width:90px;color:var(--accent-text)" colspan="3">'+esc(q.title)+'</th>'; }).join('')+'<th style="padding:7px 9px;text-align:center;border:1px solid var(--border)">Avg</th></tr><tr style="background:var(--surface)"><th style="padding:5px 9px;border:1px solid var(--border);position:sticky;left:0;background:var(--surface);z-index:2"></th><th style="padding:5px 9px;border:1px solid var(--border)"></th>'+d.quizzes.map(function(){ return '<th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Score</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">%</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Status</th>'; }).join('')+'<th style="padding:5px 9px;border:1px solid var(--border)"></th></tr></thead><tbody>'; d.rows.forEach(function(row){ var s=row.student,pcts=[]; var cells=d.quizzes.map(function(q,qi){ var r=row.results[qi]; if(!r) return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:var(--text2)" colspan="3">—</td>'; var pct=parseFloat(r.percentage)||0; pcts.push(pct); var stCol=r.status==='Pass'?'var(--success)':'var(--danger)'; return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+pct.toFixed(1)+'%</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:'+stCol+';font-weight:600">'+esc(r.status)+'</td>'; }).join(''); var avg=pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':'—'; html+='<tr><td style="padding:7px 9px;border:1px solid var(--border);font-weight:600;position:sticky;left:0;background:var(--surface2);z-index:1">'+esc(s.name)+'</td><td style="padding:7px 9px;border:1px solid var(--border);color:var(--text2)">'+esc(s.className||'—')+'</td>'+cells+'<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono);font-weight:600;color:var(--accent-text)">'+avg+'</td></tr>'; }); html+='</tbody></table>'; body.innerHTML=html; }
+function downloadBroadsheet(){ if(!_broadsheetData){ toast('error','Load broadsheet first'); return; } var d=_broadsheetData,lines=[]; var header=['Student','Email','Class','School']; d.quizzes.forEach(function(q){ header.push(q.title+' Score',q.title+' %',q.title+' Status'); }); header.push('Average %'); lines.push(header.map(function(h){ return '"'+String(h).replace(/"/g,'""')+'"'; }).join(',')); d.rows.forEach(function(row){ var s=row.student,pcts=[],cells=['"'+(s.name||'')+'"','"'+(s.email||'')+'"','"'+(s.className||'')+'"','"'+(s.school||'')+'"']; d.quizzes.forEach(function(q,qi){ var r=row.results[qi]; if(r){ var pct=parseFloat(r.percentage)||0; pcts.push(pct); cells.push(r.score+'/'+r.totalPoints,r.percentage,r.status); }else cells.push('','',''); }); cells.push(pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':''); lines.push(cells.join(',')); }); var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='broadsheet_'+_broadsheetClass+'_'+new Date().toISOString().substring(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url); toast('success','Broadsheet downloaded'); }
+
+/* ── Schedule Live ── */
+function openScheduleLive(examCode){ _scheduleTarget=examCode; var q=allQuizzes.find(function(x){ return x.examCode===examCode; }); var dt=document.getElementById('sched-live-dt'), cancelBtn=document.getElementById('sched-cancel-btn'); if(dt&&q&&q.liveAt){ try{ dt.value=q.liveAt.substring(0,16); }catch(e){ dt.value=''; } if(cancelBtn) cancelBtn.style.display='inline-flex'; }else{ if(dt) dt.value=''; if(cancelBtn) cancelBtn.style.display='none'; } document.getElementById('schedule-mo').classList.add('on'); }
+function doScheduleLive(){ var dt=(document.getElementById('sched-live-dt').value||'').trim(); if(!dt){ toast('error','Please pick a date and time'); return; } call('scheduleLive',{examCode:_scheduleTarget,liveAt:dt},function(){ toast('success','Scheduled for '+dt.replace('T',' ')); closeMo('schedule-mo'); loadQuizzes(); }); }
+function doCancelScheduledLive(){ if(!confirm('Remove the scheduled time for this quiz?')) return; call('cancelScheduledLive',{examCode:_scheduleTarget},function(){ toast('success','Schedule removed'); closeMo('schedule-mo'); loadQuizzes(); }); }
+
+/* ── Settings ── */
+var _aiGlobalEnabled=false;
+function loadSettingsTab(){ call('getPlatformSettings',{},function(d){ _aiGlobalEnabled=d.aiExplanationsEnabled; var tog=document.getElementById('tog-ai-global'); if(tog){ if(_aiGlobalEnabled) tog.classList.add('on'); else tog.classList.remove('on'); } }); loadSchools(); }
+function toggleAiGlobal(){ var tog=document.getElementById('tog-ai-global'); if(!tog) return; tog.classList.toggle('on'); _aiGlobalEnabled=tog.classList.contains('on'); call('savePlatformSettings',{aiExplanationsEnabled:_aiGlobalEnabled},function(){ toast('success','AI explanations '+(_aiGlobalEnabled?'enabled globally':'disabled')); }); }
+function loadSchools(){ call('getSchools',{},function(list){ _schoolsList=list||[]; var tb=document.querySelector('#t-schools tbody'); if(!tb) return; if(!_schoolsList.length){ tb.innerHTML='<tr class="er"><td colspan="6">No schools yet.</td></tr>'; return; } tb.innerHTML=_schoolsList.map(function(s,idx){ var aiClass=s.aiEnabled?'bg':'by', aiLabel=s.aiEnabled?'✓ On':'Off'; return '<tr><td style="font-weight:500">'+esc(s.schoolName)+'</td><td style="font-size:11.5px">'+esc(s.contactEmail||'—')+'</td><td><span class="bdg '+(s.plan==='premium'?'bp':s.plan==='trial'?'by':'bb')+'">'+esc(s.plan)+'</span></td><td><span class="bdg '+aiClass+'">'+aiLabel+'</span></td><td style="font-size:11.5px;color:var(--text2)">'+esc(s.notes||'—')+'</td><td class="fx"><button class="btn btn-sm" onclick="openEditSchoolByIdx('+idx+')">Edit</button><button class="btn '+(s.aiEnabled?'btn-d':'btn-ok')+' btn-sm" onclick="quickToggleSchoolAi('+idx+','+(!s.aiEnabled)+')">'+(s.aiEnabled?'Disable AI':'Enable AI')+'</button></td></tr>'; }).join(''); }); }
+function openAddSchoolModal(){ _editingSchoolIdx=-1; setText('school-mo-title','Add School'); document.getElementById('sch-name').value=''; document.getElementById('sch-name').disabled=false; document.getElementById('sch-email').value=''; document.getElementById('sch-notes').value=''; document.getElementById('sch-plan').value='standard'; document.getElementById('tog-sch-ai').classList.remove('on'); document.getElementById('school-mo').classList.add('on'); }
+function openEditSchoolByIdx(idx){ var s=_schoolsList[idx]; if(!s) return; _editingSchoolIdx=idx; setText('school-mo-title','Edit School'); document.getElementById('sch-name').value=s.schoolName; document.getElementById('sch-name').disabled=true; document.getElementById('sch-email').value=s.contactEmail||''; document.getElementById('sch-notes').value=s.notes||''; document.getElementById('sch-plan').value=s.plan||'standard'; var ai=document.getElementById('tog-sch-ai'); if(s.aiEnabled) ai.classList.add('on'); else ai.classList.remove('on'); document.getElementById('school-mo').classList.add('on'); }
+function saveSchool(){ var targetName=_editingSchoolIdx>=0?_schoolsList[_editingSchoolIdx].schoolName:null; var name=(document.getElementById('sch-name').value||'').trim(); if(!name&&!targetName){ toast('error','School name is required'); return; } call('upsertSchool',{schoolName:targetName||name,contactEmail:document.getElementById('sch-email').value.trim(),plan:document.getElementById('sch-plan').value,notes:(document.getElementById('sch-notes').value||'').trim(),aiEnabled:document.getElementById('tog-sch-ai').classList.contains('on')},function(d){ toast('success',d.created?'School added':'School updated'); closeMo('school-mo'); loadSchools(); }); }
+function quickToggleSchoolAi(idx,enable){ var s=_schoolsList[idx]; if(!s) return; call('upsertSchool',{schoolName:s.schoolName,aiEnabled:enable},function(){ toast('success','AI '+(enable?'enabled':'disabled')+' for '+s.schoolName); loadSchools(); }); }
+
+/* ── Modal backdrop close ── */
+window.onclick=function(e){ ['details-mo','approve-mo','assign-mo','school-mo','broadsheet-mo','schedule-mo','student-mo','live-mo'].forEach(function(id){ var el=document.getElementById(id); if(e.target===el) closeMo(id); }); };
+
+/* ── Close sidebar on ESC ── */
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSidebar(); });
+/* ── VOICE PROFILING ── */
+var _vpRecorder = null, _vpChunks = [], _vpBlob = null, _vpSelectedVoice = null;
+
+function loadVoiceProfileCard(){
+  call('getVoiceProfile',{},function(d){
+    var current=document.getElementById('vp-current-profile');
+    if(d && d.voiceProfile && d.voiceProfile.preferredVoiceName){
+      var vp=d.voiceProfile; S._voiceProfile=vp;
+      if(current){ current.style.display='block'; current.textContent='✓ Saved profile: '+vp.preferredVoiceName+' ('+vp.lang+')'; }
+    } else { if(current) current.style.display='none'; }
+  });
+}
+
+function startVoiceRecording(){
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    _vpChunks=[]; _vpBlob=null;
+    _vpRecorder=new MediaRecorder(stream);
+    _vpRecorder.ondataavailable=function(e){ if(e.data.size>0) _vpChunks.push(e.data); };
+    _vpRecorder.onstop=function(){
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      _vpBlob=new Blob(_vpChunks,{type:'audio/webm'});
+      var url=URL.createObjectURL(_vpBlob);
+      var pb=document.getElementById('vp-playback'); if(pb){ pb.src=url; }
+      var wrap=document.getElementById('vp-audio-wrap'); if(wrap) wrap.style.display='block';
+      document.getElementById('vp-status').textContent='Recording complete — listen back, then match voices.';
+      matchVoices();
+    };
+    _vpRecorder.start();
+    document.getElementById('vp-record-btn').style.display='none';
+    document.getElementById('vp-stop-btn').style.display='inline-flex';
+    document.getElementById('vp-status').textContent='🔴 Recording… read the sample text aloud';
+    // Auto-stop after 30s
+    setTimeout(function(){ if(_vpRecorder&&_vpRecorder.state==='recording') stopVoiceRecording(); },30000);
+  }).catch(function(e){ toast('error','Microphone access denied: '+e.message); });
+}
+
+function stopVoiceRecording(){
+  if(_vpRecorder&&_vpRecorder.state==='recording') _vpRecorder.stop();
+  document.getElementById('vp-record-btn').style.display='inline-flex';
+  document.getElementById('vp-stop-btn').style.display='none';
+}
+
+function matchVoices(){
+  // Enumerate available voices and present them for teacher to pick
+  // The teacher listens to each and picks which sounds most like them
+  var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  if(!voices.length && window.speechSynthesis){
+    window.speechSynthesis.onvoiceschanged=function(){ matchVoices(); };
+    return;
+  }
+  var section=document.getElementById('vp-match-section');
+  var list=document.getElementById('vp-match-list');
+  if(!section||!list) return;
+  section.style.display='block';
+  var enVoices=voices.filter(function(v){ return v.lang.startsWith('en'); }).slice(0,10);
+  if(!enVoices.length) enVoices=voices.slice(0,8);
+  list.innerHTML='<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">Listen to each voice say the sample text, then select the one that sounds most like you:</div>'+
+    enVoices.map(function(v,i){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer" id="vpm_'+i+'" onclick="selectMatchedVoice('+i+',\''+v.name.replace(/'/g,'')+'\',\''+v.lang+'\',' + (v.localService?'true':'false') + ')">'
+        +'<input type="radio" name="vp-voice" id="vpr_'+i+'" style="accent-color:var(--text);cursor:pointer">'
+        +'<div style="flex:1"><div style="font-size:12.5px;font-weight:500">'+esc(v.name)+'</div><div style="font-size:11px;color:var(--text2)">'+v.lang+(v.localService?' · On-device ★':'')+'</div></div>'
+        +'<button class="btn btn-sm" onclick="previewVoice(event,\''+v.name.replace(/'/g,'')+'\')">▶ Preview</button>'
+        +'</div>';
+    }).join('');
+  _vpEnVoices=enVoices;
+}
+
+var _vpEnVoices=[];
+function previewVoice(e,voiceName){
+  e.stopPropagation();
+  var voices=window.speechSynthesis.getVoices();
+  var v=voices.find(function(x){ return x.name===voiceName; });
+  if(!v) return;
+  window.speechSynthesis.cancel();
+  var utt=new SpeechSynthesisUtterance('Good morning students. I am '+voiceName+'.');
+  utt.voice=v; utt.rate=0.95;
+  window.speechSynthesis.speak(utt);
+}
+
+function selectMatchedVoice(idx,name,lang,isLocal){
+  _vpSelectedVoice={preferredVoiceName:name,lang:lang,isLocalService:isLocal};
+  document.querySelectorAll('[id^="vpr_"]').forEach(function(r){ r.checked=false; });
+  var radio=document.getElementById('vpr_'+idx); if(radio) radio.checked=true;
+  document.querySelectorAll('[id^="vpm_"]').forEach(function(el){ el.style.borderColor='var(--border)'; });
+  var row=document.getElementById('vpm_'+idx); if(row) row.style.borderColor='var(--accent)';
+  var btn=document.getElementById('vp-save-btn'); if(btn) btn.style.display='inline-flex';
+  document.getElementById('vp-status').textContent='Selected: '+name;
+}
+
+function saveVoiceProfile(){
+  if(!_vpSelectedVoice){ toast('error','Select a voice first'); return; }
+  call('saveVoiceProfile',{voiceProfile:_vpSelectedVoice},function(){
+    toast('success','Voice profile saved — students with TTS enabled will hear '+_vpSelectedVoice.preferredVoiceName);
+    S._voiceProfile=_vpSelectedVoice;
+    var current=document.getElementById('vp-current-profile');
+    if(current){ current.style.display='block'; current.textContent='✓ Saved profile: '+_vpSelectedVoice.preferredVoiceName+' ('+_vpSelectedVoice.lang+')'; }
+    _vpSelectedVoice=null;
+    var btn=document.getElementById('vp-save-btn'); if(btn) btn.style.display='none';
+    document.getElementById('vp-match-section').style.display='none';
+    document.getElementById('vp-audio-wrap').style.display='none';
+    document.getElementById('vp-status').textContent='Profile saved ✓';
+  });
+}
+
+function clearVoiceProfile(){
+  if(!confirm('Clear your voice profile?')) return;
+  call('saveVoiceProfile',{voiceProfile:null},function(){
+    toast('success','Voice profile cleared'); S._voiceProfile=null;
+    var current=document.getElementById('vp-current-profile'); if(current) current.style.display='none';
+    document.getElementById('vp-status').textContent='Not recorded yet';
+  });
+}
+</script>
+</body>
+</html>
