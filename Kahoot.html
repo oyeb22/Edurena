@@ -108,16 +108,12 @@
     .reveal-q{font-size:15px;font-weight:600;color:var(--muted);margin-bottom:12px;max-width:580px;margin-left:auto;margin-right:auto;text-align:center}
     .reveal-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
     .reveal-opt{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:10px;font-size:14px;font-weight:600;position:relative}
-    /* Correct answer = bright green */
     .reveal-opt.is-correct{background:var(--k-green);color:#fff;outline:3px solid #4ade80;outline-offset:-3px}
-    /* The option the player picked (but it's wrong) = dim with a border so they can see what they chose */
     .reveal-opt.my-pick-wrong{background:var(--track);color:var(--muted);filter:brightness(.75);outline:2px solid #94a3b8;outline-offset:-2px}
-    /* Other wrong options = just dim */
     .reveal-opt.not-picked{background:var(--track);color:var(--muted);filter:brightness(.55)}
     .reveal-opt-shape{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
     .reveal-correct-tick{margin-left:auto;font-size:16px}
     .reveal-my-marker{margin-left:auto;font-size:11px;color:#94a3b8;font-weight:600;white-space:nowrap}
-    /* Score pill at bottom of reveal */
     .reveal-score-pill{text-align:center;padding:10px 0}
     .reveal-score-pill .rsp-label{font-size:13px;color:var(--muted);margin-bottom:4px}
     .reveal-score-pill .rsp-score{font-size:32px;font-weight:900;font-family:monospace;color:#7fa4ff}
@@ -160,7 +156,6 @@
     .spin-icon{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spinR .7s linear infinite;vertical-align:middle;margin-right:8px}
     @keyframes spinR{to{transform:rotate(360deg)}}
 
-    /* ── Mobile responsive ── */
     @media(max-width:520px){
       .opts-grid,.reveal-opts{grid-template-columns:1fr}
       .opt-btn{min-height:52px;font-size:13px;padding:12px}
@@ -188,7 +183,6 @@
       .ctrl-btn{width:36px;height:36px;font-size:14px}
     }
 
-    /* Touch-friendly minimum tap targets */
     .opt-btn, .join-btn, .play-again-btn {
       min-height: 48px;
       -webkit-tap-highlight-color: transparent;
@@ -199,7 +193,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Safe area insets for notched phones */
     body {
       padding-bottom: max(16px, env(safe-area-inset-bottom));
       padding-left:   max(16px, env(safe-area-inset-left));
@@ -351,21 +344,16 @@ function readCurrentQuestion(){
 function resetTTSBtn(){var b=document.getElementById('q-tts-inner');if(b)b.textContent='🔊 Read aloud';}
 
 /* ── FIREBASE ── */
+// Firebase config is loaded from edurena-config.js via the EDURENA.firebaseConfig object.
+// Never hardcode credentials in this file.
 var db;
 try{
-  var cfg={
-    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
-    authDomain:'kahoot-24063.firebaseapp.com',
-    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
-    projectId:'kahoot-24063',
-    storageBucket:'kahoot-24063.firebasestorage.app',
-    messagingSenderId:'962917873467',
-    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
-  };
+  var cfg = EDURENA.firebaseConfig;
+  if(!cfg) throw new Error('EDURENA.firebaseConfig is missing from edurena-config.js');
   var ex=null;
   firebase.apps.forEach(function(a){if(a.name==='kh')ex=a;});
   db=firebase.database(ex||firebase.initializeApp(cfg,'kh'));
-}catch(e){console.error('[kahoot] Firebase:',e.message);}
+}catch(e){console.error('[edurena] Firebase init failed:',e.message);}
 
 /* ── HELPERS ── */
 function show(id){
@@ -721,7 +709,6 @@ function submitAnswer(answer, btnEl){
   totalScore=totalScore+pointsEarned;
   myResults[currentQIdx]={isCorrect:isCorrect,pointsEarned:pointsEarned,myAnswer:answer};
 
-  // Neutral lock-in feedback — no pass/fail revealed yet
   showAnsweredFeedback(btnEl, answer);
 
   var rawUpdate={};
@@ -748,7 +735,7 @@ function submitAnswer(answer, btnEl){
 }
 
 /* ════════════════════════════════════════
-   ANSWERED FEEDBACK — neutral lock-in
+   ANSWERED FEEDBACK
 ════════════════════════════════════════ */
 function showAnsweredFeedback(selectedBtn, answer){
   var body=el('q-body');
@@ -807,10 +794,7 @@ function timeOut(){
 }
 
 /* ════════════════════════════════════════
-   REVEAL — FIX 1
-   No "correct / wrong" messaging to the player.
-   Just show all options, highlight the correct one green,
-   mark the player's picked option if it was wrong (dim + border).
+   REVEAL
 ════════════════════════════════════════ */
 function showReveal(qi, serverCorrect, correctText){
   stopTimer();
@@ -822,21 +806,17 @@ function showReveal(qi, serverCorrect, correctText){
   el('reveal-q-txt').textContent=q.question;
   var optsWrap=el('reveal-opts'); optsWrap.innerHTML='';
 
-  // Determine what the player answered
   var myR   =myResults[qi];
   var myAns =myR?normAnswer(myR.myAnswer||''):'';
 
-  // Play a gentle chime — no pass/fail sound
   playRevealChime();
 
   if(q.type==='MCQ'||q.type==='TF'){
     (q.options||[]).forEach(function(opt,i){
-      // Is this the correct option?
       var isCorrectOpt=normAnswer(opt)===normAnswer(correct)
                     || String.fromCharCode(65+i)===correct.toUpperCase()
                     || normAnswer(opt)===normAnswer(correctText||'');
 
-      // Did the player pick this option?
       var playerPickedThis=myAns&&(normAnswer(opt)===myAns);
 
       var div=document.createElement('div');
@@ -847,7 +827,6 @@ function showReveal(qi, serverCorrect, correctText){
         cls+=' is-correct';
         suffix='<span class="reveal-correct-tick">✓</span>';
       } else if(playerPickedThis){
-        // Player picked this but it's wrong — show with a muted border so they know what they chose
         cls+=' my-pick-wrong';
         suffix='<span class="reveal-my-marker">your pick</span>';
       } else {
@@ -861,12 +840,10 @@ function showReveal(qi, serverCorrect, correctText){
       optsWrap.appendChild(div);
     });
   } else {
-    // Short answer — just show the correct answer highlighted
     optsWrap.innerHTML='<div class="reveal-opt is-correct" style="grid-column:1/-1">'
       +'<div class="reveal-opt-shape">✓</div>'
       +'<span style="flex:1">'+esc(correctText||correct)+'</span>'
       +'</div>';
-    // Show player's answer if they gave one
     if(myAns){
       optsWrap.innerHTML+='<div class="reveal-opt my-pick-wrong" style="grid-column:1/-1">'
         +'<div class="reveal-opt-shape">📝</div>'
@@ -875,7 +852,6 @@ function showReveal(qi, serverCorrect, correctText){
     }
   }
 
-  // Score pill — just total score, no pass/fail label
   el('reveal-score-pill').innerHTML=
     '<div class="rsp-label">Your score</div>'
     +'<div class="rsp-score">'+totalScore.toLocaleString()+' pts</div>';
