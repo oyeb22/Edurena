@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  
+  <base target="_top">
   <meta charset="UTF-8">
-  <script src="edurena-dash.js"></script>
-  <link rel="stylesheet" href="edurena-dash-design.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — School Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -244,7 +242,7 @@
     <div class="sb-logo">
       <div class="sb-logo-row">
         <div class="logo-box">⚡</div>
-        <div class="logo-txt"><h1>Edurena</h1><p>School Admin v5.1</p></div>
+        <div class="logo-txt"><h1>Edurena</h1><p>School Admin</p></div>
       </div>
     </div>
 
@@ -706,6 +704,24 @@
 // ================================================================
 // STATE
 // ================================================================
+var SCRIPT_URL = (function(){
+  var s = '<?= ScriptApp.getService().getUrl() ?>';
+  if (!s) {
+    var m = window.location.search.match(/[?&]script=([^&]+)/);
+    if (m) s = decodeURIComponent(m[1]);
+  }
+  return s;
+})();
+if (!SCRIPT_URL) {
+  document.addEventListener('DOMContentLoaded', function() {
+    var g = document.getElementById('gate-msg');
+    var b = document.getElementById('gate-btn');
+    var gate = document.getElementById('gate');
+    if (gate) gate.classList.add('on');
+    if (g) g.textContent = 'Server not configured. Add ?script=YOUR_APPS_SCRIPT_URL to the URL.';
+    if (b) b.style.display = 'none';
+  });
+}
 var S    = { token:'', email:'', name:'', role:'', school:'', phone:'' };
 var _allClasses  = [];
 var _allStudents = [];
@@ -744,7 +760,7 @@ function authFail(msg) {
   document.getElementById('gate-btn').style.display = 'inline-block';
 }
 function goLogin() {
-  DASH.goLogin();
+  window.location.href = SCRIPT_URL + '?page=login';
 }
 
 function boot() {
@@ -762,7 +778,7 @@ function boot() {
 // UTILITIES
 // ================================================================
 function callRaw(action, data, cb) {
-  fetch(DASH.scriptUrl, {
+  fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify(Object.assign({ action: action }, data || {}))
   }).then(function(r){ return r.json(); })
@@ -889,7 +905,7 @@ function renderSubBanner(d, textId, barId, cardId) {
 }
 
 function openRenewPage() {
-  var pricingUrl = 'DASH.scriptUrl+'?page=pricing&schoolName='
+  var pricingUrl = SCRIPT_URL + '?page=pricing&schoolName='
     + encodeURIComponent(S.school);
   window.open(pricingUrl, '_blank');
 }
