@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  
+  <base target="_top">
   <meta charset="UTF-8">
-  <script src="edurena-dash.js"></script>
-  <link rel="stylesheet" href="edurena-dash-design.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edurena — Teacher Dashboard</title>
+  <title>QuizFlow Pro — Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -465,7 +463,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
     <div class="sb-logo">
       <div class="sb-logo-row">
         <div class="logo-box">⚡</div>
-        <div class="logo-txt"><h1>Edurena</h1><p>v5.1 Dashboard</p></div>
+        <div class="logo-txt"><h1>QuizFlow Pro</h1><p>v5.0 Dashboard</p></div>
       </div>
     </div>
     <div class="sb-profile" onclick="nav('profile',null);closeSidebar()">
@@ -1005,7 +1003,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
           <div class="card" id="voice-profile-card">
   <div class="ct">Teacher Voice Profile for TTS</div>
   <p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;line-height:1.6">
-    Record a short sample of your voice. Edurena will match it to the closest system voice so students hear a familiar tone during read-aloud.
+    Record a short sample of your voice. QuizFlow will match it to the closest system voice so students hear a familiar tone during read-aloud.
   </p>
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px">
     <div style="font-size:12px;font-weight:500;margin-bottom:8px">Step 1 — Read this sample text aloud:</div>
@@ -1238,6 +1236,24 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 
 <script>
 /* ── State ── */
+var SCRIPT_URL = (function(){
+  var s = '<?= ScriptApp.getService().getUrl() ?>';
+  if (!s) {
+    var m = window.location.search.match(/[?&]script=([^&]+)/);
+    if (m) s = decodeURIComponent(m[1]);
+  }
+  return s;
+})();
+if (!SCRIPT_URL) {
+  document.addEventListener('DOMContentLoaded', function() {
+    var g = document.getElementById('gate-msg');
+    var b = document.getElementById('gate-btn');
+    var gate = document.getElementById('gate');
+    if (gate) gate.classList.add('on');
+    if (g) g.textContent = 'Server not configured. Please open this page via your Apps Script deployment URL.';
+    if (b) b.style.display = 'none';
+  });
+}
 var S = { token:'', email:'', name:'', role:'', classes:[], subjects:[], photoUrl:'', school:'', phone:'' };
 var allQuizzes=[], allClasses=[], allQuestions=[], subjectTags=[];
 var chStatus=null, chCls=null;
@@ -1249,7 +1265,7 @@ var _schoolsList=[], _editingSchoolIdx=-1;
 var _broadsheetData=null, _broadsheetClass='';
 var _scheduleTarget='', _liveExamCode='';
 var _allStudents=[], _editingStudentEmail=null;
-var SUPERADMIN_EMAIL = DASH.superadminEmail || '';
+var SUPERADMIN_EMAIL = '<?= CONFIG.SUPERADMIN_EMAIL ?>';
 
 /* ── Mobile sidebar ── */
 function openSidebar(){
@@ -1289,7 +1305,7 @@ function authFail(msg) {
   document.getElementById('gate-msg').textContent = msg + ' Please log in.';
   document.getElementById('gate-btn').style.display = 'inline-block';
 }
-function goLogin() { DASH.goLogin(); }
+function goLogin() { window.location.href = SCRIPT_URL + '?page=login'; }
 
 function boot() {
   autoTheme();
@@ -1297,7 +1313,7 @@ function boot() {
   document.getElementById('shell').style.display = 'flex';
 
   if (S.role === 'school_admin') {
-    window.location.href = DASH.scriptUrl + '?page=schooladmin';
+    window.location.href = SCRIPT_URL + '?page=schooladmin';
     return;
   }
 
@@ -1331,7 +1347,7 @@ function initials(name) {
 
 /* ── Core Utilities ── */
 function callRaw(action, data, cb) {
-  fetch(DASH.scriptUrl, {
+  fetch(SCRIPT_URL, {
     method: 'POST', body: JSON.stringify(Object.assign({ action: action }, data || {}))
   }).then(function(r){ return r.json(); })
     .then(function(r){ if (cb) cb(null, r); })
@@ -1542,7 +1558,7 @@ function openLiveMo(examCode) {
 function goLiveQuiz() {
   var timePerQ=parseInt(document.getElementById('live-time-per-q').value)||20;
   var saveRes=document.getElementById('tog-save-results').classList.contains('on');
-  var url=DASH.scriptUrl+'?page=livehost&examCode='+encodeURIComponent(_liveExamCode)+'&timePerQ='+timePerQ+'&saveResults='+saveRes;
+  var url=SCRIPT_URL+'?page=livehost&examCode='+encodeURIComponent(_liveExamCode)+'&timePerQ='+timePerQ+'&saveResults='+saveRes;
   window.open(url,'_blank'); closeMo('live-mo');
 }
 
