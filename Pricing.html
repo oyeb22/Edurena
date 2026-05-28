@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edurena — Plans & Pricing</title>
+  <script src="edurena-config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#07090f; --surf:#0d1117; --surf2:#131923; --surf3:#182030;
+      --bdr:#1e2a3a; --bdr2:#243348;
+      --acc:#4d7cfe; --acc2:#7ea3ff; --acc-g:rgba(77,124,254,.15);
+      --grn:#23d18b; --grn-g:rgba(35,209,139,.12);
+      --red:#ff5c5c; --red-g:rgba(255,92,92,.12);
+      --yel:#ffb547; --yel-g:rgba(255,181,71,.12);
+      --pur:#a78bfa; --pur-g:rgba(167,139,250,.12);
+      --txt:#e8ecf4; --txt2:#7a8599; --muted:#3d4d63;
+      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+      --r:14px; --rs:9px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+    /* ── NAV ── */
+    .nav{background:rgba(7,9,15,.92);border-bottom:1px solid var(--bdr);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);}
+    .nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+    .nav-logo-box{width:30px;height:30px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+    .nav-logo-txt{font-size:14px;font-weight:700;color:var(--acc2);}
+    .nav-right{display:flex;align-items:center;gap:10px;}
+    .nav-link{font-size:12px;color:var(--txt2);text-decoration:none;padding:6px 12px;border-radius:var(--rs);transition:all .15s;}
+    .nav-link:hover{color:var(--txt);background:var(--surf2);}
+    .nav-btn{font-size:12px;font-weight:600;color:#fff;background:var(--acc);border:none;border-radius:var(--rs);padding:7px 14px;cursor:pointer;font-family:var(--font);transition:all .15s;}
+    .nav-btn:hover{background:#3d6cf0;}
+
+    /* ── HERO ── */
+    .hero{text-align:center;padding:72px 20px 52px;background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(77,124,254,.12) 0%,transparent 70%);}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--acc-g);border:1px solid rgba(77,124,254,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--acc2);margin-bottom:20px;}
+    .hero h1{font-size:clamp(28px,6vw,52px);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-bottom:14px;}
+    .hero h1 span{background:linear-gradient(135deg,var(--acc2),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero p{font-size:clamp(14px,2vw,17px);color:var(--txt2);max-width:540px;margin:0 auto 28px;line-height:1.7;}
+    .hero-currency{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--muted);}
+    .currency-flag{font-size:16px;}
+
+    /* ── BILLING TOGGLE ── */
+    .billing-toggle{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:44px;}
+    .toggle-label{font-size:13px;color:var(--txt2);font-weight:500;}
+    .toggle-pill{width:46px;height:24px;background:var(--bdr);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;}
+    .toggle-pill.on{background:var(--acc);}
+    .toggle-pill::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left .18s;}
+    .toggle-pill.on::after{left:24px;}
+    .save-badge{background:var(--grn-g);border:1px solid rgba(35,209,139,.25);color:var(--grn);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+
+    /* ── PLANS GRID ── */
+    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1000px;margin:0 auto;padding:0 20px;}
+    @media(max-width:800px){.plans{grid-template-columns:1fr;max-width:420px;}}
+    .plan-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:24px;position:relative;transition:border-color .2s;}
+    .plan-card:hover{border-color:var(--bdr2);}
+    .plan-card.popular{border-color:var(--acc);box-shadow:0 0 40px rgba(77,124,254,.1);}
+    .popular-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--acc),var(--pur));color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap;}
+    .plan-name{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+    .plan-price-wrap{margin-bottom:6px;}
+    .plan-price{font-size:clamp(28px,5vw,38px);font-weight:800;font-family:var(--mono);color:var(--txt);}
+    .plan-currency{font-size:16px;font-weight:600;color:var(--txt2);vertical-align:super;margin-right:2px;}
+    .plan-period{font-size:12px;color:var(--muted);margin-bottom:14px;}
+    .plan-per{font-size:11px;color:var(--txt2);background:var(--surf2);border:1px solid var(--bdr);padding:3px 9px;border-radius:20px;display:inline-block;margin-bottom:16px;}
+    .plan-divider{height:1px;background:var(--bdr);margin:16px 0;}
+    .plan-features{list-style:none;margin-bottom:20px;}
+    .plan-features li{display:flex;align-items:flex-start;gap:7px;font-size:12.5px;color:var(--txt2);margin-bottom:8px;line-height:1.5;}
+    .feat-check{color:var(--grn);font-size:13px;flex-shrink:0;margin-top:1px;}
+    .feat-x{color:var(--muted);font-size:13px;flex-shrink:0;margin-top:1px;}
+    .plan-btn{width:100%;padding:12px;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;}
+    .plan-btn-outline{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt);}
+    .plan-btn-outline:hover{border-color:var(--acc);color:var(--acc2);}
+    .plan-btn-primary{background:var(--acc);color:#fff;}
+    .plan-btn-primary:hover{background:#3d6cf0;}
+    .plan-btn-pur{background:linear-gradient(135deg,var(--acc),var(--pur));color:#fff;}
+    .plan-btn-pur:hover{opacity:.9;}
+
+    /* ── CALCULATOR ── */
+    .calc-section{max-width:660px;margin:64px auto 0;padding:0 20px;}
+    .calc-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:28px;}
+    .calc-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+    .calc-sub{font-size:12px;color:var(--txt2);margin-bottom:22px;}
+    .calc-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    @media(max-width:500px){.calc-row{grid-template-columns:1fr;}}
+    .calc-field label{display:block;font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+    .calc-field input,.calc-field select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);color:var(--txt);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s;}
+    .calc-field input:focus,.calc-field select:focus{border-color:var(--acc);}
+    .calc-field select option{background:var(--surf);}
+    .calc-result{margin-top:16px;padding:16px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rs);}
+    .calc-result-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:7px;}
+    .calc-result-row:last-child{margin-bottom:0;}
+    .calc-result-label{color:var(--txt2);}
+    .calc-result-val{font-family:var(--mono);font-weight:600;color:var(--txt);}
+    .calc-total-row{border-top:1px solid var(--bdr);padding-top:10px;margin-top:10px;}
+    .calc-total-label{font-weight:700;color:var(--txt);font-size:13px;}
+    .calc-total-val{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--acc2);}
+    .calc-discount-badge{background:var(--grn-g);color:var(--grn);border:1px solid rgba(35,209,139,.22);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+    .calc-cta{margin-top:16px;width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;}
+    .calc-cta:hover{background:#3d6cf0;}
+
+    /* ── CHECKOUT MODAL ── */
+    .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+    .mo.on{display:flex;}
+    .mbox{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+    .mh{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+    .mh-title{font-size:14px;font-weight:700;}
+    .mc{cursor:pointer;color:var(--txt2);font-size:16px;padding:3px;}
+    .mc:hover{color:var(--txt);}
+    .mb{padding:20px;}
+    .mo-section{margin-bottom:18px;}
+    .mo-section-title{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+    .mo-field{margin-bottom:12px;}
+    .mo-field label{display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:5px;}
+    .mo-field input,.mo-field select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);color:var(--txt);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s;}
+    .mo-field input:focus,.mo-field select:focus{border-color:var(--acc);}
+    .mo-summary{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rs);padding:14px;margin-bottom:16px;}
+    .mo-sum-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:var(--txt2);}
+    .mo-sum-row:last-child{margin-bottom:0;}
+    .mo-sum-total{border-top:1px solid var(--bdr);padding-top:10px;margin-top:10px;display:flex;justify-content:space-between;}
+    .mo-sum-total-label{font-weight:700;color:var(--txt);}
+    .mo-sum-total-val{font-family:var(--mono);font-size:16px;font-weight:800;color:var(--acc2);}
+    .mo-pay-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--acc),var(--pur));color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;}
+    .mo-pay-btn:hover{opacity:.9;}
+    .mo-pay-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .mo-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);margin-top:10px;}
+    .mo-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;min-height:16px;}
+
+    /* ── SUCCESS STATE ── */
+    .success-state{text-align:center;padding:32px 20px;}
+    .success-icon{font-size:52px;margin-bottom:14px;}
+    .success-title{font-size:18px;font-weight:800;margin-bottom:8px;color:var(--grn);}
+    .success-msg{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:20px;}
+    .success-ref{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surf2);padding:6px 12px;border-radius:var(--rs);display:inline-block;}
+
+    /* ── FAQ ── */
+    .faq-section{max-width:680px;margin:64px auto;padding:0 20px;}
+    .faq-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:28px;}
+    .faq-item{border-bottom:1px solid var(--bdr);padding:16px 0;}
+    .faq-q{font-size:13px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
+    .faq-q .faq-icon{color:var(--muted);transition:transform .2s;font-size:12px;}
+    .faq-q.open .faq-icon{transform:rotate(180deg);}
+    .faq-a{font-size:12.5px;color:var(--txt2);line-height:1.7;margin-top:10px;display:none;}
+    .faq-a.on{display:block;}
+
+    /* ── TOAST ── */
+    .toast-stack{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:6px;}
+    .toast{background:var(--surf);border:1px solid var(--bdr);border-radius:9px;padding:10px 14px;font-size:12px;max-width:300px;box-shadow:0 4px 18px rgba(0,0,0,.4);animation:toastIn .18s ease;}
+    .toast.success{border-color:var(--grn);}
+    .toast.error{border-color:var(--red);}
+    @keyframes toastIn{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* ── SPINNER ── */
+    .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spinR .7s linear infinite;vertical-align:middle;margin-right:6px;}
+    @keyframes spinR{to{transform:rotate(360deg)}}
+
+    /* ── FOOTER ── */
+    .footer{border-top:1px solid var(--bdr);padding:32px 24px;text-align:center;font-size:12px;color:var(--muted);margin-top:80px;}
+    .footer a{color:var(--txt2);text-decoration:none;}
+    .footer a:hover{color:var(--acc2);}
+
+    /* ── MOBILE RESPONSIVE ── */
+    @media(max-width:640px) {
+      nav{padding:12px 16px;}
+      .nav-logo-txt{display:none;}
+      .nav-links{gap:12px;}
+      .nav-links a{font-size:12px;}
+      .nav-links .nav-cta{padding:7px 14px;font-size:12px;}
+
+      .hero{padding:60px 16px 40px;}
+      .hero h1{font-size:clamp(24px,7vw,36px);}
+      .hero p{font-size:13px;}
+
+      .section{padding:40px 16px;}
+      section{padding:40px 16px;}
+
+      .plans{grid-template-columns:1fr !important;max-width:100%;}
+      .plan{border-radius:12px;}
+      .plan-price-big{font-size:clamp(28px,8vw,40px);}
+
+      .calc-row{grid-template-columns:1fr !important;}
+      .calc-cta{min-height:48px;font-size:13px;}
+      .calc-total-val{font-size:16px;}
+
+      .faq-q{font-size:13px;padding:14px 16px;}
+      .faq-a{padding:0 16px 14px;font-size:12px;}
+
+      .mbox{max-width:100%;border-radius:16px 16px 0 0;position:fixed;bottom:0;max-height:92vh;}
+      .mo{align-items:flex-end;padding:0;}
+      .mb{padding:16px;}
+      .mo-pay-btn{min-height:52px;font-size:14px;}
+    }
+    @media(max-width:400px) {
+      .hero h1{font-size:22px;}
+      .plan-price-big{font-size:26px;}
+    }
+
+    /* Touch targets */
+    .plan-btn, .calc-cta, .mo-pay-btn, .nav-cta {
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    /* Safe area */
+    body { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-box">⚡</div>
+    <span class="nav-logo-txt">Edurena</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-link" id="nav-login-link" href="#">Teacher Login</a>
+    <button class="nav-btn" onclick="scrollToPlans()">Get Started</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🇳🇬 Nigerian Schools · Priced in Naira</div>
+  <h1>Simple, transparent<br><span>pricing for every school</span></h1>
+  <p>AI-proctored exams, live quizzes, and detailed analytics — built for Nigerian classrooms at Nigerian prices.</p>
+  <div class="hero-currency">
+    <span class="currency-flag">🇳🇬</span>
+    <span>All prices in Nigerian Naira (₦) · VAT inclusive · Cancel anytime</span>
+  </div>
+</section>
+
+<!-- BILLING TOGGLE -->
+<div class="billing-toggle">
+  <span class="toggle-label">Monthly</span>
+  <div class="toggle-pill" id="billingToggle" onclick="toggleBilling()"></div>
+  <span class="toggle-label">Annual</span>
+  <span class="save-badge">Save 20%</span>
+</div>
+
+<!-- PLANS -->
+<div class="plans" id="plans-grid">
+  <!-- Rendered by JS -->
+</div>
+
+<!-- CALCULATOR -->
+<section class="calc-section">
+  <div class="calc-card">
+    <div class="calc-title">💰 Cost Calculator</div>
+    <div class="calc-sub">See exactly what you'll pay based on your school size and plan.</div>
+    <div class="calc-row">
+      <div class="calc-field">
+        <label>Number of Students</label>
+        <input type="number" id="calc-students" value="100" min="10" max="5000" oninput="calcUpdate()">
+      </div>
+      <div class="calc-field">
+        <label>Duration</label>
+        <select id="calc-duration" onchange="calcUpdate()">
+          <option value="1">1 month</option>
+          <option value="3">3 months</option>
+          <option value="6">6 months</option>
+          <option value="12" selected>12 months (Annual)</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-row">
+      <div class="calc-field">
+        <label>Plan</label>
+        <select id="calc-plan" onchange="calcUpdate()">
+          <option value="standard">Standard</option>
+          <option value="premium" selected>Premium</option>
+        </select>
+      </div>
+      <div class="calc-field">
+        <label>School Name</label>
+        <input type="text" id="calc-school" placeholder="e.g. Sunrise Academy">
+      </div>
+    </div>
+    <div class="calc-result" id="calc-result"></div>
+    <button class="calc-cta" onclick="openCheckoutFromCalc()">Proceed to Payment →</button>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="faq-title">Frequently Asked Questions</div>
+  <div id="faq-list"></div>
+</section>
+
+<!-- CHECKOUT MODAL -->
+<div class="mo" id="checkout-mo">
+  <div class="mbox">
+    <div class="mh">
+      <span class="mh-title">🔒 Complete Your Order</span>
+      <span class="mc" onclick="closeMo('checkout-mo')">✕</span>
+    </div>
+    <div class="mb" id="checkout-body">
+      <!-- Dynamic -->
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toasts"></div>
+
+<script>
+/* ── SCRIPT URL — resolved by edurena-config.js ── */
+var SCRIPT_URL = EDURENA.scriptUrl;
+var GS_URL     = SCRIPT_URL;
+
+// Update as soon as EDURENA resolves (handles sessionStorage case)
+EDURENA.ready.then(function(cfg) {
+  SCRIPT_URL = cfg.scriptUrl || SCRIPT_URL;
+  GS_URL     = SCRIPT_URL;
+  document.getElementById('nav-login-link').href = SCRIPT_URL ? SCRIPT_URL + '?page=login' : '#';
+  // Load live pricing from API
+  _loadLivePricing(cfg.pricing);
+});
+
+/* ── Update nav login link immediately if we already have the URL ── */
+if (SCRIPT_URL) {
+  document.getElementById('nav-login-link').href = SCRIPT_URL + '?page=login';
+}
+
+/* ── TASK 8.1 — Pre-fill school name from URL ?schoolName= param (renewal flow) ── */
+(function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var preSchool = urlParams.get('schoolName') || '';
+  var prePlan   = urlParams.get('plan')       || '';
+  var preRenew  = urlParams.get('renew')      === 'true';
+
+  if (preSchool) {
+    // Pre-fill the calculator school field as soon as DOM is ready
+    var calcSchool = document.getElementById('calc-school');
+    if (calcSchool) calcSchool.value = decodeURIComponent(preSchool);
+
+    // If this is a renewal link, also switch the plan selector to match and show a banner
+    if (prePlan && (prePlan === 'standard' || prePlan === 'premium')) {
+      var calcPlan = document.getElementById('calc-plan');
+      if (calcPlan) calcPlan.value = prePlan;
+    }
+
+    if (preRenew) {
+      // Show a subtle renewal notice in the hero
+      var heroP = document.querySelector('.hero p');
+      if (heroP) {
+        heroP.innerHTML = '🔄 <strong style="color:var(--acc2)">'
+          + decodeURIComponent(preSchool).replace(/</g,'&lt;')
+          + '</strong> — renew your subscription below to restore student access.';
+      }
+    }
+  }
+})();
+
+/* ── PRICING CONFIG — loaded live from API via edurena-config.js ── */
+var PRICES = {
+  standard_per_student: 200,   // fallback defaults
+  premium_per_student:  350,
+  trial_days:           14,
+  minimum_students:     30
+};
+var DISCOUNTS = {
+  annual:   0.20,
+  bulk_50:  0.10,
+  bulk_100: 0.15,
+  bulk_500: 0.25
+};
+
+/**
+ * Called when live pricing arrives from the API.
+ * Updates PRICES from the pricing_config Supabase table.
+ */
+function _loadLivePricing(pricing) {
+  if (!pricing || typeof pricing !== 'object') return;
+  if (pricing.standard) {
+    PRICES.standard_per_student = pricing.standard.pricePerStudent || PRICES.standard_per_student;
+    PRICES.minimum_students     = pricing.standard.minStudents     || PRICES.minimum_students;
+    var tiers = pricing.standard.bulkTiers || [];
+    if (tiers.length) {
+      // Map API tier format to local DISCOUNTS
+      tiers.forEach(function(t) {
+        if (t.from >= 500) DISCOUNTS.bulk_500 = (t.discount_pct || 25) / 100;
+        else if (t.from >= 100) DISCOUNTS.bulk_100 = (t.discount_pct || 15) / 100;
+        else if (t.from >= 50)  DISCOUNTS.bulk_50  = (t.discount_pct || 10) / 100;
+      });
+    }
+  }
+  if (pricing.premium) {
+    PRICES.premium_per_student = pricing.premium.pricePerStudent || PRICES.premium_per_student;
+  }
+  // Re-render calculator with live prices
+  updateCalc();
+  renderPlans();
+}
+
+/* ── FLUTTERWAVE payment handler ── */
+function initiateFlutterwavePayment(plan, schoolName, email, studentCount, months) {
+  if (!SCRIPT_URL) { showToast('Server not configured', 'err'); return; }
+
+  showToast('Preparing payment…', 'info');
+
+  // Step 1: Get payment reference and amount from backend
+  EDURENA.post('createFlutterwavePaymentRef', {
+    plan:           plan,
+    schoolName:     schoolName,
+    contactEmail:   email,
+    studentCount:   studentCount,
+    durationMonths: months,
+    currency:       'NGN'
+  }).then(function(r) {
+    if (r.status !== 'success') throw new Error(r.message || 'Payment init failed');
+    var d = r.data;
+
+    if (d.alreadyActive) {
+      showToast('This school already has an active subscription!', 'ok');
+      return;
+    }
+
+    // Step 2: Load Flutterwave inline SDK and open payment modal
+    return EDURENA.post('getFlutterwavePublicKey', {}).then(function(pkRes) {
+      if (pkRes.status !== 'success') throw new Error('Could not load payment config');
+      var pubKey = pkRes.data.publicKey;
+
+      // Load Flutterwave inline script dynamically
+      if (typeof FlutterwaveCheckout === 'undefined') {
+        var s = document.createElement('script');
+        s.src = 'https://checkout.flutterwave.com/v3.js';
+        s.onload = function() { _openFlwModal(pubKey, d, plan, schoolName, email); };
+        document.head.appendChild(s);
+      } else {
+        _openFlwModal(pubKey, d, plan, schoolName, email);
+      }
+    });
+  }).catch(function(e) {
+    showToast('Payment error: ' + e.message, 'err');
+    console.error('[Pricing] Flutterwave init error:', e);
+  });
+}
+
+function _openFlwModal(pubKey, paymentData, plan, schoolName, email) {
+  FlutterwaveCheckout({
+    public_key: pubKey,
+    tx_ref:     paymentData.txRef,
+    amount:     paymentData.amount,
+    currency:   paymentData.currency || 'NGN',
+    payment_options: 'card,banktransfer,ussd',
+    meta:       paymentData.meta,
+    customer: {
+      email: email,
+      name:  schoolName
+    },
+    customizations: {
+      title:       'Edurena — ' + (plan.charAt(0).toUpperCase() + plan.slice(1)) + ' Plan',
+      description: paymentData.studentCount + ' students × ' + paymentData.durationMonths + ' month(s)',
+      logo:        'https://oyeb22.github.io/EDURENA/edurena-logo.png'
+    },
+    callback: function(response) {
+      // Verify on backend after successful payment
+      if (response.status === 'successful') {
+        showToast('Payment received! Activating your school…', 'ok');
+        EDURENA.post('verifyFlutterwavePayment', {
+          transactionId: String(response.transaction_id),
+          txRef:         response.tx_ref
+        }).then(function(r) {
+          if (r.status === 'success' && r.data.verified) {
+            showToast('🎉 School activated! Check your email for login details.', 'ok');
+            setTimeout(function() {
+              if (SCRIPT_URL) window.location.href = SCRIPT_URL + '?page=login';
+            }, 3000);
+          } else {
+            showToast('Payment verified but activation pending — check your email shortly.', 'info');
+          }
+        }).catch(function(e) {
+          showToast('Verification issue — contact support with ref: ' + response.tx_ref, 'err');
+        });
+      }
+    },
+    onclose: function() {
+      console.log('[Pricing] Flutterwave modal closed');
+    }
+  });
+}
+
+var isAnnual = false;
+var PLANS = [
+  {
+    key:      'trial',
+    name:     'Trial',
+    tagline:  'Try before you commit',
+    popular:  false,
+    features: [
+      { text: '14-day free trial', ok: true },
+      { text: 'Up to 50 students', ok: true },
+      { text: 'AI-proctored exams', ok: true },
+      { text: 'Live quiz games', ok: true },
+      { text: 'Question bank import', ok: true },
+      { text: 'AI explanations', ok: false },
+      { text: 'Priority support', ok: false }
+    ],
+    btnLabel: 'Start Free Trial',
+    btnClass: 'plan-btn-outline',
+    priceLabel: 'Free',
+    periodLabel: '14 days, no card needed'
+  },
+  {
+    key:      'standard',
+    name:     'Standard',
+    tagline:  'Everything a school needs',
+    popular:  false,
+    features: [
+      { text: 'Unlimited students', ok: true },
+      { text: 'AI-proctored exams', ok: true },
+      { text: 'Live quiz games (Race + Kahoot)', ok: true },
+      { text: 'CSV/JSON question import', ok: true },
+      { text: 'Broadsheet & analytics', ok: true },
+      { text: 'AI explanations', ok: false },
+      { text: 'Priority support', ok: false }
+    ],
+    btnLabel: 'Get Standard',
+    btnClass: 'plan-btn-outline'
+  },
+  {
+    key:      'premium',
+    name:     'Premium',
+    tagline:  'AI-powered learning advantage',
+    popular:  true,
+    features: [
+      { text: 'Everything in Standard', ok: true },
+      { text: 'AI answer explanations', ok: true },
+      { text: 'Phonics / diction exam mode', ok: true },
+      { text: 'Image-based answer options', ok: true },
+      { text: 'Priority email support', ok: true },
+      { text: 'Custom school branding (soon)', ok: true },
+      { text: 'API access (soon)', ok: false }
+    ],
+    btnLabel: 'Get Premium',
+    btnClass: 'plan-btn-pur'
+  }
+];
+
+var FAQ_ITEMS = [
+  { q: 'How is pricing calculated?', a: 'You pay per student per month. Bulk discounts apply automatically: 10% off for 50+ students, 15% off for 100+, and 25% off for 500+. Annual billing gives an additional 20% discount on top of any bulk discount.' },
+  { q: 'What payment methods do you accept?', a: 'We use Flutterwave which accepts Nigerian debit/credit cards, bank transfers, USSD, and mobile money. Payment is in Naira (₦). No foreign exchange needed.' },
+  { q: 'Is the trial really free? Do I need a card?', a: 'Yes — the 14-day trial requires no payment and no card. You get full access to all Standard features for your first 14 days. After that, you can upgrade to keep your data.' },
+  { q: 'What happens when my subscription expires?', a: 'Students can no longer start new exams, but all historical results are preserved. You can renew at any time to restore access. Teacher accounts remain active.' },
+  { q: 'Can I switch plans mid-subscription?', a: 'Yes. Upgrading takes effect immediately and the remaining days from your current plan are carried over. Contact us to downgrade.' },
+  { q: 'Do you offer discounts for government schools or NGOs?', a: 'Yes — contact us directly at adisa7oyebola@gmail.com with your school details and we can offer a custom arrangement.' },
+  { q: 'How does AI face detection work for exams?', a: "We use MediaPipe, a browser-based AI model that runs entirely on the student's device. No video is streamed to our servers — only still photos are saved on violation events." },
+  { q: 'Is student data stored securely?', a: "All data is stored in your school's dedicated Google Sheets — you own and control it. We use the same security as Google's infrastructure." }
+];
+
+/* ── UTILS ── */
+function fmt(n){ return '₦' + Math.round(n).toLocaleString('en-NG'); }
+function esc(s){ var d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+function toast(type, msg){
+  var s=document.getElementById('toasts'), el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML=(type==='success'?'✅ ':'❌ ')+esc(msg);
+  s.appendChild(el);
+  setTimeout(function(){el.remove();},5000);
+}
+function closeMo(id){ document.getElementById(id).classList.remove('on'); }
+function scrollToPlans(){ document.getElementById('plans-grid').scrollIntoView({behavior:'smooth',block:'start'}); }
+
+/* ── CALCULATE COST ── */
+function calcCost(students, plan, months) {
+  students = Math.max(parseInt(students)||10, PRICES.minimum_students);
+  var base = plan === 'premium' ? PRICES.premium_per_student : PRICES.standard_per_student;
+  var raw  = base * students * months;
+  var disc = 0;
+  if (months >= 12)         disc = Math.max(disc, DISCOUNTS.annual);
+  if (students >= 500)      disc = Math.max(disc, DISCOUNTS.bulk_500);
+  else if (students >= 100) disc = Math.max(disc, DISCOUNTS.bulk_100);
+  else if (students >= 50)  disc = Math.max(disc, DISCOUNTS.bulk_50);
+  var final = raw * (1 - disc);
+  return { base: base, raw: raw, disc: disc, final: final, students: students, months: months, plan: plan };
+}
+
+/* ── PLAN CARDS ── */
+function renderPlans() {
+  var grid = document.getElementById('plans-grid');
+  grid.innerHTML = PLANS.map(function(p) {
+    var priceHtml = '';
+    if (p.key === 'trial') {
+      priceHtml = '<div class="plan-price-wrap"><span class="plan-price">Free</span></div>'
+        + '<div class="plan-period">' + p.periodLabel + '</div>'
+        + '<div class="plan-per">No card required</div>';
+    } else {
+      var rate    = p.key === 'premium' ? PRICES.premium_per_student : PRICES.standard_per_student;
+      var display = isAnnual ? Math.round(rate * 0.8) : rate;
+      priceHtml = '<div class="plan-price-wrap">'
+        + '<span class="plan-currency">₦</span>'
+        + '<span class="plan-price" data-plan="'+p.key+'">' + display.toLocaleString() + '</span>'
+        + '</div>'
+        + '<div class="plan-period">per student / month' + (isAnnual ? ' · billed annually' : '') + '</div>'
+        + '<div class="plan-per">e.g. 100 students = ' + fmt(display*100) + '/mo</div>';
+    }
+    return '<div class="plan-card' + (p.popular ? ' popular' : '') + '">'
+      + (p.popular ? '<div class="popular-badge">⭐ Most Popular</div>' : '')
+      + '<div class="plan-name">' + p.name + '</div>'
+      + priceHtml
+      + '<div class="plan-divider"></div>'
+      + '<ul class="plan-features">'
+      + p.features.map(function(f){
+          return '<li><span class="' + (f.ok ? 'feat-check' : 'feat-x') + '">' + (f.ok?'✓':'✗') + '</span>' + esc(f.text) + '</li>';
+        }).join('')
+      + '</ul>'
+      + '<button class="plan-btn ' + p.btnClass + '" onclick="openCheckout(\'' + p.key + '\')">' + p.btnLabel + '</button>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  document.getElementById('billingToggle').classList.toggle('on', isAnnual);
+  renderPlans();
+  calcUpdate();
+}
+
+/* ── CALCULATOR ── */
+function calcUpdate() {
+  var students = parseInt(document.getElementById('calc-students').value) || 100;
+  var months   = parseInt(document.getElementById('calc-duration').value) || 12;
+  var plan     = document.getElementById('calc-plan').value;
+  var r        = calcCost(students, plan, months);
+  var discPct  = Math.round(r.disc * 100);
+  var res      = document.getElementById('calc-result');
+  res.innerHTML =
+    '<div class="calc-result-row"><span class="calc-result-label">Base rate</span><span class="calc-result-val">' + fmt(r.base) + ' / student / month</span></div>'
+    + '<div class="calc-result-row"><span class="calc-result-label">Students</span><span class="calc-result-val">' + r.students.toLocaleString() + '</span></div>'
+    + '<div class="calc-result-row"><span class="calc-result-label">Duration</span><span class="calc-result-val">' + r.months + ' month' + (r.months!==1?'s':'') + '</span></div>'
+    + '<div class="calc-result-row"><span class="calc-result-label">Subtotal</span><span class="calc-result-val">' + fmt(r.raw) + '</span></div>'
+    + (discPct > 0 ? '<div class="calc-result-row"><span class="calc-result-label">Discount</span><span class="calc-discount-badge">-' + discPct + '%</span></div>' : '')
+    + '<div class="calc-result-row calc-total-row"><span class="calc-total-label">Total to Pay</span><span class="calc-total-val">' + fmt(r.final) + '</span></div>';
+}
+
+/* ── CHECKOUT ── */
+var _checkoutData = {};
+
+function openCheckout(planKey) {
+  if (planKey === 'trial') { openTrialModal(); return; }
+  var preSchool = (document.getElementById('calc-school') || {}).value || '';
+  _checkoutData = { plan: planKey, students: 100, months: isAnnual ? 12 : 1, school: preSchool.trim() };
+  renderCheckoutBody();
+  document.getElementById('checkout-mo').classList.add('on');
+}
+
+function openCheckoutFromCalc() {
+  var school   = (document.getElementById('calc-school').value || '').trim();
+  var students = parseInt(document.getElementById('calc-students').value) || 100;
+  var months   = parseInt(document.getElementById('calc-duration').value) || 12;
+  var plan     = document.getElementById('calc-plan').value;
+  _checkoutData = { plan: plan, students: students, months: months, school: school };
+  renderCheckoutBody();
+  document.getElementById('checkout-mo').classList.add('on');
+}
+
+function renderCheckoutBody() {
+  var d   = _checkoutData;
+  var r   = calcCost(d.students || 100, d.plan || 'standard', d.months || 1);
+  var body = document.getElementById('checkout-body');
+  body.innerHTML =
+    '<div class="mo-section">'
+      + '<div class="mo-section-title">School Details</div>'
+      + '<div class="mo-field"><label>School Name *</label><input type="text" id="co-school" placeholder="e.g. Sunrise Academy" value="' + esc(d.school || '') + '"></div>'
+      + '<div class="mo-field"><label>Contact Email *</label><input type="email" id="co-email" placeholder="admin@school.edu"></div>'
+      + '<div class="mo-field"><label>Contact Name *</label><input type="text" id="co-name" placeholder="Your full name"></div>'
+    + '</div>'
+    + '<div class="mo-section">'
+      + '<div class="mo-section-title">Subscription Config</div>'
+      + '<div class="mo-field"><label>Number of Students</label><input type="number" id="co-students" value="' + r.students + '" min="10" max="5000" oninput="coRecalc()"></div>'
+      + '<div class="mo-field"><label>Duration (months)</label><select id="co-months" onchange="coRecalc()">'
+        + [1,3,6,12].map(function(m){ return '<option value="'+m+'"'+(m===r.months?' selected':'')+'>'+m+' month'+(m!==1?'s':'')+(m===12?' (Annual -20%)':'')+'</option>'; }).join('')
+        + '</select></div>'
+      + '<div class="mo-field"><label>Plan</label><select id="co-plan" onchange="coRecalc()">'
+        + '<option value="standard"' + (d.plan==='standard'?' selected':'') + '>Standard</option>'
+        + '<option value="premium"'  + (d.plan==='premium' ?' selected':'') + '>Premium</option>'
+        + '</select></div>'
+    + '</div>'
+    + '<div class="mo-summary" id="co-summary"></div>'
+    + '<button class="mo-pay-btn" id="co-pay-btn" onclick="doCheckout()">🔒 Pay with Flutterwave</button>'
+    + '<div class="mo-secure">🔐 Secured by Flutterwave · SSL encrypted · ₦ Naira</div>'
+    + '<div class="mo-err" id="co-err"></div>';
+  coRecalc();
+}
+
+function coRecalc() {
+  var students = parseInt((document.getElementById('co-students') || {}).value) || 100;
+  var months   = parseInt((document.getElementById('co-months')   || {}).value) || 1;
+  var plan     = ((document.getElementById('co-plan')     || {}).value) || 'standard';
+  var r        = calcCost(students, plan, months);
+  var discPct  = Math.round(r.disc * 100);
+  var sum      = document.getElementById('co-summary');
+  if (!sum) return;
+  sum.innerHTML =
+    '<div class="mo-sum-row"><span>' + (plan.charAt(0).toUpperCase()+plan.slice(1)) + ' plan</span><span>' + fmt(r.base) + '/student/mo</span></div>'
+    + '<div class="mo-sum-row"><span>' + students + ' students × ' + months + ' month' + (months!==1?'s':'') + '</span><span>' + fmt(r.raw) + '</span></div>'
+    + (discPct > 0 ? '<div class="mo-sum-row" style="color:var(--grn)"><span>Discount (' + discPct + '%)</span><span>-' + fmt(r.raw * r.disc) + '</span></div>' : '')
+    + '<div class="mo-sum-total"><span class="mo-sum-total-label">Total</span><span class="mo-sum-total-val">' + fmt(r.final) + '</span></div>';
+}
+
+/* ── CHECKOUT — uses createPaymentIntentPublic (no auth required) ── */
+function doCheckout() {
+  var school   = ((document.getElementById('co-school')   || {}).value || '').trim();
+  var email    = ((document.getElementById('co-email')    || {}).value || '').trim();
+  var name     = ((document.getElementById('co-name')     || {}).value || '').trim();
+  var students = parseInt((document.getElementById('co-students') || {}).value) || 100;
+  var months   = parseInt((document.getElementById('co-months')   || {}).value) || 1;
+  var plan     = ((document.getElementById('co-plan')     || {}).value) || 'standard';
+  var errEl    = document.getElementById('co-err');
+
+  if (!school) { errEl.textContent = 'Please enter your school name'; return; }
+  if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email'; return; }
+  if (!name)   { errEl.textContent = 'Please enter your name'; return; }
+  errEl.textContent = '';
+
+  var btn = document.getElementById('co-pay-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Preparing payment…';
+
+  // Use Flutterwave via the new createFlutterwavePaymentRef action
+  initiateFlutterwavePayment(plan, school, email, students, months);
+  btn.disabled = false;
+  btn.innerHTML = '🔒 Pay with Flutterwave';
+}
+
+function showPostPaymentMessage(ref, amount, email) {
+  var body = document.getElementById('checkout-body');
+  body.innerHTML = '<div class="success-state">'
+    + '<div class="success-icon">✅</div>'
+    + '<div class="success-title">Payment Initiated!</div>'
+    + '<div class="success-msg">Complete your payment of <strong>' + fmt(amount) + '</strong> in the Flutterwave window.<br>'
+    + 'Your subscription will activate automatically within a few minutes after payment.<br><br>'
+    + 'A confirmation email will be sent to <strong>' + esc(email) + '</strong>.</div>'
+    + '<div class="success-ref">Ref: ' + esc(ref) + '</div>'
+    + '<div style="margin-top:16px;font-size:12px;color:var(--txt2)">Already paid? '
+    + '<a href="' + esc(SCRIPT_URL) + '?page=login" style="color:var(--acc2)">Log in to your dashboard</a></div>'
+    + '</div>';
+}
+
+function showManualPayment(ref, amount, school, plan, students, months) {
+  var errEl = document.getElementById('co-err');
+  errEl.innerHTML = '<div style="background:var(--yel-g);border:1px solid rgba(255,181,71,.25);border-radius:var(--rs);padding:12px;margin-top:10px;text-align:left;line-height:1.7">'
+    + '⚠️ <strong>Manual Payment Instructions</strong><br>'
+    + 'Online payment not available yet. Please pay via bank transfer:<br>'
+    + 'Amount: <strong>' + fmt(amount) + '</strong><br>'
+    + 'Reference: <strong>' + esc(ref) + '</strong><br>'
+    + 'Contact: <strong>hello@edurena.com</strong> with proof of payment.<br>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--muted)">Your account will be activated within 24 hours after payment confirmation.</div>'
+    + '</div>';
+}
+
+function openTrialModal() {
+  var body = document.getElementById('checkout-body');
+  document.getElementById('checkout-mo').classList.add('on');
+  var preSchool = (document.getElementById('calc-school') || {}).value || '';
+  body.innerHTML =
+    '<div class="mo-section">'
+    + '<div class="mo-section-title">Start Your Free Trial</div>'
+    + '<p style="font-size:12px;color:var(--txt2);margin-bottom:16px;line-height:1.6">14 days free, no card required. We\'ll create a demo school account for your teachers to explore everything.</p>'
+    + '<div class="mo-field"><label>School Name *</label><input type="text" id="trial-school" placeholder="e.g. Sunshine Academy" value="' + esc(preSchool) + '"></div>'
+    + '<div class="mo-field"><label>Contact Email *</label><input type="email" id="trial-email" placeholder="admin@school.edu"></div>'
+    + '</div>'
+    + '<button class="mo-pay-btn" id="trial-btn" onclick="doTrial()">🚀 Create Trial Account</button>'
+    + '<div class="mo-secure">No payment required · Cancel anytime</div>'
+    + '<div class="mo-err" id="trial-err"></div>';
+}
+
+function doTrial() {
+  var school = ((document.getElementById('trial-school') || {}).value || '').trim();
+  var email  = ((document.getElementById('trial-email')  || {}).value || '').trim();
+  var errEl  = document.getElementById('trial-err');
+  if (!school) { errEl.textContent = 'School name is required'; return; }
+  if (!email || !email.includes('@')) { errEl.textContent = 'Valid email is required'; return; }
+  errEl.textContent = '';
+  var btn = document.getElementById('trial-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Creating…';
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'createDemoSchoolPublic', email: email, name: school })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res) {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Create Trial Account';
+    if (!res || res.status !== 'success') {
+      errEl.textContent = (res && res.message) || 'Could not create trial. Contact us.';
+      return;
+    }
+    var d = res.data;
+    var body = document.getElementById('checkout-body');
+    body.innerHTML = '<div class="success-state">'
+      + '<div class="success-icon">🎉</div>'
+      + '<div class="success-title">Trial Account Created!</div>'
+      + '<div class="success-msg">'
+      + 'School: <strong>' + esc(d.schoolName || school) + '</strong><br>'
+      + 'Login email: <strong>' + esc(d.email || email) + '</strong><br>'
+      + 'Password: <strong>' + esc(d.password || '—') + '</strong><br><br>'
+      + '⚠️ Change your password immediately after first login.<br>'
+      + 'Your trial expires: <strong>' + (d.expiry ? new Date(d.expiry).toLocaleDateString('en-NG') : '14 days from now') + '</strong>'
+      + '</div>'
+      + '<a href="' + esc(SCRIPT_URL) + '?page=login" style="display:block;margin-top:14px;padding:12px;background:var(--acc);color:#fff;text-align:center;border-radius:var(--rs);text-decoration:none;font-weight:700;font-size:13px">→ Go to Teacher Login</a>'
+      + '</div>';
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Create Trial Account';
+    errEl.textContent = 'Network error. Try again.';
+  });
+}
+
+/* ── FAQ ── */
+function renderFAQ() {
+  var list = document.getElementById('faq-list');
+  list.innerHTML = FAQ_ITEMS.map(function(item, i) {
+    return '<div class="faq-item">'
+      + '<div class="faq-q" onclick="toggleFAQ('+i+')" id="fq-'+i+'">'
+        + esc(item.q)
+        + '<span class="faq-icon">▼</span>'
+      + '</div>'
+      + '<div class="faq-a" id="fa-'+i+'">' + esc(item.a) + '</div>'
+    + '</div>';
+  }).join('');
+}
+function toggleFAQ(i) {
+  var q=document.getElementById('fq-'+i), a=document.getElementById('fa-'+i);
+  if(!q||!a)return;
+  q.classList.toggle('open'); a.classList.toggle('on');
+}
+
+/* ── BACKDROP CLOSE ── */
+window.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'checkout-mo') closeMo('checkout-mo');
+});
+
+/* ── INIT ── */
+renderPlans();
+calcUpdate();
+renderFAQ();
+</script>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>© 2025 Edurena · Built for Nigerian schools · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+  <p style="margin-top:8px">Questions? <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a></p>
+</footer>
+
+</body>
+</html>
