@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="UTF-8">
+  <script src="edurena-dash.js"></script>
+  <link rel="stylesheet" href="edurena-dash-design.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edurena — Super Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#080c14; --surf:#0e1321; --surf2:#161c2d; --surf3:#1c2338;
+      --bdr:#242b3d; --bdr2:#2c3550;
+      --acc:#3b6ef5; --acc2:#7c9ef8; --acc-glow:rgba(59,110,245,0.18);
+      --grn:#29c98a; --grn-glow:rgba(41,201,138,0.14);
+      --red:#f0645a; --red-glow:rgba(240,100,90,0.14);
+      --yel:#f5c026; --yel-glow:rgba(245,192,38,0.14);
+      --pur:#a78bfa; --pur-glow:rgba(167,139,250,0.14);
+      --txt:#edf0f7; --txt2:#8b93ad; --muted:#4d566e;
+      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+      --r:12px; --rs:8px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;}
+
+    #gate{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+    #gate.on{display:flex;}
+    .gate-spin{width:42px;height:42px;border:3px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:spin 0.9s linear infinite;}
+    #gate-msg{color:var(--txt2);font-size:13px;}
+    .gate-btn{padding:10px 22px;background:var(--acc);border:none;border-radius:var(--rs);color:#fff;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:none;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .app{display:flex;height:100vh;overflow:hidden;}
+    .sb{width:225px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;}
+    .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--bdr);}
+    .sb-logo-row{display:flex;align-items:center;gap:9px;}
+    .logo-box{width:32px;height:32px;background:linear-gradient(135deg,var(--pur),var(--acc));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+    .logo-txt h1{font-size:13px;font-weight:700;color:var(--pur);}
+    .logo-txt p{font-size:10px;color:var(--muted);}
+    .sb-profile{margin:10px;padding:10px 12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;}
+    .sp-row{display:flex;align-items:center;gap:8px;}
+    .sp-av{width:30px;height:30px;border-radius:50%;background:var(--pur-glow);border:1.5px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+    .sp-info{flex:1;min-width:0;}
+    .sp-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .sp-role{font-size:10px;color:var(--pur);margin-top:1px;text-transform:uppercase;font-weight:700;}
+    nav.nav{padding:8px;flex:1;overflow-y:auto;}
+    .nsec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 10px 4px;}
+    .ni{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--rs);cursor:pointer;color:var(--txt2);font-size:12px;font-weight:500;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;}
+    .ni:hover{background:var(--surf2);color:var(--txt);}
+    .ni.on{background:rgba(167,139,250,.12);color:var(--pur);}
+    .ni .ico{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+    .sb-foot{padding:10px;border-top:1px solid var(--bdr);}
+    .btn-out{width:100%;padding:7px;background:var(--red-glow);border:1px solid rgba(240,100,90,.2);color:var(--red);border-radius:var(--rs);cursor:pointer;font-size:11px;font-family:var(--font);transition:all .15s;}
+    .btn-out:hover{background:rgba(240,100,90,.22);}
+
+    .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+    .topbar{padding:13px 22px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--surf);position:sticky;top:0;z-index:10;}
+    .tb-title{font-size:15px;font-weight:700;}
+    .tb-sub{font-size:11px;color:var(--txt2);margin-top:1px;}
+    .content{padding:20px 22px;flex:1;}
+    .tp{display:none;} .tp.on{display:block;}
+
+    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+    .ct{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;}
+    .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+    .sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;cursor:default;transition:border-color .15s;}
+    .sc.clickable{cursor:pointer;}
+    .sc.clickable:hover{border-color:var(--yel);}
+    .sv{font-size:24px;font-weight:800;font-family:var(--mono);}
+    .sl{font-size:11px;color:var(--txt2);margin-top:4px;}
+
+    .tw{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    thead th{text-align:left;padding:8px 11px;font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bdr);}
+    tbody td{padding:9px 11px;border-bottom:1px solid rgba(36,43,61,.5);vertical-align:middle;}
+    tbody tr:hover td{background:var(--surf2);}
+    tbody tr:last-child td{border-bottom:none;}
+    .er td{text-align:center;color:var(--txt2);padding:24px;}
+
+    .bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;}
+    .bg{background:var(--grn-glow);color:var(--grn);}
+    .br{background:var(--red-glow);color:var(--red);}
+    .by{background:var(--yel-glow);color:var(--yel);}
+    .bp{background:var(--pur-glow);color:var(--pur);}
+    .bb{background:var(--acc-glow);color:var(--acc2);}
+    .bmute{background:var(--surf2);color:var(--muted);}
+
+    .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+    .fg{display:flex;flex-direction:column;gap:5px;}
+    .fg label{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.3px;}
+    .fg input,.fg select,.fg textarea{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:8px 10px;color:var(--txt);font-size:12px;font-family:var(--font);transition:border-color .15s;outline:none;}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--acc);}
+    .fg input:disabled{opacity:0.5;cursor:not-allowed;}
+    .fg .hint{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+
+    .tr-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bdr);}
+    .tr-row:last-child{border-bottom:none;}
+    .tl{font-size:12px;font-weight:500;}
+    .td-d{font-size:11px;color:var(--txt2);margin-top:2px;}
+    .tog{width:36px;height:20px;background:var(--bdr);border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+    .tog.on{background:var(--acc);}
+    .tog::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;}
+    .tog.on::after{left:18px;}
+
+    .btn{padding:7px 13px;border:none;border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);transition:all .15s;white-space:nowrap;}
+    .btn-p{background:var(--acc);color:#fff;} .btn-p:hover{background:#2d5fe0;}
+    .btn-d{background:var(--red-glow);color:var(--red);border:1px solid rgba(240,100,90,.25);} .btn-d:hover{background:rgba(240,100,90,.24);}
+    .btn-g{background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);} .btn-g:hover{border-color:var(--acc);color:var(--acc2);}
+    .btn-ok{background:var(--grn-glow);color:var(--grn);border:1px solid rgba(41,201,138,.25);} .btn-ok:hover{background:rgba(41,201,138,.22);}
+    .btn-warn{background:var(--yel-glow);color:var(--yel);border:1px solid rgba(245,192,38,.25);} .btn-warn:hover{background:rgba(245,192,38,.22);}
+    .btn-sm{padding:4px 9px;font-size:11px;}
+
+    .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+    .filter-bar input{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;transition:border-color .15s;flex:1;}
+    .filter-bar input:focus{border-color:var(--acc);}
+    .filter-bar select{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;}
+
+    .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .mo.on{display:flex;}
+    .mbox{background:var(--surf);border:1px solid var(--bdr);border-radius:15px;display:flex;flex-direction:column;overflow:hidden;max-height:92vh;}
+    .mh{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .mh-title{font-size:14px;font-weight:700;}
+    .mc{cursor:pointer;color:var(--txt2);font-size:16px;padding:3px;border:none;background:none;}
+    .mc:hover{color:var(--txt);}
+    .mb{padding:20px;overflow-y:auto;flex:1;}
+
+    .info-box{background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;font-size:11.5px;color:var(--txt2);line-height:1.6;}
+    .info-box strong{color:var(--acc2);}
+    .info-box.warn{border-color:rgba(245,192,38,.3);background:rgba(245,192,38,.06);color:var(--yel);}
+    .info-box.warn strong{color:var(--yel);}
+    .info-box.danger{border-color:rgba(240,100,90,.3);background:rgba(240,100,90,.06);color:var(--red);}
+    .info-box.danger strong{color:var(--red);}
+    .info-box.success{border-color:rgba(41,201,138,.3);background:rgba(41,201,138,.05);color:var(--grn);}
+
+    .divider{height:1px;background:var(--bdr2);margin:16px 0;}
+
+    .ts-stack{position:fixed;top:16px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+    .tst{background:var(--surf);border:1px solid var(--bdr);border-radius:9px;padding:10px 13px;font-size:12px;max-width:320px;pointer-events:all;display:flex;align-items:flex-start;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,.4);animation:si .2s ease;}
+    .tst.success{border-color:var(--grn);}
+    .tst.error{border-color:var(--red);}
+    @keyframes si{from{transform:translateX(28px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    .sp-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;}
+    .sp-ov.on{display:flex;}
+    .sp-box{background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:24px 32px;text-align:center;}
+    .sp{width:32px;height:32px;border:3px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+    #sp-txt{font-size:12px;color:var(--txt2);}
+
+    .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .sh h2{font-size:16px;font-weight:700;}
+    .hidden{display:none!important;}
+
+    @media(max-width:860px){.sb{display:none;}.sgrid{grid-template-columns:1fr 1fr;}.fgrid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<div id="gate" class="on">
+  <div class="gate-spin"></div>
+  <div id="gate-msg">Verifying super-admin session…</div>
+  <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
+</div>
+
+<div class="app" id="shell" style="display:none">
+  <aside class="sb">
+    <div class="sb-logo">
+      <div class="sb-logo-row">
+        <div class="logo-box">👑</div>
+        <div class="logo-txt"><h1>Super Admin</h1><p>Edurena Platform</p></div>
+      </div>
+    </div>
+    <div class="sb-profile">
+      <div class="sp-row">
+        <div class="sp-av">👑</div>
+        <div class="sp-info">
+          <div class="sp-name" id="sb-name">Founder</div>
+          <div class="sp-role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nsec">Platform</div>
+      <button class="ni on" onclick="navTo('overview',this)"><span class="ico">📊</span>Overview</button>
+      <button class="ni"    onclick="navTo('schools',this)"><span class="ico">🏫</span>Schools &amp; Subs</button>
+      <button class="ni"    onclick="navTo('activate',this)"><span class="ico">⚡</span>Activate School</button>
+      <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
+    </nav>
+    <div class="sb-foot">
+      <button class="btn-out" onclick="doLogout()">→ Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="tb-title" id="tb-title">Overview</div>
+        <div class="tb-sub"   id="tb-sub">Platform-wide metrics</div>
+      </div>
+      <div><span style="font-size:11px;color:var(--txt2)" id="tb-right">—</span></div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="tp on" id="tp-overview">
+        <div class="sgrid">
+          <div class="sc"><div class="sv" id="s-schools">—</div><div class="sl">Active Schools</div></div>
+          <div class="sc"><div class="sv" id="s-students">—</div><div class="sl">Total Students</div></div>
+          <div class="sc"><div class="sv" id="s-ai">—</div><div class="sl">AI Enabled</div></div>
+          <div class="sc clickable" onclick="showExpiringSoon()" title="Click to filter expiring schools">
+            <div class="sv" id="s-expiring">—</div>
+            <div class="sl">Expiring Soon ↗</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">School Distribution by Plan</div>
+          <div style="height:240px;position:relative"><canvas id="ch-plans"></canvas></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">Platform Summary</div>
+            <button class="btn btn-g btn-sm" onclick="loadOverview()">↻ Refresh</button>
+          </div>
+          <div id="overview-summary" style="color:var(--txt2);font-size:12px;line-height:1.9">Loading…</div>
+        </div>
+      </div>
+
+      <!-- SCHOOLS -->
+      <div class="tp" id="tp-schools">
+        <div class="sh">
+          <h2>School Management</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-g btn-sm" id="clear-filter-btn" onclick="clearFilter()" style="display:none">✕ Clear Filter</button>
+            <button class="btn btn-p btn-sm" onclick="openSchoolMo()">+ Add School</button>
+          </div>
+        </div>
+        <div class="info-box">
+          <strong>How school admins work:</strong> The <em>Contact Email</em> you enter for a school becomes the school admin login. When you save or activate a school, that email gets a <strong>school_admin</strong> account automatically. If the account already exists, it gets upgraded. The admin receives a welcome email with login credentials.
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="school-search" placeholder="Search by name or email…" oninput="filterSchools()">
+          <select id="plan-filter" onchange="filterSchools()">
+            <option value="">All Plans</option>
+            <option value="standard">Standard</option>
+            <option value="premium">Premium</option>
+            <option value="trial">Trial</option>
+          </select>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="tw">
+            <table id="t-schools">
+              <thead><tr><th>School Name</th><th>Contact / Admin Email</th><th>Plan</th><th>AI</th><th>Students</th><th>Expires</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="7">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVATE SCHOOL -->
+      <div class="tp" id="tp-activate">
+        <div class="sh"><h2>Activate / Renew School</h2></div>
+        <div class="info-box">
+          Use this to manually activate a school (e.g. after offline payment). This creates the school record and a <strong>school_admin</strong> account for the contact email, then sends a welcome email with login credentials.
+        </div>
+        <div class="card">
+          <div class="ct">School Details</div>
+          <div class="fgrid" style="margin-bottom:12px">
+            <div class="fg">
+              <label>School Name *</label>
+              <input type="text" id="act-school-name" placeholder="e.g. Sunrise Academy">
+              <div class="hint">Must match exactly if renewing an existing school</div>
+            </div>
+            <div class="fg">
+              <label>Contact / Admin Email *</label>
+              <input type="email" id="act-contact-email" placeholder="admin@school.edu">
+              <div class="hint">This email becomes the school_admin login account</div>
+            </div>
+          </div>
+          <div class="fgrid" style="margin-bottom:12px">
+            <div class="fg">
+              <label>Plan *</label>
+              <select id="act-plan">
+                <option value="standard">Standard</option>
+                <option value="premium">Premium (includes AI explanations)</option>
+                <option value="trial">Trial (14 days)</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Duration (months) *</label>
+              <input type="number" id="act-months" value="12" min="1" max="36">
+              <div class="hint">Stacks on top of existing expiry if school already active</div>
+            </div>
+          </div>
+          <div class="fgrid" style="margin-bottom:12px">
+            <div class="fg">
+              <label>Student Count (for records)</label>
+              <input type="number" id="act-students" value="100" min="1">
+            </div>
+            <div class="fg">
+              <label>Amount Paid (₦)</label>
+              <input type="number" id="act-amount" value="0" min="0">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+            <button class="btn btn-ok" onclick="doActivate()">⚡ Activate School →</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Set School Admin for Existing Account</div>
+          <div class="info-box">
+            Promote an existing teacher account to school_admin role for a specific school. Useful if someone registered as a regular teacher but needs admin access.
+          </div>
+          <div class="fgrid" style="margin-bottom:12px">
+            <div class="fg">
+              <label>Teacher Email *</label>
+              <input type="email" id="sa-email" placeholder="teacher@school.edu">
+            </div>
+            <div class="fg">
+              <label>School Name *</label>
+              <input type="text" id="sa-school" placeholder="Must match exact school name">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="btn btn-p" onclick="doSetSchoolAdmin()">Promote to School Admin →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="tp" id="tp-settings">
+        <div class="sh"><h2>Global Platform Settings</h2></div>
+        <div class="card">
+          <div class="ct">AI Answer Explanations</div>
+          <div class="tr-row">
+            <div>
+              <div class="tl">Global Master Switch</div>
+              <div class="td-d">Enables AI explanations for ALL schools. Individual school settings still apply when OFF.</div>
+            </div>
+            <div class="tog" id="tog-ai" onclick="toggleAI()"></div>
+          </div>
+          <div class="info-box" style="margin-top:12px;margin-bottom:0">
+            💡 Cost estimate: ~$0.0005 per explanation · 30 students · 8 wrong answers ≈ $0.12/day
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Email Delivery (GAS MailApp)</div>
+          <div class="info-box warn" style="margin-bottom:10px">
+            ⚠️ GAS MailApp has a daily limit of 100 emails for free accounts and 1,500 for Workspace. If emails aren't sending, check your GAS quota at <strong>Apps Script → Services → Quotas</strong>. Also ensure your script has the <strong>gmail.send</strong> scope in appsscript.json.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-g btn-sm" onclick="sendTestEmail()">Send Test Email to Self</button>
+          </div>
+          <div id="email-test-result" style="margin-top:10px;font-size:12px;color:var(--txt2);display:none"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCHOOL MODAL — Edit / Add with Rename & Delete
+═══════════════════════════════════════════════════════════════ -->
+<div class="mo" id="school-mo">
+  <div class="mbox" style="width:540px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title" id="school-mo-title">Add School</span>
+      <button class="mc" onclick="closeMo('school-mo')">✕</button>
+    </div>
+    <div class="mb">
+
+      <!-- Info shown when ADDING -->
+      <div class="info-box" id="mo-add-info">
+        The <strong>Contact Email</strong> becomes the school admin login. Saving will create or upgrade that account to <strong>school_admin</strong> role and send a welcome email.
+      </div>
+
+      <!-- ── RENAME SECTION — only shown when editing ── -->
+      <div id="mo-rename-section" style="display:none">
+        <div class="info-box warn">
+          <strong>To rename this school</strong> — enter the new name below and click Rename. All teachers, students, quizzes, questions, classes and exam results will be migrated to the new name automatically. Affected teachers will be signed out and must log in again.
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label>New School Name</label>
+          <input type="text" id="mo-new-name" placeholder="Enter new name…">
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+          <button class="btn btn-warn btn-sm" onclick="doRenameSchool()">↩ Rename School</button>
+        </div>
+        <div class="divider"></div>
+      </div>
+
+      <!-- School name — locked when editing, open when adding -->
+      <div class="fg" style="margin-bottom:12px">
+        <label>School Name *</label>
+        <input type="text" id="mo-school-name" placeholder="e.g. Sunrise Academy">
+        <div class="hint" id="mo-name-hint" style="display:none">
+          School name is locked. Use the <strong style="color:var(--yel)">Rename School</strong> section above to change it safely with full data migration.
+        </div>
+      </div>
+
+      <div class="fg" style="margin-bottom:12px">
+        <label>Contact / Admin Email *</label>
+        <input type="email" id="mo-contact-email" placeholder="admin@school.edu">
+        <div class="hint">This email receives the school admin account and welcome email</div>
+      </div>
+      <div class="fgrid" style="margin-bottom:12px">
+        <div class="fg">
+          <label>Plan</label>
+          <select id="mo-plan">
+            <option value="standard">Standard</option>
+            <option value="premium">Premium</option>
+            <option value="trial">Trial</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Subscription Expiry</label>
+          <input type="date" id="mo-expiry">
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label>Internal Notes</label>
+        <input type="text" id="mo-notes" placeholder="e.g. Paid via bank transfer Dec 2025">
+      </div>
+      <div class="tr-row" style="margin-bottom:16px">
+        <div>
+          <div class="tl">Enable AI Explanations</div>
+          <div class="td-d">Premium plan recommended for AI features</div>
+        </div>
+        <div class="tog" id="mo-tog-ai" onclick="this.classList.toggle('on')"></div>
+      </div>
+
+      <!-- Footer buttons — Delete on left, Cancel/Save on right -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <button class="btn btn-d" id="mo-delete-btn" style="display:none" onclick="doDeleteSchool()">🗑 Delete School</button>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button class="btn btn-g" onclick="closeMo('school-mo')">Cancel</button>
+          <button class="btn btn-p" onclick="saveSchool()">Save School</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- RENEW MODAL -->
+<div class="mo" id="renew-mo">
+  <div class="mbox" style="width:400px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Renew Subscription</span>
+      <button class="mc" onclick="closeMo('renew-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:var(--txt2);margin-bottom:14px">Extend access for <strong id="rn-school-name" style="color:var(--txt)"></strong></p>
+      <div class="fg" style="margin-bottom:16px">
+        <label>New Expiry Date</label>
+        <input type="date" id="rn-date">
+        <div class="hint">Subscription will extend to this date. Current expiry is shown below.</div>
+      </div>
+      <div id="rn-current-expiry" style="font-size:11px;color:var(--txt2);margin-bottom:14px"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-g" onclick="closeMo('renew-mo')">Cancel</button>
+        <button class="btn btn-ok" onclick="confirmRenew()">Confirm Renewal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sp-ov" id="sp-ov"><div class="sp-box"><div class="sp"></div><div id="sp-txt">Working…</div></div></div>
+<div class="ts-stack" id="toasts"></div>
+
+<script>
+var S = { token:'', email:'', name:'Founder' };
+var schoolsAll = [], schoolsDisplay = [];
+var _editingSchool = null;
+var _planChart = null;
+
+// ── UTILS ──────────────────────────────────────────────────────
+function callRaw(action, data, cb) {
+  fetch(DASH.scriptUrl, {
+    method: 'POST',
+    body: JSON.stringify(Object.assign({ action: action }, data || {}))
+  }).then(function(r){ return r.json(); })
+    .then(function(r){ if (cb) cb(null, r); })
+    .catch(function(e){ if (cb) cb(e, null); });
+}
+
+function call(action, data, onOk, onFail) {
+  spin(true);
+  callRaw(action, Object.assign({ token: S.token }, data || {}), function(e, r) {
+    spin(false);
+    if (e || !r) { toast('error', 'Connection error'); if (onFail) onFail('Connection error'); return; }
+    if (r.status === 'error') {
+      if (r.message && r.message.toLowerCase().indexOf('session') !== -1) goLogin();
+      toast('error', r.message || 'Error');
+      if (onFail) onFail(r.message);
+      return;
+    }
+    if (onOk) onOk(r.data);
+  });
+}
+
+function toast(type, msg) {
+  var s = document.getElementById('toasts'), el = document.createElement('div');
+  el.className = 'tst ' + type;
+  el.innerHTML = '<span>' + (type==='success'?'✓':'✗') + '</span><span>' + escH(msg) + '</span>';
+  s.appendChild(el);
+  setTimeout(function(){ if (el.parentNode) el.remove(); }, 5500);
+}
+function spin(on) { document.getElementById('sp-ov').classList.toggle('on', on); }
+function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+function closeMo(id) { document.getElementById(id).classList.remove('on'); }
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── AUTH ────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var token = '';
+  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  if (!token) { var p = new URLSearchParams(window.location.search); token = p.get('token') || ''; }
+  if (!token) { authFail('No active session.'); return; }
+  callRaw('validateSuperadminSession', { token: token }, function(e, r) {
+    if (e || !r || r.status !== 'success') { authFail((r && r.message) || 'Super-admin access denied.'); return; }
+    S = Object.assign(S, r.data, { token: token });
+    try { sessionStorage.setItem('qf_token', token); } catch(_) {}
+    boot();
+  });
+});
+
+function authFail(msg) {
+  setText('gate-msg', msg + ' Please log in.');
+  document.getElementById('gate-btn').style.display = 'inline-block';
+}
+function goLogin() { DASH.goLogin(); }
+
+function boot() {
+  document.getElementById('gate').classList.remove('on');
+  document.getElementById('shell').style.display = 'flex';
+  setText('sb-name', S.name || S.email || 'Founder');
+  setText('tb-right', S.email || '');
+  loadOverview();
+  loadSchoolsTable();
+}
+
+function doLogout() {
+  callRaw('teacherLogout', { token: S.token }, function(){});
+  try { sessionStorage.clear(); } catch(_) {}
+  goLogin();
+}
+
+// ── NAV ─────────────────────────────────────────────────────────
+var tabTitles = {
+  overview: ['Overview', 'Platform-wide metrics'],
+  schools:  ['Schools & Subscriptions', 'Manage school access and billing'],
+  activate: ['Activate School', 'Manually activate or renew a school subscription'],
+  settings: ['Global Settings', 'Platform configuration']
+};
+
+function navTo(name, el) {
+  document.querySelectorAll('.tp').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('.ni').forEach(function(n){ n.classList.remove('on'); });
+  var tp = document.getElementById('tp-' + name);
+  if (tp) tp.classList.add('on');
+  if (el) el.classList.add('on');
+  var t = tabTitles[name] || [name, ''];
+  setText('tb-title', t[0]);
+  setText('tb-sub', t[1]);
+  if (name === 'settings') loadSettings();
+}
+
+// ── OVERVIEW ────────────────────────────────────────────────────
+function loadOverview() {
+  call('getSuperadminDashboard', {}, function(d) {
+    schoolsAll = d.schools || [];
+    setText('s-schools', schoolsAll.length);
+    setText('s-students', d.totalStudents || 0);
+    var aiCount = schoolsAll.filter(function(s){ return s.aiEnabled; }).length;
+    setText('s-ai', aiCount);
+    var now = new Date();
+    var expSoon = schoolsAll.filter(function(s){
+      if (!s.subscriptionExpiry) return false;
+      var diff = (new Date(s.subscriptionExpiry) - now) / 86400000;
+      return diff >= 0 && diff <= 30;
+    }).length;
+    setText('s-expiring', expSoon);
+
+    var expired = schoolsAll.filter(function(s){
+      return s.subscriptionExpiry && new Date(s.subscriptionExpiry) < now;
+    }).length;
+    var sumEl = document.getElementById('overview-summary');
+    if (sumEl) {
+      sumEl.innerHTML =
+        '<strong style="color:var(--txt)">' + schoolsAll.length + '</strong> schools registered &nbsp;·&nbsp; ' +
+        '<strong style="color:var(--txt)">' + aiCount + '</strong> with AI enabled &nbsp;·&nbsp; ' +
+        '<strong style="color:var(--txt)">' + (d.totalStudents||0) + '</strong> total students<br>' +
+        (expired > 0
+          ? '<span style="color:var(--red)">⚠ ' + expired + ' school(s) have expired subscriptions. Use Activate School to renew.</span>'
+          : '<span style="color:var(--grn)">✓ All subscriptions active.</span>');
+    }
+    renderPlanChart();
+    schoolsDisplay = schoolsAll.slice();
+    renderSchoolRows(schoolsDisplay);
+  });
+}
+
+function renderPlanChart() {
+  var counts = {};
+  schoolsAll.forEach(function(s){ counts[s.plan] = (counts[s.plan]||0)+1; });
+  var ctx = document.getElementById('ch-plans'); if (!ctx) return;
+  if (_planChart) { _planChart.destroy(); _planChart = null; }
+  var labels = Object.keys(counts).map(function(k){ return k.charAt(0).toUpperCase()+k.slice(1); });
+  _planChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: Object.values(counts),
+        backgroundColor: ['rgba(59,110,245,0.8)','rgba(167,139,250,0.8)','rgba(245,192,38,0.8)'],
+        borderColor: '#161c2d', borderWidth: 2
+      }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ color:'#8b93ad', font:{size:11} } } } }
+  });
+}
+
+// ── SCHOOLS TABLE ───────────────────────────────────────────────
+function loadSchoolsTable() {
+  call('getSchools', {}, function(list) {
+    schoolsAll = list || [];
+    schoolsDisplay = schoolsAll.slice();
+    renderSchoolRows(schoolsDisplay);
+  });
+}
+
+function filterSchools() {
+  var q    = (document.getElementById('school-search').value || '').trim().toLowerCase();
+  var plan = (document.getElementById('plan-filter').value   || '').toLowerCase();
+  schoolsDisplay = schoolsAll.filter(function(s) {
+    var nm = !q || (s.schoolName||'').toLowerCase().indexOf(q)!==-1 || (s.contactEmail||'').toLowerCase().indexOf(q)!==-1;
+    var pl = !plan || (s.plan||'').toLowerCase() === plan;
+    return nm && pl;
+  });
+  var clearBtn = document.getElementById('clear-filter-btn');
+  if (clearBtn) clearBtn.style.display = (q || plan) ? '' : 'none';
+  renderSchoolRows(schoolsDisplay);
+}
+
+function clearFilter() {
+  document.getElementById('school-search').value = '';
+  document.getElementById('plan-filter').value   = '';
+  document.getElementById('clear-filter-btn').style.display = 'none';
+  schoolsDisplay = schoolsAll.slice();
+  renderSchoolRows(schoolsDisplay);
+}
+
+function showExpiringSoon() {
+  navTo('schools', document.querySelectorAll('.ni')[1]);
+  document.getElementById('school-search').value = '';
+  document.getElementById('plan-filter').value   = '';
+  var now = new Date();
+  schoolsDisplay = schoolsAll.filter(function(s) {
+    if (!s.subscriptionExpiry) return false;
+    var diff = (new Date(s.subscriptionExpiry) - now) / 86400000;
+    return diff >= 0 && diff <= 30;
+  });
+  document.getElementById('clear-filter-btn').style.display = '';
+  renderSchoolRows(schoolsDisplay);
+}
+
+function renderSchoolRows(list) {
+  var tb = document.querySelector('#t-schools tbody');
+  if (!list || !list.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="7">No schools found.</td></tr>'; return;
+  }
+  var now = new Date();
+  tb.innerHTML = list.map(function(s, idx) {
+    var exp = s.subscriptionExpiry ? String(s.subscriptionExpiry).substring(0,10) : '—';
+    var isExp  = s.subscriptionExpiry && new Date(s.subscriptionExpiry) < now;
+    var isSoon = !isExp && s.subscriptionExpiry && ((new Date(s.subscriptionExpiry)-now)/86400000)<=30;
+    var expBadge = isExp
+      ? '<span class="bdg br">Expired</span>'
+      : isSoon ? '<span class="bdg by">⚠ '+exp+'</span>'
+      : exp !== '—' ? '<span class="bdg bb">'+exp+'</span>'
+      : '<span class="bdg bmute">None</span>';
+    var planBadge = s.plan==='premium'?'bp':s.plan==='trial'?'by':'bb';
+    return '<tr>' +
+      '<td style="font-weight:600">'+escH(s.schoolName)+'</td>' +
+      '<td style="font-size:11px;color:var(--txt2)">'+escH(s.contactEmail||'—')+'</td>' +
+      '<td><span class="bdg '+planBadge+'">'+escH(s.plan)+'</span></td>' +
+      '<td>'+(s.aiEnabled?'<span class="bdg bg">On</span>':'<span class="bdg bmute">Off</span>')+'</td>' +
+      '<td style="font-family:var(--mono)">'+(s.studentCount||0)+'</td>' +
+      '<td>'+expBadge+'</td>' +
+      '<td style="display:flex;gap:4px;flex-wrap:wrap">' +
+        '<button class="btn btn-g btn-sm" onclick="openSchoolMo('+idx+')">Edit</button>' +
+        '<button class="btn btn-ok btn-sm" onclick="openRenewMo('+idx+')">Renew</button>' +
+        '<button class="btn btn-sm" style="background:var(--pur-glow);color:var(--pur);border:1px solid rgba(167,139,250,.2)" onclick="makeAdminForSchool('+idx+')">Set Admin</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ── SCHOOL MODAL ────────────────────────────────────────────────
+function openSchoolMo(idx) {
+  var s = (idx !== undefined && idx !== null) ? schoolsDisplay[idx] : null;
+  _editingSchool = s ? s.schoolName : null;
+
+  var isEditing = !!s;
+  setText('school-mo-title', isEditing ? 'Edit School' : 'Add School');
+
+  // Sections that only appear when editing
+  document.getElementById('mo-rename-section').style.display = isEditing ? 'block' : 'none';
+  document.getElementById('mo-delete-btn').style.display     = isEditing ? 'inline-flex' : 'none';
+  document.getElementById('mo-add-info').style.display       = isEditing ? 'none' : 'block';
+  document.getElementById('mo-name-hint').style.display      = isEditing ? 'block' : 'none';
+
+  // School name field — locked when editing to prevent accidental new-record creation
+  var nameInput = document.getElementById('mo-school-name');
+  nameInput.value    = s ? (s.schoolName || '') : '';
+  nameInput.disabled = isEditing;
+
+  // Clear rename input whenever the modal opens
+  document.getElementById('mo-new-name').value = '';
+
+  document.getElementById('mo-contact-email').value = s ? (s.contactEmail || '') : '';
+  document.getElementById('mo-plan').value          = s ? (s.plan || 'standard') : 'standard';
+  document.getElementById('mo-notes').value         = s ? (s.notes || '')        : '';
+  document.getElementById('mo-expiry').value        = s && s.subscriptionExpiry
+    ? String(s.subscriptionExpiry).substring(0, 10) : '';
+
+  var aiTog = document.getElementById('mo-tog-ai');
+  if (s && s.aiEnabled) aiTog.classList.add('on');
+  else aiTog.classList.remove('on');
+
+  document.getElementById('school-mo').classList.add('on');
+}
+
+// Save school — updates non-name fields only (name is locked when editing)
+function saveSchool() {
+  var name  = (document.getElementById('mo-school-name').value  || '').trim();
+  var email = (document.getElementById('mo-contact-email').value || '').trim();
+  if (!name)  { toast('error', 'School name is required');   return; }
+  if (!email) { toast('error', 'Contact email is required'); return; }
+
+  var payload = {
+    schoolName:   name,
+    contactEmail: email,
+    plan:         document.getElementById('mo-plan').value,
+    notes:        (document.getElementById('mo-notes').value || '').trim(),
+    aiEnabled:    document.getElementById('mo-tog-ai').classList.contains('on')
+  };
+  var expiry = document.getElementById('mo-expiry').value;
+  if (expiry) payload.subscriptionExpiry = expiry;
+
+  call('upsertSchool', payload, function() {
+    toast('success', _editingSchool ? 'School updated' : 'School added');
+    closeMo('school-mo');
+    loadSchoolsTable();
+    loadOverview();
+  });
+}
+
+// Rename school — migrates ALL linked records in the backend
+function doRenameSchool() {
+  var oldName = _editingSchool;
+  var newName = (document.getElementById('mo-new-name').value || '').trim();
+  if (!newName)            { toast('error', 'Enter a new school name'); return; }
+  if (newName === oldName) { toast('error', 'New name is the same as the current name'); return; }
+
+  if (!confirm(
+    'Rename "' + oldName + '" → "' + newName + '"?\n\n' +
+    'The following will all be updated to the new name:\n' +
+    '  • Teachers\n  • Students\n  • Quizzes\n  • Question bank\n  • Classes\n  • Exam results\n\n' +
+    'Affected teachers will be signed out and must log in again.\n\nContinue?'
+  )) return;
+
+  call('renameSchool', { oldName: oldName, newName: newName }, function() {
+    toast('success', '"' + oldName + '" renamed to "' + newName + '" — all records migrated');
+    closeMo('school-mo');
+    loadSchoolsTable();
+    loadOverview();
+  });
+}
+
+// Delete school — double-confirm, wipes all linked data
+function doDeleteSchool() {
+  var schoolName = _editingSchool;
+  if (!schoolName) return;
+
+  if (!confirm(
+    '⚠ DELETE SCHOOL: "' + schoolName + '"\n\n' +
+    'This will permanently delete:\n' +
+    '  • The school record\n' +
+    '  • All teachers in this school\n' +
+    '  • All students in this school\n' +
+    '  • All quizzes and questions\n' +
+    '  • All exam results\n\n' +
+    'This CANNOT be undone. Continue?'
+  )) return;
+
+  if (!confirm(
+    'FINAL CONFIRMATION\n\nPermanently delete "' + schoolName + '" and ALL its data?\n\nPress OK to confirm.'
+  )) return;
+
+  call('deleteSchool', { schoolName: schoolName, confirm: true }, function(d) {
+    toast('success',
+      '"' + schoolName + '" deleted — removed ' +
+      d.removed.teachers + ' teacher(s), ' +
+      d.removed.students + ' student(s), ' +
+      d.removed.quizzes  + ' quiz(zes).'
+    );
+    closeMo('school-mo');
+    loadSchoolsTable();
+    loadOverview();
+  });
+}
+
+// ── SET ADMIN FOR SCHOOL (quick from table row) ─────────────────
+function makeAdminForSchool(idx) {
+  var s = schoolsDisplay[idx]; if (!s) return;
+  var email = s.contactEmail;
+  if (!email) {
+    email = prompt('Enter the email address to promote to school_admin for "'+s.schoolName+'":\n(No contact email is set for this school yet)');
+    if (!email) return;
+  }
+  if (!confirm(
+    'Promote "'+email+'" to school_admin for "'+s.schoolName+'"?\n\n' +
+    'This will:\n• Set their role to school_admin\n• Link their account to this school\n• Force them to log in again'
+  )) return;
+  call('setSuperSchoolAdmin', { targetEmail: email, schoolName: s.schoolName }, function() {
+    toast('success', email + ' is now school_admin for ' + s.schoolName);
+    loadSchoolsTable();
+  });
+}
+
+// ── RENEW MODAL ─────────────────────────────────────────────────
+function openRenewMo(idx) {
+  var s = schoolsDisplay[idx]; if (!s) return;
+  setText('rn-school-name', s.schoolName);
+  var expEl = document.getElementById('rn-current-expiry');
+  if (expEl) expEl.textContent = s.subscriptionExpiry
+    ? 'Current expiry: ' + String(s.subscriptionExpiry).substring(0,10)
+    : 'No expiry set — will be created fresh';
+  var d = new Date(); d.setFullYear(d.getFullYear()+1);
+  document.getElementById('rn-date').value = d.toISOString().substring(0,10);
+  document.getElementById('renew-mo').dataset.school = s.schoolName;
+  document.getElementById('renew-mo').classList.add('on');
+}
+
+function confirmRenew() {
+  var name = document.getElementById('renew-mo').dataset.school;
+  var dt   = document.getElementById('rn-date').value;
+  if (!dt) { toast('error', 'Please select a renewal date'); return; }
+  call('renewSchoolSubscription', { schoolName: name, expiryDate: dt }, function() {
+    toast('success', 'Subscription renewed for ' + name + ' until ' + dt);
+    closeMo('renew-mo');
+    loadSchoolsTable();
+    loadOverview();
+  });
+}
+
+// ── ACTIVATE SCHOOL ─────────────────────────────────────────────
+function doActivate() {
+  var schoolName   = (document.getElementById('act-school-name').value || '').trim();
+  var contactEmail = (document.getElementById('act-contact-email').value || '').trim();
+  var plan         = document.getElementById('act-plan').value;
+  var months       = parseInt(document.getElementById('act-months').value) || 12;
+  var students     = parseInt(document.getElementById('act-students').value) || 100;
+  var amount       = parseFloat(document.getElementById('act-amount').value) || 0;
+
+  if (!schoolName)   { toast('error', 'School name is required');   return; }
+  if (!contactEmail) { toast('error', 'Contact email is required'); return; }
+  if (!contactEmail.includes('@')) { toast('error', 'Enter a valid email address'); return; }
+
+  if (!confirm(
+    'Activate "'+schoolName+'" (' + plan + ', ' + months + ' months)?\n\n' +
+    'Contact email: ' + contactEmail + '\n\n' +
+    'This will:\n• Create/update the school record\n• Create a school_admin account for the email\n• Send a welcome email with login credentials'
+  )) return;
+
+  spin(true);
+  callRaw('activateSchoolManual', {
+    token:          S.token,
+    schoolName:     schoolName,
+    contactEmail:   contactEmail,
+    plan:           plan,
+    durationMonths: months,
+    studentCount:   students,
+    amount:         amount
+  }, function(e, r) {
+    spin(false);
+    if (e || !r || r.status !== 'success') {
+      toast('error', (r && r.message) || 'Activation failed'); return;
+    }
+    var d = r.data;
+    toast('success',
+      'School activated! ' +
+      (d.newAdmin ? 'New admin account created.' : 'Existing account upgraded.') +
+      ' Welcome email sent to ' + contactEmail
+    );
+    ['act-school-name','act-contact-email','act-students','act-amount'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('act-months').value = '12';
+    loadSchoolsTable();
+    loadOverview();
+  });
+}
+
+// ── SET SCHOOL ADMIN (manual form) ──────────────────────────────
+function doSetSchoolAdmin() {
+  var email  = (document.getElementById('sa-email').value  || '').trim();
+  var school = (document.getElementById('sa-school').value || '').trim();
+  if (!email || !school) { toast('error', 'Both email and school name are required'); return; }
+  if (!confirm('Promote "'+email+'" to school_admin for "'+school+'"?')) return;
+  call('setSuperSchoolAdmin', { targetEmail: email, schoolName: school }, function() {
+    toast('success', email + ' is now school_admin for ' + school);
+    document.getElementById('sa-email').value  = '';
+    document.getElementById('sa-school').value = '';
+  });
+}
+
+// ── SETTINGS ────────────────────────────────────────────────────
+function loadSettings() {
+  call('getPlatformSettings', {}, function(d) {
+    var tog = document.getElementById('tog-ai');
+    if (d.aiExplanationsEnabled) tog.classList.add('on'); else tog.classList.remove('on');
+  });
+}
+
+function toggleAI() {
+  var tog = document.getElementById('tog-ai');
+  tog.classList.toggle('on');
+  call('savePlatformSettings', { aiExplanationsEnabled: tog.classList.contains('on') }, function() {
+    toast('success', 'Global AI setting updated');
+  });
+}
+
+function sendTestEmail() {
+  var resultEl = document.getElementById('email-test-result');
+  resultEl.style.display = 'block';
+  resultEl.textContent = 'Sending test email…';
+  resultEl.style.color = 'var(--txt2)';
+  callRaw('requestPasswordReset', { email: S.email }, function(e, r) {
+    if (e || !r) {
+      resultEl.textContent = 'Error: Could not reach server.';
+      resultEl.style.color = 'var(--red)'; return;
+    }
+    if (r.status === 'success') {
+      resultEl.textContent = '✓ Test email triggered! Check ' + S.email + ' (including spam). Note: GAS MailApp quota may delay or block email if daily limit reached.';
+      resultEl.style.color = 'var(--grn)';
+    } else {
+      resultEl.textContent = 'Error: ' + (r.message || 'Unknown error');
+      resultEl.style.color = 'var(--red)';
+    }
+  });
+}
+
+// ── MODAL BACKDROP CLOSE ─────────────────────────────────────────
+window.addEventListener('click', function(e) {
+  ['school-mo','renew-mo'].forEach(function(id) {
+    if (e.target && e.target.id === id) closeMo(id);
+  });
+});
+</script>
+</body>
+</html>
