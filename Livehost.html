@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  
+  <base target="_top">
   <meta charset="UTF-8">
-  <script src="edurena-dash.js"></script>
-  <link rel="stylesheet" href="edurena-dash-design.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edurena — Live Host</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <title>Edurena Live — Host</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0a0c15;--surf:#10142a;--surf2:#181d36;--bdr:#232a45;
-      --acc:#4f78ff;--grn:#1fc98e;--red:#ff5f5f;--yel:#ffcc00;--pur:#a78bfa;
+      --bg:#080C16;--surf:#0F1523;--surf2:#151D2E;--bdr:#1E2A3F;
+      --acc:#F97316;--grn:#1fc98e;--red:#ff5f5f;--yel:#ffcc00;--pur:#A78BFA;
       --txt:#f0f2ff;--txt2:#8892b0;
-      --f:'Sora',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+      --f:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
     }
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh;padding:24px;display:flex;align-items:center;justify-content:center}
@@ -208,7 +206,7 @@
         </button>
         <button class="mode-card kahoot" id="mc-kahoot">
           <span class="mc-icon">&#x1F3AF;</span>
-          <span class="mc-title">Kahoot Quiz</span>
+          <span class="mc-title">Blitz Quiz</span>
           <span class="mc-desc">Timed questions &middot; instant feedback &middot; timer auto-advances</span>
         </button>
       </div>
@@ -220,7 +218,7 @@
         <select id="sel-quiz"><option value="">Loading quizzes&hellip;</option></select>
       </div>
       <div class="fg" id="time-row" style="display:none">
-        <label>Seconds per question (Kahoot only)</label>
+        <label>Seconds per question (Blitz only)</label>
         <input type="number" id="sel-time" value="20" min="5" max="120">
       </div>
     </div>
@@ -341,7 +339,7 @@
 (function(){
 'use strict';
 
-var SCRIPT_URL = DASH.scriptUrl;
+var SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>';
 var RACE_URL   = 'https://oyeb22.github.io/QUIZFLOW/race.html';
 var KAHOOT_URL = 'https://oyeb22.github.io/QUIZFLOW/kahoot.html';
 
@@ -388,8 +386,8 @@ function post(action,data,cb){
 function getDb(){return mode==='race'?raceDb:khDb;}
 
 try{
-  var rCfg={apiKey:'',authDomain:'examrace-31854.firebaseapp.com',databaseURL:'https://examrace-31854-default-rtdb.firebaseio.com',projectId:'examrace-31854',storageBucket:'examrace-31854.firebasestorage.app',messagingSenderId:'698483423316',appId:'1:698483423316:web:d5dd780bb186d8253115c1'};
-  var kCfg={apiKey:'',authDomain:'kahoot-24063.firebaseapp.com',databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',projectId:'kahoot-24063',storageBucket:'kahoot-24063.firebasestorage.app',messagingSenderId:'962917873467',appId:'1:962917873467:web:a6b526aee30cd15c92291e'};
+  var rCfg={apiKey:'AIzaSyDpKPol5g5iZQpi6zw5aODpNH4MzejOBfw',authDomain:'examrace-31854.firebaseapp.com',databaseURL:'https://examrace-31854-default-rtdb.firebaseio.com',projectId:'examrace-31854',storageBucket:'examrace-31854.firebasestorage.app',messagingSenderId:'698483423316',appId:'1:698483423316:web:d5dd780bb186d8253115c1'};
+  var kCfg={apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',authDomain:'kahoot-24063.firebaseapp.com',databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',projectId:'kahoot-24063',storageBucket:'kahoot-24063.firebasestorage.app',messagingSenderId:'962917873467',appId:'1:962917873467:web:a6b526aee30cd15c92291e'};
   var eR=null,eK=null;
   firebase.apps.forEach(function(a){if(a.name==='race')eR=a;if(a.name==='kh')eK=a;});
   raceDb=firebase.database(eR||firebase.initializeApp(rCfg,'race'));
@@ -405,7 +403,7 @@ window.addEventListener('load',function(){
   });
 });
 
-el('loginBtn').addEventListener('click',function(){DASH.goLogin();});
+el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
 function wireModeCards(){
   el('mc-race').addEventListener('click',function(){selectMode('race');});
@@ -532,7 +530,7 @@ function showLobby(){
   var isRace=mode==='race';
   _joinUrl=(isRace?RACE_URL:KAHOOT_URL)+'?script='+encodeURIComponent(SCRIPT_URL);
   el('lby-tag').className  ='lobby-mode-tag '+(isRace?'race':'kahoot');
-  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Kahoot';
+  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Blitz';
   el('lby-code').textContent=sessionCode;
   el('lby-url').textContent=_joinUrl;
   el('lby-count').textContent='0';
@@ -999,7 +997,7 @@ function doKahootFinal(){
   if(khPropagationRaf){cancelAnimationFrame(khPropagationRaf);khPropagationRaf=null;}
   el('kh-propagation-bar').classList.remove('on');
   khDb.ref('kahoot/'+sessionCode+'/state').update({phase:'final'});
-  el('done-msg').textContent='Kahoot complete! Students see the final podium. Code: '+sessionCode;
+  el('done-msg').textContent='Blitz complete! Students see the final podium. Code: '+sessionCode;
   cleanupKahoot();
   show('s-done');
 }
