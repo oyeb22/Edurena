@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Plans & Pricing</title>
-  <script src="edurena-config.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#07090f; --surf:#0d1117; --surf2:#131923; --surf3:#182030;
+      --bg:#080C16; --surf:#0F1523; --surf2:#131923; --surf3:#182030;
       --bdr:#1e2a3a; --bdr2:#243348;
-      --acc:#4d7cfe; --acc2:#7ea3ff; --acc-g:rgba(77,124,254,.15);
+      --acc:#F97316; --acc2:#FB923C; --acc-g:rgba(249,115,22,.15);
       --grn:#23d18b; --grn-g:rgba(35,209,139,.12);
       --red:#ff5c5c; --red-g:rgba(255,92,92,.12);
       --yel:#ffb547; --yel-g:rgba(255,181,71,.12);
       --pur:#a78bfa; --pur-g:rgba(167,139,250,.12);
       --txt:#e8ecf4; --txt2:#7a8599; --muted:#3d4d63;
-      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+      --font:'Plus Jakarta Sans',sans-serif; --mono:'JetBrains Mono',monospace;
       --r:14px; --rs:9px;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -25,7 +25,7 @@
     /* ── NAV ── */
     .nav{background:rgba(7,9,15,.92);border-bottom:1px solid var(--bdr);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);}
     .nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
-    .nav-logo-box{width:30px;height:30px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+    .nav-logo-box{width:30px;height:30px;background:linear-gradient(135deg,#F97316,#FB923C);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
     .nav-logo-txt{font-size:14px;font-weight:700;color:var(--acc2);}
     .nav-right{display:flex;align-items:center;gap:10px;}
     .nav-link{font-size:12px;color:var(--txt2);text-decoration:none;padding:6px 12px;border-radius:var(--rs);transition:all .15s;}
@@ -34,8 +34,8 @@
     .nav-btn:hover{background:#3d6cf0;}
 
     /* ── HERO ── */
-    .hero{text-align:center;padding:72px 20px 52px;background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(77,124,254,.12) 0%,transparent 70%);}
-    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--acc-g);border:1px solid rgba(77,124,254,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--acc2);margin-bottom:20px;}
+    .hero{text-align:center;padding:72px 20px 52px;background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(249,115,22,.12) 0%,transparent 70%);}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--acc-g);border:1px solid rgba(249,115,22,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--acc2);margin-bottom:20px;}
     .hero h1{font-size:clamp(28px,6vw,52px);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-bottom:14px;}
     .hero h1 span{background:linear-gradient(135deg,var(--acc2),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
     .hero p{font-size:clamp(14px,2vw,17px);color:var(--txt2);max-width:540px;margin:0 auto 28px;line-height:1.7;}
@@ -56,7 +56,7 @@
     @media(max-width:800px){.plans{grid-template-columns:1fr;max-width:420px;}}
     .plan-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:24px;position:relative;transition:border-color .2s;}
     .plan-card:hover{border-color:var(--bdr2);}
-    .plan-card.popular{border-color:var(--acc);box-shadow:0 0 40px rgba(77,124,254,.1);}
+    .plan-card.popular{border-color:var(--acc);box-shadow:0 0 40px rgba(249,115,22,.1);}
     .popular-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--acc),var(--pur));color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap;}
     .plan-name{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
     .plan-price-wrap{margin-bottom:6px;}
@@ -159,53 +159,6 @@
     .footer{border-top:1px solid var(--bdr);padding:32px 24px;text-align:center;font-size:12px;color:var(--muted);margin-top:80px;}
     .footer a{color:var(--txt2);text-decoration:none;}
     .footer a:hover{color:var(--acc2);}
-
-    /* ── MOBILE RESPONSIVE ── */
-    @media(max-width:640px) {
-      nav{padding:12px 16px;}
-      .nav-logo-txt{display:none;}
-      .nav-links{gap:12px;}
-      .nav-links a{font-size:12px;}
-      .nav-links .nav-cta{padding:7px 14px;font-size:12px;}
-
-      .hero{padding:60px 16px 40px;}
-      .hero h1{font-size:clamp(24px,7vw,36px);}
-      .hero p{font-size:13px;}
-
-      .section{padding:40px 16px;}
-      section{padding:40px 16px;}
-
-      .plans{grid-template-columns:1fr !important;max-width:100%;}
-      .plan{border-radius:12px;}
-      .plan-price-big{font-size:clamp(28px,8vw,40px);}
-
-      .calc-row{grid-template-columns:1fr !important;}
-      .calc-cta{min-height:48px;font-size:13px;}
-      .calc-total-val{font-size:16px;}
-
-      .faq-q{font-size:13px;padding:14px 16px;}
-      .faq-a{padding:0 16px 14px;font-size:12px;}
-
-      .mbox{max-width:100%;border-radius:16px 16px 0 0;position:fixed;bottom:0;max-height:92vh;}
-      .mo{align-items:flex-end;padding:0;}
-      .mb{padding:16px;}
-      .mo-pay-btn{min-height:52px;font-size:14px;}
-    }
-    @media(max-width:400px) {
-      .hero h1{font-size:22px;}
-      .plan-price-big{font-size:26px;}
-    }
-
-    /* Touch targets */
-    .plan-btn, .calc-cta, .mo-pay-btn, .nav-cta {
-      min-height: 44px;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    button { -webkit-tap-highlight-color: transparent; }
-
-    /* Safe area */
-    body { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
   </style>
 </head>
 <body>
@@ -214,7 +167,7 @@
 <nav class="nav">
   <a class="nav-logo" href="#">
     <div class="nav-logo-box">⚡</div>
-    <span class="nav-logo-txt">Edurena</span>
+    <span class="nav-logo-txt" style="color:#F97316;font-weight:700">Edurena</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#faq">FAQ</a>
@@ -307,23 +260,18 @@
 <div class="toast-stack" id="toasts"></div>
 
 <script>
-/* ── SCRIPT URL — resolved by edurena-config.js ── */
-var SCRIPT_URL = EDURENA.scriptUrl;
-var GS_URL     = SCRIPT_URL;
+/* ── SCRIPT URL ── */
+var SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>';
+var GS_URL = SCRIPT_URL;
 
-// Update as soon as EDURENA resolves (handles sessionStorage case)
-EDURENA.ready.then(function(cfg) {
-  SCRIPT_URL = cfg.scriptUrl || SCRIPT_URL;
-  GS_URL     = SCRIPT_URL;
-  document.getElementById('nav-login-link').href = SCRIPT_URL ? SCRIPT_URL + '?page=login' : '#';
-  // Load live pricing from API
-  _loadLivePricing(cfg.pricing);
-});
-
-/* ── Update nav login link immediately if we already have the URL ── */
-if (SCRIPT_URL) {
-  document.getElementById('nav-login-link').href = SCRIPT_URL + '?page=login';
+// If opened outside GAS (e.g. GitHub Pages or direct file), fall back to ?script= param
+if (!SCRIPT_URL || SCRIPT_URL.indexOf('script.google') === -1) {
+  var _p = new URLSearchParams(window.location.search);
+  if (_p.get('script')) SCRIPT_URL = _p.get('script');
 }
+
+/* ── Update nav login link ── */
+document.getElementById('nav-login-link').href = SCRIPT_URL ? SCRIPT_URL + '?page=login' : '#';
 
 /* ── TASK 8.1 — Pre-fill school name from URL ?schoolName= param (renewal flow) ── */
 (function() {
@@ -355,12 +303,12 @@ if (SCRIPT_URL) {
   }
 })();
 
-/* ── PRICING CONFIG — loaded live from API via edurena-config.js ── */
+/* ── PRICING CONFIG (mirrors Code.gs — client-side for live preview) ── */
 var PRICES = {
-  standard_per_student: 200,   // fallback defaults
-  premium_per_student:  350,
-  trial_days:           14,
-  minimum_students:     30
+  standard_per_student: 200,
+  premium_per_student:  500,
+  trial_days: 14,
+  minimum_students: 10
 };
 var DISCOUNTS = {
   annual:   0.20,
@@ -368,121 +316,6 @@ var DISCOUNTS = {
   bulk_100: 0.15,
   bulk_500: 0.25
 };
-
-/**
- * Called when live pricing arrives from the API.
- * Updates PRICES from the pricing_config Supabase table.
- */
-function _loadLivePricing(pricing) {
-  if (!pricing || typeof pricing !== 'object') return;
-  if (pricing.standard) {
-    PRICES.standard_per_student = pricing.standard.pricePerStudent || PRICES.standard_per_student;
-    PRICES.minimum_students     = pricing.standard.minStudents     || PRICES.minimum_students;
-    var tiers = pricing.standard.bulkTiers || [];
-    if (tiers.length) {
-      // Map API tier format to local DISCOUNTS
-      tiers.forEach(function(t) {
-        if (t.from >= 500) DISCOUNTS.bulk_500 = (t.discount_pct || 25) / 100;
-        else if (t.from >= 100) DISCOUNTS.bulk_100 = (t.discount_pct || 15) / 100;
-        else if (t.from >= 50)  DISCOUNTS.bulk_50  = (t.discount_pct || 10) / 100;
-      });
-    }
-  }
-  if (pricing.premium) {
-    PRICES.premium_per_student = pricing.premium.pricePerStudent || PRICES.premium_per_student;
-  }
-  // Re-render calculator with live prices
-  updateCalc();
-  renderPlans();
-}
-
-/* ── FLUTTERWAVE payment handler ── */
-function initiateFlutterwavePayment(plan, schoolName, email, studentCount, months) {
-  if (!SCRIPT_URL) { showToast('Server not configured', 'err'); return; }
-
-  showToast('Preparing payment…', 'info');
-
-  // Step 1: Get payment reference and amount from backend
-  EDURENA.post('createFlutterwavePaymentRef', {
-    plan:           plan,
-    schoolName:     schoolName,
-    contactEmail:   email,
-    studentCount:   studentCount,
-    durationMonths: months,
-    currency:       'NGN'
-  }).then(function(r) {
-    if (r.status !== 'success') throw new Error(r.message || 'Payment init failed');
-    var d = r.data;
-
-    if (d.alreadyActive) {
-      showToast('This school already has an active subscription!', 'ok');
-      return;
-    }
-
-    // Step 2: Load Flutterwave inline SDK and open payment modal
-    return EDURENA.post('getFlutterwavePublicKey', {}).then(function(pkRes) {
-      if (pkRes.status !== 'success') throw new Error('Could not load payment config');
-      var pubKey = pkRes.data.publicKey;
-
-      // Load Flutterwave inline script dynamically
-      if (typeof FlutterwaveCheckout === 'undefined') {
-        var s = document.createElement('script');
-        s.src = 'https://checkout.flutterwave.com/v3.js';
-        s.onload = function() { _openFlwModal(pubKey, d, plan, schoolName, email); };
-        document.head.appendChild(s);
-      } else {
-        _openFlwModal(pubKey, d, plan, schoolName, email);
-      }
-    });
-  }).catch(function(e) {
-    showToast('Payment error: ' + e.message, 'err');
-    console.error('[Pricing] Flutterwave init error:', e);
-  });
-}
-
-function _openFlwModal(pubKey, paymentData, plan, schoolName, email) {
-  FlutterwaveCheckout({
-    public_key: pubKey,
-    tx_ref:     paymentData.txRef,
-    amount:     paymentData.amount,
-    currency:   paymentData.currency || 'NGN',
-    payment_options: 'card,banktransfer,ussd',
-    meta:       paymentData.meta,
-    customer: {
-      email: email,
-      name:  schoolName
-    },
-    customizations: {
-      title:       'Edurena — ' + (plan.charAt(0).toUpperCase() + plan.slice(1)) + ' Plan',
-      description: paymentData.studentCount + ' students × ' + paymentData.durationMonths + ' month(s)',
-      logo:        'https://oyeb22.github.io/EDURENA/edurena-logo.png'
-    },
-    callback: function(response) {
-      // Verify on backend after successful payment
-      if (response.status === 'successful') {
-        showToast('Payment received! Activating your school…', 'ok');
-        EDURENA.post('verifyFlutterwavePayment', {
-          transactionId: String(response.transaction_id),
-          txRef:         response.tx_ref
-        }).then(function(r) {
-          if (r.status === 'success' && r.data.verified) {
-            showToast('🎉 School activated! Check your email for login details.', 'ok');
-            setTimeout(function() {
-              if (SCRIPT_URL) window.location.href = SCRIPT_URL + '?page=login';
-            }, 3000);
-          } else {
-            showToast('Payment verified but activation pending — check your email shortly.', 'info');
-          }
-        }).catch(function(e) {
-          showToast('Verification issue — contact support with ref: ' + response.tx_ref, 'err');
-        });
-      }
-    },
-    onclose: function() {
-      console.log('[Pricing] Flutterwave modal closed');
-    }
-  });
-}
 
 var isAnnual = false;
 var PLANS = [
@@ -543,7 +376,7 @@ var PLANS = [
 
 var FAQ_ITEMS = [
   { q: 'How is pricing calculated?', a: 'You pay per student per month. Bulk discounts apply automatically: 10% off for 50+ students, 15% off for 100+, and 25% off for 500+. Annual billing gives an additional 20% discount on top of any bulk discount.' },
-  { q: 'What payment methods do you accept?', a: 'We use Flutterwave which accepts Nigerian debit/credit cards, bank transfers, USSD, and mobile money. Payment is in Naira (₦). No foreign exchange needed.' },
+  { q: 'What payment methods do you accept?', a: 'We use Paystack which accepts all Nigerian debit/credit cards, bank transfers, and USSD. Payment is in Naira (₦). No foreign exchange needed.' },
   { q: 'Is the trial really free? Do I need a card?', a: 'Yes — the 14-day trial requires no payment and no card. You get full access to all Standard features for your first 14 days. After that, you can upgrade to keep your data.' },
   { q: 'What happens when my subscription expires?', a: 'Students can no longer start new exams, but all historical results are preserved. You can renew at any time to restore access. Teacher accounts remain active.' },
   { q: 'Can I switch plans mid-subscription?', a: 'Yes. Upgrading takes effect immediately and the remaining days from your current plan are carried over. Contact us to downgrade.' },
@@ -681,8 +514,8 @@ function renderCheckoutBody() {
         + '</select></div>'
     + '</div>'
     + '<div class="mo-summary" id="co-summary"></div>'
-    + '<button class="mo-pay-btn" id="co-pay-btn" onclick="doCheckout()">🔒 Pay with Flutterwave</button>'
-    + '<div class="mo-secure">🔐 Secured by Flutterwave · SSL encrypted · ₦ Naira</div>'
+    + '<button class="mo-pay-btn" id="co-pay-btn" onclick="doCheckout()">🔒 Pay with Paystack</button>'
+    + '<div class="mo-secure">🔐 Secured by Paystack · SSL encrypted · ₦ Naira</div>'
     + '<div class="mo-err" id="co-err"></div>';
   coRecalc();
 }
@@ -719,20 +552,56 @@ function doCheckout() {
 
   var btn = document.getElementById('co-pay-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Preparing payment…';
+  btn.innerHTML = '<span class="spin"></span>Creating payment…';
 
-  // Use Flutterwave via the new createFlutterwavePaymentRef action
-  initiateFlutterwavePayment(plan, school, email, students, months);
-  btn.disabled = false;
-  btn.innerHTML = '🔒 Pay with Flutterwave';
+  /*
+   * FIX: Use 'createPaymentIntentPublic' — no auth token needed.
+   * The old 'createPaymentIntent' required admin login, blocking all public orders.
+   * createPaymentIntentPublic validates the school name + plan server-side
+   * and stores the intent, then returns a Paystack checkout URL.
+   */
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action:         'createPaymentIntentPublic',
+      schoolName:     school,
+      contactEmail:   email,
+      contactName:    name,
+      plan:           plan,
+      studentCount:   students,
+      durationMonths: months
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res) {
+    btn.disabled = false;
+    btn.innerHTML = '🔒 Pay with Paystack';
+    if (!res || res.status !== 'success') {
+      errEl.textContent = (res && res.message) || 'Could not create payment. Try again.';
+      return;
+    }
+    var d = res.data;
+    if (d.paymentUrl) {
+      window.open(d.paymentUrl, '_blank');
+      showPostPaymentMessage(d.reference, d.amount, email);
+    } else {
+      /* Paystack not yet configured — show manual payment instructions */
+      showManualPayment(d.reference, d.amount, school, plan, students, months);
+    }
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.innerHTML = '🔒 Pay with Paystack';
+    errEl.textContent = 'Network error. Please try again.';
+  });
 }
 
 function showPostPaymentMessage(ref, amount, email) {
   var body = document.getElementById('checkout-body');
   body.innerHTML = '<div class="success-state">'
     + '<div class="success-icon">✅</div>'
-    + '<div class="success-title">Payment Initiated!</div>'
-    + '<div class="success-msg">Complete your payment of <strong>' + fmt(amount) + '</strong> in the Flutterwave window.<br>'
+    + '<div class="success-title">Payment Window Opened!</div>'
+    + '<div class="success-msg">Complete your payment of <strong>' + fmt(amount) + '</strong> in the Paystack window.<br>'
     + 'Your subscription will activate automatically within a few minutes after payment.<br><br>'
     + 'A confirmation email will be sent to <strong>' + esc(email) + '</strong>.</div>'
     + '<div class="success-ref">Ref: ' + esc(ref) + '</div>'
@@ -745,10 +614,10 @@ function showManualPayment(ref, amount, school, plan, students, months) {
   var errEl = document.getElementById('co-err');
   errEl.innerHTML = '<div style="background:var(--yel-g);border:1px solid rgba(255,181,71,.25);border-radius:var(--rs);padding:12px;margin-top:10px;text-align:left;line-height:1.7">'
     + '⚠️ <strong>Manual Payment Instructions</strong><br>'
-    + 'Online payment not available yet. Please pay via bank transfer:<br>'
+    + 'Paystack is not yet active. Please pay via bank transfer:<br>'
     + 'Amount: <strong>' + fmt(amount) + '</strong><br>'
     + 'Reference: <strong>' + esc(ref) + '</strong><br>'
-    + 'Contact: <strong>hello@edurena.com</strong> with proof of payment.<br>'
+    + 'Contact: <strong>adisa7oyebola@gmail.com</strong> with proof of payment.<br>'
     + '<div style="margin-top:6px;font-size:11px;color:var(--muted)">Your account will be activated within 24 hours after payment confirmation.</div>'
     + '</div>';
 }
