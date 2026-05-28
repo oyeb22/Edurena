@@ -388,8 +388,8 @@ function post(action,data,cb){
 function getDb(){return mode==='race'?raceDb:khDb;}
 
 try{
-  var rCfg={apiKey:'AIzaSyDpKPol5g5iZQpi6zw5aODpNH4MzejOBfw',authDomain:'examrace-31854.firebaseapp.com',databaseURL:'https://examrace-31854-default-rtdb.firebaseio.com',projectId:'examrace-31854',storageBucket:'examrace-31854.firebasestorage.app',messagingSenderId:'698483423316',appId:'1:698483423316:web:d5dd780bb186d8253115c1'};
-  var kCfg={apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',authDomain:'kahoot-24063.firebaseapp.com',databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',projectId:'kahoot-24063',storageBucket:'kahoot-24063.firebasestorage.app',messagingSenderId:'962917873467',appId:'1:962917873467:web:a6b526aee30cd15c92291e'};
+  var rCfg={apiKey:'',authDomain:'examrace-31854.firebaseapp.com',databaseURL:'https://examrace-31854-default-rtdb.firebaseio.com',projectId:'examrace-31854',storageBucket:'examrace-31854.firebasestorage.app',messagingSenderId:'698483423316',appId:'1:698483423316:web:d5dd780bb186d8253115c1'};
+  var kCfg={apiKey:'',authDomain:'kahoot-24063.firebaseapp.com',databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',projectId:'kahoot-24063',storageBucket:'kahoot-24063.firebasestorage.app',messagingSenderId:'962917873467',appId:'1:962917873467:web:a6b526aee30cd15c92291e'};
   var eR=null,eK=null;
   firebase.apps.forEach(function(a){if(a.name==='race')eR=a;if(a.name==='kh')eK=a;});
   raceDb=firebase.database(eR||firebase.initializeApp(rCfg,'race'));
