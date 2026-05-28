@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edurena — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080C16;
+      --surface: #0F1523;
+      --surface2: #151D2E;
+      --border: rgba(255,255,255,0.07);
+      --border-focus: rgba(249,115,22,0.6);
+      --text: #F1F5F9;
+      --text2: #94A3B8;
+      --text3: #64748B;
+      --accent: #F97316;
+      --accent-2: #FB923C;
+      --accent-bg: rgba(249,115,22,0.12);
+      --accent-border: rgba(249,115,22,0.3);
+      --success: #10B981;
+      --success-bg: rgba(16,185,129,0.1);
+      --success-border: rgba(16,185,129,0.3);
+      --danger: #EF4444;
+      --danger-bg: rgba(239,68,68,0.1);
+      --danger-border: rgba(239,68,68,0.3);
+      --warn-bg: rgba(245,158,11,0.1);
+      --warn-border: rgba(245,158,11,0.3);
+      --warn: #F59E0B;
+      --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --r: 12px;
+      --r-sm: 8px;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      background-image: radial-gradient(ellipse 60% 50% at 20% 20%, rgba(249,115,22,0.07) 0%, transparent 60%),
+                        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(251,146,60,0.05) 0%, transparent 50%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text);
+    }
+    .wrap { width: 100%; max-width: 400px; }
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #F97316, #FB923C);
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(249,115,22,0.35);
+    }
+    .brand h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      color: var(--text);
+    }
+    .brand p {
+      font-size: 13px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.5);
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .tab {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all .15s;
+      position: relative;
+      letter-spacing: -0.1px;
+    }
+    .tab.on {
+      color: var(--text);
+      background: var(--surface);
+    }
+    .tab.on::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0; right: 0;
+      height: 1.5px;
+      background: var(--text);
+    }
+    .panel { display: none; padding: 24px; }
+    .panel.on { display: block; }
+    .panel-title {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      margin-bottom: 3px;
+    }
+    .panel-sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .fg { margin-bottom: 14px; }
+    .fg label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 5px;
+    }
+    .fg input, .fg select {
+      width: 100%;
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    .fg input:focus, .fg select:focus { border-color: var(--border-focus); }
+    .fg input.pw { font-family: var(--mono); letter-spacing: 1.5px; }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 36px; }
+    .pw-toggle {
+      position: absolute;
+      right: 10px; top: 50%;
+      transform: translateY(-50%);
+      border: none; background: none;
+      font-size: 14px; cursor: pointer;
+      color: var(--text3); padding: 2px;
+      transition: color .15s;
+    }
+    .pw-toggle:hover { color: var(--text); }
+    .forgot {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      margin-top: -8px;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+    .forgot:hover { text-decoration: underline; }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--text);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-sm);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+      letter-spacing: -0.1px;
+    }
+    .btn:hover:not(:disabled) { opacity: 0.88; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .msg {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: var(--r-sm);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+    .msg.on { display: block; }
+    .msg.err { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); }
+    .msg.ok  { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); }
+    .msg.info{ background: var(--accent-bg); border: 1px solid var(--accent-border); color: var(--accent); }
+    .spin {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 1.5px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .subscreen { display: none; }
+    .subscreen.on { display: block; }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text3);
+      cursor: pointer;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .back:hover { color: var(--text); }
+    .pw-strength {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .pw-sf {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .3s, background .3s;
+      width: 0%;
+    }
+    .notice {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-radius: var(--r-sm);
+      padding: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--warn);
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    .notice strong { color: var(--text); }
+    .foot {
+      padding: 12px 24px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      font-size: 11.5px;
+      color: var(--text3);
+      text-align: center;
+    }
+    .sa-link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text3);
+    }
+    .sa-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .sa-link a:hover { text-decoration: underline; }
+    select option { background: #fff; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-icon">⬡</div>
+    <h1>Edurena</h1>
+    <p>AI-Proctored Examination Platform</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab on" id="t-login" onclick="showTab('login')">Sign in</button>
+      <button class="tab" id="t-register" onclick="showTab('register')">Register</button>
+    </div>
+
+    <!-- SIGN IN PANEL -->
+    <div class="panel on" id="p-login">
+
+      <!-- Login form -->
+      <div class="subscreen on" id="ss-login">
+        <div class="panel-title">Welcome back</div>
+        <div class="panel-sub">Sign in with your approved teacher account.</div>
+        <div class="fg">
+          <label>Email address</label>
+          <input type="email" id="l-email" placeholder="teacher@school.edu" autocomplete="email"
+                 onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div class="fg">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="l-pass" class="pw" placeholder="••••••••" autocomplete="current-password"
+                   onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="pw-toggle" onclick="togglePw('l-pass',this)">👁</button>
+          </div>
+        </div>
+        <span class="forgot" onclick="showSubscreen('ss-forgot')">Forgot password?</span>
+        <button class="btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+        <div class="msg err" id="l-err"></div>
+      </div>
+
+      <!-- Forgot password -->
+      <div class="subscreen" id="ss-forgot">
+        <span class="back" onclick="showSubscreen('ss-login')">← Back to sign in</span>
+        <div class="panel-title">Reset password</div>
+        <div class="panel-sub">Enter your email and we'll send a reset link valid for 1 hour.</div>
+        <div class="fg">
+          <label>Email address</label>
+          <input type="email" id="fp-email" placeholder="teacher@school.edu"
+                 onkeydown="if(event.key==='Enter')doForgotPassword()">
+        </div>
+        <button class="btn" id="fpBtn" onclick="doForgotPassword()">Send reset link</button>
+        <div class="msg err" id="fp-err"></div>
+        <div class="msg ok"  id="fp-ok"></div>
+      </div>
+
+      <!-- Reset password (via token) -->
+      <div class="subscreen" id="ss-reset">
+        <div class="panel-title">Set new password</div>
+        <div class="panel-sub" id="reset-sub">Enter and confirm your new password.</div>
+        <div class="fg">
+          <label>New password (min 8 characters)</label>
+          <div class="pw-wrap">
+            <input type="password" id="rp-new" class="pw" placeholder="••••••••" autocomplete="new-password"
+                   oninput="checkStrength(this.value,'rp-sf')"
+                   onkeydown="if(event.key==='Enter')doResetPassword()">
+            <button class="pw-toggle" onclick="togglePw('rp-new',this)">👁</button>
+          </div>
+          <div class="pw-strength"><div class="pw-sf" id="rp-sf"></div></div>
+        </div>
+        <div class="fg">
+          <label>Confirm new password</label>
+          <div class="pw-wrap">
+            <input type="password" id="rp-cnf" class="pw" placeholder="••••••••" autocomplete="new-password"
+                   onkeydown="if(event.key==='Enter')doResetPassword()">
+            <button class="pw-toggle" onclick="togglePw('rp-cnf',this)">👁</button>
+          </div>
+        </div>
+        <button class="btn" id="rpBtn" onclick="doResetPassword()">Set new password</button>
+        <div class="msg err" id="rp-err"></div>
+        <div class="msg ok"  id="rp-ok"></div>
+      </div>
+
+    </div><!-- /p-login -->
+
+    <!-- REGISTER PANEL -->
+    <div class="panel" id="p-register">
+      <div class="panel-title">Create an account</div>
+      <div class="panel-sub">Your account will be active once an administrator approves it.</div>
+      <div class="fg">
+        <label>Full name</label>
+        <input type="text" id="r-name" placeholder="e.g. Adisa Oyebola" autocomplete="name">
+      </div>
+      <div class="fg">
+        <label>Email address</label>
+        <input type="email" id="r-email" placeholder="teacher@school.edu" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label>School</label>
+        <select id="r-school">
+          <option value="">Loading schools…</option>
+        </select>
+        <div style="font-size:11.5px;color:var(--text3);margin-top:4px">
+          Don't see your school? Contact the platform administrator.
+        </div>
+      </div>
+      <div class="fg">
+        <label>Password (min 8 characters)</label>
+        <div class="pw-wrap">
+          <input type="password" id="r-pass" class="pw" placeholder="••••••••" autocomplete="new-password"
+                 oninput="checkStrength(this.value,'r-sf')">
+          <button class="pw-toggle" onclick="togglePw('r-pass',this)">👁</button>
+        </div>
+        <div class="pw-strength"><div class="pw-sf" id="r-sf"></div></div>
+      </div>
+      <div class="fg">
+        <label>Confirm password</label>
+        <div class="pw-wrap">
+          <input type="password" id="r-confirm" class="pw" placeholder="••••••••" autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter')doRegister()">
+          <button class="pw-toggle" onclick="togglePw('r-confirm',this)">👁</button>
+        </div>
+      </div>
+      <button class="btn" id="regBtn" onclick="doRegister()">Submit registration</button>
+      <div class="msg err" id="r-err"></div>
+      <div class="notice hidden" id="r-pending">
+        <strong>Registration submitted</strong><br>
+        Please check your email to verify your address. Your account will be active once an administrator approves it.
+      </div>
+    </div>
+
+    <div class="foot">For authorised teaching staff only · Edurena v5.0</div>
+  </div>
+
+  <div class="sa-link hidden" id="sa-link">
+    <a onclick="goSuperadmin()">👑 Founder Dashboard</a>
+  </div>
+</div>
+
+<script>
+var SCRIPT_URL = (function(){
+  var s = '<?= ScriptApp.getService().getUrl() ?>';
+  if (!s) {
+    var m = window.location.search.match(/[?&]script=([^&]+)/);
+    if (m) s = decodeURIComponent(m[1]);
+  }
+  return s;
+})();
+if (!SCRIPT_URL) {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.body.innerHTML = '<div style="font-family:sans-serif;max-width:480px;margin:80px auto;padding:32px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.1);text-align:center">'
+      + '<h2 style="color:#dc2626;margin-bottom:12px">⚠️ Server Not Configured</h2>'
+      + '<p style="color:#555;line-height:1.6">Open this page through your Apps Script deployment URL, or append <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">?script=YOUR_APPS_SCRIPT_URL</code> to the address bar.</p>'
+      + '</div>';
+  });
+}
+var SUPERADMIN_EMAIL = '<?= CONFIG.SUPERADMIN_EMAIL ?>';
+var _resetToken = '';
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  loadSchools();
+  var params = {};
+  window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,k,v){
+    params[k] = decodeURIComponent(v);
+  });
+  if (params.action === 'reset' && params.token) {
+    showTab('login');
+    showSubscreen('ss-reset');
+    _resetToken = params.token;
+    validateResetToken(params.token);
+  }
+  try {
+    var stored = JSON.parse(sessionStorage.getItem('qf_teacher') || '{}');
+    if (stored.role === 'admin' || stored.role === 'superadmin') {
+      document.getElementById('sa-link').classList.remove('hidden');
+    }
+  } catch(_) {}
+});
+
+function loadSchools() {
+  post('getSchoolsPublic', {}, function(e, r) {
+    var sel = document.getElementById('r-school');
+    if (e || !r || r.status !== 'success' || !r.data || !r.data.length) {
+      sel.innerHTML = '<option value="">— No schools registered yet —</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">— Select your school —</option>' +
+      r.data.map(function(s) {
+        return '<option value="' + s.schoolName + '">' + s.schoolName + '</option>';
+      }).join('');
+  });
+}
+
+/* ── Nav ── */
+function showTab(name) {
+  ['login','register'].forEach(function(n) {
+    document.getElementById('t-'+n).classList.toggle('on', n === name);
+    document.getElementById('p-'+n).classList.toggle('on', n === name);
+  });
+  if (name === 'login') showSubscreen('ss-login');
+  clearAllMsgs();
+}
+
+function showSubscreen(id) {
+  ['ss-login','ss-forgot','ss-reset'].forEach(function(ss) {
+    var el = document.getElementById(ss);
+    if (el) el.classList.toggle('on', ss === id);
+  });
+  clearAllMsgs();
+}
+
+/* ── Utils ── */
+function setMsg(id, type, text) {
+  var el = document.getElementById(id); if (!el) return;
+  el.className = 'msg ' + type + ' on';
+  el.textContent = text;
+}
+function clearMsg(id) { var el = document.getElementById(id); if (el) el.className = 'msg'; }
+function clearAllMsgs() {
+  ['l-err','fp-err','fp-ok','rp-err','rp-ok','r-err'].forEach(clearMsg);
+}
+
+function togglePw(id, btn) {
+  var el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+function checkStrength(pw, barId) {
+  var bar = document.getElementById(barId); if (!bar) return;
+  var score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  var widths  = ['0%','20%','40%','70%','100%'];
+  var colors  = ['','#ef4444','#f59e0b','#22c55e','#16a34a'];
+  bar.style.width = widths[score] || '0%';
+  bar.style.background = colors[score] || '';
+}
+
+function spinBtn(id, loading, label) {
+  var btn = document.getElementById(id); if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spin"></span>' + label : label;
+}
+
+function post(action, data, cb) {
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(Object.assign({ action: action }, data || {}))
+  }).then(function(r) { return r.json(); })
+    .then(function(r) { if (cb) cb(null, r); })
+    .catch(function(e) { if (cb) cb(e, null); });
+}
+
+/* ── Login ── */
+function doLogin() {
+  clearMsg('l-err');
+  var email = (document.getElementById('l-email').value || '').trim();
+  var pass  = (document.getElementById('l-pass').value || '');
+  if (!email || !pass) { setMsg('l-err','err','Please enter your email and password.'); return; }
+  spinBtn('loginBtn', true, 'Signing in…');
+  post('teacherLogin', { email: email, password: pass }, function(e, r) {
+    spinBtn('loginBtn', false, 'Sign in');
+    if (e || !r || r.status !== 'success') {
+      setMsg('l-err','err', (r && r.message) || 'Login failed. Check your credentials and try again.');
+      return;
+    }
+    try {
+      sessionStorage.setItem('qf_token', r.data.token);
+      sessionStorage.setItem('qf_teacher', JSON.stringify(r.data));
+    } catch(_) {}
+
+    /* ── ROUTING FIX: correct destination per role ── */
+    var role  = r.data.role || 'teacher';
+    var email2 = (r.data.email || '').toLowerCase();
+    var saEmail= (SUPERADMIN_EMAIL || '').toLowerCase();
+
+    if ((role === 'superadmin' || role === 'admin') && email2 === saEmail) {
+      window.location.href = SCRIPT_URL + '?page=superadmin';
+    } else if (role === 'school_admin') {
+      window.location.href = SCRIPT_URL + '?page=schooladmin';
+    } else {
+      /* teacher, admin (non-superadmin) → teacher dashboard */
+      window.location.href = SCRIPT_URL + '?page=teacher';
+    }
+  });
+}
+
+/* ── Forgot password ── */
+function doForgotPassword() {
+  clearMsg('fp-err'); clearMsg('fp-ok');
+  var email = (document.getElementById('fp-email').value || '').trim();
+  if (!email || !email.includes('@')) { setMsg('fp-err','err','Please enter a valid email address.'); return; }
+  spinBtn('fpBtn', true, 'Sending…');
+  post('requestPasswordReset', { email: email }, function(e, r) {
+    spinBtn('fpBtn', false, 'Send reset link');
+    if (e || !r || r.status !== 'success') {
+      setMsg('fp-err','err', (r && r.message) || 'Something went wrong. Please try again.');
+      return;
+    }
+    setMsg('fp-ok','ok', (r.data && r.data.message) ||
+      'If that email exists, a reset link has been sent. Check your inbox and spam folder.');
+    document.getElementById('fp-email').value = '';
+  });
+}
+
+/* ── Validate reset token ── */
+function validateResetToken(token) {
+  var sub = document.getElementById('reset-sub');
+  if (sub) sub.textContent = 'Validating your reset link…';
+  post('validateResetToken', { token: token }, function(e, r) {
+    if (e || !r || r.status !== 'success') {
+      if (sub) sub.textContent = '';
+      setMsg('rp-err','err', (r && r.message) || 'This reset link is invalid or has expired. Please request a new one.');
+      ['rp-new','rp-cnf'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.disabled = true;
+      });
+      var btn = document.getElementById('rpBtn'); if (btn) btn.disabled = true;
+      return;
+    }
+    if (sub) sub.textContent = 'Set a new password for ' + r.data.email;
+  });
+}
+
+/* ── Reset password ── */
+function doResetPassword() {
+  clearMsg('rp-err'); clearMsg('rp-ok');
+  var nw  = (document.getElementById('rp-new').value || '');
+  var cnf = (document.getElementById('rp-cnf').value || '');
+  if (!nw) { setMsg('rp-err','err','Please enter a new password.'); return; }
+  if (nw.length < 8) { setMsg('rp-err','err','Password must be at least 8 characters.'); return; }
+  if (nw !== cnf)   { setMsg('rp-err','err','Passwords do not match.'); return; }
+  if (!_resetToken) { setMsg('rp-err','err','Reset token missing. Use the link from your email.'); return; }
+  spinBtn('rpBtn', true, 'Setting password…');
+  post('resetPassword', { token: _resetToken, newPassword: nw }, function(e, r) {
+    spinBtn('rpBtn', false, 'Set new password');
+    if (e || !r || r.status !== 'success') {
+      setMsg('rp-err','err', (r && r.message) || 'Password reset failed. Please try again.');
+      return;
+    }
+    document.getElementById('rp-new').value = '';
+    document.getElementById('rp-cnf').value = '';
+    setMsg('rp-ok','ok','Password reset successfully. Redirecting to sign in…');
+    var btn = document.getElementById('rpBtn'); if (btn) btn.style.display = 'none';
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, '', SCRIPT_URL + '?page=login');
+    }
+    _resetToken = '';
+    setTimeout(function() { showSubscreen('ss-login'); clearMsg('rp-ok'); }, 2500);
+  });
+}
+
+/* ── Register ── */
+function doRegister() {
+  clearMsg('r-err');
+  var name    = (document.getElementById('r-name').value    || '').trim();
+  var email   = (document.getElementById('r-email').value   || '').trim();
+  var school  = (document.getElementById('r-school').value  || '').trim();
+  var pass    = (document.getElementById('r-pass').value    || '');
+  var confirm = (document.getElementById('r-confirm').value || '');
+  if (!name)                { setMsg('r-err','err','Please enter your full name.'); return; }
+  if (!email || !email.includes('@')) { setMsg('r-err','err','Please enter a valid email address.'); return; }
+  if (!school)              { setMsg('r-err','err','Please select your school.'); return; }
+  if (pass.length < 8)     { setMsg('r-err','err','Password must be at least 8 characters.'); return; }
+  if (pass !== confirm)    { setMsg('r-err','err','Passwords do not match.'); return; }
+  spinBtn('regBtn', true, 'Submitting…');
+  post('teacherRegister', { name: name, email: email, password: pass, school: school }, function(e, r) {
+    spinBtn('regBtn', false, 'Submit registration');
+    if (e || !r || r.status !== 'success') {
+      setMsg('r-err','err', (r && r.message) || 'Registration failed. Please try again.');
+      return;
+    }
+    ['r-name','r-email','r-school','r-pass','r-confirm'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.closest('.fg')) el.closest('.fg').style.display = 'none';
+    });
+    document.getElementById('r-pass').value    = '';
+    document.getElementById('r-confirm').value = '';
+    document.getElementById('regBtn').style.display = 'none';
+    document.getElementById('r-pending').classList.remove('hidden');
+  });
+}
+
+function goSuperadmin() {
+  var token = '';
+  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  if (!token) { alert('Please sign in first.'); return; }
+  window.location.href = SCRIPT_URL + '?page=superadmin';
+}
+</script>
+</body>
+</html>
