@@ -4,19 +4,19 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edurena — Plans & Pricing</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>QuizFlow Pro — Plans & Pricing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#080C16; --surf:#0F1523; --surf2:#131923; --surf3:#182030;
+      --bg:#07090f; --surf:#0d1117; --surf2:#131923; --surf3:#182030;
       --bdr:#1e2a3a; --bdr2:#243348;
-      --acc:#F97316; --acc2:#FB923C; --acc-g:rgba(249,115,22,.15);
+      --acc:#4d7cfe; --acc2:#7ea3ff; --acc-g:rgba(77,124,254,.15);
       --grn:#23d18b; --grn-g:rgba(35,209,139,.12);
       --red:#ff5c5c; --red-g:rgba(255,92,92,.12);
       --yel:#ffb547; --yel-g:rgba(255,181,71,.12);
       --pur:#a78bfa; --pur-g:rgba(167,139,250,.12);
       --txt:#e8ecf4; --txt2:#7a8599; --muted:#3d4d63;
-      --font:'Plus Jakarta Sans',sans-serif; --mono:'JetBrains Mono',monospace;
+      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
       --r:14px; --rs:9px;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -25,7 +25,7 @@
     /* ── NAV ── */
     .nav{background:rgba(7,9,15,.92);border-bottom:1px solid var(--bdr);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);}
     .nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
-    .nav-logo-box{width:30px;height:30px;background:linear-gradient(135deg,#F97316,#FB923C);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+    .nav-logo-box{width:30px;height:30px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
     .nav-logo-txt{font-size:14px;font-weight:700;color:var(--acc2);}
     .nav-right{display:flex;align-items:center;gap:10px;}
     .nav-link{font-size:12px;color:var(--txt2);text-decoration:none;padding:6px 12px;border-radius:var(--rs);transition:all .15s;}
@@ -34,8 +34,8 @@
     .nav-btn:hover{background:#3d6cf0;}
 
     /* ── HERO ── */
-    .hero{text-align:center;padding:72px 20px 52px;background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(249,115,22,.12) 0%,transparent 70%);}
-    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--acc-g);border:1px solid rgba(249,115,22,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--acc2);margin-bottom:20px;}
+    .hero{text-align:center;padding:72px 20px 52px;background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(77,124,254,.12) 0%,transparent 70%);}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--acc-g);border:1px solid rgba(77,124,254,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--acc2);margin-bottom:20px;}
     .hero h1{font-size:clamp(28px,6vw,52px);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-bottom:14px;}
     .hero h1 span{background:linear-gradient(135deg,var(--acc2),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
     .hero p{font-size:clamp(14px,2vw,17px);color:var(--txt2);max-width:540px;margin:0 auto 28px;line-height:1.7;}
@@ -56,7 +56,7 @@
     @media(max-width:800px){.plans{grid-template-columns:1fr;max-width:420px;}}
     .plan-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:24px;position:relative;transition:border-color .2s;}
     .plan-card:hover{border-color:var(--bdr2);}
-    .plan-card.popular{border-color:var(--acc);box-shadow:0 0 40px rgba(249,115,22,.1);}
+    .plan-card.popular{border-color:var(--acc);box-shadow:0 0 40px rgba(77,124,254,.1);}
     .popular-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--acc),var(--pur));color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap;}
     .plan-name{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
     .plan-price-wrap{margin-bottom:6px;}
@@ -167,7 +167,7 @@
 <nav class="nav">
   <a class="nav-logo" href="#">
     <div class="nav-logo-box">⚡</div>
-    <span class="nav-logo-txt" style="color:#F97316;font-weight:700">Edurena</span>
+    <span class="nav-logo-txt">QuizFlow Pro</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#faq">FAQ</a>
@@ -307,7 +307,6 @@ document.getElementById('nav-login-link').href = SCRIPT_URL ? SCRIPT_URL + '?pag
 var PRICES = {
   standard_per_student: 200,
   premium_per_student:  500,
-  trial_days: 14,
   minimum_students: 10
 };
 var DISCOUNTS = {
@@ -319,25 +318,6 @@ var DISCOUNTS = {
 
 var isAnnual = false;
 var PLANS = [
-  {
-    key:      'trial',
-    name:     'Trial',
-    tagline:  'Try before you commit',
-    popular:  false,
-    features: [
-      { text: '14-day free trial', ok: true },
-      { text: 'Up to 50 students', ok: true },
-      { text: 'AI-proctored exams', ok: true },
-      { text: 'Live quiz games', ok: true },
-      { text: 'Question bank import', ok: true },
-      { text: 'AI explanations', ok: false },
-      { text: 'Priority support', ok: false }
-    ],
-    btnLabel: 'Start Free Trial',
-    btnClass: 'plan-btn-outline',
-    priceLabel: 'Free',
-    periodLabel: '14 days, no card needed'
-  },
   {
     key:      'standard',
     name:     'Standard',
@@ -377,12 +357,12 @@ var PLANS = [
 var FAQ_ITEMS = [
   { q: 'How is pricing calculated?', a: 'You pay per student per month. Bulk discounts apply automatically: 10% off for 50+ students, 15% off for 100+, and 25% off for 500+. Annual billing gives an additional 20% discount on top of any bulk discount.' },
   { q: 'What payment methods do you accept?', a: 'We use Paystack which accepts all Nigerian debit/credit cards, bank transfers, and USSD. Payment is in Naira (₦). No foreign exchange needed.' },
-  { q: 'Is the trial really free? Do I need a card?', a: 'Yes — the 14-day trial requires no payment and no card. You get full access to all Standard features for your first 14 days. After that, you can upgrade to keep your data.' },
+  { q: 'How do I get started?', a: 'Pick a plan and complete payment. Your school admin account is created automatically and login details are emailed to you. From there you invite your teachers (each receives a temporary password), and your teachers can add students. If you want to see the product before committing, email us at adisa7oyebola@gmail.com to schedule a live walkthrough.' },
   { q: 'What happens when my subscription expires?', a: 'Students can no longer start new exams, but all historical results are preserved. You can renew at any time to restore access. Teacher accounts remain active.' },
   { q: 'Can I switch plans mid-subscription?', a: 'Yes. Upgrading takes effect immediately and the remaining days from your current plan are carried over. Contact us to downgrade.' },
   { q: 'Do you offer discounts for government schools or NGOs?', a: 'Yes — contact us directly at adisa7oyebola@gmail.com with your school details and we can offer a custom arrangement.' },
   { q: 'How does AI face detection work for exams?', a: "We use MediaPipe, a browser-based AI model that runs entirely on the student's device. No video is streamed to our servers — only still photos are saved on violation events." },
-  { q: 'Is student data stored securely?', a: "All data is stored in your school's dedicated Google Sheets — you own and control it. We use the same security as Google's infrastructure." }
+  { q: 'Is student data stored securely?', a: "All data is stored in your school's private Supabase database. We use industry-standard encryption and role-based access controls so only your school's staff can see your data." }
 ];
 
 /* ── UTILS ── */
@@ -416,21 +396,14 @@ function calcCost(students, plan, months) {
 function renderPlans() {
   var grid = document.getElementById('plans-grid');
   grid.innerHTML = PLANS.map(function(p) {
-    var priceHtml = '';
-    if (p.key === 'trial') {
-      priceHtml = '<div class="plan-price-wrap"><span class="plan-price">Free</span></div>'
-        + '<div class="plan-period">' + p.periodLabel + '</div>'
-        + '<div class="plan-per">No card required</div>';
-    } else {
-      var rate    = p.key === 'premium' ? PRICES.premium_per_student : PRICES.standard_per_student;
-      var display = isAnnual ? Math.round(rate * 0.8) : rate;
-      priceHtml = '<div class="plan-price-wrap">'
-        + '<span class="plan-currency">₦</span>'
-        + '<span class="plan-price" data-plan="'+p.key+'">' + display.toLocaleString() + '</span>'
-        + '</div>'
-        + '<div class="plan-period">per student / month' + (isAnnual ? ' · billed annually' : '') + '</div>'
-        + '<div class="plan-per">e.g. 100 students = ' + fmt(display*100) + '/mo</div>';
-    }
+    var rate    = p.key === 'premium' ? PRICES.premium_per_student : PRICES.standard_per_student;
+    var display = isAnnual ? Math.round(rate * 0.8) : rate;
+    var priceHtml = '<div class="plan-price-wrap">'
+      + '<span class="plan-currency">₦</span>'
+      + '<span class="plan-price" data-plan="'+p.key+'">' + display.toLocaleString() + '</span>'
+      + '</div>'
+      + '<div class="plan-period">per student / month' + (isAnnual ? ' · billed annually' : '') + '</div>'
+      + '<div class="plan-per">e.g. 100 students = ' + fmt(display*100) + '/mo</div>';
     return '<div class="plan-card' + (p.popular ? ' popular' : '') + '">'
       + (p.popular ? '<div class="popular-badge">⭐ Most Popular</div>' : '')
       + '<div class="plan-name">' + p.name + '</div>'
@@ -474,7 +447,6 @@ function calcUpdate() {
 var _checkoutData = {};
 
 function openCheckout(planKey) {
-  if (planKey === 'trial') { openTrialModal(); return; }
   var preSchool = (document.getElementById('calc-school') || {}).value || '';
   _checkoutData = { plan: planKey, students: 100, months: isAnnual ? 12 : 1, school: preSchool.trim() };
   renderCheckoutBody();
@@ -622,65 +594,8 @@ function showManualPayment(ref, amount, school, plan, students, months) {
     + '</div>';
 }
 
-function openTrialModal() {
-  var body = document.getElementById('checkout-body');
-  document.getElementById('checkout-mo').classList.add('on');
-  var preSchool = (document.getElementById('calc-school') || {}).value || '';
-  body.innerHTML =
-    '<div class="mo-section">'
-    + '<div class="mo-section-title">Start Your Free Trial</div>'
-    + '<p style="font-size:12px;color:var(--txt2);margin-bottom:16px;line-height:1.6">14 days free, no card required. We\'ll create a demo school account for your teachers to explore everything.</p>'
-    + '<div class="mo-field"><label>School Name *</label><input type="text" id="trial-school" placeholder="e.g. Sunshine Academy" value="' + esc(preSchool) + '"></div>'
-    + '<div class="mo-field"><label>Contact Email *</label><input type="email" id="trial-email" placeholder="admin@school.edu"></div>'
-    + '</div>'
-    + '<button class="mo-pay-btn" id="trial-btn" onclick="doTrial()">🚀 Create Trial Account</button>'
-    + '<div class="mo-secure">No payment required · Cancel anytime</div>'
-    + '<div class="mo-err" id="trial-err"></div>';
-}
-
-function doTrial() {
-  var school = ((document.getElementById('trial-school') || {}).value || '').trim();
-  var email  = ((document.getElementById('trial-email')  || {}).value || '').trim();
-  var errEl  = document.getElementById('trial-err');
-  if (!school) { errEl.textContent = 'School name is required'; return; }
-  if (!email || !email.includes('@')) { errEl.textContent = 'Valid email is required'; return; }
-  errEl.textContent = '';
-  var btn = document.getElementById('trial-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>Creating…';
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'createDemoSchoolPublic', email: email, name: school })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(res) {
-    btn.disabled = false;
-    btn.innerHTML = '🚀 Create Trial Account';
-    if (!res || res.status !== 'success') {
-      errEl.textContent = (res && res.message) || 'Could not create trial. Contact us.';
-      return;
-    }
-    var d = res.data;
-    var body = document.getElementById('checkout-body');
-    body.innerHTML = '<div class="success-state">'
-      + '<div class="success-icon">🎉</div>'
-      + '<div class="success-title">Trial Account Created!</div>'
-      + '<div class="success-msg">'
-      + 'School: <strong>' + esc(d.schoolName || school) + '</strong><br>'
-      + 'Login email: <strong>' + esc(d.email || email) + '</strong><br>'
-      + 'Password: <strong>' + esc(d.password || '—') + '</strong><br><br>'
-      + '⚠️ Change your password immediately after first login.<br>'
-      + 'Your trial expires: <strong>' + (d.expiry ? new Date(d.expiry).toLocaleDateString('en-NG') : '14 days from now') + '</strong>'
-      + '</div>'
-      + '<a href="' + esc(SCRIPT_URL) + '?page=login" style="display:block;margin-top:14px;padding:12px;background:var(--acc);color:#fff;text-align:center;border-radius:var(--rs);text-decoration:none;font-weight:700;font-size:13px">→ Go to Teacher Login</a>'
-      + '</div>';
-  })
-  .catch(function() {
-    btn.disabled = false;
-    btn.innerHTML = '🚀 Create Trial Account';
-    errEl.textContent = 'Network error. Try again.';
-  });
-}
+/* openTrialModal() and doTrial() were removed in v5.1.
+   Self-service trials no longer exist — interested schools email us to book a walkthrough. */
 
 /* ── FAQ ── */
 function renderFAQ() {
@@ -714,7 +629,7 @@ renderFAQ();
 
 <!-- FOOTER -->
 <footer class="footer">
-  <p>© 2025 Edurena · Built for Nigerian schools · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+  <p>© 2025 QuizFlow Pro · Built for Nigerian schools · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
   <p style="margin-top:8px">Questions? <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a></p>
 </footer>
 
