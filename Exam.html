@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Edurena — Secure Exam</title>
+  <title>QuizFlow Pro — Secure Exam</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#080C16; --surface:#0F1523; --surface2:#151D2E; --surface3:#1C2840;
+      --bg:#080b14; --surface:#0e1221; --surface2:#161929; --surface3:#1e2235;
       --border:#252a42; --border2:#2e3450;
-      --accent:#F97316; --accent2:#FB923C; --accent-glow:rgba(249,115,22,0.25);
+      --accent:#5b6ef5; --accent2:#818cf8; --accent-glow:rgba(91,110,245,0.25);
       --green:#2dd4a0; --green-glow:rgba(45,212,160,0.2);
       --red:#f06b6b; --red-glow:rgba(240,107,107,0.2);
       --yellow:#f5c842; --yellow-glow:rgba(245,200,66,0.2);
       --text:#e8eaf4; --text2:#9ba3c0; --muted:#5c6480;
-      --font:'Plus Jakarta Sans',sans-serif; --mono:'JetBrains Mono',monospace;
+      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
       --radius:14px; --radius-sm:9px;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -468,11 +468,6 @@
     <button class="nav-btn nav-submit hidden" id="submitBtn" onclick="confirmSubmit()">Submit Exam ✓</button>
     <button class="nav-btn nav-next" id="nextBtn" onclick="nextQ()">Next →</button>
   </div>
-  <div id="submitRetryBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10000;background:#7c3aed;color:#fff;padding:12px 20px;text-align:center;font-size:14px;font-family:var(--font);display:none;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
-    <span>⚠️ Submission failed — your answers are saved locally.</span>
-    <button onclick="retrySubmit()" style="background:#fff;color:#7c3aed;border:none;padding:7px 18px;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px;">↺ Retry Submit</button>
-    <button onclick="document.getElementById('submitRetryBanner').style.display='none'" style="background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.4);padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12px;">Dismiss</button>
-  </div>
 </div>
 
 <!-- VIOLATION MODAL -->
@@ -553,7 +548,7 @@
       + 'Please get the correct exam link from your teacher and try again.'
       + '</p>'
       + '</div>';
-    throw new Error('[Edurena] Security: Invalid or missing script URL. Access denied.');
+    throw new Error('[QuizFlow] Security: Invalid or missing script URL. Access denied.');
   }
 })();
 
@@ -606,6 +601,7 @@ var faceEnabled   = true;
 var faceDetector  = null;
 var examSubmitted = false;
 var studentInfo   = { name:'', class:'', school:'', locked:false };
+var examSessionToken = '';   // v5.1: issued by validateExamCode; required by savePhoto, logViolation, getExplanation
 var _explainCache = {};
 var _passageCache = {};
 // ================================================================
@@ -727,6 +723,10 @@ async function validateExamDirect(examCode, studentEmail) {
       if (!gasCheck || gasCheck.status !== 'success') {
         return { ok: false, message: (gasCheck && gasCheck.message) || 'Validation failed' };
       }
+      // v5.1: capture examSessionToken for downstream proctoring calls
+      if (gasCheck.data && gasCheck.data.examSessionToken) {
+        examSessionToken = gasCheck.data.examSessionToken;
+      }
     }
 
     // Subscription check via GAS (school data is protected)
@@ -739,8 +739,29 @@ async function validateExamDirect(examCode, studentEmail) {
       if (!subCheck || subCheck.status !== 'success') {
         return { ok: false, message: (subCheck && subCheck.message) || 'Access denied' };
       }
+      // v5.1: capture examSessionToken
+      if (subCheck.data && subCheck.data.examSessionToken) {
+        examSessionToken = subCheck.data.examSessionToken;
+      }
       // Trust GAS result fully when subscription or duplicate check is needed
       return { ok: true, quizData: subCheck.data.quizData };
+    }
+
+    // v5.1: even on the all-clear happy path, we need an examSessionToken so
+    // savePhoto/logViolation/getExplanation will be accepted. The GAS call is
+    // cheap (cached) when both branches above also fired, and necessary when
+    // neither did (no-school + retakes-allowed exams).
+    if (!examSessionToken) {
+      await new Promise(function(resolve) {
+        post('validateExamCode',
+          { studentEmail: studentEmail, examCode: examCode },
+          function(e, r) {
+            if (r && r.status === 'success' && r.data && r.data.examSessionToken) {
+              examSessionToken = r.data.examSessionToken;
+            }
+            resolve();
+          });
+      });
     }
 
     return {
@@ -764,6 +785,10 @@ async function validateExamDirect(examCode, studentEmail) {
           if (err || !r || r.status !== 'success') {
             resolve({ ok: false, message: (r && r.message) || 'Validation failed' });
           } else {
+            // v5.1: capture examSessionToken in fallback path too
+            if (r.data && r.data.examSessionToken) {
+              examSessionToken = r.data.examSessionToken;
+            }
             resolve({ ok: true, quizData: r.data.quizData });
           }
         });
@@ -1057,32 +1082,6 @@ window.addEventListener('load',function(){
     }
     quizMeta    = result.quizData;
     faceEnabled = quizMeta.faceDetection !== false;
-    // Restore any autosaved answers (e.g. after network drop during submit)
-    try {
-      var _asKey = 'qf_as_'+student.examCode+'_'+(student.email||'').toLowerCase();
-      var _saved = localStorage.getItem(_asKey);
-      if (_saved) {
-        var _sd = JSON.parse(_saved);
-        var _age = Date.now() - (_sd.savedAt||0);
-        if (_sd.answers && _age < 6*60*60*1000) { // within 6 hours
-          answers = _sd.answers;
-          console.log('[Edurena] Restored autosaved answers, age:', Math.round(_age/60000)+'m');
-        }
-      }
-    } catch(_){}
-    // Restore any autosaved answers (e.g. after network drop during submit)
-    try {
-      var _asKey = 'qf_as_'+student.examCode+'_'+(student.email||'').toLowerCase();
-      var _saved = localStorage.getItem(_asKey);
-      if (_saved) {
-        var _sd = JSON.parse(_saved);
-        var _age = Date.now() - (_sd.savedAt||0);
-        if (_sd.answers && _age < 6*60*60*1000) { // within 6 hours
-          answers = _sd.answers;
-          console.log('[Edurena] Restored autosaved answers, age:', Math.round(_age/60000)+'m');
-        }
-      }
-    } catch(_){}
     safeText('preTitle', quizMeta.title);
     safeText('bannerCode', student.examCode);
     fetchStudentInfo();
@@ -1504,36 +1503,17 @@ function togglePassagePanel(header){
   if(icon)icon.classList.toggle('open',!isOpen);
 }
 
-function _autosaveKey(){return 'qf_as_'+student.examCode+'_'+(student.email||'').toLowerCase();}
-function autosaveLocal(){
-  try{
-    localStorage.setItem(_autosaveKey(),JSON.stringify({
-      answers:answers,
-      timeSpent:examStart?Math.floor((Date.now()-examStart)/1000):0,
-      savedAt:Date.now()
-    }));
-  }catch(e){}
-}
-function clearAutosave(){try{localStorage.removeItem(_autosaveKey());}catch(e){}}
-function retrySubmit(){
-  var banner=document.getElementById('submitRetryBanner');
-  if(banner)banner.style.display='none';
-  doSubmit(true);
-}
-
 function selectAns(qId,letter,el){
   answers[qId]=letter;
   var parent=el.closest('.options');
   if(parent)parent.querySelectorAll('.option').forEach(function(o){o.classList.remove('selected');});
   el.classList.add('selected');
   updateDots(); updateVioDisplay();
-  autosaveLocal();
 }
 
 function saveShort(){
   var q=questions[qIndex]; if(!q||q.type!=='SHORT')return;
   var el=document.getElementById('short_'+q.id); if(el)answers[q.id]=el.value.trim();
-  autosaveLocal();
 }
 function prevQ(){ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}}
 function nextQ(){ttsStop();saveShort();if(qIndex<questions.length-1){qIndex++;renderQuestion();}}
@@ -1624,7 +1604,7 @@ function triggerViolation(msg,type){
   }
   document.getElementById('vioModal').classList.add('on');
   capturePhoto('violation_'+type);
-  post('logViolation',{studentEmail:student.email,examCode:student.examCode,violationType:type,message:msg,violationCount:violations,userAgent:navigator.userAgent,url:window.location.href},function(){});
+  post('logViolation',{studentEmail:student.email,examCode:student.examCode,violationType:type,message:msg,violationCount:violations,userAgent:navigator.userAgent,url:window.location.href,examSessionToken:examSessionToken},function(){});
 }
 
 function ackViolation(){
@@ -1669,10 +1649,11 @@ function capturePhoto(reason) {
     ctx.restore();
     var dataUrl = c.toDataURL('image/jpeg', 0.55);
     post('savePhoto', {
-      studentEmail: student.email,
-      examCode:     student.examCode,
-      reason:       reason || 'unknown',
-      imageBase64:  dataUrl
+      studentEmail:     student.email,
+      examCode:         student.examCode,
+      reason:           reason || 'unknown',
+      imageBase64:      dataUrl,
+      examSessionToken: examSessionToken
     }, function(e, r) {
       if (r && r.status === 'success' && r.data && r.data.fileId) {
         photos.push('https://drive.google.com/uc?id=' + r.data.fileId);
@@ -1707,22 +1688,16 @@ function doSubmit(forced){
   releaseWakeLock();
   stopNoSleepFallback();
   saveShort();
-  autosaveLocal(); // ensure latest answers saved before submit
   var spent=examStart?Math.floor((Date.now()-examStart)/1000):0;
   showLoading('Submitting exam — please wait...');
   post('submitExam',{studentEmail:student.email,examCode:student.examCode,answers:answers,timeSpent:spent,violations:violations,photos:photos},
     function(e,r){
       hideLoading();
+      if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
       if(e||!r||r.status!=='success'){
-        // Don't lock the student out — allow retry
-        examSubmitted=false;
-        var banner=document.getElementById('submitRetryBanner');
-        if(banner){banner.style.display='flex';}
-        // Keep media stream alive so camera proctoring continues
+        alert('Submission failed: '+((r&&r.message)||'Unknown error')+'\n\nPlease contact your teacher immediately and do NOT close this window.');
         return;
       }
-      if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
-      clearAutosave(); // success — clear saved answers
       showResults(r.data);
     });
 }
@@ -1755,7 +1730,7 @@ function showResults(data){
   safeText('resExamName',quizMeta?quizMeta.title:'Exam');
   var attemptStr = (data.attemptNumber && data.attemptNumber > 1) ? ' · Attempt #'+data.attemptNumber : '';
   safeText('resCandidateName',[studentInfo.name,studentInfo.class,studentInfo.school].filter(Boolean).join(' · ')+(attemptStr)||student.email+attemptStr);
-  safeText('resSchool',studentInfo.school||'Edurena');
+  safeText('resSchool',studentInfo.school||'QuizFlow Pro');
   safeText('resViolations',violations);
   var statusEl=document.getElementById('resStatus');
   if(statusEl)statusEl.className='result-status '+(passed?'pass':'fail');
@@ -1833,7 +1808,7 @@ function fetchAiExplanation(idx){
   if(_explainCache[idx]){box.innerHTML=_explainCache[idx];btn.style.display='none';return;}
   btn.disabled=true;
   btn.innerHTML='<span class="explain-spinner"></span> Getting explanation...';
-  post('getExplanation',{question:a.questionText,studentAnswer:a.studentAnswer,correctAnswer:a.correctAnswer,type:a.type||'MCQ',school:studentInfo.school||''},
+  post('getExplanation',{question:a.questionText,studentAnswer:a.studentAnswer,correctAnswer:a.correctAnswer,type:a.type||'MCQ',school:studentInfo.school||'',studentEmail:student.email,examCode:student.examCode,examSessionToken:examSessionToken},
     function(e,r){
       btn.disabled=false;
       if(e||!r||r.status!=='success'){
