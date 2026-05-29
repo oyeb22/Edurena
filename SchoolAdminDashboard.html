@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  
+  <base target="_top">
   <meta charset="UTF-8">
-  <script src="edurena-dash.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edurena — School Admin</title>
+  <title>QuizFlow Pro — School Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -449,7 +448,10 @@
         </div>
         <div class="sh" style="margin-top:4px">
           <h2>Active Teachers</h2>
-          <button class="btn btn-g btn-sm" onclick="loadTeachersTab()">↻ Refresh</button>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-g btn-sm" onclick="loadTeachersTab()">↻ Refresh</button>
+            <button class="btn btn-p btn-sm" onclick="openInviteTeacherModal()">+ Invite Teacher</button>
+          </div>
         </div>
         <div id="teacher-list" style="display:grid;gap:7px">
           <p style="color:var(--txt2);font-size:12px;text-align:center;padding:22px">Loading…</p>
@@ -642,6 +644,50 @@
   </div>
 </div>
 
+<!-- INVITE TEACHER (v5.1) -->
+<div class="mo" id="invite-mo">
+  <div class="mbox" style="width:440px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Invite Teacher</span>
+      <span class="mc" onclick="closeMo('invite-mo')">✕</span>
+    </div>
+    <div class="mb">
+      <p style="font-size:12.5px;margin-bottom:14px;color:var(--txt2);line-height:1.55">
+        Send a teacher an invite email with a temporary password. They will be added to your school as an active teacher immediately.
+      </p>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Full Name *</label>
+        <input type="text" id="inv-name" placeholder="e.g. Adisa Oyebola" autocomplete="off">
+      </div>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Email Address *</label>
+        <input type="email" id="inv-email" placeholder="teacher@school.edu" autocomplete="off">
+      </div>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Role</label>
+        <select id="inv-role"
+          style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12px;outline:none;width:100%">
+          <option value="teacher" selected>Teacher</option>
+          <option value="school_admin">School Admin (co-administrator)</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label>Initial Classes (optional)</label>
+        <div class="cls-grid" id="inv-cls-grid"
+          style="max-height:180px;overflow-y:auto;border:1px solid var(--bdr);border-radius:var(--rs);padding:8px"></div>
+      </div>
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:9px 11px;font-size:11px;color:var(--txt2);margin-bottom:14px;line-height:1.5">
+        💡 The teacher will receive an email with their login URL and a temporary password. They should change it on first sign in.
+      </div>
+      <div class="msg err" id="inv-err" style="margin-bottom:8px"></div>
+      <div style="display:flex;justify-content:flex-end;gap:7px">
+        <button class="btn btn-g" onclick="closeMo('invite-mo')">Cancel</button>
+        <button class="btn btn-p" id="invite-btn" onclick="doInviteTeacher()">Send Invite</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ASSIGN CLASSES -->
 <div class="mo" id="assign-mo">
   <div class="mbox" style="width:400px;max-width:96vw">
@@ -743,7 +789,7 @@ function authFail(msg) {
   document.getElementById('gate-btn').style.display = 'inline-block';
 }
 function goLogin() {
-  DASH.goLogin();
+  window.location.href = '<?= ScriptApp.getService().getUrl() ?>?page=login';
 }
 
 function boot() {
@@ -761,7 +807,7 @@ function boot() {
 // UTILITIES
 // ================================================================
 function callRaw(action, data, cb) {
-  fetch(DASH.scriptUrl, {
+  fetch('<?= ScriptApp.getService().getUrl() ?>', {
     method: 'POST',
     body: JSON.stringify(Object.assign({ action: action }, data || {}))
   }).then(function(r){ return r.json(); })
@@ -888,7 +934,7 @@ function renderSubBanner(d, textId, barId, cardId) {
 }
 
 function openRenewPage() {
-  var pricingUrl = DASH.pageUrl('Pricing.html')+'?schoolName='
+  var pricingUrl = '<?= ScriptApp.getService().getUrl() ?>?page=pricing&schoolName='
     + encodeURIComponent(S.school);
   window.open(pricingUrl, '_blank');
 }
@@ -1148,6 +1194,67 @@ function doDelTeacher(email) {
   call('deleteTeacher', { targetEmail: email }, function() {
     toast('success', 'Teacher removed');
     loadTeachersTab();
+  });
+}
+
+// ── Invite Teacher (v5.1) ──────────────────────────────────────
+function _invErr(msg) {
+  var el = document.getElementById('inv-err');
+  if (!el) return;
+  if (!msg) { el.textContent = ''; el.style.display = 'none'; return; }
+  el.textContent = msg;
+  el.style.cssText = 'display:block;color:var(--red,#ef4444);font-size:11.5px;margin-bottom:8px';
+}
+
+function openInviteTeacherModal() {
+  function show() {
+    // Reset form
+    document.getElementById('inv-name').value  = '';
+    document.getElementById('inv-email').value = '';
+    document.getElementById('inv-role').value  = 'teacher';
+    _invErr('');
+    // Render class checkboxes
+    var grid = document.getElementById('inv-cls-grid');
+    grid.innerHTML = (_allClasses && _allClasses.length)
+      ? _allClasses.map(function(c) {
+          return '<div class="cls-item">'
+            + '<input type="checkbox" id="inv_' + esc(c.id) + '" value="' + esc(c.id) + '">'
+            + '<label for="inv_' + esc(c.id) + '">' + esc(c.id) + '</label>'
+            + '</div>';
+        }).join('')
+      : '<p style="font-size:11.5px;color:var(--txt2);margin:0">No classes exist yet — you can assign classes after the teacher accepts.</p>';
+    document.getElementById('invite-mo').classList.add('on');
+  }
+  // Lazy-load classes if we haven't yet
+  if (!_allClasses || !_allClasses.length) loadClasses(show);
+  else show();
+}
+
+function doInviteTeacher() {
+  var name  = (document.getElementById('inv-name').value  || '').trim();
+  var email = (document.getElementById('inv-email').value || '').trim();
+  var role  = document.getElementById('inv-role').value || 'teacher';
+  if (!name)                          { _invErr('Full name is required.'); return; }
+  if (!email || email.indexOf('@')<0) { _invErr('Valid email is required.'); return; }
+  var classes = [];
+  document.querySelectorAll('#inv-cls-grid input:checked').forEach(function(cb){ classes.push(cb.value); });
+
+  var btn = document.getElementById('invite-btn');
+  btn.disabled = true;
+  var orig = btn.textContent;
+  btn.textContent = 'Sending…';
+  _invErr('');
+
+  call('inviteTeacher', { name: name, email: email, role: role, classes: classes }, function(data) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    toast('success', 'Invite sent to ' + email);
+    closeMo('invite-mo');
+    loadTeachersTab();
+  }, function(errMsg) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    _invErr(errMsg || 'Could not send invite. Please try again.');
   });
 }
 
@@ -1520,5 +1627,239 @@ window.onclick = function(e) {
   });
 };
 </script>
+<!-- ════════════════════════════════════════════════════════════════
+     QUIZFLOW HELP & SUPPORT WIDGET (v5.1)
+     Self-contained: own CSS prefix (qfhw-), own JS namespace (qfhw_).
+     Drop in once per dashboard, right before </body>.
+     Depends on: window.call(action, args, onOk, onFail) and window.S
+     ════════════════════════════════════════════════════════════════ -->
+<style>
+  .qfhw-fab {
+    position:fixed;bottom:20px;right:20px;z-index:9999;
+    width:54px;height:54px;border-radius:50%;
+    background:#1c3d6e;color:#fff;border:none;cursor:pointer;
+    font-size:22px;font-weight:700;
+    box-shadow:0 6px 16px rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .qfhw-fab:hover { transform:scale(1.06); box-shadow:0 8px 20px rgba(0,0,0,.32); }
+  .qfhw-fab:active { transform:scale(0.96); }
+  .qfhw-overlay {
+    position:fixed;inset:0;background:rgba(0,0,0,.55);
+    z-index:10000;display:none;align-items:center;justify-content:center;
+    padding:16px;
+  }
+  .qfhw-overlay.on { display:flex; }
+  .qfhw-card {
+    background:#fff;color:#0f172a;border-radius:14px;
+    width:100%;max-width:440px;max-height:90vh;overflow-y:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .qfhw-head {
+    padding:18px 20px 6px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .qfhw-head h3 { margin:0;font-size:16px;color:#1c3d6e;font-weight:700 }
+  .qfhw-close {
+    background:none;border:none;font-size:22px;color:#64748b;cursor:pointer;line-height:1;padding:4px 8px;
+  }
+  .qfhw-body { padding:6px 20px 18px;font-size:13px;line-height:1.55 }
+  .qfhw-body p { margin:8px 0;color:#374151 }
+  .qfhw-act {
+    display:block;width:100%;padding:11px 14px;margin:8px 0;
+    border-radius:9px;text-decoration:none;text-align:left;
+    font-size:13px;font-weight:600;border:1px solid #e5e7eb;background:#f9fafb;color:#1c3d6e;
+    cursor:pointer;font-family:inherit;
+  }
+  .qfhw-act:hover { background:#eef2f7;border-color:#cbd5e1 }
+  .qfhw-act .qfhw-act-icon { display:inline-block;width:22px }
+  .qfhw-hr { border:none;border-top:1px solid #e5e7eb;margin:14px 0 }
+  .qfhw-bug-area { display:none }
+  .qfhw-bug-area.on { display:block }
+  .qfhw-textarea {
+    width:100%;min-height:110px;padding:9px 11px;border:1px solid #d1d5db;border-radius:9px;
+    font-family:inherit;font-size:13px;line-height:1.5;resize:vertical;color:#0f172a;
+  }
+  .qfhw-row { display:flex;gap:8px;margin-top:10px }
+  .qfhw-btn {
+    flex:1;padding:10px 12px;border-radius:9px;border:none;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;
+  }
+  .qfhw-btn-prim { background:#1c3d6e;color:#fff }
+  .qfhw-btn-prim:hover { background:#16325b }
+  .qfhw-btn-prim:disabled { opacity:.6;cursor:not-allowed }
+  .qfhw-btn-sec { background:#f3f4f6;color:#374151;border:1px solid #d1d5db }
+  .qfhw-diag {
+    font-size:11px;color:#64748b;background:#f9fafb;border:1px solid #e5e7eb;border-radius:9px;
+    padding:9px 11px;margin-top:12px;line-height:1.6;
+  }
+  .qfhw-diag b { color:#374151 }
+  .qfhw-status { font-size:12px;margin-top:8px;min-height:18px }
+  .qfhw-status.err { color:#b91c1c }
+  .qfhw-status.ok  { color:#059669 }
+</style>
+
+<button id="qfhw-fab" class="qfhw-fab" title="Need help?" aria-label="Open help">?</button>
+
+<div id="qfhw-overlay" class="qfhw-overlay" role="dialog" aria-modal="true">
+  <div class="qfhw-card">
+    <div class="qfhw-head">
+      <h3>Need help?</h3>
+      <button class="qfhw-close" onclick="qfhw_close()" aria-label="Close">×</button>
+    </div>
+    <div class="qfhw-body">
+      <p>We typically respond within 4 working hours.</p>
+
+      <a class="qfhw-act" id="qfhw-email-link" href="#">
+        <span class="qfhw-act-icon">📧</span>Email support
+      </a>
+      <a class="qfhw-act" id="qfhw-wa-link" href="https://wa.me/2348012345678?text=Hi%20QuizFlow%2C%20I%20need%20help" target="_blank" rel="noopener">
+        <span class="qfhw-act-icon">💬</span>Chat on WhatsApp
+      </a>
+      <button class="qfhw-act" onclick="qfhw_toggleBug()">
+        <span class="qfhw-act-icon">🐛</span>Report a bug
+      </button>
+
+      <div class="qfhw-bug-area" id="qfhw-bug-area">
+        <hr class="qfhw-hr">
+        <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Describe what went wrong</label>
+        <textarea class="qfhw-textarea" id="qfhw-bug-msg" placeholder="Be specific — what were you doing, what did you expect, what actually happened?"></textarea>
+        <div class="qfhw-row">
+          <button class="qfhw-btn qfhw-btn-sec" onclick="qfhw_toggleBug()">Cancel</button>
+          <button class="qfhw-btn qfhw-btn-prim" id="qfhw-bug-submit" onclick="qfhw_submitBug()">Send report</button>
+        </div>
+        <div class="qfhw-status" id="qfhw-bug-status"></div>
+      </div>
+
+      <div class="qfhw-diag">
+        Diagnostics (auto-attached to bug reports):<br>
+        <b>Account:</b> <span id="qfhw-d-email">—</span><br>
+        <b>Role:</b> <span id="qfhw-d-role">—</span><br>
+        <b>School:</b> <span id="qfhw-d-school">—</span><br>
+        <b>Version:</b> <span id="qfhw-d-ver">v5.1</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var ADMIN_EMAIL = 'adisa7oyebola@gmail.com';
+  var WA_NUMBER   = '2348012345678'; // TODO_WHATSAPP: replace with your real WhatsApp number (no '+', no spaces)
+
+  function _qsa(id) { return document.getElementById(id); }
+  function _qfhwS() {
+    // Read whatever the host dashboard exposes
+    return (window.S || {});
+  }
+
+  window.qfhw_open = function() {
+    var s = _qfhwS();
+    _qsa('qfhw-d-email').textContent  = s.email  || '—';
+    _qsa('qfhw-d-role').textContent   = s.role   || '—';
+    _qsa('qfhw-d-school').textContent = s.school || '—';
+    _qsa('qfhw-email-link').href =
+      'mailto:' + ADMIN_EMAIL + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'QuizFlow user'))
+      + '&body=' + encodeURIComponent(
+          'Account: ' + (s.email || '-') + '\n'
+        + 'Role: '    + (s.role || '-') + '\n'
+        + 'School: '  + (s.school || '-') + '\n'
+        + 'URL: '     + window.location.href + '\n\n'
+        + 'Describe your issue below:\n\n');
+    _qsa('qfhw-wa-link').href =
+      'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(
+        'Hi QuizFlow, I need help. Account: ' + (s.email || '-') + ' (' + (s.role || '-') + ')'
+      );
+    _qsa('qfhw-overlay').classList.add('on');
+  };
+
+  window.qfhw_close = function() {
+    _qsa('qfhw-overlay').classList.remove('on');
+    _qsa('qfhw-bug-area').classList.remove('on');
+    _qsa('qfhw-bug-msg').value = '';
+    _qsa('qfhw-bug-status').textContent = '';
+    _qsa('qfhw-bug-status').className = 'qfhw-status';
+  };
+
+  window.qfhw_toggleBug = function() {
+    var box = _qsa('qfhw-bug-area');
+    box.classList.toggle('on');
+    if (box.classList.contains('on')) {
+      setTimeout(function(){ _qsa('qfhw-bug-msg').focus(); }, 80);
+    }
+  };
+
+  window.qfhw_submitBug = function() {
+    var msg = (_qsa('qfhw-bug-msg').value || '').trim();
+    var status = _qsa('qfhw-bug-status');
+    if (msg.length < 5) {
+      status.textContent = 'Please describe the issue (at least a sentence).';
+      status.className = 'qfhw-status err';
+      return;
+    }
+    var btn = _qsa('qfhw-bug-submit');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    status.textContent = '';
+    status.className = 'qfhw-status';
+
+    function onOk() {
+      btn.disabled = false;
+      btn.textContent = 'Send report';
+      status.textContent = 'Thanks — your report has been received.';
+      status.className = 'qfhw-status ok';
+      _qsa('qfhw-bug-msg').value = '';
+      setTimeout(qfhw_close, 1800);
+    }
+    function onErr(em) {
+      btn.disabled = false;
+      btn.textContent = 'Send report';
+      status.textContent = em || 'Could not send report. Please email us directly.';
+      status.className = 'qfhw-status err';
+    }
+
+    var payload = { message: msg, url: window.location.href, userAgent: navigator.userAgent };
+
+    // Prefer the host dashboard's call() helper if available (handles tokens, spinner, session expiry)
+    if (typeof window.call === 'function') {
+      window.call('submitBugReport', payload, function(){ onOk(); }, function(em){ onErr(em); });
+      return;
+    }
+
+    // Fallback: direct fetch using SCRIPT_URL and S.token from the page globals
+    var s = _qfhwS();
+    var scriptUrl = window.SCRIPT_URL || (window.CFG && window.CFG.SCRIPT_URL) || '';
+    if (!scriptUrl) { onErr('Internal error — script URL not found.'); return; }
+    fetch(scriptUrl, {
+      method: 'POST',
+      body:   JSON.stringify(Object.assign({ action: 'submitBugReport', token: s.token || '' }, payload))
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res) {
+      if (res && res.status === 'success') onOk();
+      else onErr(res && res.message);
+    })
+    .catch(function(e){ onErr('Network error: ' + e.message); });
+  };
+
+  // Wire up the FAB on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      _qsa('qfhw-fab').addEventListener('click', qfhw_open);
+    });
+  } else {
+    _qsa('qfhw-fab').addEventListener('click', qfhw_open);
+  }
+
+  // Click outside the card closes it
+  _qsa('qfhw-overlay').addEventListener('click', function(e) {
+    if (e.target.id === 'qfhw-overlay') qfhw_close();
+  });
+})();
+</script>
+<!-- ════════════════════════════════════════════════════════════════
+     END HELP WIDGET
+     ════════════════════════════════════════════════════════════════ -->
+
 </body>
 </html>
