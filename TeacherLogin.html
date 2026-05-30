@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Sign In</title>
-  <script src="config-loader.js"></script>
+  <script src="edurena-dash.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -362,10 +362,14 @@
 </div>
 
 <script>
-// SCRIPT_URL is provided by config-loader.js (see <head>).
-// Superadmin email — used only for client-side dashboard routing after login.
-// Must match CONFIG.SUPERADMIN_EMAIL on the server. Not a secret.
+// SCRIPT_URL and SUPERADMIN_EMAIL are provided by edurena-dash.js (DASH).
+// We seed SUPERADMIN_EMAIL with a default; DASH.ready will overwrite it.
 var SUPERADMIN_EMAIL = 'adisa7oyebola@gmail.com';
+if (window.DASH && DASH.ready) {
+  DASH.ready.then(function(cfg) {
+    if (cfg && cfg.superadminEmail) SUPERADMIN_EMAIL = cfg.superadminEmail;
+  });
+}
 
 var _resetToken = '';
 
@@ -439,15 +443,9 @@ function spinBtn(id, loading, label) {
 }
 
 function post(action, data, cb) {
-  // SCRIPT_URL may be unset on first visit until config-loader resolves.
-  // Wait for it before firing the request.
-  window.EDURENA_CONFIG_READY.then(function() {
-    fetch(window.SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(Object.assign({ action: action }, data || {}))
-    }).then(function(r) { return r.json(); })
-      .then(function(r) { if (cb) cb(null, r); })
-      .catch(function(e) { if (cb) cb(e, null); });
+  // Wait for DASH config (no-op if already resolved); then POST.
+  DASH.ready.then(function() {
+    DASH.callRaw(action, data || {}, cb);
   }).catch(function(e) { if (cb) cb(e, null); });
 }
 
@@ -469,20 +467,18 @@ function doLogin() {
       sessionStorage.setItem('qf_teacher', JSON.stringify(r.data));
     } catch(_) {}
 
-    /* ── ROUTING FIX: dashboards live on GitHub Pages, not GAS ── */
-    // Build dashboard URL from this page's origin so dev/prod both work.
-    var DASH_BASE = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+    /* ── ROUTING FIX: dashboards live on GitHub Pages, accessed via DASH ── */
     var role  = r.data.role || 'teacher';
     var email2 = (r.data.email || '').toLowerCase();
     var saEmail= (SUPERADMIN_EMAIL || '').toLowerCase();
 
     if ((role === 'superadmin' || role === 'admin') && email2 === saEmail) {
-      window.location.href = DASH_BASE + 'SuperAdminDashboard.html';
+      window.location.href = DASH.pageUrl('SuperAdminDashboard.html');
     } else if (role === 'school_admin') {
-      window.location.href = DASH_BASE + 'SchoolAdminDashboard.html';
+      window.location.href = DASH.pageUrl('SchoolAdminDashboard.html');
     } else {
       /* teacher, admin (non-superadmin) → teacher dashboard */
-      window.location.href = DASH_BASE + 'TeacherDashboard.html';
+      window.location.href = DASH.pageUrl('TeacherDashboard.html');
     }
   });
 }
@@ -557,8 +553,7 @@ function goSuperadmin() {
   var token = '';
   try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
   if (!token) { alert('Please sign in first.'); return; }
-  var DASH_BASE = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
-  window.location.href = DASH_BASE + 'SuperAdminDashboard.html';
+  window.location.href = DASH.pageUrl('SuperAdminDashboard.html');
 }
 </script>
 </body>
