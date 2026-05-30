@@ -342,8 +342,8 @@
 
 var SCRIPT_URL = DASH.scriptUrl;
 DASH.ready.then(function(cfg){ SCRIPT_URL = cfg.scriptUrl || DASH.scriptUrl; });
-var RACE_URL   = 'https://oyeb22.github.io/QUIZFLOW/race.html';
-var KAHOOT_URL = 'https://oyeb22.github.io/QUIZFLOW/kahoot.html';
+var RACE_URL   = DASH.racePageUrl   || 'https://oyeb22.github.io/Edurena/race.html';
+var KAHOOT_URL = DASH.kahootPageUrl || 'https://oyeb22.github.io/Edurena/kahoot.html';
 
 var TOKEN       = '';
 var mode        = 'race';
