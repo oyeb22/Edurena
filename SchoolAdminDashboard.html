@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — School Admin</title>
-  <script src="config-loader.js"></script>
+  <script src="edurena-dash.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -749,8 +749,8 @@
 <div class="ts-stack" id="toasts"></div>
 
 <script>
-// SCRIPT_URL is provided by config-loader.js (see <head>).
-// SITE_BASE: directory of this page on GitHub Pages, used for sibling-page links.
+// edurena-dash.js exposes DASH (scriptUrl, ready, post, pageUrl, goLogin).
+// SITE_BASE: kept for legacy use; DASH.pageUrl() is preferred for cross-page links.
 var SITE_BASE = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
 
 // ================================================================
@@ -768,8 +768,8 @@ var _editingStudentEmail  = null;
 // AUTH GATE
 // ================================================================
 document.addEventListener('DOMContentLoaded', function() {
-  // v5.1: wait for config-loader to provide SCRIPT_URL before calling the API.
-  window.EDURENA_CONFIG_READY.then(function() {
+  // v5.1: wait for edurena-dash to provide SCRIPT_URL before calling the API.
+  DASH.ready.then(function() {
     var token = '';
     try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
     if (!token) { authFail('No active session.'); return; }
@@ -799,7 +799,7 @@ function authFail(msg) {
   document.getElementById('gate-btn').style.display = 'inline-block';
 }
 function goLogin() {
-  window.location.href = SITE_BASE + 'TeacherLogin.html';
+  DASH.goLogin();
 }
 
 function boot() {
@@ -817,12 +817,12 @@ function boot() {
 // UTILITIES
 // ================================================================
 function callRaw(action, data, cb) {
-  if (!window.SCRIPT_URL) {
-    // Should be impossible after auth-gate awaited EDURENA_CONFIG_READY, but defend anyway.
+  if (!DASH.scriptUrl) {
+    // Should be impossible after auth-gate awaited DASH.ready, but defend anyway.
     if (cb) cb(new Error('Config not loaded'), null);
     return;
   }
-  fetch(window.SCRIPT_URL, {
+  fetch(DASH.scriptUrl, {
     method: 'POST',
     body: JSON.stringify(Object.assign({ action: action }, data || {}))
   }).then(function(r){ return r.json(); })
@@ -949,7 +949,11 @@ function renderSubBanner(d, textId, barId, cardId) {
 }
 
 function openRenewPage() {
-  var pricingUrl = SITE_BASE + 'Pricing.html?schoolName=' + encodeURIComponent(S.school);
+  // DASH.pageUrl auto-appends ?script=, so we add &schoolName= as the second param.
+  var pricingUrl = DASH.pageUrl('Pricing.html');
+  // pageUrl returns either 'Pricing.html' or 'Pricing.html?script=...'; pick correct joiner.
+  pricingUrl += (pricingUrl.indexOf('?') === -1 ? '?' : '&')
+              + 'schoolName=' + encodeURIComponent(S.school);
   window.open(pricingUrl, '_blank');
 }
 
