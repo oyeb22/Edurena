@@ -1364,7 +1364,29 @@ function spin(on, t) {
   if (t) document.getElementById('sp-txt').textContent = t;
 }
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
-function setAv(id, url) { var e = document.getElementById(id); if (!e) return; e.innerHTML = '<img src="'+url+'" alt="av">'; }
+function setAv(id, url) {
+  var e = document.getElementById(id); if (!e) return;
+  // Only allow https URLs from Google Drive (where profile photos live) or data: URIs
+  var safe = String(url || '');
+  var isHttps   = safe.indexOf('https://') === 0;
+  var isDrive   = safe.indexOf('https://drive.google.com/') === 0
+               || safe.indexOf('https://lh3.googleusercontent.com/') === 0
+               || safe.indexOf('https://lh4.googleusercontent.com/') === 0
+               || safe.indexOf('https://lh5.googleusercontent.com/') === 0
+               || safe.indexOf('https://lh6.googleusercontent.com/') === 0;
+  var isDataImg = safe.indexOf('data:image/') === 0;
+  if (!(isHttps && isDrive) && !isDataImg) {
+    // Reject untrusted URL — show initial instead
+    e.textContent = '?';
+    return;
+  }
+  // Use createElement, not innerHTML — prevents any XSS path
+  var img = document.createElement('img');
+  img.src = safe;
+  img.alt = 'av';
+  e.innerHTML = '';
+  e.appendChild(img);
+}
 function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function p2(n) { return String(n).padStart(2,'0'); }
@@ -1463,10 +1485,25 @@ function populateClassDropdowns() {
 function loadClassesTab() { loadClasses(renderClassesTable); }
 function renderClassesTable() {
   var tb=document.querySelector('#t-classes tbody'); if(!tb) return;
-  if(!allClasses.length){ tb.innerHTML='<tr class="er"><td colspan="3">No classes yet.</td></tr>'; return; }
-  tb.innerHTML=allClasses.map(function(c){
-    return '<tr><td><code>'+esc(c.id)+'</code></td><td>'+esc(c.description)+'</td><td><button class="btn btn-d btn-sm" onclick="doDelClass(\''+esc(c.id)+'\')">Delete</button></td></tr>';
-  }).join('');
+  if(!allClasses.length){
+    tb.innerHTML='<tr class="er"><td colspan="3">No classes yet.</td></tr>';
+    return;
+  }
+  tb.innerHTML = '';
+  allClasses.forEach(function(c) {
+    var tr = document.createElement('tr');
+    var td1 = document.createElement('td');
+    var code = document.createElement('code'); code.textContent = c.id; td1.appendChild(code);
+    var td2 = document.createElement('td'); td2.textContent = c.description || '';
+    var td3 = document.createElement('td');
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-d btn-sm';
+    btn.textContent = 'Delete';
+    btn.addEventListener('click', function(){ doDelClass(c.id); });
+    td3.appendChild(btn);
+    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+    tb.appendChild(tr);
+  });
 }
 function doAddClass() {
   var id=(document.getElementById('nc-id').value||'').trim(), desc=(document.getElementById('nc-desc').value||'').trim();
@@ -2199,6 +2236,74 @@ function clearVoiceProfile(){
     var current=document.getElementById('vp-current-profile'); if(current) current.style.display='none';
     document.getElementById('vp-status').textContent='Not recorded yet';
   });
+}
+</script>
+<!-- ═══════════════════════════════════════════════════════════════
+     EDURENA HELP & SUPPORT WIDGET (v5.1)
+═══════════════════════════════════════════════════════════════ -->
+<div id="qfhw-fab" style="position:fixed;bottom:20px;right:20px;z-index:9000;cursor:pointer;width:54px;height:54px;border-radius:50%;background:#4f78ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(0,0,0,0.35);transition:transform .15s" onclick="qfhwOpen()" title="Need help?">?</div>
+
+<div id="qfhw-mo" class="mo" style="display:none">
+  <div class="mbox" style="width:440px;max-width:96vw">
+    <div class="mh"><span class="mh-title">Need help?</span><button class="mc" onclick="qfhwClose()">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--text2,#94a3b8);margin-bottom:14px;line-height:1.6">We typically respond within 4 working hours.</p>
+      <a id="qfhw-email-link" class="btn btn-p" style="display:block;text-align:center;margin-bottom:8px;text-decoration:none">📧 Email Support</a>
+      <a id="qfhw-wa-link" class="btn" style="display:block;text-align:center;margin-bottom:8px;text-decoration:none" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <button class="btn" style="display:block;width:100%;margin-bottom:14px" onclick="qfhwOpenBug()">🐛 Report a bug</button>
+      <div style="font-size:11px;color:var(--text3,#64748b);background:var(--surface2,#131923);padding:9px 11px;border-radius:6px;line-height:1.6">
+        Diagnostics (auto-included):<br>
+        Account: <span id="qfhw-email"></span><br>
+        Role: <span id="qfhw-role"></span><br>
+        Version: <span id="qfhw-ver">v5.1</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function _qfhwS() {
+  // Read whichever state object this dashboard uses (S works for all three).
+  return (typeof S !== 'undefined') ? S : { email:'', role:'', token:'' };
+}
+function qfhwOpen() {
+  var s = _qfhwS();
+  document.getElementById('qfhw-email').textContent = s.email || '—';
+  document.getElementById('qfhw-role').textContent  = s.role  || '—';
+  var supportEmail = (window.DASH && DASH.superadminEmail) || 'adisa7oyebola@gmail.com';
+  document.getElementById('qfhw-email-link').href =
+    'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
+    + '&body=' + encodeURIComponent('My account: ' + (s.email || '-') + '\nRole: ' + (s.role || '-') + '\n\nWhat I need help with:\n');
+  document.getElementById('qfhw-wa-link').href =
+    'https://wa.me/2348012345678?text=' + encodeURIComponent(
+      'Hi Edurena, I need help. Account: ' + (s.email || '-') + ' (' + (s.role || '-') + ')'
+    );
+  document.getElementById('qfhw-mo').style.display = 'flex';
+}
+function qfhwClose() { document.getElementById('qfhw-mo').style.display = 'none'; }
+function qfhwOpenBug() {
+  var msg = prompt('What went wrong? Describe what you were doing when it broke.');
+  if (!msg) return;
+  var payload = { message: msg, url: window.location.href, userAgent: navigator.userAgent };
+  function onOk() { alert('Bug report received. Thanks!'); qfhwClose(); }
+  function onErr(em) { alert('Could not send bug report: ' + (em || 'unknown')); }
+
+  // Prefer the page's existing call() helper if it exists
+  if (typeof window.call === 'function') {
+    window.call('submitBugReport', payload, function(){ onOk(); }, function(em){ onErr(em); });
+    return;
+  }
+  // Fallback: direct fetch using DASH
+  if (!window.DASH || !DASH.scriptUrl) { onErr('Internal error — script URL not found.'); return; }
+  fetch(DASH.scriptUrl, {
+    method: 'POST',
+    body:   JSON.stringify(Object.assign({ action: 'submitBugReport', token: _qfhwS().token || '' }, payload))
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res) {
+    if (res && res.status === 'success') onOk();
+    else onErr(res && res.message);
+  })
+  .catch(function(e){ onErr('Network error: ' + e.message); });
 }
 </script>
 </body>
