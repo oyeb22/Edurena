@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Sign In</title>
+  <script src="config-loader.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -361,8 +362,11 @@
 </div>
 
 <script>
-var SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>';
-var SUPERADMIN_EMAIL = '<?= CONFIG.SUPERADMIN_EMAIL ?>';
+// SCRIPT_URL is provided by config-loader.js (see <head>).
+// Superadmin email — used only for client-side dashboard routing after login.
+// Must match CONFIG.SUPERADMIN_EMAIL on the server. Not a secret.
+var SUPERADMIN_EMAIL = 'adisa7oyebola@gmail.com';
+
 var _resetToken = '';
 
 /* ── Init ── */
@@ -435,12 +439,16 @@ function spinBtn(id, loading, label) {
 }
 
 function post(action, data, cb) {
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(Object.assign({ action: action }, data || {}))
-  }).then(function(r) { return r.json(); })
-    .then(function(r) { if (cb) cb(null, r); })
-    .catch(function(e) { if (cb) cb(e, null); });
+  // SCRIPT_URL may be unset on first visit until config-loader resolves.
+  // Wait for it before firing the request.
+  window.EDURENA_CONFIG_READY.then(function() {
+    fetch(window.SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(Object.assign({ action: action }, data || {}))
+    }).then(function(r) { return r.json(); })
+      .then(function(r) { if (cb) cb(null, r); })
+      .catch(function(e) { if (cb) cb(e, null); });
+  }).catch(function(e) { if (cb) cb(e, null); });
 }
 
 /* ── Login ── */
@@ -461,18 +469,20 @@ function doLogin() {
       sessionStorage.setItem('qf_teacher', JSON.stringify(r.data));
     } catch(_) {}
 
-    /* ── ROUTING FIX: correct destination per role ── */
+    /* ── ROUTING FIX: dashboards live on GitHub Pages, not GAS ── */
+    // Build dashboard URL from this page's origin so dev/prod both work.
+    var DASH_BASE = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
     var role  = r.data.role || 'teacher';
     var email2 = (r.data.email || '').toLowerCase();
     var saEmail= (SUPERADMIN_EMAIL || '').toLowerCase();
 
     if ((role === 'superadmin' || role === 'admin') && email2 === saEmail) {
-      window.location.href = SCRIPT_URL + '?page=superadmin';
+      window.location.href = DASH_BASE + 'SuperAdminDashboard.html';
     } else if (role === 'school_admin') {
-      window.location.href = SCRIPT_URL + '?page=schooladmin';
+      window.location.href = DASH_BASE + 'SchoolAdminDashboard.html';
     } else {
       /* teacher, admin (non-superadmin) → teacher dashboard */
-      window.location.href = SCRIPT_URL + '?page=teacher';
+      window.location.href = DASH_BASE + 'TeacherDashboard.html';
     }
   });
 }
@@ -534,7 +544,7 @@ function doResetPassword() {
     setMsg('rp-ok','ok','Password reset successfully. Redirecting to sign in…');
     var btn = document.getElementById('rpBtn'); if (btn) btn.style.display = 'none';
     if (window.history && window.history.replaceState) {
-      window.history.replaceState({}, '', SCRIPT_URL + '?page=login');
+      window.history.replaceState({}, '', window.location.pathname);
     }
     _resetToken = '';
     setTimeout(function() { showSubscreen('ss-login'); clearMsg('rp-ok'); }, 2500);
@@ -547,7 +557,8 @@ function goSuperadmin() {
   var token = '';
   try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
   if (!token) { alert('Please sign in first.'); return; }
-  window.location.href = SCRIPT_URL + '?page=superadmin';
+  var DASH_BASE = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  window.location.href = DASH_BASE + 'SuperAdminDashboard.html';
 }
 </script>
 </body>
