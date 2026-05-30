@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Start Exam</title>
+  <script src="edurena-dash.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -214,22 +215,24 @@
 </div>
 
 <script>
- // ── Read script URL from ?script= param (injected by GAS redirect) ──
-var _params = {};
-window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,k,v){
-  _params[k] = decodeURIComponent(v);
-});
-var SCRIPT_URL = _params.script || '';
-
-// If no script URL in params, use the hardcoded production GAS URL
-// WebApp.html is a public gateway — students can visit it directly
-if (!SCRIPT_URL || SCRIPT_URL.indexOf('script.google.com/macros/s/') === -1) {
-  SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwUVgMXFrmXZ1ZYhBbICwjVdEY0fTikwPDKGJBQouBwOGFLut6Sgml6Gv6Y3UtRS35lg/exec';
-}
-
+// SCRIPT_URL and the page URLs come from edurena-dash.js (DASH).
+// Hard fallbacks are used only if DASH.ready hasn't resolved yet by the
+// time a user clicks a button (extremely unlikely; <100ms typical).
+var SCRIPT_URL    = '';
 var EXAM_PAGE_URL = 'https://oyeb22.github.io/Edurena/Exam.html';
 var KAHOOT_URL    = 'https://oyeb22.github.io/Edurena/kahoot.html';
 var RACE_URL      = 'https://oyeb22.github.io/Edurena/race.html';
+
+function refreshFromDash() {
+  if (!window.DASH) return;
+  if (DASH.scriptUrl)     SCRIPT_URL    = DASH.scriptUrl;
+  if (DASH.examPageUrl)   EXAM_PAGE_URL = DASH.examPageUrl;
+  if (DASH.kahootPageUrl) KAHOOT_URL    = DASH.kahootPageUrl;
+  if (DASH.racePageUrl)   RACE_URL      = DASH.racePageUrl;
+}
+// Apply immediately (in case DASH is already initialised) and again on .ready
+refreshFromDash();
+if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
 
  var _email         = '';
   var _code          = '';
@@ -288,17 +291,25 @@ var RACE_URL      = 'https://oyeb22.github.io/Edurena/race.html';
   }
   function goBack() { setStep(1); }
 
+  // ── Helper: wait for DASH to be ready before firing requests ──
+  function whenReady(fn) {
+    refreshFromDash();
+    if (SCRIPT_URL) { fn(); return; }
+    if (window.DASH && DASH.ready) {
+      DASH.ready.then(function(){ refreshFromDash(); fn(); }).catch(fn);
+    } else {
+      fn();
+    }
+  }
+
   // ── Join Live Game ──────────────────────────────────────────
-  // Opens LivePlay.html — students just type the room code there
   function joinLiveGame() {
-  // Show game mode picker inline instead of opening a dead link
   var box = document.getElementById('live-picker');
   if (box) {
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
     return;
   }
 
-  // Build picker the first time
   var picker = document.createElement('div');
   picker.id = 'live-picker';
   picker.style.cssText = [
@@ -339,7 +350,6 @@ var RACE_URL      = 'https://oyeb22.github.io/Edurena/race.html';
     '</button>'
   ].join('');
 
-  // Insert after the btn-live button
   var liveBtn = document.querySelector('.btn-live');
   if (liveBtn && liveBtn.parentNode) {
     liveBtn.parentNode.insertBefore(picker, liveBtn.nextSibling);
@@ -347,9 +357,12 @@ var RACE_URL      = 'https://oyeb22.github.io/Edurena/race.html';
 }
 
 function openGame(mode) {
-  var base = mode === 'race' ? RACE_URL : KAHOOT_URL;
-  var url  = base + '?script=' + encodeURIComponent(SCRIPT_URL);
-  window.open(url, '_blank');
+  whenReady(function(){
+    var base = mode === 'race' ? RACE_URL : KAHOOT_URL;
+    var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
+             + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
 }
 
   // ── Step 1: validate exam code ──
@@ -364,58 +377,66 @@ function openGame(mode) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Verifying...';
 
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action:'validateExamCode', studentEmail:email, examCode:code })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(result) {
-      btn.disabled = false;
-      btn.innerHTML = 'Verify Exam Code &#x2192;';
-      if (!result || result.status !== 'success') {
-        showErr(1, result ? result.message : 'Verification failed');
+    whenReady(function(){
+      if (!SCRIPT_URL) {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Exam Code &#x2192;';
+        showErr(1, 'Cannot reach server — please refresh the page.');
         return;
       }
-      _email      = email;
-      _code       = code;
-      _quizMeta   = result.data.quizData;
-      _quizSchool = result.data.quizSchool || '';
-
       fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({
-          action: 'getStudentProfilePublic',
-          email:  email,
-          school: _quizSchool  // scope profile lookup to this school
-        })
+        body: JSON.stringify({ action:'validateExamCode', studentEmail:email, examCode:code })
       })
       .then(function(r){ return r.json(); })
-      .then(function(profileResult) {
-        if (profileResult && profileResult.status === 'success' && profileResult.data && profileResult.data.exists) {
-          var d = profileResult.data;
-          _prefillName   = d.name       || '';
-          _prefillClass  = d.className  || '';
-          _prefillSchool = d.school     || _quizSchool || '';
-          _profileLocked = d.locked     || false;
-        } else {
-          _prefillName   = '';
-          _prefillClass  = '';
-          _prefillSchool = _quizSchool || '';
-          _profileLocked = false;
+      .then(function(result) {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Exam Code &#x2192;';
+        if (!result || result.status !== 'success') {
+          showErr(1, result ? result.message : 'Verification failed');
+          return;
         }
-        setStep(2);
-        applyPrefill();
+        _email      = email;
+        _code       = code;
+        _quizMeta   = result.data.quizData;
+        _quizSchool = result.data.quizSchool || '';
+
+        fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'getStudentProfilePublic',
+            email:  email,
+            school: _quizSchool
+          })
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(profileResult) {
+          if (profileResult && profileResult.status === 'success' && profileResult.data && profileResult.data.exists) {
+            var d = profileResult.data;
+            _prefillName   = d.name       || '';
+            _prefillClass  = d.className  || '';
+            _prefillSchool = d.school     || _quizSchool || '';
+            _profileLocked = d.locked     || false;
+          } else {
+            _prefillName   = '';
+            _prefillClass  = '';
+            _prefillSchool = _quizSchool || '';
+            _profileLocked = false;
+          }
+          setStep(2);
+          applyPrefill();
+        })
+        .catch(function() {
+          _prefillName = ''; _prefillClass = ''; _prefillSchool = _quizSchool || '';
+          setStep(2);
+          applyPrefill();
+        });
       })
-      .catch(function() {
-        _prefillName = ''; _prefillClass = ''; _prefillSchool = _quizSchool || '';
-        setStep(2);
-        applyPrefill();
+      .catch(function(e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Exam Code &#x2192;';
+        showErr(1, 'Network error: ' + e.message);
       });
-    })
-    .catch(function(e) {
-      btn.disabled = false;
-      btn.innerHTML = 'Verify Exam Code &#x2192;';
-      showErr(1, 'Network error: ' + e.message);
     });
   }
 
@@ -433,58 +454,62 @@ function openGame(mode) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Saving...';
 
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action:'registerStudent', email:_email, name:name, className:cls, school:school })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(result) {
-      btn.disabled = false;
-      btn.innerHTML = 'Save &amp; Continue &#x2192;';
-      if (!result || result.status !== 'success') {
-        showErr(2, result ? result.message : 'Could not save profile');
-        return;
-      }
-      var summary = document.getElementById('examSummary');
-      if (summary) {
-        summary.innerHTML =
-          '<strong style="color:#e2e8f0">' + (_quizMeta ? _quizMeta.title : 'Exam') + '</strong><br>'
-          + 'Student: ' + name + '<br>'
-          + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
-          + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
-      }
-      setStep(3);
-    })
-    .catch(function(e) {
-      btn.disabled = false;
-      btn.innerHTML = 'Save &amp; Continue &#x2192;';
-      showErr(2, 'Network error: ' + e.message);
+    whenReady(function(){
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action:'registerStudent', email:_email, name:name, className:cls, school:school })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(result) {
+        btn.disabled = false;
+        btn.innerHTML = 'Save &amp; Continue &#x2192;';
+        if (!result || result.status !== 'success') {
+          showErr(2, result ? result.message : 'Could not save profile');
+          return;
+        }
+        var summary = document.getElementById('examSummary');
+        if (summary) {
+          summary.innerHTML =
+            '<strong style="color:#e2e8f0">' + (_quizMeta ? _quizMeta.title : 'Exam') + '</strong><br>'
+            + 'Student: ' + name + '<br>'
+            + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
+            + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
+        }
+        setStep(3);
+      })
+      .catch(function(e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Save &amp; Continue &#x2192;';
+        showErr(2, 'Network error: ' + e.message);
+      });
     });
   }
 
   // ── Step 3: open exam tab ──
   function doLaunch() {
     clearErr(3);
-    if (!EXAM_PAGE_URL || !SCRIPT_URL) {
-      showErr(3, 'Configuration error — please contact your administrator');
-      return;
-    }
+    whenReady(function(){
+      if (!EXAM_PAGE_URL || !SCRIPT_URL) {
+        showErr(3, 'Configuration error — please contact your administrator');
+        return;
+      }
 
-    var examUrl = EXAM_PAGE_URL
-      + '?email='  + encodeURIComponent(_email)
-      + '&code='   + encodeURIComponent(_code)
-      + '&script=' + encodeURIComponent(SCRIPT_URL);
+      var examUrl = EXAM_PAGE_URL
+        + '?email='  + encodeURIComponent(_email)
+        + '&code='   + encodeURIComponent(_code)
+        + '&script=' + encodeURIComponent(SCRIPT_URL);
 
-    var infoEl = document.getElementById('infoMsg');
-    if (infoEl) {
-      infoEl.innerHTML =
-        '<span class="spinner"></span>Opening exam tab...<br><br>' +
-        '<small>If nothing opens, ' +
-        '<a href="' + examUrl + '" target="_blank" style="color:#FB923C;">click here</a></small>';
-      infoEl.classList.add('on');
-    }
+      var infoEl = document.getElementById('infoMsg');
+      if (infoEl) {
+        infoEl.innerHTML =
+          '<span class="spinner"></span>Opening exam tab...<br><br>' +
+          '<small>If nothing opens, ' +
+          '<a href="' + examUrl + '" target="_blank" style="color:#FB923C;">click here</a></small>';
+        infoEl.classList.add('on');
+      }
 
-    window.open(examUrl, '_blank');
+      window.open(examUrl, '_blank');
+    });
   }
 
   // Enter key shortcuts
