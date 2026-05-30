@@ -1543,7 +1543,7 @@ function openLiveMo(examCode) {
 function goLiveQuiz() {
   var timePerQ=parseInt(document.getElementById('live-time-per-q').value)||20;
   var saveRes=document.getElementById('tog-save-results').classList.contains('on');
-  var url=DASH.pageUrl('Livehost.html')+'&examCode='+encodeURIComponent(_liveExamCode)+'&timePerQ='+timePerQ+'&saveResults='+saveRes;
+  var url=DASH.pageUrl('LiveHost.html')+'&examCode='+encodeURIComponent(_liveExamCode)+'&timePerQ='+timePerQ+'&saveResults='+saveRes;
   window.open(url,'_blank'); closeMo('live-mo');
 }
 
