@@ -4,7 +4,8 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QuizFlow Pro — Plans & Pricing</title>
+  <title>Edurena — Plans & Pricing</title>
+  <script src="config-loader.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -167,7 +168,7 @@
 <nav class="nav">
   <a class="nav-logo" href="#">
     <div class="nav-logo-box">⚡</div>
-    <span class="nav-logo-txt">QuizFlow Pro</span>
+    <span class="nav-logo-txt">Edurena</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#faq">FAQ</a>
@@ -260,18 +261,20 @@
 <div class="toast-stack" id="toasts"></div>
 
 <script>
-/* ── SCRIPT URL ── */
-var SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>';
-var GS_URL = SCRIPT_URL;
-
-// If opened outside GAS (e.g. GitHub Pages or direct file), fall back to ?script= param
-if (!SCRIPT_URL || SCRIPT_URL.indexOf('script.google') === -1) {
-  var _p = new URLSearchParams(window.location.search);
-  if (_p.get('script')) SCRIPT_URL = _p.get('script');
+// SCRIPT_URL and GS_URL are provided by config-loader.js (see <head>).
+// Keep GS_URL as an alias used elsewhere in this file.
+function _ensureGsUrl() {
+  if (window.SCRIPT_URL) { window.GS_URL = window.SCRIPT_URL; }
 }
+window.addEventListener('edurena:config', _ensureGsUrl);
+_ensureGsUrl();  // handle the case where config-loader already resolved synchronously
 
-/* ── Update nav login link ── */
-document.getElementById('nav-login-link').href = SCRIPT_URL ? SCRIPT_URL + '?page=login' : '#';
+/* ── Update nav login link → static GitHub Pages route ── */
+(function(){
+  var base = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+  var el = document.getElementById('nav-login-link');
+  if (el) el.href = base + 'TeacherLogin.html';
+})();
 
 /* ── TASK 8.1 — Pre-fill school name from URL ?schoolName= param (renewal flow) ── */
 (function() {
@@ -532,17 +535,20 @@ function doCheckout() {
    * createPaymentIntentPublic validates the school name + plan server-side
    * and stores the intent, then returns a Paystack checkout URL.
    */
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({
-      action:         'createPaymentIntentPublic',
-      schoolName:     school,
-      contactEmail:   email,
-      contactName:    name,
-      plan:           plan,
-      studentCount:   students,
-      durationMonths: months
-    })
+  // SCRIPT_URL may not be set on first visit until config-loader resolves.
+  window.EDURENA_CONFIG_READY.then(function() {
+    return fetch(window.SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action:         'createPaymentIntentPublic',
+        schoolName:     school,
+        contactEmail:   email,
+        contactName:    name,
+        plan:           plan,
+        studentCount:   students,
+        durationMonths: months
+      })
+    });
   })
   .then(function(r){ return r.json(); })
   .then(function(res) {
@@ -578,7 +584,7 @@ function showPostPaymentMessage(ref, amount, email) {
     + 'A confirmation email will be sent to <strong>' + esc(email) + '</strong>.</div>'
     + '<div class="success-ref">Ref: ' + esc(ref) + '</div>'
     + '<div style="margin-top:16px;font-size:12px;color:var(--txt2)">Already paid? '
-    + '<a href="' + esc(SCRIPT_URL) + '?page=login" style="color:var(--acc2)">Log in to your dashboard</a></div>'
+    + '<a href="TeacherLogin.html" style="color:var(--acc2)">Log in to your dashboard</a></div>'
     + '</div>';
 }
 
@@ -629,7 +635,7 @@ renderFAQ();
 
 <!-- FOOTER -->
 <footer class="footer">
-  <p>© 2025 QuizFlow Pro · Built for Nigerian schools · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+  <p>© 2025 Edurena · Built for Nigerian schools · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
   <p style="margin-top:8px">Questions? <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a></p>
 </footer>
 
