@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Edurena — Secure Exam</title>
-  <script src="config-loader.js"></script>
+  <script src="edurena-dash.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -564,17 +564,19 @@ var PARAMS = (function(){
   return p;
 })();
 
-// SCRIPT_URL: prefer the ?script= URL param (set by the WebApp redirect),
-// fall back to whatever config-loader.js cached/fetched.
-// On first visit without ?script= param, the page waits for EDURENA_CONFIG_READY.
-var SCRIPT_URL = PARAMS.script || window.SCRIPT_URL || '';
+// SCRIPT_URL: prefer the ?script= URL param (set by the WebApp redirect or GAS doGet),
+// fall back to whatever DASH resolves (?script param → localStorage → BOOTSTRAP_URL).
+// On first visit without ?script= param, the page waits for DASH.ready.
+var SCRIPT_URL = PARAMS.script || (window.DASH && DASH.scriptUrl) || '';
 var SUPABASE_URL  = 'https://hrslazwxaciooqowvzcy.supabase.co'; // replace
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyc2xhend4YWNpb29xb3d2emN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDk3NzksImV4cCI6MjA5MzM4NTc3OX0.UbEko3d0zyHguOq9w5Zy-_89OhAbQaV7Z6uBw_nS_yk';           // replace — safe to expose
 
-// Make sure SCRIPT_URL is filled in even if config-loader resolves later
-window.addEventListener('edurena:config', function() {
-  if (!SCRIPT_URL && window.SCRIPT_URL) SCRIPT_URL = window.SCRIPT_URL;
-});
+// If DASH resolves AFTER this script ran, pick up the URL when it lands.
+if (window.DASH && DASH.ready) {
+  DASH.ready.then(function() {
+    if (!SCRIPT_URL && DASH.scriptUrl) SCRIPT_URL = DASH.scriptUrl;
+  });
+}
 
 async function supabaseGet(table, filters, select) {
   var url = SUPABASE_URL + '/rest/v1/' + table + '?select=' + (select || '*');
@@ -1056,15 +1058,14 @@ function safeText(id,val){ var el=document.getElementById(id); if(el)el.textCont
 
 function post(action,data,cb){
   function fire(){
-    var url = SCRIPT_URL || window.SCRIPT_URL;
+    var url = SCRIPT_URL || (window.DASH && DASH.scriptUrl);
     fetch(url,{method:'POST',body:JSON.stringify(Object.assign({action:action},data||{}))})
       .then(function(r){return r.json();}).then(function(r){if(cb)cb(null,r);}).catch(function(e){if(cb)cb(e,null);});
   }
-  if (SCRIPT_URL || window.SCRIPT_URL) { fire(); return; }
-  // SCRIPT_URL not yet available — wait for config-loader
-  if (window.EDURENA_CONFIG_READY) {
-    window.EDURENA_CONFIG_READY.then(function(){
-      if (!SCRIPT_URL) SCRIPT_URL = window.SCRIPT_URL;
+  if (SCRIPT_URL || (window.DASH && DASH.scriptUrl)) { fire(); return; }
+  if (window.DASH && DASH.ready) {
+    DASH.ready.then(function(){
+      if (!SCRIPT_URL) SCRIPT_URL = DASH.scriptUrl;
       fire();
     }).catch(function(e){ if (cb) cb(e, null); });
   } else { if (cb) cb(new Error('No SCRIPT_URL available'), null); }
@@ -1091,10 +1092,10 @@ window.addEventListener('load',function(){
   }
   // Wait briefly for SCRIPT_URL to be set by either ?script= param or config-loader
   function startWhenReady() {
-    if(!SCRIPT_URL && !window.SCRIPT_URL){
+    if(!SCRIPT_URL && !(window.DASH && DASH.scriptUrl)){
       safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.'); return;
     }
-    if (!SCRIPT_URL) SCRIPT_URL = window.SCRIPT_URL;
+    if (!SCRIPT_URL) SCRIPT_URL = DASH.scriptUrl;
     showLoading('Verifying exam access...');
     validateExamDirect(student.examCode, student.email).then(function(result) {
       hideLoading();
@@ -1123,10 +1124,10 @@ window.addEventListener('load',function(){
       safeText('camText', 'Validation error: ' + e.message);
     });
   }
-  if (SCRIPT_URL || window.SCRIPT_URL) {
+  if (SCRIPT_URL || (window.DASH && DASH.scriptUrl)) {
     startWhenReady();
-  } else if (window.EDURENA_CONFIG_READY) {
-    window.EDURENA_CONFIG_READY.then(startWhenReady).catch(function(){
+  } else if (window.DASH && DASH.ready) {
+    DASH.ready.then(startWhenReady).catch(function(){
       safeText('preTitle','Configuration error'); safeText('camText','Could not load app config.');
     });
   } else {
