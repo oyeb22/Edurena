@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>QuizFlow Pro — Secure Exam</title>
+  <title>Edurena — Secure Exam</title>
+  <script src="config-loader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -548,7 +549,7 @@
       + 'Please get the correct exam link from your teacher and try again.'
       + '</p>'
       + '</div>';
-    throw new Error('[QuizFlow] Security: Invalid or missing script URL. Access denied.');
+    throw new Error('[Edurena] Security: Invalid or missing script URL. Access denied.');
   }
 })();
 
@@ -563,9 +564,17 @@ var PARAMS = (function(){
   return p;
 })();
 
-var SCRIPT_URL = PARAMS.script || '';
+// SCRIPT_URL: prefer the ?script= URL param (set by the WebApp redirect),
+// fall back to whatever config-loader.js cached/fetched.
+// On first visit without ?script= param, the page waits for EDURENA_CONFIG_READY.
+var SCRIPT_URL = PARAMS.script || window.SCRIPT_URL || '';
 var SUPABASE_URL  = 'https://hrslazwxaciooqowvzcy.supabase.co'; // replace
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyc2xhend4YWNpb29xb3d2emN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDk3NzksImV4cCI6MjA5MzM4NTc3OX0.UbEko3d0zyHguOq9w5Zy-_89OhAbQaV7Z6uBw_nS_yk';           // replace — safe to expose
+
+// Make sure SCRIPT_URL is filled in even if config-loader resolves later
+window.addEventListener('edurena:config', function() {
+  if (!SCRIPT_URL && window.SCRIPT_URL) SCRIPT_URL = window.SCRIPT_URL;
+});
 
 async function supabaseGet(table, filters, select) {
   var url = SUPABASE_URL + '/rest/v1/' + table + '?select=' + (select || '*');
@@ -1046,8 +1055,19 @@ function showScreen(id){
 function safeText(id,val){ var el=document.getElementById(id); if(el)el.textContent=val; }
 
 function post(action,data,cb){
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},data||{}))})
-    .then(function(r){return r.json();}).then(function(r){if(cb)cb(null,r);}).catch(function(e){if(cb)cb(e,null);});
+  function fire(){
+    var url = SCRIPT_URL || window.SCRIPT_URL;
+    fetch(url,{method:'POST',body:JSON.stringify(Object.assign({action:action},data||{}))})
+      .then(function(r){return r.json();}).then(function(r){if(cb)cb(null,r);}).catch(function(e){if(cb)cb(e,null);});
+  }
+  if (SCRIPT_URL || window.SCRIPT_URL) { fire(); return; }
+  // SCRIPT_URL not yet available — wait for config-loader
+  if (window.EDURENA_CONFIG_READY) {
+    window.EDURENA_CONFIG_READY.then(function(){
+      if (!SCRIPT_URL) SCRIPT_URL = window.SCRIPT_URL;
+      fire();
+    }).catch(function(e){ if (cb) cb(e, null); });
+  } else { if (cb) cb(new Error('No SCRIPT_URL available'), null); }
 }
 
 function setMobileBadge(id,okClass,text){
@@ -1069,36 +1089,49 @@ window.addEventListener('load',function(){
   if(!student.email||!student.examCode){
     safeText('preTitle','Invalid exam link'); safeText('camText','Missing credentials.'); return;
   }
-  if(!SCRIPT_URL){
-    safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.'); return;
-  }
- showLoading('Verifying exam access...');
-  validateExamDirect(student.examCode, student.email).then(function(result) {
-    hideLoading();
-    if (!result.ok) {
+  // Wait briefly for SCRIPT_URL to be set by either ?script= param or config-loader
+  function startWhenReady() {
+    if(!SCRIPT_URL && !window.SCRIPT_URL){
+      safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.'); return;
+    }
+    if (!SCRIPT_URL) SCRIPT_URL = window.SCRIPT_URL;
+    showLoading('Verifying exam access...');
+    validateExamDirect(student.examCode, student.email).then(function(result) {
+      hideLoading();
+      if (!result.ok) {
+        safeText('preTitle', 'Access Denied');
+        safeText('camText', result.message || 'Validation failed');
+        return;
+      }
+      quizMeta    = result.quizData;
+      faceEnabled = quizMeta.faceDetection !== false;
+      safeText('preTitle', quizMeta.title);
+      safeText('bannerCode', student.examCode);
+      fetchStudentInfo();
+      initMedia();
+      CFG.MAX_VIOLATIONS = quizMeta.maxViolations || 3;
+      if (quizMeta.enableTTS) {
+        post('getTeacherVoiceProfileForExam', { examCode: student.examCode }, function(e2, r2) {
+          if (!e2 && r2 && r2.status === 'success' && r2.data && r2.data.voiceProfile) {
+            TTS._teacherVoiceProfile = r2.data.voiceProfile;
+          }
+        });
+      }
+    }).catch(function(e) {
+      hideLoading();
       safeText('preTitle', 'Access Denied');
-      safeText('camText', result.message || 'Validation failed');
-      return;
-    }
-    quizMeta    = result.quizData;
-    faceEnabled = quizMeta.faceDetection !== false;
-    safeText('preTitle', quizMeta.title);
-    safeText('bannerCode', student.examCode);
-    fetchStudentInfo();
-    initMedia();
-    CFG.MAX_VIOLATIONS = quizMeta.maxViolations || 3;
-    if (quizMeta.enableTTS) {
-      post('getTeacherVoiceProfileForExam', { examCode: student.examCode }, function(e2, r2) {
-        if (!e2 && r2 && r2.status === 'success' && r2.data && r.data.voiceProfile) {
-                 TTS._teacherVoiceProfile = r2.data.voiceProfile;
-        }
-      });
-    }
-   }).catch(function(e) {
-    hideLoading();
-    safeText('preTitle', 'Access Denied');
-    safeText('camText', 'Validation error: ' + e.message);
-  });
+      safeText('camText', 'Validation error: ' + e.message);
+    });
+  }
+  if (SCRIPT_URL || window.SCRIPT_URL) {
+    startWhenReady();
+  } else if (window.EDURENA_CONFIG_READY) {
+    window.EDURENA_CONFIG_READY.then(startWhenReady).catch(function(){
+      safeText('preTitle','Configuration error'); safeText('camText','Could not load app config.');
+    });
+  } else {
+    safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.');
+  }
 });   // ← ADD THIS: closes the load event listener callback
 
 function fetchStudentInfo(){
@@ -1730,7 +1763,7 @@ function showResults(data){
   safeText('resExamName',quizMeta?quizMeta.title:'Exam');
   var attemptStr = (data.attemptNumber && data.attemptNumber > 1) ? ' · Attempt #'+data.attemptNumber : '';
   safeText('resCandidateName',[studentInfo.name,studentInfo.class,studentInfo.school].filter(Boolean).join(' · ')+(attemptStr)||student.email+attemptStr);
-  safeText('resSchool',studentInfo.school||'QuizFlow Pro');
+  safeText('resSchool',studentInfo.school||'Edurena');
   safeText('resViolations',violations);
   var statusEl=document.getElementById('resStatus');
   if(statusEl)statusEl.className='result-status '+(passed?'pass':'fail');
