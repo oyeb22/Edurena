@@ -4,7 +4,8 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QuizFlow Pro — School Admin</title>
+  <title>Edurena — School Admin</title>
+  <script src="config-loader.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -242,7 +243,7 @@
     <div class="sb-logo">
       <div class="sb-logo-row">
         <div class="logo-box">⚡</div>
-        <div class="logo-txt"><h1>QuizFlow Pro</h1><p>School Admin v5.0</p></div>
+        <div class="logo-txt"><h1>Edurena</h1><p>School Admin v5.1</p></div>
       </div>
     </div>
 
@@ -748,6 +749,10 @@
 <div class="ts-stack" id="toasts"></div>
 
 <script>
+// SCRIPT_URL is provided by config-loader.js (see <head>).
+// SITE_BASE: directory of this page on GitHub Pages, used for sibling-page links.
+var SITE_BASE = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+
 // ================================================================
 // STATE
 // ================================================================
@@ -763,24 +768,29 @@ var _editingStudentEmail  = null;
 // AUTH GATE
 // ================================================================
 document.addEventListener('DOMContentLoaded', function() {
-  var token = '';
-  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
-  if (!token) { authFail('No active session.'); return; }
+  // v5.1: wait for config-loader to provide SCRIPT_URL before calling the API.
+  window.EDURENA_CONFIG_READY.then(function() {
+    var token = '';
+    try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+    if (!token) { authFail('No active session.'); return; }
 
-  callRaw('validateSession', { token: token }, function(e, r) {
-    if (e || !r || r.status !== 'success') {
-      authFail((r && r.message) || 'Session invalid.'); return;
-    }
-    var t = r.data;
-    // Only school_admin (and superadmin for testing) can use this dashboard
-    if (t.role !== 'school_admin' && t.role !== 'admin' && t.role !== 'superadmin') {
-      authFail('This dashboard is for school administrators only.');
-      return;
-    }
-    S = { token: token, email: t.email, name: t.name, role: t.role,
-          school: t.school || '', phone: t.phone || '', photoUrl: t.photoUrl || '' };
-    try { sessionStorage.setItem('qf_sa_user', JSON.stringify(S)); } catch(_) {}
-    boot();
+    callRaw('validateSession', { token: token }, function(e, r) {
+      if (e || !r || r.status !== 'success') {
+        authFail((r && r.message) || 'Session invalid.'); return;
+      }
+      var t = r.data;
+      // Only school_admin (and superadmin for testing) can use this dashboard
+      if (t.role !== 'school_admin' && t.role !== 'admin' && t.role !== 'superadmin') {
+        authFail('This dashboard is for school administrators only.');
+        return;
+      }
+      S = { token: token, email: t.email, name: t.name, role: t.role,
+            school: t.school || '', phone: t.phone || '', photoUrl: t.photoUrl || '' };
+      try { sessionStorage.setItem('qf_sa_user', JSON.stringify(S)); } catch(_) {}
+      boot();
+    });
+  }).catch(function(e) {
+    authFail('Could not load app configuration. Check your connection.');
   });
 });
 
@@ -789,7 +799,7 @@ function authFail(msg) {
   document.getElementById('gate-btn').style.display = 'inline-block';
 }
 function goLogin() {
-  window.location.href = '<?= ScriptApp.getService().getUrl() ?>?page=login';
+  window.location.href = SITE_BASE + 'TeacherLogin.html';
 }
 
 function boot() {
@@ -807,7 +817,12 @@ function boot() {
 // UTILITIES
 // ================================================================
 function callRaw(action, data, cb) {
-  fetch('<?= ScriptApp.getService().getUrl() ?>', {
+  if (!window.SCRIPT_URL) {
+    // Should be impossible after auth-gate awaited EDURENA_CONFIG_READY, but defend anyway.
+    if (cb) cb(new Error('Config not loaded'), null);
+    return;
+  }
+  fetch(window.SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify(Object.assign({ action: action }, data || {}))
   }).then(function(r){ return r.json(); })
@@ -934,8 +949,7 @@ function renderSubBanner(d, textId, barId, cardId) {
 }
 
 function openRenewPage() {
-  var pricingUrl = '<?= ScriptApp.getService().getUrl() ?>?page=pricing&schoolName='
-    + encodeURIComponent(S.school);
+  var pricingUrl = SITE_BASE + 'Pricing.html?schoolName=' + encodeURIComponent(S.school);
   window.open(pricingUrl, '_blank');
 }
 
@@ -1628,7 +1642,7 @@ window.onclick = function(e) {
 };
 </script>
 <!-- ════════════════════════════════════════════════════════════════
-     QUIZFLOW HELP & SUPPORT WIDGET (v5.1)
+     EDURENA HELP & SUPPORT WIDGET (v5.1)
      Self-contained: own CSS prefix (qfhw-), own JS namespace (qfhw_).
      Drop in once per dashboard, right before </body>.
      Depends on: window.call(action, args, onOk, onFail) and window.S
@@ -1713,7 +1727,7 @@ window.onclick = function(e) {
       <a class="qfhw-act" id="qfhw-email-link" href="#">
         <span class="qfhw-act-icon">📧</span>Email support
       </a>
-      <a class="qfhw-act" id="qfhw-wa-link" href="https://wa.me/2348012345678?text=Hi%20QuizFlow%2C%20I%20need%20help" target="_blank" rel="noopener">
+      <a class="qfhw-act" id="qfhw-wa-link" href="https://wa.me/2348012345678?text=Hi%20Edurena%2C%20I%20need%20help" target="_blank" rel="noopener">
         <span class="qfhw-act-icon">💬</span>Chat on WhatsApp
       </a>
       <button class="qfhw-act" onclick="qfhw_toggleBug()">
@@ -1759,7 +1773,7 @@ window.onclick = function(e) {
     _qsa('qfhw-d-role').textContent   = s.role   || '—';
     _qsa('qfhw-d-school').textContent = s.school || '—';
     _qsa('qfhw-email-link').href =
-      'mailto:' + ADMIN_EMAIL + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'QuizFlow user'))
+      'mailto:' + ADMIN_EMAIL + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
       + '&body=' + encodeURIComponent(
           'Account: ' + (s.email || '-') + '\n'
         + 'Role: '    + (s.role || '-') + '\n'
@@ -1768,7 +1782,7 @@ window.onclick = function(e) {
         + 'Describe your issue below:\n\n');
     _qsa('qfhw-wa-link').href =
       'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(
-        'Hi QuizFlow, I need help. Account: ' + (s.email || '-') + ' (' + (s.role || '-') + ')'
+        'Hi Edurena, I need help. Account: ' + (s.email || '-') + ' (' + (s.role || '-') + ')'
       );
     _qsa('qfhw-overlay').classList.add('on');
   };
