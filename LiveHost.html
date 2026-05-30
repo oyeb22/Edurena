@@ -342,8 +342,16 @@
 
 var SCRIPT_URL = DASH.scriptUrl;
 DASH.ready.then(function(cfg){ SCRIPT_URL = cfg.scriptUrl || DASH.scriptUrl; });
-var RACE_URL   = DASH.racePageUrl   || 'https://oyeb22.github.io/Edurena/race.html';
-var KAHOOT_URL = DASH.kahootPageUrl || 'https://oyeb22.github.io/Edurena/kahoot.html';
+var RACE_URL   = (window.DASH && DASH.racePageUrl)   || 'https://oyeb22.github.io/Edurena/race.html';
+var KAHOOT_URL = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/kahoot.html';
+
+// If DASH resolves after this script, pick up the real URLs
+if (window.DASH && DASH.ready) {
+  DASH.ready.then(function(){
+    if (DASH.racePageUrl)   RACE_URL   = DASH.racePageUrl;
+    if (DASH.kahootPageUrl) KAHOOT_URL = DASH.kahootPageUrl;
+  });
+}
 
 var TOKEN       = '';
 var mode        = 'race';
