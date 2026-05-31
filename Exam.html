@@ -363,10 +363,19 @@
     <div class="sub-ref" id="subRef" style="display:none">Reference: <span id="subRefCode">—</span></div>
     <div class="sub-recovery" id="subRecovery" style="display:none">
       <h3>⚠️ We could not submit your exam</h3>
-      <p>Your answers are saved on this device. Please show this screen to your teacher.</p>
+      <p>Your answers are saved on this device. Tap the button below to send them to your teacher for review.</p>
       <p>Reference code:</p>
       <span class="ref-big" id="subRecoveryRef">—</span>
-      <p style="font-size:12px;color:#94a3b8;margin-top:14px;">Your teacher can use this code to recover your submission. Please do not close this window until they confirm.</p>
+      <button id="subSendToTeacherBtn" onclick="sendToTeacher()"
+              style="width:100%;padding:13px;background:#F97316;color:white;border:none;border-radius:10px;
+                     font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;
+                     margin-top:6px;transition:all .15s">
+        📤 Send to Teacher
+      </button>
+      <div id="subSendStatus" style="margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center"></div>
+      <p style="font-size:11px;color:#7c85a2;margin-top:14px;line-height:1.6;border-top:1px solid #2e3248;padding-top:12px;">
+        If the button doesn't work, screenshot this screen and contact your teacher with the reference code above.
+      </p>
     </div>
   </div>
 </div>
@@ -698,6 +707,8 @@ var faceDetector  = null;
 var examSubmitted = false;
 var studentInfo   = { name:'', class:'', school:'', locked:false };
 var examSessionToken = '';   // v5.1: issued by validateExamCode; required by savePhoto, logViolation, getExplanation
+var examSignature    = '';   // v5.2: HMAC binding (email+code+validUntil), used by subqueue for offline-recovery auth
+var examValidUntilMs = 0;    // v5.2: when the signature expires (~30 days from issue)
 var _explainCache = {};
 var _passageCache = {};
 // ================================================================
@@ -823,6 +834,11 @@ async function validateExamDirect(examCode, studentEmail) {
       if (gasCheck.data && gasCheck.data.examSessionToken) {
         examSessionToken = gasCheck.data.examSessionToken;
       }
+      // v5.2: capture examSignature for offline-recovery auth
+      if (gasCheck.data && gasCheck.data.examSignature) {
+        examSignature    = gasCheck.data.examSignature;
+        examValidUntilMs = gasCheck.data.validUntilMs || 0;
+      }
     }
 
     // Subscription check via GAS (school data is protected)
@@ -839,6 +855,11 @@ async function validateExamDirect(examCode, studentEmail) {
       if (subCheck.data && subCheck.data.examSessionToken) {
         examSessionToken = subCheck.data.examSessionToken;
       }
+      // v5.2: capture examSignature for offline-recovery auth
+      if (subCheck.data && subCheck.data.examSignature) {
+        examSignature    = subCheck.data.examSignature;
+        examValidUntilMs = subCheck.data.validUntilMs || 0;
+      }
       // Trust GAS result fully when subscription or duplicate check is needed
       return { ok: true, quizData: subCheck.data.quizData };
     }
@@ -852,8 +873,13 @@ async function validateExamDirect(examCode, studentEmail) {
         post('validateExamCode',
           { studentEmail: studentEmail, examCode: examCode },
           function(e, r) {
-            if (r && r.status === 'success' && r.data && r.data.examSessionToken) {
-              examSessionToken = r.data.examSessionToken;
+            if (r && r.status === 'success' && r.data) {
+              if (r.data.examSessionToken) examSessionToken = r.data.examSessionToken;
+              // v5.2: capture examSignature for offline-recovery auth
+              if (r.data.examSignature) {
+                examSignature    = r.data.examSignature;
+                examValidUntilMs = r.data.validUntilMs || 0;
+              }
             }
             resolve();
           });
@@ -1179,8 +1205,16 @@ var subqueue = (function(){
   /**
    * Send the queued submission with retry. Calls onProgress(pct, label)
    * frequently; calls onDone(err, result, entry) once when finished.
+   *
+   * opts.recovery=true marks ALL attempts as recovery (includes recoveryRef
+   * in payload). Used when draining queued data on next page load.
+   * When false (default — fresh submit), the FIRST attempt sends as a live
+   * submission; if it fails and we retry, subsequent attempts are tagged as
+   * recovery so the server applies the signature check.
    */
-  function send(entry, onProgress, onDone){
+  function send(entry, onProgress, onDone, opts){
+    opts = opts || {};
+    var forceRecovery = !!opts.recovery;
     var attemptIndex = entry.attempts || 0;
 
     // Smooth progress animation across the entire retry window
@@ -1198,35 +1232,36 @@ var subqueue = (function(){
 
     function attempt(){
       if (attemptIndex >= RETRY_DELAYS_MS.length) {
-        // All retries exhausted
         finish(new Error('Max retries exceeded after ' + RETRY_DELAYS_MS.length + ' attempts'), null);
         return;
       }
 
-      // Use the existing post() helper. It already handles DASH config.
-      post(entry.payload.action || 'submitExam', entry.payload, function(err, result){
+      // Build per-attempt payload. If this is a retry (or forced recovery),
+      // include recoveryRef so the server treats it as a recovered submission.
+      var sendPayload = Object.assign({}, entry.payload);
+      if (forceRecovery || attemptIndex > 0) {
+        sendPayload.recoveryRef = entry.ref;
+      }
+
+      post(sendPayload.action || 'submitExam', sendPayload, function(err, result){
         bumpAttempts();
         attemptIndex++;
         if (!err && result && result.status === 'success') {
-          // SUCCESS — jump bar to 100%, brief pause, then call onDone
           if (onProgress) onProgress(100, 'Submitted ✓');
           setTimeout(function(){ finish(null, result); }, 400);
           return;
         }
-        // Server-side validation errors (4xx-style "status:error") are PERMANENT
-        // — retrying won't help. Bail immediately.
+        // Server-side validation errors are PERMANENT — bail immediately
         if (!err && result && result.status === 'error' && result.message
-            && /invalid|expired|already submitted|not found/i.test(result.message)) {
+            && /invalid|expired|already submitted|not found|signature/i.test(result.message)) {
           finish(new Error(result.message), result);
           return;
         }
-        // Transient failure — schedule next retry
         var delay = RETRY_DELAYS_MS[attemptIndex - 1] || 60000;
         setTimeout(attempt, delay);
       });
     }
 
-    // Override the entry.payload.action default — the bare payload doesn't have it
     if (!entry.payload.action) entry.payload.action = 'submitExam';
     attempt();
   }
@@ -1271,46 +1306,127 @@ function showSubmitRecovery(entry, errMsg){
   document.getElementById('subRef').style.display = 'none';
   document.getElementById('subRecovery').style.display = 'block';
   document.getElementById('subRecoveryRef').textContent = entry.ref;
+  // Reset button + status in case it was previously clicked
+  var btn = document.getElementById('subSendToTeacherBtn');
+  if (btn) { btn.disabled = false; btn.textContent = '📤 Send to Teacher'; btn.style.opacity = '1'; }
+  var st = document.getElementById('subSendStatus');
+  if (st) st.textContent = '';
+}
+
+// ── "Send to Teacher" handler on the recovery card (v5.2) ──
+// Reattempts delivery as an authenticated recovery. The server verifies the
+// examSignature in the queued payload before accepting — DevTools tampering
+// to alter answers will fail signature check and be logged.
+function sendToTeacher(){
+  var entry = subqueue.get();
+  if (!entry) {
+    var st1 = document.getElementById('subSendStatus');
+    if (st1) st1.textContent = 'No saved submission found.';
+    return;
+  }
+  var btn = document.getElementById('subSendToTeacherBtn');
+  var st  = document.getElementById('subSendStatus');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.55'; btn.textContent = '📤 Sending…'; }
+  if (st)  st.textContent = 'Contacting server…';
+
+  // Reset attempts so this fresh user-initiated try gets the full retry budget
+  entry.attempts = 0;
+  try { localStorage.setItem('edurena_pending_submission_v1', JSON.stringify(entry)); } catch(_) {}
+
+  subqueue.send(entry, function(pct, label){
+    if (st) st.textContent = label + ' ' + Math.round(pct) + '%';
+  }, function(err, result){
+    if (!err && result && result.status === 'success') {
+      subqueue.clear();
+      if (st) st.textContent = '✓ Delivered. Your teacher has been notified.';
+      if (btn) btn.textContent = '✓ Sent';
+      // Optionally: transition to results screen so student sees their score
+      setTimeout(function(){
+        try {
+          hideSubmitProgress();
+          if (entry.studentInfo && typeof studentInfo === 'object') {
+            studentInfo.name   = entry.studentInfo.name   || studentInfo.name;
+            studentInfo.class  = entry.studentInfo.class  || studentInfo.class;
+            studentInfo.school = entry.studentInfo.school || studentInfo.school;
+          }
+          if (typeof showResults === 'function' && result.data) showResults(result.data);
+        } catch(_) {}
+      }, 1200);
+    } else {
+      if (st) st.innerHTML = '<span style="color:#f87171">Could not send: '
+                            + ((err && err.message) || (result && result.message) || 'network error')
+                            + '</span><br><span style="font-size:11px">Please screenshot this screen and contact your teacher.</span>';
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '📤 Try Again'; }
+    }
+  }, { recovery: true });
 }
 
 // ── Page-load resume hook (runs from DOMContentLoaded boot) ────
 function checkPendingSubmission(){
   var entry = subqueue.get();
   if (!entry) return false;
-  // There's an orphaned submission from a previous session — try to drain it.
+
+  // There's an orphaned submission from a previous session.
+  // Show the banner + overlay immediately so the user knows we're working.
   document.getElementById('subResumeBanner').classList.add('on');
   showSubmitProgress(entry);
-  subqueue.send(entry, updateSubmitProgress, function(err, result){
-    document.getElementById('subResumeBanner').classList.remove('on');
-    if (!err && result && result.status === 'success') {
-      subqueue.clear();
-      // Navigate to results — but we need to set up the screen first
-      try {
-        hideSubmitProgress();
-        // Restore studentInfo from the queue entry so the result screen
-        // shows the student's name/class/school instead of just email.
-        if (entry.studentInfo && typeof studentInfo === 'object') {
-          studentInfo.name   = entry.studentInfo.name   || studentInfo.name;
-          studentInfo.class  = entry.studentInfo.class  || studentInfo.class;
-          studentInfo.school = entry.studentInfo.school || studentInfo.school;
+
+  // CRITICAL: do NOT call subqueue.send() until DASH has resolved AND
+  // SCRIPT_URL is populated. Otherwise post() will fire with no URL and all
+  // 5 retries fail back-to-back, showing "Max retries exceeded" immediately.
+  function actuallySend() {
+    // Tag this as recovery mode so the server applies signature check.
+    subqueue.send(entry, updateSubmitProgress, function(err, result){
+      document.getElementById('subResumeBanner').classList.remove('on');
+      if (!err && result && result.status === 'success') {
+        subqueue.clear();
+        try {
+          hideSubmitProgress();
+          if (entry.studentInfo && typeof studentInfo === 'object') {
+            studentInfo.name   = entry.studentInfo.name   || studentInfo.name;
+            studentInfo.class  = entry.studentInfo.class  || studentInfo.class;
+            studentInfo.school = entry.studentInfo.school || studentInfo.school;
+          }
+          if (typeof showResults === 'function' && result.data) {
+            showResults(result.data);
+          } else {
+            document.getElementById('subProgressOverlay').classList.add('on');
+            document.getElementById('subIcon').textContent = '✓';
+            document.getElementById('subTitle').textContent = 'Submission delivered';
+            document.getElementById('subMsg').textContent = 'You can close this window.';
+          }
+        } catch(_) {}
+      } else {
+        // Final failure — show recovery card, do NOT clear the queue
+        showSubmitRecovery(entry, (err && err.message) || 'Could not deliver your submission.');
+      }
+    }, { recovery: true });
+  }
+
+  // Wait for the URL to be ready. Three cases:
+  //   (a) URL already set     → fire immediately
+  //   (b) DASH not yet ready  → wait for DASH.ready then fire
+  //   (c) DASH absent entirely → fire anyway and let post() use whatever URL it has
+  function waitForUrl(cb) {
+    var url = (typeof SCRIPT_URL !== 'undefined' && SCRIPT_URL)
+              || (window.DASH && DASH.scriptUrl);
+    if (url) { cb(); return; }
+    if (window.DASH && DASH.ready && typeof DASH.ready.then === 'function') {
+      DASH.ready.then(function(){
+        // After DASH resolves, also poke local SCRIPT_URL var if it's empty
+        if (typeof SCRIPT_URL !== 'undefined' && !SCRIPT_URL && DASH.scriptUrl) {
+          // Note: this only updates if SCRIPT_URL is declared on window; for var-scoped it's a no-op
+          try { SCRIPT_URL = DASH.scriptUrl; } catch(_) {}
         }
-        // If the exam page itself is loaded, route through showResults()
-        if (typeof showResults === 'function' && result.data) {
-          showResults(result.data);
-        } else {
-          // Fallback: show a simple success and let them close
-          document.getElementById('subProgressOverlay').classList.add('on');
-          document.getElementById('subIcon').textContent = '✓';
-          document.getElementById('subTitle').textContent = 'Submission delivered';
-          document.getElementById('subMsg').textContent = 'You can close this window.';
-        }
-      } catch(_) {}
+        cb();
+      }).catch(cb);
     } else {
-      // Final failure on resume — show recovery panel, do NOT clear the queue
-      // so the student can try again on a future page load
-      showSubmitRecovery(entry, (err && err.message) || 'Could not deliver your submission.');
+      // No DASH at all — fire anyway, post() will handle it
+      cb();
     }
-  });
+  }
+
+  waitForUrl(actuallySend);
   return true;
 }
 
@@ -2010,7 +2126,11 @@ function doSubmit(forced){
     answers: answers,
     timeSpent: spent,
     violations: violations,
-    photos: photos
+    photos: photos,
+    // v5.2: included so a queued/recovered submission can be authenticated by the
+    // server. Live submissions ignore these on the server side (no recoveryRef set).
+    examSignature: examSignature,
+    validUntilMs:  examValidUntilMs
   };
   // ── v5.2: save to localStorage queue FIRST (safety net), then send ──
   var entry = subqueue.save(payload, studentInfo);
