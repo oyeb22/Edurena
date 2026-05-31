@@ -282,9 +282,94 @@
     .tts-test-btn:hover{background:rgba(91,110,245,.25);}
     .tts-auto-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
     .tts-hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+    /* ── Submission Progress Overlay (v5.2 queue) ────────────────── */
+    #subProgressOverlay{
+      position:fixed; inset:0; z-index:99999;
+      background:rgba(8,12,22,0.96);
+      display:none; align-items:center; justify-content:center;
+      padding:24px;
+    }
+    #subProgressOverlay.on{ display:flex; }
+    .sub-card{
+      background:#0F1523; border:1px solid #2e3248; border-radius:20px;
+      padding:36px 36px 30px; width:440px; max-width:96vw;
+      box-shadow:0 24px 80px rgba(0,0,0,0.6); text-align:center;
+    }
+    .sub-icon{ font-size:42px; margin-bottom:14px; display:block; }
+    .sub-title{ font-size:18px; font-weight:700; color:#e2e8f0; margin-bottom:8px; }
+    .sub-msg{ font-size:13px; color:#94a3b8; margin-bottom:22px; line-height:1.55; }
+    .sub-bar-track{
+      width:100%; height:10px; background:#1a2030; border-radius:6px;
+      overflow:hidden; position:relative;
+    }
+    .sub-bar-fill{
+      height:100%;
+      background:linear-gradient(90deg, #F97316 0%, #FB923C 100%);
+      border-radius:6px;
+      width:0%;
+      transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:0 0 12px rgba(249,115,22,0.4);
+    }
+    .sub-bar-fill.success{
+      background:linear-gradient(90deg, #34d399 0%, #10b981 100%);
+      box-shadow:0 0 12px rgba(52,211,153,0.4);
+    }
+    .sub-pct{ font-size:12px; color:#7c85a2; margin-top:10px; font-family:'DM Mono',monospace; }
+    .sub-ref{
+      margin-top:18px; padding:10px; background:#080C16; border-radius:8px;
+      font-family:'DM Mono',monospace; font-size:11px; color:#7c85a2;
+    }
+    .sub-recovery{
+      background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.3);
+      border-radius:12px; padding:18px; margin-top:18px; text-align:left;
+    }
+    .sub-recovery h3{
+      font-size:14px; color:#f87171; margin-bottom:10px; font-weight:700;
+    }
+    .sub-recovery p{
+      font-size:13px; color:#cbd5e1; line-height:1.6; margin-bottom:10px;
+    }
+    .sub-recovery .ref-big{
+      display:block; font-family:'DM Mono',monospace; font-size:18px;
+      color:#FB923C; background:#080C16; padding:10px; border-radius:8px;
+      text-align:center; margin:10px 0; font-weight:700; letter-spacing:1.5px;
+    }
+
+    /* ── Page-load resume banner ─────────────────────────────────── */
+    #subResumeBanner{
+      position:fixed; top:0; left:0; right:0; z-index:99998;
+      background:linear-gradient(90deg, #F97316, #FB923C);
+      color:#03060f; font-weight:600; font-size:13px;
+      padding:10px 16px; text-align:center;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      display:none;
+    }
+    #subResumeBanner.on{ display:block; }
   </style>
 </head>
 <body>
+
+<!-- ── Submission Queue UI (v5.2) ───────────────────────────────── -->
+<div id="subResumeBanner">📤 Resuming a submission from your previous session…</div>
+
+<div id="subProgressOverlay">
+  <div class="sub-card" id="subCard">
+    <span class="sub-icon" id="subIcon">📤</span>
+    <div class="sub-title" id="subTitle">Submitting your exam…</div>
+    <div class="sub-msg" id="subMsg">Please keep this window open.</div>
+    <div class="sub-bar-track"><div class="sub-bar-fill" id="subBarFill"></div></div>
+    <div class="sub-pct" id="subPct">0%</div>
+    <div class="sub-ref" id="subRef" style="display:none">Reference: <span id="subRefCode">—</span></div>
+    <div class="sub-recovery" id="subRecovery" style="display:none">
+      <h3>⚠️ We could not submit your exam</h3>
+      <p>Your answers are saved on this device. Please show this screen to your teacher.</p>
+      <p>Reference code:</p>
+      <span class="ref-big" id="subRecoveryRef">—</span>
+      <p style="font-size:12px;color:#94a3b8;margin-top:14px;">Your teacher can use this code to recover your submission. Please do not close this window until they confirm.</p>
+    </div>
+  </div>
+</div>
 
 <div id="loadingScreen">
   <div class="ld-ring"></div>
@@ -1042,6 +1127,193 @@ function phonicsPlay() {
 function showLoading(t){ document.getElementById('loadingText').textContent=t||'Loading...'; document.getElementById('loadingScreen').classList.add('on'); }
 function hideLoading(){ document.getElementById('loadingScreen').classList.remove('on'); }
 
+// ================================================================
+// SUBMISSION QUEUE v5.2
+// ----------------------------------------------------------------
+// Persists the final submitExam payload to localStorage on first
+// attempt, retries with exponential backoff (1/3/9/27/60s = ~100s
+// total), shows a single animated progress bar that always ends
+// in success or saved. Survives accidental refresh during retry.
+// If the queue still has a pending item when Exam.html loads, it
+// drains it before showing the pre-exam screen.
+// ================================================================
+var subqueue = (function(){
+  var STORAGE_KEY = 'edurena_pending_submission_v1';
+  var RETRY_DELAYS_MS = [1000, 3000, 9000, 27000, 60000]; // 5 attempts, ~100s total
+
+  function genRef(){
+    // 8-char human-readable reference: EDU-XXXXXX
+    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
+    var s = '';
+    for (var i = 0; i < 6; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+    return 'EDU-' + s;
+  }
+  function save(payload, sInfo){
+    var entry = {
+      ref: genRef(),
+      savedAt: Date.now(),
+      examCode: (payload && payload.examCode) || '?',
+      studentEmail: (payload && payload.studentEmail) || '?',
+      studentInfo: sInfo || null,
+      payload: payload,
+      attempts: 0
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entry)); } catch(_) {}
+    return entry;
+  }
+  function get(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(_) { return null; }
+  }
+  function clear(){
+    try { localStorage.removeItem(STORAGE_KEY); } catch(_) {}
+  }
+  function bumpAttempts(){
+    var e = get(); if (!e) return;
+    e.attempts = (e.attempts || 0) + 1;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(e)); } catch(_) {}
+  }
+
+  /**
+   * Send the queued submission with retry. Calls onProgress(pct, label)
+   * frequently; calls onDone(err, result, entry) once when finished.
+   */
+  function send(entry, onProgress, onDone){
+    var attemptIndex = entry.attempts || 0;
+
+    // Smooth progress animation across the entire retry window
+    var totalDuration = RETRY_DELAYS_MS.reduce(function(a,b){return a+b;}, 0); // ~100s
+    var animStart = Date.now();
+    var progressTimer = setInterval(function(){
+      var pct = Math.min(95, ((Date.now() - animStart) / totalDuration) * 100);
+      if (onProgress) onProgress(pct, 'Submitting…');
+    }, 200);
+
+    function finish(err, result){
+      clearInterval(progressTimer);
+      if (onDone) onDone(err, result, entry);
+    }
+
+    function attempt(){
+      if (attemptIndex >= RETRY_DELAYS_MS.length) {
+        // All retries exhausted
+        finish(new Error('Max retries exceeded after ' + RETRY_DELAYS_MS.length + ' attempts'), null);
+        return;
+      }
+
+      // Use the existing post() helper. It already handles DASH config.
+      post(entry.payload.action || 'submitExam', entry.payload, function(err, result){
+        bumpAttempts();
+        attemptIndex++;
+        if (!err && result && result.status === 'success') {
+          // SUCCESS — jump bar to 100%, brief pause, then call onDone
+          if (onProgress) onProgress(100, 'Submitted ✓');
+          setTimeout(function(){ finish(null, result); }, 400);
+          return;
+        }
+        // Server-side validation errors (4xx-style "status:error") are PERMANENT
+        // — retrying won't help. Bail immediately.
+        if (!err && result && result.status === 'error' && result.message
+            && /invalid|expired|already submitted|not found/i.test(result.message)) {
+          finish(new Error(result.message), result);
+          return;
+        }
+        // Transient failure — schedule next retry
+        var delay = RETRY_DELAYS_MS[attemptIndex - 1] || 60000;
+        setTimeout(attempt, delay);
+      });
+    }
+
+    // Override the entry.payload.action default — the bare payload doesn't have it
+    if (!entry.payload.action) entry.payload.action = 'submitExam';
+    attempt();
+  }
+
+  return { save: save, get: get, clear: clear, send: send };
+})();
+
+// ── Submit progress overlay controller ─────────────────────────
+function showSubmitProgress(entry){
+  document.getElementById('subProgressOverlay').classList.add('on');
+  document.getElementById('subIcon').textContent = '📤';
+  document.getElementById('subTitle').textContent = 'Submitting your exam…';
+  document.getElementById('subMsg').textContent = 'Please keep this window open.';
+  document.getElementById('subBarFill').classList.remove('success');
+  document.getElementById('subBarFill').style.width = '0%';
+  document.getElementById('subPct').textContent = '0%';
+  document.getElementById('subRef').style.display = 'block';
+  document.getElementById('subRefCode').textContent = entry.ref;
+  document.getElementById('subRecovery').style.display = 'none';
+}
+function updateSubmitProgress(pct, label){
+  var fill = document.getElementById('subBarFill');
+  fill.style.width = pct + '%';
+  document.getElementById('subPct').textContent = Math.round(pct) + '%';
+  if (pct >= 100) {
+    fill.classList.add('success');
+    document.getElementById('subIcon').textContent = '✓';
+    document.getElementById('subTitle').textContent = label || 'Submitted';
+    document.getElementById('subMsg').textContent = 'Loading your results…';
+  }
+}
+function hideSubmitProgress(){
+  document.getElementById('subProgressOverlay').classList.remove('on');
+}
+function showSubmitRecovery(entry, errMsg){
+  // Permanent failure — show the recovery card
+  document.getElementById('subIcon').textContent = '⚠️';
+  document.getElementById('subTitle').textContent = 'Submission needs help';
+  document.getElementById('subMsg').textContent = errMsg || 'Could not deliver your exam after several attempts.';
+  document.getElementById('subBarFill').style.width = '100%';
+  document.getElementById('subPct').style.display = 'none';
+  document.getElementById('subRef').style.display = 'none';
+  document.getElementById('subRecovery').style.display = 'block';
+  document.getElementById('subRecoveryRef').textContent = entry.ref;
+}
+
+// ── Page-load resume hook (runs from DOMContentLoaded boot) ────
+function checkPendingSubmission(){
+  var entry = subqueue.get();
+  if (!entry) return false;
+  // There's an orphaned submission from a previous session — try to drain it.
+  document.getElementById('subResumeBanner').classList.add('on');
+  showSubmitProgress(entry);
+  subqueue.send(entry, updateSubmitProgress, function(err, result){
+    document.getElementById('subResumeBanner').classList.remove('on');
+    if (!err && result && result.status === 'success') {
+      subqueue.clear();
+      // Navigate to results — but we need to set up the screen first
+      try {
+        hideSubmitProgress();
+        // Restore studentInfo from the queue entry so the result screen
+        // shows the student's name/class/school instead of just email.
+        if (entry.studentInfo && typeof studentInfo === 'object') {
+          studentInfo.name   = entry.studentInfo.name   || studentInfo.name;
+          studentInfo.class  = entry.studentInfo.class  || studentInfo.class;
+          studentInfo.school = entry.studentInfo.school || studentInfo.school;
+        }
+        // If the exam page itself is loaded, route through showResults()
+        if (typeof showResults === 'function' && result.data) {
+          showResults(result.data);
+        } else {
+          // Fallback: show a simple success and let them close
+          document.getElementById('subProgressOverlay').classList.add('on');
+          document.getElementById('subIcon').textContent = '✓';
+          document.getElementById('subTitle').textContent = 'Submission delivered';
+          document.getElementById('subMsg').textContent = 'You can close this window.';
+        }
+      } catch(_) {}
+    } else {
+      // Final failure on resume — show recovery panel, do NOT clear the queue
+      // so the student can try again on a future page load
+      showSubmitRecovery(entry, (err && err.message) || 'Could not deliver your submission.');
+    }
+  });
+  return true;
+}
+
 function showScreen(id){
   ['preExam','examScreen','resultsScreen'].forEach(function(s){
     var el=document.getElementById(s); if(!el)return;
@@ -1087,7 +1359,15 @@ function setBadge(id,warn,text){
 // ================================================================
 window.addEventListener('load',function(){
   ttsLoadVoices();
+
+  // ── v5.2: drain any orphaned submission from a previous session FIRST ──
+  // If there's a pending queue entry, this returns true and the overlay takes
+  // over the screen until the drain finishes. We still continue with the rest
+  // of the boot below so the page is ready for resume → showResults().
+  var hasPending = checkPendingSubmission();
+
   if(!student.email||!student.examCode){
+    if (hasPending) return;  // queue overlay is showing; don't render "invalid link"
     safeText('preTitle','Invalid exam link'); safeText('camText','Missing credentials.'); return;
   }
   // Wait briefly for SCRIPT_URL to be set by either ?script= param or config-loader
@@ -1723,17 +2003,34 @@ function doSubmit(forced){
   stopNoSleepFallback();
   saveShort();
   var spent=examStart?Math.floor((Date.now()-examStart)/1000):0;
-  showLoading('Submitting exam — please wait...');
-  post('submitExam',{studentEmail:student.email,examCode:student.examCode,answers:answers,timeSpent:spent,violations:violations,photos:photos},
-    function(e,r){
-      hideLoading();
-      if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
-      if(e||!r||r.status!=='success'){
-        alert('Submission failed: '+((r&&r.message)||'Unknown error')+'\n\nPlease contact your teacher immediately and do NOT close this window.');
-        return;
-      }
-      showResults(r.data);
-    });
+  var payload = {
+    action: 'submitExam',
+    studentEmail: student.email,
+    examCode: student.examCode,
+    answers: answers,
+    timeSpent: spent,
+    violations: violations,
+    photos: photos
+  };
+  // ── v5.2: save to localStorage queue FIRST (safety net), then send ──
+  var entry = subqueue.save(payload, studentInfo);
+  showSubmitProgress(entry);
+  subqueue.send(entry, updateSubmitProgress, function(err, result){
+    if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
+    if (!err && result && result.status === 'success') {
+      // Success — clear the queue, transition to results
+      subqueue.clear();
+      setTimeout(function(){
+        hideSubmitProgress();
+        showResults(result.data);
+      }, 600);  // brief pause so user sees "Submitted ✓"
+      return;
+    }
+    // Permanent failure (server rejected) OR transient failure (all retries exhausted)
+    // Either way: show the recovery card. Queue stays in localStorage so a future
+    // page load can attempt resume.
+    showSubmitRecovery(entry, (err && err.message) || (result && result.message) || 'Network error.');
+  });
 }
 
 // ================================================================
