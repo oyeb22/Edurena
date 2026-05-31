@@ -575,6 +575,21 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
               <div><div class="tl">Cumulative weeks</div><div class="td" id="week-mode-desc">Include questions from all weeks up to and including selected week</div></div>
               <div class="tog on" id="tog-week-mode" onclick="toggleWeekMode()"></div>
             </div>
+            <!-- v5.3: Exclude specific weeks (only when cumulative is ON) -->
+            <div id="excluded-weeks-block" style="display:none;margin-top:12px;padding:12px;background:var(--surface2,#131923);border-radius:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+                <div>
+                  <div class="tl" style="font-size:13px">Include / exclude weeks</div>
+                  <div class="td" id="excl-weeks-desc" style="font-size:11.5px;margin-top:2px">Uncheck weeks you want to skip (e.g. holidays)</div>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button type="button" class="btn btn-sm" onclick="exclWeeksAll(true)">All</button>
+                  <button type="button" class="btn btn-sm" onclick="exclWeeksAll(false)">None</button>
+                </div>
+              </div>
+              <div id="excluded-weeks-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow-y:auto"></div>
+              <div id="excl-weeks-summary" style="font-size:11px;color:var(--text2);margin-top:8px"></div>
+            </div>
           </div>
         </div>
         <div class="card">
@@ -1915,8 +1930,54 @@ function onClassChange(){ var cid=document.getElementById('c-class').value, wk=d
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
 function onTypeChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
 function getWeekMode(){ var tog=document.getElementById('tog-week-mode'); return (tog&&tog.classList.contains('on'))?'cumulative':'single'; }
-function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
-function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
+function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
+
+// v5.3 — exclude-weeks helpers
+function renderExcludedWeeksUI(targetWeek){
+  var list=document.getElementById('excluded-weeks-list'); if(!list) return;
+  var tw=parseInt(targetWeek)||0;
+  if(!tw){ list.innerHTML=''; updateExclWeeksSummary(); return; }
+  var existing={};
+  // Preserve current checked state across re-renders (e.g. when target week shifts)
+  list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ existing[cb.value]=cb.checked; });
+  var html='';
+  for(var w=1; w<=tw; w++){
+    var prev=(existing[String(w)]!==false); // default checked
+    html+='<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;background:var(--surface,#0F1523);border:1px solid var(--border,#2e3248);border-radius:6px;font-size:12px;cursor:pointer;user-select:none">'
+        + '<input type="checkbox" value="'+w+'" '+(prev?'checked':'')+' onchange="exclWeekToggle()" style="margin:0;cursor:pointer">'
+        + 'Wk '+w
+        + '</label>';
+  }
+  list.innerHTML=html;
+  updateExclWeeksSummary();
+}
+function getExcludedWeeks(){
+  // Returns list of UNCHECKED weeks (the ones to exclude). Only meaningful in cumulative mode.
+  if(getWeekMode()!=='cumulative') return [];
+  var out=[];
+  var boxes=document.querySelectorAll('#excluded-weeks-list input[type="checkbox"]');
+  boxes.forEach(function(cb){ if(!cb.checked) out.push(parseInt(cb.value)); });
+  return out;
+}
+function exclWeeksAll(checked){
+  var boxes=document.querySelectorAll('#excluded-weeks-list input[type="checkbox"]');
+  boxes.forEach(function(cb){ cb.checked=!!checked; });
+  exclWeekToggle();
+}
+function exclWeekToggle(){
+  updateExclWeeksSummary();
+  // Re-fetch subject counts so the preview matches what they'll actually get
+  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
+  if(cid&&wk) onWeekChange();
+}
+function updateExclWeeksSummary(){
+  var summary=document.getElementById('excl-weeks-summary'); if(!summary) return;
+  var excl=getExcludedWeeks();
+  if(!excl.length){ summary.textContent='All weeks included.'; summary.style.color='var(--text2)'; }
+  else { summary.innerHTML='<strong style="color:var(--warning,#FB923C)">Excluding:</strong> '+excl.map(function(w){return 'Week '+w;}).join(', '); }
+}
+
+function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
 function renderSubjAlloc(subjs,wk,weekMode){ if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode(); var tot=0,types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):''; var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk; document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e){ var subjectName=e[0],available=e[1],suggested=Math.min(available,20); tot+=suggested; var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5); return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+'</div></div><input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjectName.replace(/"/g,'&quot;')+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()"></div>'; }).join(''); setText('tot-q',tot); }
@@ -1940,6 +2001,7 @@ function doCreate(){
     endTime:             localToISO(en),
     questionTypes:       getSelectedTypes(),
     weekMode:            getWeekMode(),
+    excludedWeeks:       getExcludedWeeks(),  // v5.3 — empty array if single mode or all weeks checked
     session:             document.getElementById('c-session').value,
     term:                document.getElementById('c-term').value,
     faceDetection:       document.getElementById('tog-face').classList.contains('on'),
@@ -1967,6 +2029,10 @@ function resetCreate(){
   var mv = document.getElementById('c-max-violations'); if(mv) mv.value = '3';
   var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.add('on');
   var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display='none';
+  // v5.3: reset excluded weeks UI
+  var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='none';
+  var exclList=document.getElementById('excluded-weeks-list'); if(exclList) exclList.innerHTML='';
+  var exclSum=document.getElementById('excl-weeks-summary'); if(exclSum) exclSum.textContent='';
   setDefaultTimes();
   var ps=document.getElementById('passage-select'); if(ps){ ps.innerHTML='<option value="">— Select class & week first —</option>'; ps.disabled=true; }
   var pp=document.getElementById('passage-preview'); if(pp) pp.style.display='none';
