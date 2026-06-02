@@ -32,7 +32,7 @@
   // ════════════════════════════════════════════════════════════════════
   // ↓↓↓  THE ONE LINE YOU UPDATE AFTER EACH GAS REDEPLOY  ↓↓↓
   // ════════════════════════════════════════════════════════════════════
-  var BOOTSTRAP_URL = 'https://script.google.com/macros/s/AKfycbyz2pMeBbw4g2eRKj1o2QGip3NpInttjW_UP6e6jFX4W5q4U8dCG-mJZN7pGtpJIO46yw/exec';
+  var BOOTSTRAP_URL = 'https://script.google.com/macros/s/AKfycbzXRaspqLnqf7wkXxb6uOoKmhK5DxFRPany6xBfJMB0/exec';
   // ════════════════════════════════════════════════════════════════════
 
   var STORAGE_KEY = 'edurena_script_url';
