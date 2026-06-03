@@ -1511,6 +1511,10 @@ function submitAns(answer, btnEl) {
       // Server doesn't return the correct text — for highlighting we
       // still need it. Fall back to nothing if missing.
       correctText = res.data.correctText || '';
+      // TEMPORARY DEBUG — remove after diagnosing all-answers-wrong issue
+      if (res.data._debug) {
+        console.log('[race-debug]', JSON.stringify(res.data._debug, null, 2));
+      }
     } else {
       // Network/server failure — treat as wrong, but keep streak intact so
       // a momentary blip doesn't cost the player. They'll see "wrong" UX
