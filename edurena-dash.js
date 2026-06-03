@@ -1,18 +1,23 @@
 /**
- * edurena-dash.js — v5.2.1
+ * edurena-dash.js — v5.4
  * Shared bootstrap for ALL Edurena dashboard + staff HTML pages on GitHub Pages.
  *
  * HOW IT WORKS:
  *   GAS only runs doPost (the API). All HTML lives on GitHub Pages.
  *   Pages need to know the GAS URL. Resolution order:
  *     1. ?script= URL parameter (wins — used by GAS redirects + cross-page links)
- *     2. localStorage cache from a previous visit
- *     3. BOOTSTRAP_URL hardcoded below (first-time visitors)
+ *     2. BOOTSTRAP_URL hardcoded below (single source of truth)
+ *
+ *   v5.4 — localStorage caching removed from the resolution chain.
+ *   Previously, devices that cached a URL got STUCK on it forever
+ *   even after BOOTSTRAP_URL changed → many hours of "works on phone,
+ *   fails on system" debugging. Now BOOTSTRAP_URL always wins.
  *
  * AFTER EVERY GAS REDEPLOY:
- *   Run `printDeploymentInfo()` in the Apps Script editor.
- *   Update BOOTSTRAP_URL below with the printed URL.
- *   Commit + push. Done — one file, one line.
+ *   1. Update BOOTSTRAP_URL below with the new deployment URL.
+ *   2. Commit + push. Done.
+ *   3. Best practice: use Apps Script "edit existing deployment → New
+ *      version" so the URL never changes and step 1 is unnecessary.
  *
  * EXPOSES:
  *   DASH.scriptUrl          — GAS deployment URL
@@ -44,15 +49,17 @@
   });
 
   // ── Derive script URL ─────────────────────────────────────────────────
-  // Priority: ?script= param → localStorage → BOOTSTRAP_URL fallback
-  // localStorage survives browser restart (sessionStorage didn't)
+  // Priority: ?script= param → BOOTSTRAP_URL
+  // localStorage is NO LONGER consulted at read time — stale cached URLs
+  // were the root cause of multiple production debugging sessions. The
+  // BOOTSTRAP_URL line above is the single source of truth.
   var _scriptUrl = (_params.script || '').trim();
-  if (!_scriptUrl) {
-    try { _scriptUrl = localStorage.getItem(STORAGE_KEY) || ''; } catch(_) {}
-  }
   if (!_scriptUrl && BOOTSTRAP_URL && BOOTSTRAP_URL.indexOf('PASTE_YOUR') !== 0) {
     _scriptUrl = BOOTSTRAP_URL;
   }
+  // Still WRITE to localStorage — harmless, and a future offline-mode
+  // feature might read it. But this value is never used to resolve the
+  // URL; it's a debugging breadcrumb only.
   if (_scriptUrl) {
     try { localStorage.setItem(STORAGE_KEY, _scriptUrl); } catch(_) {}
   }
@@ -63,7 +70,7 @@
   // ── Config state ──────────────────────────────────────────────────────
   var _superadminEmail = '';
   var _platformName    = 'Edurena';
-  var _version         = '5.2.1';
+  var _version         = '5.4';
   var _examPageUrl     = '';
   var _kahootPageUrl   = '';
   var _racePageUrl     = '';
@@ -153,7 +160,7 @@
       'display:flex', 'align-items:center', 'gap:12px', 'flex-wrap:wrap'
     ].join(';');
     bar.innerHTML = '⚠️ Server not connected — this page needs <code style="background:rgba(0,0,0,0.15);padding:2px 6px;border-radius:4px">?script=YOUR_GAS_URL</code> in the URL. '
-      + '<button onclick="(function(){var v=prompt(\'Paste your GAS deployment URL:\');if(v&&v.includes(\'script.google\')){localStorage.setItem(\'edurena_script_url\',v.trim());location.reload();}})()" '
+      + '<button onclick="(function(){var v=prompt(\'Paste your GAS deployment URL:\');if(v&&v.includes(\'script.google\')){var sep=location.href.indexOf(\'?\')>=0?\'&\':\'?\';location.href=location.href.split(\'?\')[0]+\'?script=\'+encodeURIComponent(v.trim());}})()" '
       + 'style="padding:4px 12px;background:#03060f;color:#f5a623;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px;">Connect Now</button>';
     if (document.body) document.body.prepend(bar);
     else document.addEventListener('DOMContentLoaded', function(){ document.body.prepend(bar); });
