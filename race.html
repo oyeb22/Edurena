@@ -128,40 +128,34 @@
     }
     .grid-card.in{transform:scale(1) translateY(0);opacity:1}
 
-    /* ── BOTTOM PANEL (question area) — mobile-hardened v2 ── */
+    /* ── BOTTOM PANEL (question area) — slimmed down v3 ── */
     .bottom-panel{
       position:fixed;bottom:0;left:0;right:0;
-      /* v5.4: panel ABOVE countdown (40) and HUD (10) so it's always visible,
-         even during countdown end. Only screen-flash (9999) and grid cards (10000)
-         can overlay it. */
       z-index:50;
       background:linear-gradient(to top,rgba(5,8,16,.97),rgba(5,8,16,.85));
       border-top:2px solid var(--acc);
-      padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));
+      padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
       pointer-events:auto;backdrop-filter:blur(10px);
-      /* Reserve space on mobile so address-bar slide doesn't make panel
-         disappear. min-height ensures the panel is always tall enough to
-         be visible above any mobile chrome shifts. */
-      min-height:180px;
-      max-height:55vh;overflow-y:auto;
+      /* v5.4: smaller min-height + max-height — give the 3D scene more room.
+         Was min:180 max:55vh; now min:130 max:40vh. */
+      min-height:130px;
+      max-height:40vh;overflow-y:auto;
       -webkit-overflow-scrolling:touch;
-      box-shadow:0 -8px 28px rgba(0,0,0,0.55);
+      box-shadow:0 -6px 20px rgba(0,0,0,0.45);
     }
-    /* v5.4 mobile fix: use display:none for hidden state. transform:translateY(100%)
-       was causing intermittent flicker on some Android Chrome viewport recalc events.
-       display:none is bulletproof — panel either exists or it doesn't. */
     .bottom-panel.hidden{display:none}
-    .timing-strip{display:flex;gap:5px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none;flex-shrink:0;margin-bottom:8px}
+    .timing-strip{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;flex-shrink:0;margin-bottom:6px}
     .timing-strip::-webkit-scrollbar{display:none}
-    .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 10px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:8px;min-width:70px;transition:all .2s}
-    .ts-item.me{border-color:rgba(0,212,255,.5);background:rgba(0,212,255,.08);box-shadow:0 0 10px rgba(0,212,255,0.15)}
-    .ts-item.leader{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.08);box-shadow:0 0 10px rgba(255,204,0,0.15)}
-    .ts-pos{font-family:var(--display);font-size:10px;font-weight:700;color:var(--muted)}
-    .ts-pos.p1{color:var(--yel);text-shadow:0 0 8px rgba(255,204,0,0.5)}
-    .ts-name{font-size:10px;font-weight:600;white-space:nowrap;max-width:60px;overflow:hidden;text-overflow:ellipsis}
-    .ts-pct{font-family:var(--display);font-size:9px;color:var(--muted)}
-    .q-card{background:var(--panel);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px}
-    .q-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    /* v5.4: smaller timing cards. min-width 50 (was 70), tighter padding */
+    .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 7px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:6px;min-width:50px;transition:all .2s}
+    .ts-item.me{border-color:rgba(0,212,255,.5);background:rgba(0,212,255,.08);box-shadow:0 0 8px rgba(0,212,255,0.12)}
+    .ts-item.leader{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.08);box-shadow:0 0 8px rgba(255,204,0,0.12)}
+    .ts-pos{font-family:var(--display);font-size:9px;font-weight:700;color:var(--muted)}
+    .ts-pos.p1{color:var(--yel);text-shadow:0 0 6px rgba(255,204,0,0.5)}
+    .ts-name{font-size:9px;font-weight:600;white-space:nowrap;max-width:55px;overflow:hidden;text-overflow:ellipsis}
+    .ts-pct{font-family:var(--display);font-size:8px;color:var(--muted)}
+    .q-card{background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:10px 14px}
+    .q-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
     .q-num{font-family:var(--display);font-size:11px;color:var(--muted);letter-spacing:1px}
     .streak-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);border-radius:20px;padding:3px 10px;font-family:var(--display);font-size:10px;font-weight:700;color:var(--yel);box-shadow:0 0 8px rgba(255,204,0,0.1)}
     .streak-badge.nitro{background:rgba(255,100,0,.2);border-color:rgba(255,100,0,.5);color:#ff6400;box-shadow:0 0 12px rgba(255,100,0,0.3);animation:nitroPulse .8s ease-in-out infinite}
@@ -761,14 +755,16 @@ function createCar(colorInt, colorHex, name, isPlayer) {
   var tl2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.08), tlMat);
   tl2.position.set( 0.55, 0.65, 2.0); group.add(tl2);
 
-  // Nameplate floating above
-  if (name) {
+  // Nameplate floating above — but NOT for the player's own car
+  // (you don't need to see your own name; it would just block the rear view).
+  // Other players still get nameplates so you can identify them.
+  if (name && !isPlayer) {
     var canv = document.createElement('canvas');
     canv.width = 256; canv.height = 64;
     var ctx = canv.getContext('2d');
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
     roundRect(ctx, 0, 0, 256, 64, 14); ctx.fill();
-    ctx.font = 'bold 24px Orbitron,monospace';
+    ctx.font = 'bold 22px Orbitron,monospace';
     ctx.textAlign = 'center';
     ctx.fillStyle = colorHex;
     ctx.shadowColor = colorHex; ctx.shadowBlur = 10;
@@ -777,8 +773,9 @@ function createCar(colorInt, colorHex, name, isPlayer) {
     var nMat = new THREE.MeshBasicMaterial({
       map: nTex, transparent: true, side: THREE.DoubleSide, depthWrite: false
     });
-    var lbl = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.6), nMat);
-    lbl.position.set(0, 2.0, 0);
+    // Smaller plane (1.6 × 0.4 vs 2.5 × 0.6) + higher position (2.4 vs 2.0)
+    var lbl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), nMat);
+    lbl.position.set(0, 2.4, 0);
     group.add(lbl);
     group.userData.nameLabel = lbl;
   }
@@ -1090,11 +1087,10 @@ function updateCamera(dt, speedKmh) {
     .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))
     .add(new THREE.Vector3(sx, sy, sz));
 
-  // v5.4 DIAGNOSTIC: snap camera (no lerp) to test whether the apparent
-  // "car tilting on curves" is real or just lerp-lag perspective. If
-  // car looks flat with this snap, the bug is camera lag. If car still
-  // looks tilted, something is rolling the car geometry.
-  camera.position.copy(camTargetPos);
+  // v5.4: restore smooth lerp now that we've confirmed the tilt was
+  // perspective lag, not a rotation bug. Tighter lerp (dt*10) keeps
+  // the car looking flat through curves while still feeling smooth.
+  camera.position.lerp(camTargetPos, Math.min(dt * 10, 1));
 
   // Look at a point ahead of the car
   var LOOK_AHEAD   = 9;
@@ -1639,7 +1635,9 @@ function submitAns(answer, btnEl) {
       console.warn('[race] validateRaceAnswer failed:', err || (res && res.message));
     }
 
-    setTimeout(function() {
+    // v5.4: feedback shown IMMEDIATELY after server responds — no artificial
+    // 400ms delay. Kahoot-snappy response.
+    (function() {
       if (correct) {
         streak++;
         if (btnEl) { btnEl.classList.add('correct'); }
@@ -1647,8 +1645,6 @@ function submitAns(answer, btnEl) {
         if (streak>=3) {
           nitroUntil=Date.now()+3000;
           showBanner('nitro'); playNitro(); playStreakMilestone(streak);
-          // v5.4: removed setCameraMode + cameraShake — banner + sound + speed boost
-          // signal the nitro without disorienting the player's view.
         } else {
           boostUntil=Date.now()+1500;
         }
@@ -1657,7 +1653,6 @@ function submitAns(answer, btnEl) {
       } else {
         streak = 0;
         if (btnEl) { btnEl.classList.add('wrong'); }
-        // Highlight correct answer if server told us what it was
         if (correctText) {
           el('q-area').querySelectorAll('.opt-btn').forEach(function(b) {
             if (b.innerHTML.indexOf(correctText)>=0) b.classList.add('correct');
@@ -1665,11 +1660,13 @@ function submitAns(answer, btnEl) {
         }
         flashScreen('wrong'); playWrong();
         wrongUntil=Date.now()+2000;
-        showBanner('wrong'); // v5.4: removed setCameraMode('cinematic') — chase view stays
+        showBanner('wrong');
         db.ref('race/'+raceId+'/players/'+playerId).update({ streak:0 });
       }
-      setTimeout(function(){ currentQ++; loadQ(); }, 1500);
-    }, 400);
+      // v5.4: shorter inter-question wait — 800ms vs 1500ms.
+      // Just long enough for player to register feedback, not so long it drags.
+      setTimeout(function(){ currentQ++; loadQ(); }, 800);
+    })();
   });
 }
 
