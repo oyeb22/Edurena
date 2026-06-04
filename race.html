@@ -128,21 +128,29 @@
     }
     .grid-card.in{transform:scale(1) translateY(0);opacity:1}
 
-    /* ── BOTTOM PANEL (question area) — mobile-hardened ── */
+    /* ── BOTTOM PANEL (question area) — mobile-hardened v2 ── */
     .bottom-panel{
-      position:fixed;bottom:0;left:0;right:0;z-index:20;
-      background:linear-gradient(to top,rgba(5,8,16,.95),rgba(5,8,16,.7));
-      border-top:1px solid var(--bdr);
+      position:fixed;bottom:0;left:0;right:0;
+      /* v5.4: panel ABOVE countdown (40) and HUD (10) so it's always visible,
+         even during countdown end. Only screen-flash (9999) and grid cards (10000)
+         can overlay it. */
+      z-index:50;
+      background:linear-gradient(to top,rgba(5,8,16,.97),rgba(5,8,16,.85));
+      border-top:2px solid var(--acc);
       padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));
       pointer-events:auto;backdrop-filter:blur(10px);
-      transform:translateY(0);transition:transform .3s;
-      /* Mobile: cap height so it never overflows viewport on small screens.
-         Question area scrolls within if many options. */
-      max-height:50vh;overflow-y:auto;
-      /* Prevent iOS rubber-band scroll bouncing the whole page */
+      /* Reserve space on mobile so address-bar slide doesn't make panel
+         disappear. min-height ensures the panel is always tall enough to
+         be visible above any mobile chrome shifts. */
+      min-height:180px;
+      max-height:55vh;overflow-y:auto;
       -webkit-overflow-scrolling:touch;
+      box-shadow:0 -8px 28px rgba(0,0,0,0.55);
     }
-    .bottom-panel.hidden{transform:translateY(100%)}
+    /* v5.4 mobile fix: use display:none for hidden state. transform:translateY(100%)
+       was causing intermittent flicker on some Android Chrome viewport recalc events.
+       display:none is bulletproof — panel either exists or it doesn't. */
+    .bottom-panel.hidden{display:none}
     .timing-strip{display:flex;gap:5px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none;flex-shrink:0;margin-bottom:8px}
     .timing-strip::-webkit-scrollbar{display:none}
     .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 10px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:8px;min-width:70px;transition:all .2s}
@@ -1411,6 +1419,28 @@ function startRaceGameplay() {
   gameRunning = true;
   el('game-hud').classList.add('on');
   el('bottom-panel').classList.remove('hidden');
+
+  // v5.4 mobile diagnostic: log panel state every 2 sec for 30 sec so we
+  // can see if anything is hiding the panel intermittently. Remove this
+  // logger after we confirm mobile UI is stable.
+  (function diagPanel(){
+    var iters = 0;
+    var diagTimer = setInterval(function(){
+      iters++;
+      var p = document.getElementById('bottom-panel');
+      if (!p) { console.warn('[race-mobile-diag] panel element missing!'); return; }
+      var rect = p.getBoundingClientRect();
+      var cs = window.getComputedStyle(p);
+      console.log('[race-mobile-diag] t=' + iters*2 + 's',
+        'hidden=' + p.classList.contains('hidden'),
+        'display=' + cs.display,
+        'visible-h=' + Math.round(rect.height),
+        'top=' + Math.round(rect.top),
+        'bot=' + Math.round(rect.bottom),
+        'inner-q=' + (el('q-txt') ? el('q-txt').textContent.slice(0,30) : 'n/a'));
+      if (iters >= 15) clearInterval(diagTimer);
+    }, 2000);
+  })();
 
   // Watch all players
   gameRef = db.ref('race/' + raceId + '/players');
