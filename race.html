@@ -732,7 +732,7 @@ function createCar(colorInt, colorHex, name, isPlayer) {
 
   // Headlight spot beams — front of car
   var hlG = new THREE.BoxGeometry(0.35,0.15,0.1);
-  var hlM = new THREE.MeshStandardMaterial({ color:0xffffcc, emissive:0xffffaa, emissiveIntensity:2 });
+  var hlM = new THREE.MeshStandardMaterial({ color:0xffffcc, emissive:0xffffaa, emissiveIntensity:1.2 });
   var hl1=new THREE.Mesh(hlG,hlM); hl1.position.set(-0.5,0.55,-2.1);
   var hl2=new THREE.Mesh(hlG,hlM); hl2.position.set(0.5,0.55,-2.1);
   group.add(hl1); group.add(hl2);
@@ -763,9 +763,9 @@ function createCar(colorInt, colorHex, name, isPlayer) {
     group.userData.underglow = ug;
   }
 
-  // Neon side strips
+  // Neon side strips — dimmer for sunset scene
   var neonG=new THREE.BoxGeometry(0.05,0.05,3.8);
-  var neonM=new THREE.MeshStandardMaterial({ color:colorInt, emissive:colorInt, emissiveIntensity:4 });
+  var neonM=new THREE.MeshStandardMaterial({ color:colorInt, emissive:colorInt, emissiveIntensity:1.8 });
   var nL=new THREE.Mesh(neonG,neonM); nL.position.set(-0.92,0.3,0);
   var nR=new THREE.Mesh(neonG,neonM); nR.position.set(0.92,0.3,0);
   group.add(nL); group.add(nR);
@@ -822,10 +822,48 @@ function generateTrack() {
   roadShape.lineTo(TRACK_WIDTH/2,0);
   roadShape.lineTo(-TRACK_WIDTH/2,0);
   var extSettings = { steps:400, extrudePath:trackCurve, bevelEnabled:false };
+  // ── 3a. Asphalt road texture (procedural, no asset download) ──
+  // Generates a dark grey asphalt-look canvas with subtle noise grain.
+  // Lane stripes are drawn separately as Lines below so they follow the curve.
+  var asphCanvas = document.createElement('canvas');
+  asphCanvas.width = 512; asphCanvas.height = 512;
+  var aCtx = asphCanvas.getContext('2d');
+  // Base asphalt grey
+  aCtx.fillStyle = '#2a2a30';
+  aCtx.fillRect(0, 0, 512, 512);
+  // Subtle noise: many tiny dark/light specks for grain feel
+  for (var n = 0; n < 4000; n++) {
+    var ax = Math.random() * 512;
+    var ay = Math.random() * 512;
+    var brightness = Math.random();
+    if (brightness < 0.5) {
+      aCtx.fillStyle = 'rgba(0,0,0,' + (brightness * 0.5) + ')';
+    } else {
+      aCtx.fillStyle = 'rgba(255,255,255,' + ((brightness - 0.5) * 0.18) + ')';
+    }
+    aCtx.fillRect(ax, ay, 1.5, 1.5);
+  }
+  // A few larger lighter specks — tar patches
+  for (var n = 0; n < 30; n++) {
+    aCtx.fillStyle = 'rgba(70,65,75,0.6)';
+    var px = Math.random() * 512, py = Math.random() * 512;
+    var pr = 4 + Math.random() * 12;
+    aCtx.beginPath(); aCtx.arc(px, py, pr, 0, Math.PI * 2); aCtx.fill();
+  }
+  var asphaltTex = new THREE.CanvasTexture(asphCanvas);
+  asphaltTex.wrapS = asphaltTex.wrapT = THREE.RepeatWrapping;
+  // Repeat along the long extrusion direction (track length)
+  asphaltTex.repeat.set(40, 2);
+
   var trkGeo = new THREE.ExtrudeGeometry(roadShape, extSettings);
-  var trkMat = new THREE.MeshStandardMaterial({ color:0x1a1a2e, metalness:0.6, roughness:0.4 });
+  var trkMat = new THREE.MeshStandardMaterial({
+    map: asphaltTex,
+    color: 0xffffff,        // multiply by white so texture shows true
+    metalness: 0.05,        // asphalt is matte, not metallic
+    roughness: 0.85         // asphalt scatters light, doesn't reflect
+  });
   var trkMesh = new THREE.Mesh(trkGeo, trkMat);
-  trkMesh.receiveShadow = true;
+  if (!IS_MOBILE) trkMesh.receiveShadow = true;
   scene.add(trkMesh);
 
   // Center line
@@ -834,7 +872,7 @@ function generateTrack() {
   var cl=new THREE.Line(clGeo,new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.5 }));
   cl.position.y=0.25; scene.add(cl);
 
-  // Lane dividers
+  // Lane dividers — white dashed (real road style), more visible than before
   for(var lane=0;lane<3;lane++){
     var off=(lane-1)*(TRACK_WIDTH/3);
     var lpts=[];
@@ -846,8 +884,14 @@ function generateTrack() {
       lpts.push(p2);
     }
     var lGeo=new THREE.BufferGeometry().setFromPoints(lpts);
-    var lLine=new THREE.Line(lGeo,new THREE.LineDashedMaterial({ color:0x444466, dashSize:3, gapSize:3, transparent:true, opacity:0.35 }));
-    lLine.position.y=0.22; lLine.computeLineDistances(); scene.add(lLine);
+    // Center lane (lane===1) = solid yellow center line; sides = dashed white
+    var isCenter = (lane === 1);
+    var lLine=new THREE.Line(lGeo, isCenter
+      ? new THREE.LineBasicMaterial({ color:0xffe060, transparent:true, opacity:0.85 })
+      : new THREE.LineDashedMaterial({ color:0xffffff, dashSize:2.2, gapSize:1.8, transparent:true, opacity:0.7 }));
+    lLine.position.y=0.22;
+    if (!isCenter) lLine.computeLineDistances();
+    scene.add(lLine);
   }
 
   // Start/finish checker
@@ -879,13 +923,11 @@ function generateTrack() {
     poleMesh.position.y=3; scene.add(poleMesh);
     var fixPos=poleMesh.position.clone(); fixPos.y=6;
     var fix=new THREE.Mesh(new THREE.SphereGeometry(0.3),
-      new THREE.MeshStandardMaterial({ color:0x00d4ff, emissive:0x00d4ff, emissiveIntensity:3 }));
+      new THREE.MeshStandardMaterial({ color:0xffcc66, emissive:0xffaa44, emissiveIntensity:1.8 }));
     fix.position.copy(fixPos); scene.add(fix);
-    // v5.4 mobile: skip PointLight per pole. 40 streetlights × 1 light each
-    // = 40 dynamic lights, which destroys mid-range Android GPU performance.
-    // The emissive sphere above still glows visually.
+    // v5.4 mobile: skip PointLight per pole on phones. Emissive sphere still glows visually.
     if (!IS_MOBILE) {
-      var pl=new THREE.PointLight(0x00d4ff,1,25);
+      var pl=new THREE.PointLight(0xffaa55, 0.6, 18);
       pl.position.copy(fixPos); scene.add(pl);
     }
   }
@@ -948,7 +990,7 @@ function generateTrack() {
 function init3D() {
   var canvas = el('game-canvas');
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x050810, 0.008);
+  scene.fog = new THREE.FogExp2(0x4a2840, 0.006);  // warm dusk haze, lighter density
 
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 500);
 
@@ -969,16 +1011,37 @@ function init3D() {
   renderer.toneMappingExposure = 1.2;
   renderer.outputEncoding = THREE.sRGBEncoding;
 
-  // Sky box (procedural, simple)
-  var skyG=new THREE.BoxGeometry(300,300,300);
-  var skyM=new THREE.MeshBasicMaterial({ color:0x050810, side:THREE.BackSide });
-  scene.add(new THREE.Mesh(skyG,skyM));
+  // ── 3b. Sunset gradient skybox (procedural) ──
+  // Vertical gradient via CanvasTexture: deep blue at top → purple → pink → warm orange at horizon.
+  // No HDR file required; works with our existing renderer config.
+  var skyCanvas = document.createElement('canvas');
+  skyCanvas.width = 16; skyCanvas.height = 512;
+  var sCtx = skyCanvas.getContext('2d');
+  var skyGrad = sCtx.createLinearGradient(0, 0, 0, 512);
+  skyGrad.addColorStop(0.00, '#0d1428');   // top — deep night blue
+  skyGrad.addColorStop(0.35, '#2b1f4a');   // upper — deep violet
+  skyGrad.addColorStop(0.55, '#5a2960');   // mid — magenta dusk
+  skyGrad.addColorStop(0.72, '#a83a55');   // lower — sunset pink
+  skyGrad.addColorStop(0.88, '#dd6a3a');   // near horizon — warm orange
+  skyGrad.addColorStop(1.00, '#f0a065');   // horizon glow
+  sCtx.fillStyle = skyGrad;
+  sCtx.fillRect(0, 0, 16, 512);
+  var skyTex = new THREE.CanvasTexture(skyCanvas);
+  skyTex.wrapS = skyTex.wrapT = THREE.ClampToEdgeWrapping;
 
-  // Lighting — mobile uses simpler setup
-  // Boost ambient on mobile to compensate for no shadows / fewer lights
-  scene.add(new THREE.AmbientLight(0x2a2a4a, IS_MOBILE ? 0.9 : 0.5));
-  var moon=new THREE.DirectionalLight(0x6688cc, IS_MOBILE ? 1.0 : 0.8);
-  moon.position.set(50,100,50);
+  // Apply as inside-facing dome. SphereGeometry gives smooth wrap (no cube seams).
+  var skyGeo = new THREE.SphereGeometry(280, 32, 16);
+  var skyMat = new THREE.MeshBasicMaterial({
+    map: skyTex,
+    side: THREE.BackSide,
+    depthWrite: false
+  });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  // Lighting tuned for sunset — warm directional sun, soft warm ambient
+  scene.add(new THREE.AmbientLight(0x553344, IS_MOBILE ? 0.9 : 0.55));
+  var moon=new THREE.DirectionalLight(0xffaa66, IS_MOBILE ? 1.1 : 0.9);  // warm setting sun
+  moon.position.set(40,40,80);  // lower in sky for dusk angle
   if (!IS_MOBILE) {
     moon.castShadow = true;
     moon.shadow.mapSize.width=2048; moon.shadow.mapSize.height=2048;
@@ -987,10 +1050,10 @@ function init3D() {
     moon.shadow.camera.top=100; moon.shadow.camera.bottom=-100;
   }
   scene.add(moon);
-  // Track-side neon point lights — desktop only. Mobile GPU can't handle them.
+  // Subtle accent lights — much dimmer than before, warm sunset tones
   if (!IS_MOBILE) {
-    var n1=new THREE.PointLight(0x00d4ff,2,100); n1.position.set(0,20,0); scene.add(n1);
-    var n2=new THREE.PointLight(0xff00aa,1.5,80); n2.position.set(60,15,-40); scene.add(n2);
+    var n1=new THREE.PointLight(0xffb070, 0.6, 80); n1.position.set(0, 25, 0); scene.add(n1);
+    var n2=new THREE.PointLight(0xff8055, 0.4, 60); n2.position.set(60, 18, -40); scene.add(n2);
   }
 
   generateTrack();
@@ -1049,18 +1112,41 @@ function updateCamera(dt, speedKmh) {
     camera.lookAt(carPos.clone().add(new THREE.Vector3(0,1,0)));
   } else if (cameraMode==='hood') {
     var ho = tangent.clone().multiplyScalar(-1.5).add(new THREE.Vector3(0,1.2,0));
-    camera.position.copy(carPos).add(ho).add(new THREE.Vector3(sx*.5,sy*.5,sz*.5));
+    var hoodTarget = carPos.clone().add(ho).add(new THREE.Vector3(sx*.5,sy*.5,sz*.5));
+    // v5.4 3e: lerp instead of hard copy so mode change is smooth
+    camera.position.lerp(hoodTarget, Math.min(dt*4,1));
     camera.lookAt(carPos.clone().add(tangent.clone().multiplyScalar(20)));
   } else if (cameraMode==='cinematic') {
     var ct = gameTime*.5;
-    camera.position.copy(carPos).add(new THREE.Vector3(Math.sin(ct)*8, 4+Math.sin(ct*.7)*2, Math.cos(ct)*8));
+    var cinTarget = carPos.clone().add(new THREE.Vector3(Math.sin(ct)*8, 4+Math.sin(ct*.7)*2, Math.cos(ct)*8));
+    // v5.4 3e: lerp here too — cinematic was lurching
+    camera.position.lerp(cinTarget, Math.min(dt*2,1));
     camera.lookAt(carPos.clone().add(new THREE.Vector3(0,1,0)));
   }
 }
 
+// v5.4 3e: Camera mode cooldown. The setCameraMode function was being
+// called repeatedly by checkOvertakes() whenever player ranks shifted —
+// every Firebase tick (~every 200ms-1s for active races). Result: camera
+// flipped to "hood" / "cinematic" multiple times per second, looking glitchy.
+// Now: once a mode change fires, ignore further requests for COOLDOWN_MS.
+var cameraModeChangedAt = 0;
+var CAMERA_MODE_COOLDOWN_MS = 4000;
+
 function setCameraMode(mode, ms) {
+  var now = Date.now();
+  // If a non-default mode is already active and within cooldown, ignore new requests.
+  // Exception: explicit 'chase' (default) calls always go through, so internal
+  // timeouts can reset cleanly.
+  if (mode !== 'chase' && cameraMode !== 'chase' && (now - cameraModeChangedAt) < CAMERA_MODE_COOLDOWN_MS) {
+    return; // honor cooldown — silently drop the duplicate request
+  }
   cameraMode = mode;
-  if (ms) setTimeout(function(){ cameraMode='chase'; }, ms);
+  cameraModeChangedAt = now;
+  if (ms) setTimeout(function(){
+    cameraMode = 'chase';
+    cameraModeChangedAt = Date.now();
+  }, ms);
 }
 
 /* ============ PARTICLES ============ */
@@ -1170,26 +1256,33 @@ function stopCinematicLoop() {
 }
 
 /* ============ PRE-RACE CINEMATIC SEQUENCE ============ */
-function runPreRaceCinematic() {
+// v5.4 SYNC: total fixed intro duration (cinematic + countdown).
+// All players target gameplay-start at startedAt + RACE_INTRO_MS.
+// Cinematic phase = (RACE_INTRO_MS - RACE_COUNTDOWN_MS), countdown is locked.
+var RACE_INTRO_MS = 9000;         // ~5.5s cinematic + 3.45s countdown
+var RACE_COUNTDOWN_MS = 3450;     // 3 ticks × 900ms + 750ms final "GO!"
+
+function runPreRaceCinematic(serverStartedAt) {
   // 1) Show canvas + cinematic overlay
   el('game-canvas').style.display = 'block';
   el('cinematic-overlay').classList.add('on');
 
   // v5.4 mobile fix: un-hide bottom-panel immediately with a placeholder
-  // so mobile users see the question area exists during the intro. Without
-  // this, the panel stays off-screen for ~7 seconds and users think the
-  // game is broken (no visible UI).
+  // so mobile users see the question area exists during the intro.
   el('bottom-panel').classList.remove('hidden');
   el('q-num').textContent = 'GET READY';
   el('q-txt').textContent = 'Race starting…';
   el('q-area').innerHTML = '';
 
-  // 2) Create ALL player cars and place them on the starting grid
+  // 2) Create ALL player cars. v5.4 3d: cars now ROLL into grid from behind
+  // the start line over the first ~1.2 sec of cinematic, instead of appearing
+  // already-parked. Stored target positions are read during cinematicFrame.
   var playerList = Object.values(allPlayers);
+  var rollInStart = performance.now();
+  var ROLL_IN_DURATION_MS = 1200;
 
   playerList.forEach(function(p, i) {
     var cIdx = Math.floor(Math.random() * NEON_COLORS.length);
-    // Use stored color if available
     if (p.color) {
       var hi = NEON_HEX.indexOf(p.color);
       if (hi >= 0) cIdx = hi;
@@ -1201,31 +1294,68 @@ function runPreRaceCinematic() {
     if (isMe) { cInt = playerColorInt; cHex = playerColorHex; }
 
     var car = createCar(cInt, cHex, p.name || '?', isMe);
-
-    // Place at starting grid — staggered spacing so cars don't overlap
-    var gridT = 0.98 - (i * 0.003); // slightly behind start line
+    var gridT = 0.98 - (i * 0.003);
     var laneOff = laneOffsets[i % laneOffsets.length];
-    placeCarOnTrack(car, gridT, laneOff, 0);
 
+    // v5.4 3d: store target grid pos and current animated pos
+    // Initial position: ~12-15 units of track length BEHIND the grid spot.
+    // Animation lerps t from startT to gridT.
+    var startT = ((gridT - 0.03) % 1 + 1) % 1;  // 0.03 = ~12 units back along track
+    car.userData.gridT = gridT;
+    car.userData.gridLaneOff = laneOff;
+    car.userData.rollInStart = rollInStart + (i * 80);  // tiny stagger per car
+    car.userData.rollInFromT = startT;
+    placeCarOnTrack(car, startT, laneOff, 0);
     scene.add(car);
-
-    if (isMe) {
-      playerCar = car;
-    } else {
-      otherCars[p.pid] = car;
-    }
-
-    // Store lane on player data for the game
+    if (isMe) { playerCar = car; } else { otherCars[p.pid] = car; }
     allPlayers[p.pid].laneX = laneOff;
   });
+
+  // v5.4 3d: roll-in animation. Runs as its own RAF loop until all cars are
+  // at their grid positions. Easing: cubic ease-out (fast start, soft landing).
+  var rollInActive = true;
+  function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+  function rollInFrame(now) {
+    if (!rollInActive) return;
+    var anyMoving = false;
+    var allCars = [playerCar].concat(Object.values(otherCars));
+    allCars.forEach(function(car) {
+      if (!car || !car.userData.rollInStart) return;
+      var elapsed = now - car.userData.rollInStart;
+      if (elapsed < 0) { anyMoving = true; return; }  // not started yet
+      if (elapsed >= ROLL_IN_DURATION_MS) {
+        // Snap to final grid position, clear state
+        placeCarOnTrack(car, car.userData.gridT, car.userData.gridLaneOff, 0);
+        car.userData.rollInStart = null;
+        return;
+      }
+      var raw = elapsed / ROLL_IN_DURATION_MS;
+      var eased = easeOutCubic(raw);
+      // Lerp track position from startT to gridT
+      var fromT = car.userData.rollInFromT;
+      var toT = car.userData.gridT;
+      // Handle wraparound (e.g. fromT=0.95, toT=0.98 — normal; but 0.97 → 0.00 across the loop)
+      var deltaT = toT - fromT;
+      if (deltaT < -0.5) deltaT += 1; else if (deltaT > 0.5) deltaT -= 1;
+      var currentT = ((fromT + deltaT * eased) % 1 + 1) % 1;
+      placeCarOnTrack(car, currentT, car.userData.gridLaneOff, 0);
+      anyMoving = true;
+    });
+    if (anyMoving) {
+      requestAnimationFrame(rollInFrame);
+    } else {
+      rollInActive = false;
+    }
+  }
+  requestAnimationFrame(rollInFrame);
 
   // 3) Start the sweeping cinematic camera
   startCinematicLoop();
 
-  // 4) Show "DRIVERS APPROACHING GRID" text
+  // 4) Show cinematic text immediately
   showCinematicText('DRIVERS ON THE STARTING GRID', 'ALL SYSTEMS GO — PREPARE FOR LAUNCH');
 
-  // 5) After 1s show player name cards one by one
+  // 5) Show player name cards (no setTimeout staggering — fire immediately)
   var cardContainer = el('grid-cards');
   cardContainer.innerHTML = '';
   playerList.forEach(function(p, i) {
@@ -1237,15 +1367,39 @@ function runPreRaceCinematic() {
     card.style.boxShadow = '0 0 12px ' + cHex + '55';
     card.textContent = (p.pid === playerId ? '▶ ' : '') + (p.name || '?').toUpperCase();
     cardContainer.appendChild(card);
-    // Stagger card pop-in
+    // Stagger card pop-in only up to first 2 sec
+    var cardDelay = Math.min(400 + i * 150, 1800);
     setTimeout(function() {
       card.classList.add('in');
       playRevEngine();
-    }, 800 + i * 300);
+    }, cardDelay);
   });
 
-  // 6) After 2s + stagger, begin countdown
-  var totalDelay = 1400 + playerList.length * 300 + 800;
+  // 6) ── SYNCHRONIZED COUNTDOWN ──
+  // Compute "time until gameplay" based on the server anchor.
+  // Every player works backward from the same target moment, so countdown
+  // and gameplay begin in perfect lockstep.
+  var now = Date.now();
+  var elapsedSinceStart = now - serverStartedAt;
+  var msUntilGameplay = Math.max(0, RACE_INTRO_MS - elapsedSinceStart);
+  var msUntilCountdown = Math.max(0, msUntilGameplay - RACE_COUNTDOWN_MS);
+
+  console.log('[race-sync] startedAt=' + serverStartedAt + ' now=' + now +
+              ' elapsed=' + elapsedSinceStart + 'ms' +
+              ' countdown_in=' + msUntilCountdown + 'ms' +
+              ' gameplay_in=' + msUntilGameplay + 'ms');
+
+  // If player is so late they've missed everything, skip straight to gameplay
+  if (msUntilGameplay <= 100) {
+    console.warn('[race-sync] player joined late, skipping intro');
+    hideCinematicText();
+    el('cinematic-overlay').classList.remove('on');
+    stopCinematicLoop();
+    startRaceGameplay();
+    return;
+  }
+
+  // Schedule countdown to start at the exact synchronized moment
   setTimeout(function() {
     hideCinematicText();
     showCinematicText('RACE STARTING IN…', '');
@@ -1253,8 +1407,8 @@ function runPreRaceCinematic() {
       el('cinematic-overlay').classList.remove('on');
       stopCinematicLoop();
       runCountdown();
-    }, 1000);
-  }, totalDelay);
+    }, 200); // tiny visual breath between text-swap and countdown
+  }, Math.max(0, msUntilCountdown - 200));
 }
 
 function showCinematicText(main, sub) {
@@ -1762,20 +1916,23 @@ function watchLobby() {
     });
   });
 
-  phaseRef = db.ref('race/'+raceId+'/state/phase');
+  phaseRef = db.ref('race/'+raceId+'/state');
   phaseRef.on('value', function(snap) {
     if (!snap||!snap.val()) return;
-    var phase = snap.val();
+    var state = snap.val();
+    var phase = state.phase;
     if (phase==='started') {
       // Detach lobby listeners
       detachLobby();
       // Hide all screens
       document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
-      // Init 3D scene (creates renderer + scene + track)
+      // v5.4 SYNC: use server's startedAt as anchor. All players target the
+      // SAME gameplay-start moment so the race is genuinely synchronous,
+      // regardless of when each device received the phase change.
+      // Falls back to 0 if startedAt missing (shouldn't happen post-v5.4 host).
+      var startedAt = state.startedAt || Date.now();
       init3D();
-      // Run the cinematic pre-race sequence
-      // (this creates all cars, then countdown, then startRaceGameplay)
-      runPreRaceCinematic();
+      runPreRaceCinematic(startedAt);
     } else if (phase==='ended') {
       endRace();
     }
