@@ -374,16 +374,25 @@ function gasPost(body, cb) {
     .catch(function(e){ cb(e,null); });
 }
 
-/* ============ NEON COLORS ============ */
+/* ============ CAR PAINT COLORS (v5.4: realistic palette, not neon) ============ */
 var NEON_COLORS = [
-  0x00d4ff, 0xff3355, 0x00ff88, 0xffcc00,
-  0xbf5fff, 0xff6400, 0x00ffcc, 0xff00aa,
-  0x4dff4d, 0xff9900, 0x0088ff, 0xff4488
+  0xd62828, // Ferrari red
+  0x1a4ea8, // Racing blue
+  0xeeeeee, // White
+  0x111111, // Carbon black
+  0xf6c200, // Bright yellow
+  0xff7a1a, // Orange
+  0x2a8c4a, // Racing green
+  0x7a3a99, // Deep purple
+  0xc0c0c0, // Silver
+  0xff5599, // Magenta-pink
+  0x118ab2, // Teal
+  0x6a4f30  // Bronze
 ];
 var NEON_HEX = [
-  '#00d4ff','#ff3355','#00ff88','#ffcc00',
-  '#bf5fff','#ff6400','#00ffcc','#ff00aa',
-  '#4dff4d','#ff9900','#0088ff','#ff4488'
+  '#d62828','#1a4ea8','#eeeeee','#111111',
+  '#f6c200','#ff7a1a','#2a8c4a','#7a3a99',
+  '#c0c0c0','#ff5599','#118ab2','#6a4f30'
 ];
 
 /* ============ GAME STATE ============ */
@@ -751,24 +760,14 @@ function createCar(colorInt, colorHex, name, isPlayer) {
 
   // Tail lights (emissive mesh, no light cost — keep on mobile)
   var tlG=new THREE.BoxGeometry(0.3,0.12,0.08);
-  var tlM=new THREE.MeshStandardMaterial({ color:0xff0000, emissive:0xff0000, emissiveIntensity:3 });
+  var tlM=new THREE.MeshStandardMaterial({ color:0xff0000, emissive:0xff0000, emissiveIntensity:1.5 });
   var tl1=new THREE.Mesh(tlG,tlM); tl1.position.set(-0.5,0.6,2.1);
   var tl2=new THREE.Mesh(tlG,tlM); tl2.position.set(0.5,0.6,2.1);
   group.add(tl1); group.add(tl2);
 
-  // Under-glow PointLight — desktop only (each is another GPU light)
-  if (!IS_MOBILE) {
-    var ug = new THREE.PointLight(colorInt,2,8);
-    ug.position.set(0,0.1,0); group.add(ug);
-    group.userData.underglow = ug;
-  }
-
-  // Neon side strips — dimmer for sunset scene
-  var neonG=new THREE.BoxGeometry(0.05,0.05,3.8);
-  var neonM=new THREE.MeshStandardMaterial({ color:colorInt, emissive:colorInt, emissiveIntensity:1.8 });
-  var nL=new THREE.Mesh(neonG,neonM); nL.position.set(-0.92,0.3,0);
-  var nR=new THREE.Mesh(neonG,neonM); nR.position.set(0.92,0.3,0);
-  group.add(nL); group.add(nR);
+  // (v5.4: removed per-car underglow PointLight and neon side strips — they
+  // were responsible for the "still looks neon" feel. Cars now have only
+  // emissive headlights + taillights, like a real car.)
 
   // ── Nameplate above car ──
   if (name) {
@@ -800,6 +799,7 @@ function createCar(colorInt, colorHex, name, isPlayer) {
 
 /* ============ TRACK GENERATION ============ */
 function generateTrack() {
+  // ─── TRACK CURVE (kept — same hilly racing line) ───
   var pts = [];
   var numPts = 60;
   var radius = 80;
@@ -814,7 +814,40 @@ function generateTrack() {
   trackCurve = new THREE.CatmullRomCurve3(pts, true);
   trackCurve.tension = 0.5;
 
-  // Road extrusion
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SCENE REBUILD (v5.4 Step 3 — replaced neon-abstract scene with real road)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ─── 1) ASPHALT ROAD SURFACE ───
+  // Wider extrusion (TRACK_WIDTH + shoulders). The middle band is asphalt;
+  // outer bands are dirt shoulders. We extrude both as separate strips so
+  // they have different materials.
+  var SHOULDER_W = 3;   // dirt/gravel shoulder on each side
+  var asphCanvas = document.createElement('canvas');
+  asphCanvas.width = 512; asphCanvas.height = 512;
+  var aCtx = asphCanvas.getContext('2d');
+  aCtx.fillStyle = '#252528';
+  aCtx.fillRect(0, 0, 512, 512);
+  // Grain
+  for (var n = 0; n < 3500; n++) {
+    var ax = Math.random() * 512;
+    var ay = Math.random() * 512;
+    var brightness = Math.random();
+    if (brightness < 0.5) aCtx.fillStyle = 'rgba(0,0,0,' + (brightness * 0.45) + ')';
+    else aCtx.fillStyle = 'rgba(255,255,255,' + ((brightness - 0.5) * 0.15) + ')';
+    aCtx.fillRect(ax, ay, 1.4, 1.4);
+  }
+  // Tar patches
+  for (var n = 0; n < 20; n++) {
+    aCtx.fillStyle = 'rgba(55,52,58,0.55)';
+    var px = Math.random() * 512, py = Math.random() * 512;
+    var pr = 6 + Math.random() * 14;
+    aCtx.beginPath(); aCtx.arc(px, py, pr, 0, Math.PI * 2); aCtx.fill();
+  }
+  var asphaltTex = new THREE.CanvasTexture(asphCanvas);
+  asphaltTex.wrapS = asphaltTex.wrapT = THREE.RepeatWrapping;
+  asphaltTex.repeat.set(40, 2);
+
   var roadShape = new THREE.Shape();
   roadShape.moveTo(-TRACK_WIDTH/2,0);
   roadShape.lineTo(-TRACK_WIDTH/2,0.2);
@@ -822,167 +855,294 @@ function generateTrack() {
   roadShape.lineTo(TRACK_WIDTH/2,0);
   roadShape.lineTo(-TRACK_WIDTH/2,0);
   var extSettings = { steps:400, extrudePath:trackCurve, bevelEnabled:false };
-  // ── 3a. Asphalt road texture (procedural, no asset download) ──
-  // Generates a dark grey asphalt-look canvas with subtle noise grain.
-  // Lane stripes are drawn separately as Lines below so they follow the curve.
-  var asphCanvas = document.createElement('canvas');
-  asphCanvas.width = 512; asphCanvas.height = 512;
-  var aCtx = asphCanvas.getContext('2d');
-  // Base asphalt grey
-  aCtx.fillStyle = '#2a2a30';
-  aCtx.fillRect(0, 0, 512, 512);
-  // Subtle noise: many tiny dark/light specks for grain feel
-  for (var n = 0; n < 4000; n++) {
-    var ax = Math.random() * 512;
-    var ay = Math.random() * 512;
-    var brightness = Math.random();
-    if (brightness < 0.5) {
-      aCtx.fillStyle = 'rgba(0,0,0,' + (brightness * 0.5) + ')';
-    } else {
-      aCtx.fillStyle = 'rgba(255,255,255,' + ((brightness - 0.5) * 0.18) + ')';
-    }
-    aCtx.fillRect(ax, ay, 1.5, 1.5);
-  }
-  // A few larger lighter specks — tar patches
-  for (var n = 0; n < 30; n++) {
-    aCtx.fillStyle = 'rgba(70,65,75,0.6)';
-    var px = Math.random() * 512, py = Math.random() * 512;
-    var pr = 4 + Math.random() * 12;
-    aCtx.beginPath(); aCtx.arc(px, py, pr, 0, Math.PI * 2); aCtx.fill();
-  }
-  var asphaltTex = new THREE.CanvasTexture(asphCanvas);
-  asphaltTex.wrapS = asphaltTex.wrapT = THREE.RepeatWrapping;
-  // Repeat along the long extrusion direction (track length)
-  asphaltTex.repeat.set(40, 2);
-
   var trkGeo = new THREE.ExtrudeGeometry(roadShape, extSettings);
   var trkMat = new THREE.MeshStandardMaterial({
     map: asphaltTex,
-    color: 0xffffff,        // multiply by white so texture shows true
-    metalness: 0.05,        // asphalt is matte, not metallic
-    roughness: 0.85         // asphalt scatters light, doesn't reflect
+    color: 0xffffff,
+    metalness: 0.05,
+    roughness: 0.88
   });
   var trkMesh = new THREE.Mesh(trkGeo, trkMat);
   if (!IS_MOBILE) trkMesh.receiveShadow = true;
   scene.add(trkMesh);
 
-  // Center line
-  var clPts=[]; for(var i=0;i<=800;i++){ clPts.push(trackCurve.getPointAt(i/800)); }
-  var clGeo=new THREE.BufferGeometry().setFromPoints(clPts);
-  var cl=new THREE.Line(clGeo,new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.5 }));
-  cl.position.y=0.25; scene.add(cl);
+  // ─── 2) DIRT SHOULDERS (left + right of asphalt) ───
+  var dirtCanvas = document.createElement('canvas');
+  dirtCanvas.width = 256; dirtCanvas.height = 256;
+  var dCtx = dirtCanvas.getContext('2d');
+  dCtx.fillStyle = '#4a3a2a';
+  dCtx.fillRect(0, 0, 256, 256);
+  for (var n = 0; n < 2000; n++) {
+    var dx = Math.random() * 256, dy = Math.random() * 256;
+    var b = Math.random();
+    dCtx.fillStyle = b < 0.5
+      ? 'rgba(40,30,20,' + (b * 0.5) + ')'
+      : 'rgba(120,95,60,' + ((b - 0.5) * 0.4) + ')';
+    dCtx.fillRect(dx, dy, 1.5, 1.5);
+  }
+  var dirtTex = new THREE.CanvasTexture(dirtCanvas);
+  dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping;
+  dirtTex.repeat.set(30, 1);
 
-  // Lane dividers — white dashed (real road style), more visible than before
-  for(var lane=0;lane<3;lane++){
-    var off=(lane-1)*(TRACK_WIDTH/3);
-    var lpts=[];
-    for(var i=0;i<=400;i++){
-      var t2=i/400; var p2=trackCurve.getPointAt(t2);
-      var tan=trackCurve.getTangentAt(t2);
-      var norm=new THREE.Vector3(-tan.z,0,tan.x).normalize();
+  // Left shoulder
+  var shoulderL = new THREE.Shape();
+  shoulderL.moveTo(-TRACK_WIDTH/2 - SHOULDER_W, -0.05);
+  shoulderL.lineTo(-TRACK_WIDTH/2 - SHOULDER_W, 0.1);
+  shoulderL.lineTo(-TRACK_WIDTH/2, 0.1);
+  shoulderL.lineTo(-TRACK_WIDTH/2, -0.05);
+  shoulderL.lineTo(-TRACK_WIDTH/2 - SHOULDER_W, -0.05);
+  var shoulderLGeo = new THREE.ExtrudeGeometry(shoulderL, extSettings);
+  var shoulderMat = new THREE.MeshStandardMaterial({
+    map: dirtTex, color:0xffffff, metalness:0, roughness:1
+  });
+  scene.add(new THREE.Mesh(shoulderLGeo, shoulderMat));
+  // Right shoulder (mirror)
+  var shoulderR = new THREE.Shape();
+  shoulderR.moveTo(TRACK_WIDTH/2, -0.05);
+  shoulderR.lineTo(TRACK_WIDTH/2, 0.1);
+  shoulderR.lineTo(TRACK_WIDTH/2 + SHOULDER_W, 0.1);
+  shoulderR.lineTo(TRACK_WIDTH/2 + SHOULDER_W, -0.05);
+  shoulderR.lineTo(TRACK_WIDTH/2, -0.05);
+  var shoulderRGeo = new THREE.ExtrudeGeometry(shoulderR, extSettings);
+  scene.add(new THREE.Mesh(shoulderRGeo, shoulderMat));
+
+  // ─── 3) LANE MARKINGS ───
+  // Solid yellow center line (US 2-lane road style — divides direction)
+  var clPts = [];
+  for (var i=0;i<=800;i++) { clPts.push(trackCurve.getPointAt(i/800)); }
+  var clGeo = new THREE.BufferGeometry().setFromPoints(clPts);
+  var cl = new THREE.Line(clGeo, new THREE.LineBasicMaterial({ color:0xf0c040 }));
+  cl.position.y = 0.23;
+  scene.add(cl);
+
+  // Solid white edge lines (at lane boundaries)
+  [-1, 1].forEach(function(side) {
+    var edgePts = [];
+    var off = side * (TRACK_WIDTH/2 - 0.4);
+    for (var i=0;i<=800;i++) {
+      var t2 = i/800;
+      var p2 = trackCurve.getPointAt(t2);
+      var tan = trackCurve.getTangentAt(t2);
+      var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+      p2.add(norm.multiplyScalar(off));
+      edgePts.push(p2);
+    }
+    var eGeo = new THREE.BufferGeometry().setFromPoints(edgePts);
+    var eLine = new THREE.Line(eGeo, new THREE.LineBasicMaterial({ color:0xffffff }));
+    eLine.position.y = 0.23;
+    scene.add(eLine);
+  });
+
+  // Dashed lane dividers between center and edges
+  [-1, 1].forEach(function(side) {
+    var off = side * (TRACK_WIDTH/4);
+    var lpts = [];
+    for (var i=0;i<=400;i++) {
+      var t2 = i/400;
+      var p2 = trackCurve.getPointAt(t2);
+      var tan = trackCurve.getTangentAt(t2);
+      var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
       p2.add(norm.multiplyScalar(off));
       lpts.push(p2);
     }
-    var lGeo=new THREE.BufferGeometry().setFromPoints(lpts);
-    // Center lane (lane===1) = solid yellow center line; sides = dashed white
-    var isCenter = (lane === 1);
-    var lLine=new THREE.Line(lGeo, isCenter
-      ? new THREE.LineBasicMaterial({ color:0xffe060, transparent:true, opacity:0.85 })
-      : new THREE.LineDashedMaterial({ color:0xffffff, dashSize:2.2, gapSize:1.8, transparent:true, opacity:0.7 }));
-    lLine.position.y=0.22;
-    if (!isCenter) lLine.computeLineDistances();
+    var lGeo = new THREE.BufferGeometry().setFromPoints(lpts);
+    var lLine = new THREE.Line(lGeo, new THREE.LineDashedMaterial({
+      color: 0xffffff,
+      dashSize: 2.5,
+      gapSize: 3.0,
+      transparent: true,
+      opacity: 0.85
+    }));
+    lLine.position.y = 0.22;
+    lLine.computeLineDistances();
     scene.add(lLine);
-  }
+  });
 
-  // Start/finish checker
-  var sfPt=trackCurve.getPointAt(0); var sfTan=trackCurve.getTangentAt(0);
-  var cCanvas=document.createElement('canvas'); cCanvas.width=64; cCanvas.height=64;
-  var cCtx=cCanvas.getContext('2d');
-  for(var cy=0;cy<8;cy++) for(var cx=0;cx<8;cx++){
-    cCtx.fillStyle=(cx+cy)%2===0?'#fff':'#000';
-    cCtx.fillRect(cx*8,cy*8,8,8);
+  // ─── 4) START/FINISH CHECKER (kept, useful visual landmark) ───
+  var sfPt = trackCurve.getPointAt(0);
+  var sfTan = trackCurve.getTangentAt(0);
+  var cCanvas = document.createElement('canvas');
+  cCanvas.width = 64; cCanvas.height = 64;
+  var cCtx = cCanvas.getContext('2d');
+  for (var cy=0;cy<8;cy++) for (var cx=0;cx<8;cx++) {
+    cCtx.fillStyle = (cx + cy) % 2 === 0 ? '#fff' : '#000';
+    cCtx.fillRect(cx*8, cy*8, 8, 8);
   }
-  var cTex=new THREE.CanvasTexture(cCanvas);
-  cTex.wrapS=THREE.RepeatWrapping; cTex.wrapT=THREE.RepeatWrapping; cTex.repeat.set(8,1);
-  var sfMesh=new THREE.Mesh(new THREE.PlaneGeometry(TRACK_WIDTH,3),
-    new THREE.MeshStandardMaterial({ map:cTex, emissive:0xffffff, emissiveIntensity:0.5, roughness:0.3 }));
-  sfMesh.position.copy(sfPt); sfMesh.position.y=0.3;
-  sfMesh.lookAt(sfPt.clone().add(sfTan)); sfMesh.rotateX(-Math.PI/2);
+  var cTex = new THREE.CanvasTexture(cCanvas);
+  cTex.wrapS = cTex.wrapT = THREE.RepeatWrapping;
+  cTex.repeat.set(8, 1);
+  var sfMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(TRACK_WIDTH, 2.5),
+    new THREE.MeshStandardMaterial({ map: cTex, roughness: 0.8 })
+  );
+  sfMesh.position.copy(sfPt); sfMesh.position.y = 0.26;
+  sfMesh.lookAt(sfPt.clone().add(sfTan));
+  sfMesh.rotateX(-Math.PI/2);
   scene.add(sfMesh);
 
-  // Road-side neon light poles
-  for(var i=0;i<40;i++){
-    var lt=i/40;
-    var lpt=trackCurve.getPointAt(lt);
-    var ltan=trackCurve.getTangentAt(lt);
-    var lnorm=new THREE.Vector3(-ltan.z,0,ltan.x).normalize();
-    var poleMesh=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,6),
-      new THREE.MeshStandardMaterial({ color:0x333344, metalness:0.8 }));
-    poleMesh.position.copy(lpt);
-    poleMesh.position.add(lnorm.clone().multiplyScalar(TRACK_WIDTH/2+3));
-    poleMesh.position.y=3; scene.add(poleMesh);
-    var fixPos=poleMesh.position.clone(); fixPos.y=6;
-    var fix=new THREE.Mesh(new THREE.SphereGeometry(0.3),
-      new THREE.MeshStandardMaterial({ color:0xffcc66, emissive:0xffaa44, emissiveIntensity:1.8 }));
-    fix.position.copy(fixPos); scene.add(fix);
-    // v5.4 mobile: skip PointLight per pole on phones. Emissive sphere still glows visually.
-    if (!IS_MOBILE) {
-      var pl=new THREE.PointLight(0xffaa55, 0.6, 18);
-      pl.position.copy(fixPos); scene.add(pl);
-    }
+  // ─── 5) GUARDRAILS (concrete barriers along the outside edge) ───
+  // Simple repeated low-poly barriers on both sides of the road.
+  // Skip on mobile to save geometry budget — 200 barriers × 2 sides = 400 meshes.
+  var BARRIER_COUNT = IS_MOBILE ? 80 : 200;
+  var barrierGeo = new THREE.BoxGeometry(0.5, 1.0, 3.5);
+  var barrierMat = new THREE.MeshStandardMaterial({
+    color: 0xa8a8a8,
+    metalness: 0.1,
+    roughness: 0.85
+  });
+  for (var i=0;i<BARRIER_COUNT;i++) {
+    var bt = i / BARRIER_COUNT;
+    var bpt = trackCurve.getPointAt(bt);
+    var btan = trackCurve.getTangentAt(bt);
+    var bnorm = new THREE.Vector3(-btan.z, 0, btan.x).normalize();
+    var barrierOffset = (TRACK_WIDTH/2 + SHOULDER_W + 0.5);
+    [-1, 1].forEach(function(side) {
+      var bMesh = new THREE.Mesh(barrierGeo, barrierMat);
+      bMesh.position.copy(bpt);
+      bMesh.position.add(bnorm.clone().multiplyScalar(barrierOffset * side));
+      bMesh.position.y += 0.5;
+      // Orient barrier along track direction
+      bMesh.lookAt(bMesh.position.clone().add(btan));
+      if (!IS_MOBILE) bMesh.castShadow = true;
+      scene.add(bMesh);
+    });
   }
 
-  // Ground grid
-  var groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(600,600,100,100),
-    new THREE.MeshStandardMaterial({ color:0x0a0a15, metalness:0.3, roughness:0.9 }));
-  groundMesh.rotation.x=-Math.PI/2; groundMesh.position.y=-2;
-  if (!IS_MOBILE) groundMesh.receiveShadow=true; scene.add(groundMesh);
-  var grid=new THREE.GridHelper(600,120,0x1a1a35,0x0f0f20);
-  grid.position.y=-1.9; scene.add(grid);
+  // ─── 6) LAMP POSTS (proper street lights — no glow, just gray geometry) ───
+  // Tall pole, horizontal arm, lampshade head pointing toward road.
+  // NO glowing bulb. NO emissive sphere. Pure structural geometry.
+  var LAMP_COUNT = IS_MOBILE ? 16 : 30;
+  var lampPoleGeo = new THREE.CylinderGeometry(0.08, 0.12, 7, 8);
+  var lampMat = new THREE.MeshStandardMaterial({
+    color: 0x383838,
+    metalness: 0.6,
+    roughness: 0.5
+  });
+  var lampArmGeo = new THREE.BoxGeometry(0.08, 0.08, 2.5);
+  var lampHeadGeo = new THREE.ConeGeometry(0.4, 0.6, 8);
 
-  // City buildings — fewer on mobile (geometry + PBR material cost adds up)
-  var BUILDING_COUNT = IS_MOBILE ? 40 : 80;
-  for(var i=0;i<BUILDING_COUNT;i++){
-    var bt=Math.random();
-    var bpt=trackCurve.getPointAt(bt);
-    var btan=trackCurve.getTangentAt(bt);
-    var bnorm=new THREE.Vector3(-btan.z,0,btan.x).normalize();
-    var bdist=30+Math.random()*80;
-    var bside=Math.random()>.5?1:-1;
-    var bh=15+Math.random()*60, bw=5+Math.random()*15, bd=5+Math.random()*15;
-    var bMesh=new THREE.Mesh(new THREE.BoxGeometry(bw,bh,bd),
-      new THREE.MeshStandardMaterial({ color:new THREE.Color().setHSL(0.6+Math.random()*.15,0.3,0.08+Math.random()*.05), metalness:0.8, roughness:0.2 }));
-    bMesh.position.copy(bpt);
-    bMesh.position.add(bnorm.multiplyScalar(bdist*bside));
-    bMesh.position.y=bh/2-2; if (!IS_MOBILE) bMesh.castShadow=true; scene.add(bMesh);
-    // Window glow plane
-    var wMesh=new THREE.Mesh(new THREE.PlaneGeometry(bw*.8,bh*.6),
-      new THREE.MeshBasicMaterial({ color:new THREE.Color().setHSL(Math.random(),0.8,0.5), transparent:true, opacity:.15+Math.random()*.2 }));
-    wMesh.position.copy(bMesh.position);
-    wMesh.position.y+=2; wMesh.position.z+=bd/2+.1; scene.add(wMesh);
+  for (var i=0;i<LAMP_COUNT;i++) {
+    var lt = (i + 0.5) / LAMP_COUNT;  // offset so lamps don't sit on start line
+    var lpt = trackCurve.getPointAt(lt);
+    var ltan = trackCurve.getTangentAt(lt);
+    var lnorm = new THREE.Vector3(-ltan.z, 0, ltan.x).normalize();
+    var side = i % 2 === 0 ? 1 : -1;  // alternate sides for variety
+    var lampOffset = (TRACK_WIDTH/2 + SHOULDER_W + 2);
+
+    var basePos = lpt.clone().add(lnorm.clone().multiplyScalar(lampOffset * side));
+
+    var pole = new THREE.Mesh(lampPoleGeo, lampMat);
+    pole.position.copy(basePos);
+    pole.position.y += 3.5;
+    scene.add(pole);
+
+    var arm = new THREE.Mesh(lampArmGeo, lampMat);
+    arm.position.copy(basePos);
+    arm.position.y += 6.8;
+    // Move arm toward road
+    arm.position.add(lnorm.clone().multiplyScalar(-1.2 * side));
+    // Orient arm to point along normal
+    arm.lookAt(basePos.x, arm.position.y, basePos.z);
+    scene.add(arm);
+
+    var head = new THREE.Mesh(lampHeadGeo, lampMat);
+    head.position.copy(basePos);
+    head.position.y += 6.6;
+    head.position.add(lnorm.clone().multiplyScalar(-2.0 * side));
+    head.rotation.x = Math.PI;  // point down
+    scene.add(head);
   }
 
-  // Particle pool
-  var pCount=300;
-  var pGeo=new THREE.BufferGeometry();
-  var pPos=new Float32Array(pCount*3);
-  var pCol=new Float32Array(pCount*3);
-  var pSiz=new Float32Array(pCount);
-  for(var i=0;i<pCount;i++){ pPos[i*3]=0; pPos[i*3+1]=-100; pPos[i*3+2]=0; pSiz[i]=0; }
-  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
-  pGeo.setAttribute('color',new THREE.BufferAttribute(pCol,3));
-  pGeo.setAttribute('size',new THREE.BufferAttribute(pSiz,1));
-  particleSystem=new THREE.Points(pGeo,new THREE.PointsMaterial({ size:.5, vertexColors:true, transparent:true, opacity:.8, blending:THREE.AdditiveBlending, depthWrite:false }));
+  // ─── 7) GROUND PLANE (grass/dirt extending to horizon) ───
+  // Replaces the dark blue ground grid. Uses HSL-noise canvas for natural feel.
+  var groundCanvas = document.createElement('canvas');
+  groundCanvas.width = 512; groundCanvas.height = 512;
+  var gCtx = groundCanvas.getContext('2d');
+  gCtx.fillStyle = '#3a4a2e';  // dark grass green
+  gCtx.fillRect(0, 0, 512, 512);
+  for (var n=0;n<6000;n++) {
+    var gx = Math.random() * 512, gy = Math.random() * 512;
+    var b = Math.random();
+    if (b < 0.5) gCtx.fillStyle = 'rgba(20,35,15,' + (b * 0.5) + ')';
+    else gCtx.fillStyle = 'rgba(120,130,80,' + ((b - 0.5) * 0.3) + ')';
+    gCtx.fillRect(gx, gy, 2, 2);
+  }
+  var groundTex = new THREE.CanvasTexture(groundCanvas);
+  groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+  groundTex.repeat.set(50, 50);
+
+  var groundMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(800, 800, 32, 32),
+    new THREE.MeshStandardMaterial({
+      map: groundTex,
+      color: 0xffffff,
+      metalness: 0,
+      roughness: 1
+    })
+  );
+  groundMesh.rotation.x = -Math.PI/2;
+  groundMesh.position.y = -1.0;  // slightly below track surface
+  if (!IS_MOBILE) groundMesh.receiveShadow = true;
+  scene.add(groundMesh);
+
+  // ─── 8) DISTANT MOUNTAINS (silhouette ring for horizon depth) ───
+  // Low-poly cone mountains arranged in a circle around the track.
+  // Dark silhouette against the sunset sky, no detail.
+  var mountainMat = new THREE.MeshStandardMaterial({
+    color: 0x252535,
+    metalness: 0,
+    roughness: 1,
+    flatShading: true
+  });
+  for (var i=0;i<24;i++) {
+    var ang = (i / 24) * Math.PI * 2;
+    var dist = 200 + Math.random() * 80;
+    var mh = 30 + Math.random() * 50;
+    var mr = 30 + Math.random() * 20;
+    var mtn = new THREE.Mesh(
+      new THREE.ConeGeometry(mr, mh, 5),  // pentagonal — looks rough/mountain-like
+      mountainMat
+    );
+    mtn.position.set(
+      Math.cos(ang) * dist,
+      mh/2 - 1,
+      Math.sin(ang) * dist
+    );
+    scene.add(mtn);
+  }
+
+  // ─── 9) PARTICLE POOL (kept — gameplay-essential) ───
+  var pCount = 300;
+  var pGeo = new THREE.BufferGeometry();
+  var pPos = new Float32Array(pCount * 3);
+  var pCol = new Float32Array(pCount * 3);
+  var pSiz = new Float32Array(pCount);
+  for (var i=0;i<pCount;i++) { pPos[i*3]=0; pPos[i*3+1]=-100; pPos[i*3+2]=0; pSiz[i]=0; }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+  pGeo.setAttribute('size', new THREE.BufferAttribute(pSiz, 1));
+  particleSystem = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    size: 0.5,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  }));
   scene.add(particleSystem);
 
-  // Speed lines
-  for(var i=0;i<30;i++){
-    var slGeo=new THREE.BufferGeometry();
-    var slPos=new Float32Array(6);
-    slGeo.setAttribute('position',new THREE.BufferAttribute(slPos,3));
-    var sl=new THREE.Line(slGeo,new THREE.LineBasicMaterial({ color:0xffcc00, transparent:true, opacity:0 }));
+  // ─── 10) SPEED LINES (kept — gameplay-essential) ───
+  for (var i=0;i<30;i++) {
+    var slGeo = new THREE.BufferGeometry();
+    var slPos = new Float32Array(6);
+    slGeo.setAttribute('position', new THREE.BufferAttribute(slPos, 3));
+    var sl = new THREE.Line(slGeo, new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0
+    }));
     scene.add(sl);
-    speedLines.push({ mesh:sl, active:false, speed:0 });
+    speedLines.push({ mesh: sl, active: false, speed: 0 });
   }
 }
 
