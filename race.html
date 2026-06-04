@@ -687,459 +687,285 @@ function roundRect(ctx,x,y,w,h,r){
 }
 
 function createCar(colorInt, colorHex, name, isPlayer) {
+  // Clean rebuild — simple car body, wheels, lights, nameplate.
+  // No neon strips, no underglow PointLight, no per-car SpotLights.
+  // Forward direction = +Z (matches placeCarOnTrack which lookAts t+0.01).
   var group = new THREE.Group();
   group.userData.wheels = [];
 
-  // ── Procedural car (post-rollback: GLB path removed) ──
-    var bodyG = new THREE.BoxGeometry(1.8,0.5,4.2);
-    var bodyM = new THREE.MeshStandardMaterial({ color:colorInt, metalness:0.9, roughness:0.1 });
-    var body = new THREE.Mesh(bodyG, bodyM);
-    body.position.y = 0.5; if (!IS_MOBILE) body.castShadow = true;
-    group.add(body);
+  // Body — main hull
+  var bodyMat = new THREE.MeshStandardMaterial({
+    color: colorInt,
+    metalness: 0.45,
+    roughness: 0.45
+  });
+  var body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.55, 4.0), bodyMat);
+  body.position.y = 0.55;
+  group.add(body);
 
-    var cabinG = new THREE.BoxGeometry(1.4,0.4,2.2);
-    var cabinM = new THREE.MeshStandardMaterial({ color:0x111111, metalness:0.95, roughness:0.05, transparent:true, opacity:0.85 });
-    var cabin = new THREE.Mesh(cabinG, cabinM);
-    cabin.position.set(0,0.95,-0.2); if (!IS_MOBILE) cabin.castShadow = true;
-    group.add(cabin);
+  // Cabin (greenhouse)
+  var cabinMat = new THREE.MeshStandardMaterial({
+    color: 0x111722,
+    metalness: 0.9,
+    roughness: 0.1,
+    transparent: true,
+    opacity: 0.9
+  });
+  var cabin = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.45, 2.0), cabinMat);
+  cabin.position.set(0, 1.0, -0.15);
+  group.add(cabin);
 
-    var wsG = new THREE.PlaneGeometry(1.3,0.5);
-    var wsM = new THREE.MeshStandardMaterial({ color:0x88ccff, metalness:1, roughness:0, transparent:true, opacity:0.4, side:THREE.DoubleSide });
-    var ws = new THREE.Mesh(wsG,wsM);
-    ws.position.set(0,0.95,0.91); ws.rotation.x=-0.3;
-    group.add(ws);
+  // Hood + trunk slope hint (small wedges to break up box shape)
+  var hood = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.18, 1.0), bodyMat);
+  hood.position.set(0, 0.85, -1.4);
+  group.add(hood);
+  var trunk = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.18, 0.7), bodyMat);
+  trunk.position.set(0, 0.85, 1.5);
+  group.add(trunk);
 
-    var spG = new THREE.BoxGeometry(1.6,0.08,0.4);
-    var spM = new THREE.MeshStandardMaterial({ color:colorInt, metalness:0.9, roughness:0.1 });
-    var sp = new THREE.Mesh(spG,spM); sp.position.set(0,1.0,1.9);
-    group.add(sp);
-    ['-0.5','0.5'].forEach(function(x){
-      var sg = new THREE.BoxGeometry(0.08,0.3,0.08);
-      var sm = new THREE.MeshStandardMaterial({ color:0x333333, metalness:0.8 });
-      var s = new THREE.Mesh(sg,sm);
-      s.position.set(parseFloat(x),0.85,1.9); group.add(s);
-    });
+  // Wheels — black tire, light rim
+  var wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.3, roughness: 0.85 });
+  var rimMat   = new THREE.MeshStandardMaterial({ color: 0xb0b0b0, metalness: 0.9, roughness: 0.25 });
+  var wheelPos = [
+    [-0.95, 0.4, -1.3], [0.95, 0.4, -1.3],
+    [-0.95, 0.4,  1.3], [0.95, 0.4,  1.3]
+  ];
+  wheelPos.forEach(function(p) {
+    var wg = new THREE.Group();
+    var tire = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+    tire.rotation.z = Math.PI / 2;
+    wg.add(tire);
+    var rim = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.32, 12), rimMat);
+    rim.rotation.z = Math.PI / 2;
+    wg.add(rim);
+    wg.position.set(p[0], p[1], p[2]);
+    group.add(wg);
+    group.userData.wheels.push(wg);
+  });
 
-    var wpos = [[-0.9,0.35,-1.3],[0.9,0.35,-1.3],[-0.9,0.35,1.3],[0.9,0.35,1.3]];
-    wpos.forEach(function(p){
-      var wg = new THREE.Group();
-      var tw = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,0.25,16),
-        new THREE.MeshStandardMaterial({ color:0x1a1a2e, metalness:0.7, roughness:0.3 }));
-      tw.rotation.z = Math.PI/2; if (!IS_MOBILE) tw.castShadow = true;
-      wg.add(tw);
-      var rim = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.26,8),
-        new THREE.MeshStandardMaterial({ color:0x888888, metalness:0.95, roughness:0.1 }));
-      rim.rotation.z = Math.PI/2; wg.add(rim);
-      wg.position.set(p[0],p[1],p[2]);
-      group.add(wg);
-      group.userData.wheels.push(wg);
-    });
+  // Headlights — small emissive blocks at front (-Z)
+  var hlMat = new THREE.MeshStandardMaterial({
+    color: 0xfff4d6, emissive: 0xfff0c0, emissiveIntensity: 1.0
+  });
+  var hl1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.1), hlMat);
+  hl1.position.set(-0.55, 0.6, -2.0); group.add(hl1);
+  var hl2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.1), hlMat);
+  hl2.position.set( 0.55, 0.6, -2.0); group.add(hl2);
 
-  // ── Effects that apply to BOTH paths ──
-  // Even with GLB cars, we still want headlight beams, taillights, underglow,
-  // and a nameplate. These are extras the GLB doesn't include.
+  // Taillights — small red emissive blocks at rear (+Z)
+  var tlMat = new THREE.MeshStandardMaterial({
+    color: 0x550000, emissive: 0xff2020, emissiveIntensity: 1.2
+  });
+  var tl1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.08), tlMat);
+  tl1.position.set(-0.55, 0.65, 2.0); group.add(tl1);
+  var tl2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.08), tlMat);
+  tl2.position.set( 0.55, 0.65, 2.0); group.add(tl2);
 
-  // Headlight spot beams — front of car
-  var hlG = new THREE.BoxGeometry(0.35,0.15,0.1);
-  var hlM = new THREE.MeshStandardMaterial({ color:0xffffcc, emissive:0xffffaa, emissiveIntensity:1.2 });
-  var hl1=new THREE.Mesh(hlG,hlM); hl1.position.set(-0.5,0.55,-2.1);
-  var hl2=new THREE.Mesh(hlG,hlM); hl2.position.set(0.5,0.55,-2.1);
-  group.add(hl1); group.add(hl2);
-
-  // Headlight beams — desktop only. Each SpotLight adds significant GPU
-  // cost; with 10 cars on mobile that's 20 spotlights — guaranteed lag.
-  // Mobile keeps the emissive headlight mesh (no light cost) for visual cue.
-  if (!IS_MOBILE) {
-    var b1=new THREE.SpotLight(0xffffaa,3,30,Math.PI/6,0.5,1);
-    b1.position.set(-0.5,0.55,-2.1); b1.target.position.set(-0.5,0,-10);
-    group.add(b1); group.add(b1.target);
-    var b2=new THREE.SpotLight(0xffffaa,3,30,Math.PI/6,0.5,1);
-    b2.position.set(0.5,0.55,-2.1); b2.target.position.set(0.5,0,-10);
-    group.add(b2); group.add(b2.target);
-  }
-
-  // Tail lights (emissive mesh, no light cost — keep on mobile)
-  var tlG=new THREE.BoxGeometry(0.3,0.12,0.08);
-  var tlM=new THREE.MeshStandardMaterial({ color:0xff0000, emissive:0xff0000, emissiveIntensity:1.5 });
-  var tl1=new THREE.Mesh(tlG,tlM); tl1.position.set(-0.5,0.6,2.1);
-  var tl2=new THREE.Mesh(tlG,tlM); tl2.position.set(0.5,0.6,2.1);
-  group.add(tl1); group.add(tl2);
-
-  // (v5.4: removed per-car underglow PointLight and neon side strips — they
-  // were responsible for the "still looks neon" feel. Cars now have only
-  // emissive headlights + taillights, like a real car.)
-
-  // ── Nameplate above car ──
+  // Nameplate floating above
   if (name) {
-    var canv=document.createElement('canvas');
-    canv.width=256; canv.height=64;
-    var ctx=canv.getContext('2d');
-    ctx.fillStyle='rgba(0,0,0,0.6)';
-    roundRect(ctx,0,0,256,64,16); ctx.fill();
-    ctx.font='bold 24px Orbitron,monospace';
-    ctx.textAlign='center';
-    ctx.fillStyle=colorHex;
-    ctx.shadowColor=colorHex; ctx.shadowBlur=15;
-    ctx.fillText(name.slice(0,12),128,40);
-    var tex=new THREE.CanvasTexture(canv);
-    var lM=new THREE.MeshBasicMaterial({ map:tex, transparent:true, side:THREE.DoubleSide, depthWrite:false });
-    var lbl=new THREE.Mesh(new THREE.PlaneGeometry(2.5,0.6),lM);
-    lbl.position.set(0,1.8,0);
+    var canv = document.createElement('canvas');
+    canv.width = 256; canv.height = 64;
+    var ctx = canv.getContext('2d');
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    roundRect(ctx, 0, 0, 256, 64, 14); ctx.fill();
+    ctx.font = 'bold 24px Orbitron,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = colorHex;
+    ctx.shadowColor = colorHex; ctx.shadowBlur = 10;
+    ctx.fillText((name || '?').slice(0, 12), 128, 40);
+    var nTex = new THREE.CanvasTexture(canv);
+    var nMat = new THREE.MeshBasicMaterial({
+      map: nTex, transparent: true, side: THREE.DoubleSide, depthWrite: false
+    });
+    var lbl = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.6), nMat);
+    lbl.position.set(0, 2.0, 0);
     group.add(lbl);
-    group.userData.nameLabel=lbl;
+    group.userData.nameLabel = lbl;
   }
 
-  group.userData.exhaustPos=new THREE.Vector3(0,0.3,2.2);
-  group.userData.color=colorInt;
-  group.userData.colorHex=colorHex;
-  group.userData.name=name;
-  group.userData.isPlayer=isPlayer;
+  group.userData.exhaustPos = new THREE.Vector3(0, 0.3, 2.2);
+  group.userData.color = colorInt;
+  group.userData.colorHex = colorHex;
+  group.userData.name = name;
+  group.userData.isPlayer = isPlayer;
   return group;
 }
 
 /* ============ TRACK GENERATION ============ */
 function generateTrack() {
-  // ─── TRACK CURVE (v5.4: FLAT — no vertical undulation, road sits on ground) ───
+  // Clean rebuild — flat winding track, ground, sky, lane markings.
+  // No mountains, no buildings, no guardrails, no lamp posts, no shoulders.
+  // We add those back later, piece by piece, only after camera+track work.
+
+  // 1) Track curve — flat (y=0), gentle bends, large loop
   var pts = [];
   var numPts = 60;
   var radius = 80;
-  for (var i=0;i<=numPts;i++) {
-    var t = (i/numPts)*Math.PI*2;
-    var r = radius + Math.sin(t*3)*20 + Math.cos(t*5)*10;
-    var x = Math.cos(t)*r;
-    var z = Math.sin(t)*r;
-    // y stays 0 — no hills. Track is a flat winding loop, sits on ground plane.
+  for (var i = 0; i <= numPts; i++) {
+    var t = (i / numPts) * Math.PI * 2;
+    var r = radius + Math.sin(t * 3) * 18 + Math.cos(t * 5) * 8;
+    var x = Math.cos(t) * r;
+    var z = Math.sin(t) * r;
     pts.push(new THREE.Vector3(x, 0, z));
   }
   trackCurve = new THREE.CatmullRomCurve3(pts, true);
   trackCurve.tension = 0.5;
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SCENE REBUILD (v5.4 Step 3 — replaced neon-abstract scene with real road)
-  // ═══════════════════════════════════════════════════════════════════════════
+  // 2) Road extrusion — gray asphalt
+  // Use BufferGeometry from a strip of polygons along the curve, so the road
+  // sits AT y=0 (flat top, no extruded depth). Previous extrusion created
+  // a thick box that showed brown underside from below.
+  var STEPS = 800;
+  var halfWidth = TRACK_WIDTH / 2;
+  var positions = new Float32Array((STEPS + 1) * 2 * 3);
+  var uvs       = new Float32Array((STEPS + 1) * 2 * 2);
+  var indices   = [];
 
-  // ─── 1) ASPHALT ROAD SURFACE ───
-  // Wider extrusion (TRACK_WIDTH + shoulders). The middle band is asphalt;
-  // outer bands are dirt shoulders. We extrude both as separate strips so
-  // they have different materials.
-  var SHOULDER_W = 3;   // dirt/gravel shoulder on each side
-  var asphCanvas = document.createElement('canvas');
-  asphCanvas.width = 512; asphCanvas.height = 512;
-  var aCtx = asphCanvas.getContext('2d');
-  aCtx.fillStyle = '#252528';
-  aCtx.fillRect(0, 0, 512, 512);
-  // Grain
-  for (var n = 0; n < 3500; n++) {
-    var ax = Math.random() * 512;
-    var ay = Math.random() * 512;
-    var brightness = Math.random();
-    if (brightness < 0.5) aCtx.fillStyle = 'rgba(0,0,0,' + (brightness * 0.45) + ')';
-    else aCtx.fillStyle = 'rgba(255,255,255,' + ((brightness - 0.5) * 0.15) + ')';
-    aCtx.fillRect(ax, ay, 1.4, 1.4);
+  for (var s = 0; s <= STEPS; s++) {
+    var tt = s / STEPS;
+    var pt = trackCurve.getPointAt(tt);
+    var tan = trackCurve.getTangentAt(tt);
+    var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    var left  = pt.clone().add(norm.clone().multiplyScalar( halfWidth));
+    var right = pt.clone().add(norm.clone().multiplyScalar(-halfWidth));
+    positions[s * 6 + 0] = left.x;  positions[s * 6 + 1] = 0.02; positions[s * 6 + 2] = left.z;
+    positions[s * 6 + 3] = right.x; positions[s * 6 + 4] = 0.02; positions[s * 6 + 5] = right.z;
+    uvs[s * 4 + 0] = 0; uvs[s * 4 + 1] = tt * 40;
+    uvs[s * 4 + 2] = 1; uvs[s * 4 + 3] = tt * 40;
+    if (s < STEPS) {
+      var i0 = s * 2, i1 = s * 2 + 1, i2 = (s + 1) * 2, i3 = (s + 1) * 2 + 1;
+      indices.push(i0, i2, i1);
+      indices.push(i1, i2, i3);
+    }
   }
-  // Tar patches
-  for (var n = 0; n < 20; n++) {
-    aCtx.fillStyle = 'rgba(55,52,58,0.55)';
-    var px = Math.random() * 512, py = Math.random() * 512;
-    var pr = 6 + Math.random() * 14;
-    aCtx.beginPath(); aCtx.arc(px, py, pr, 0, Math.PI * 2); aCtx.fill();
+  var roadGeo = new THREE.BufferGeometry();
+  roadGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  roadGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  roadGeo.setIndex(indices);
+  roadGeo.computeVertexNormals();
+
+  // Asphalt canvas texture
+  var asphCanvas = document.createElement('canvas');
+  asphCanvas.width = 256; asphCanvas.height = 256;
+  var aCtx = asphCanvas.getContext('2d');
+  aCtx.fillStyle = '#2a2a2e'; aCtx.fillRect(0, 0, 256, 256);
+  for (var n = 0; n < 1500; n++) {
+    var ax = Math.random() * 256, ay = Math.random() * 256;
+    var b = Math.random();
+    aCtx.fillStyle = b < 0.5
+      ? 'rgba(0,0,0,' + (b * 0.45) + ')'
+      : 'rgba(255,255,255,' + ((b - 0.5) * 0.12) + ')';
+    aCtx.fillRect(ax, ay, 1.4, 1.4);
   }
   var asphaltTex = new THREE.CanvasTexture(asphCanvas);
   asphaltTex.wrapS = asphaltTex.wrapT = THREE.RepeatWrapping;
-  asphaltTex.repeat.set(40, 2);
 
-  var roadShape = new THREE.Shape();
-  roadShape.moveTo(-TRACK_WIDTH/2,0);
-  roadShape.lineTo(-TRACK_WIDTH/2,0.2);
-  roadShape.lineTo(TRACK_WIDTH/2,0.2);
-  roadShape.lineTo(TRACK_WIDTH/2,0);
-  roadShape.lineTo(-TRACK_WIDTH/2,0);
-  var extSettings = { steps:400, extrudePath:trackCurve, bevelEnabled:false };
-  var trkGeo = new THREE.ExtrudeGeometry(roadShape, extSettings);
-  var trkMat = new THREE.MeshStandardMaterial({
+  var roadMat = new THREE.MeshStandardMaterial({
     map: asphaltTex,
-    color: 0xffffff,
     metalness: 0.05,
-    roughness: 0.88
+    roughness: 0.92
   });
-  var trkMesh = new THREE.Mesh(trkGeo, trkMat);
-  if (!IS_MOBILE) trkMesh.receiveShadow = true;
-  scene.add(trkMesh);
+  var roadMesh = new THREE.Mesh(roadGeo, roadMat);
+  scene.add(roadMesh);
 
-  // ─── 2) DIRT SHOULDERS (left + right of asphalt) ───
-  var dirtCanvas = document.createElement('canvas');
-  dirtCanvas.width = 256; dirtCanvas.height = 256;
-  var dCtx = dirtCanvas.getContext('2d');
-  dCtx.fillStyle = '#4a3a2a';
-  dCtx.fillRect(0, 0, 256, 256);
-  for (var n = 0; n < 2000; n++) {
-    var dx = Math.random() * 256, dy = Math.random() * 256;
-    var b = Math.random();
-    dCtx.fillStyle = b < 0.5
-      ? 'rgba(40,30,20,' + (b * 0.5) + ')'
-      : 'rgba(120,95,60,' + ((b - 0.5) * 0.4) + ')';
-    dCtx.fillRect(dx, dy, 1.5, 1.5);
+  // 3) Lane markings — solid yellow center + solid white edge lines
+  function makeLine(offset, color, dashed) {
+    var pts = [];
+    for (var i = 0; i <= 400; i++) {
+      var t2 = i / 400;
+      var p2 = trackCurve.getPointAt(t2);
+      var tan = trackCurve.getTangentAt(t2);
+      var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+      p2.add(norm.multiplyScalar(offset));
+      p2.y = 0.04;
+      pts.push(p2);
+    }
+    var geo = new THREE.BufferGeometry().setFromPoints(pts);
+    var mat = dashed
+      ? new THREE.LineDashedMaterial({ color: color, dashSize: 2.5, gapSize: 2.5, transparent: true, opacity: 0.9 })
+      : new THREE.LineBasicMaterial({ color: color });
+    var line = new THREE.Line(geo, mat);
+    if (dashed) line.computeLineDistances();
+    scene.add(line);
   }
-  var dirtTex = new THREE.CanvasTexture(dirtCanvas);
-  dirtTex.wrapS = dirtTex.wrapT = THREE.RepeatWrapping;
-  dirtTex.repeat.set(30, 1);
+  // Yellow center line, solid
+  makeLine(0, 0xf0c040, false);
+  // White outer edges, solid
+  makeLine( halfWidth - 0.3, 0xffffff, false);
+  makeLine(-halfWidth + 0.3, 0xffffff, false);
+  // Dashed white between center and edges (lane dividers)
+  makeLine( halfWidth / 2, 0xffffff, true);
+  makeLine(-halfWidth / 2, 0xffffff, true);
 
-  // Left shoulder
-  var shoulderL = new THREE.Shape();
-  shoulderL.moveTo(-TRACK_WIDTH/2 - SHOULDER_W, -0.05);
-  shoulderL.lineTo(-TRACK_WIDTH/2 - SHOULDER_W, 0.1);
-  shoulderL.lineTo(-TRACK_WIDTH/2, 0.1);
-  shoulderL.lineTo(-TRACK_WIDTH/2, -0.05);
-  shoulderL.lineTo(-TRACK_WIDTH/2 - SHOULDER_W, -0.05);
-  var shoulderLGeo = new THREE.ExtrudeGeometry(shoulderL, extSettings);
-  var shoulderMat = new THREE.MeshStandardMaterial({
-    map: dirtTex, color:0xffffff, metalness:0, roughness:1
-  });
-  scene.add(new THREE.Mesh(shoulderLGeo, shoulderMat));
-  // Right shoulder (mirror)
-  var shoulderR = new THREE.Shape();
-  shoulderR.moveTo(TRACK_WIDTH/2, -0.05);
-  shoulderR.lineTo(TRACK_WIDTH/2, 0.1);
-  shoulderR.lineTo(TRACK_WIDTH/2 + SHOULDER_W, 0.1);
-  shoulderR.lineTo(TRACK_WIDTH/2 + SHOULDER_W, -0.05);
-  shoulderR.lineTo(TRACK_WIDTH/2, -0.05);
-  var shoulderRGeo = new THREE.ExtrudeGeometry(shoulderR, extSettings);
-  scene.add(new THREE.Mesh(shoulderRGeo, shoulderMat));
+  // 4) Ground plane (large green-brown grass field, extends past horizon)
+  var groundCanvas = document.createElement('canvas');
+  groundCanvas.width = 256; groundCanvas.height = 256;
+  var gCtx = groundCanvas.getContext('2d');
+  gCtx.fillStyle = '#3d4a30'; gCtx.fillRect(0, 0, 256, 256);
+  for (var n = 0; n < 2000; n++) {
+    var gx = Math.random() * 256, gy = Math.random() * 256;
+    var b = Math.random();
+    gCtx.fillStyle = b < 0.5
+      ? 'rgba(25,35,18,' + (b * 0.5) + ')'
+      : 'rgba(110,125,75,' + ((b - 0.5) * 0.35) + ')';
+    gCtx.fillRect(gx, gy, 1.6, 1.6);
+  }
+  var groundTex = new THREE.CanvasTexture(groundCanvas);
+  groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+  groundTex.repeat.set(60, 60);
+  var ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(800, 800),
+    new THREE.MeshStandardMaterial({ map: groundTex, metalness: 0, roughness: 1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;  // sit at y=0, road sits at y=0.02 on top of it
+  scene.add(ground);
 
-  // ─── 3) LANE MARKINGS ───
-  // Solid yellow center line (US 2-lane road style — divides direction)
-  var clPts = [];
-  for (var i=0;i<=800;i++) { clPts.push(trackCurve.getPointAt(i/800)); }
-  var clGeo = new THREE.BufferGeometry().setFromPoints(clPts);
-  var cl = new THREE.Line(clGeo, new THREE.LineBasicMaterial({ color:0xf0c040 }));
-  cl.position.y = 0.23;
-  scene.add(cl);
-
-  // Solid white edge lines (at lane boundaries)
-  [-1, 1].forEach(function(side) {
-    var edgePts = [];
-    var off = side * (TRACK_WIDTH/2 - 0.4);
-    for (var i=0;i<=800;i++) {
-      var t2 = i/800;
-      var p2 = trackCurve.getPointAt(t2);
-      var tan = trackCurve.getTangentAt(t2);
-      var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
-      p2.add(norm.multiplyScalar(off));
-      edgePts.push(p2);
-    }
-    var eGeo = new THREE.BufferGeometry().setFromPoints(edgePts);
-    var eLine = new THREE.Line(eGeo, new THREE.LineBasicMaterial({ color:0xffffff }));
-    eLine.position.y = 0.23;
-    scene.add(eLine);
-  });
-
-  // Dashed lane dividers between center and edges
-  [-1, 1].forEach(function(side) {
-    var off = side * (TRACK_WIDTH/4);
-    var lpts = [];
-    for (var i=0;i<=400;i++) {
-      var t2 = i/400;
-      var p2 = trackCurve.getPointAt(t2);
-      var tan = trackCurve.getTangentAt(t2);
-      var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
-      p2.add(norm.multiplyScalar(off));
-      lpts.push(p2);
-    }
-    var lGeo = new THREE.BufferGeometry().setFromPoints(lpts);
-    var lLine = new THREE.Line(lGeo, new THREE.LineDashedMaterial({
-      color: 0xffffff,
-      dashSize: 2.5,
-      gapSize: 3.0,
-      transparent: true,
-      opacity: 0.85
-    }));
-    lLine.position.y = 0.22;
-    lLine.computeLineDistances();
-    scene.add(lLine);
-  });
-
-  // ─── 4) START/FINISH CHECKER (kept, useful visual landmark) ───
+  // 5) Start/finish stripe (small checker patch)
   var sfPt = trackCurve.getPointAt(0);
   var sfTan = trackCurve.getTangentAt(0);
   var cCanvas = document.createElement('canvas');
   cCanvas.width = 64; cCanvas.height = 64;
   var cCtx = cCanvas.getContext('2d');
-  for (var cy=0;cy<8;cy++) for (var cx=0;cx<8;cx++) {
+  for (var cy = 0; cy < 8; cy++) for (var cx = 0; cx < 8; cx++) {
     cCtx.fillStyle = (cx + cy) % 2 === 0 ? '#fff' : '#000';
-    cCtx.fillRect(cx*8, cy*8, 8, 8);
+    cCtx.fillRect(cx * 8, cy * 8, 8, 8);
   }
-  var cTex = new THREE.CanvasTexture(cCanvas);
-  cTex.wrapS = cTex.wrapT = THREE.RepeatWrapping;
-  cTex.repeat.set(8, 1);
-  var sfMesh = new THREE.Mesh(
+  var sfTex = new THREE.CanvasTexture(cCanvas);
+  sfTex.wrapS = sfTex.wrapT = THREE.RepeatWrapping;
+  sfTex.repeat.set(8, 1);
+  var sf = new THREE.Mesh(
     new THREE.PlaneGeometry(TRACK_WIDTH, 2.5),
-    new THREE.MeshStandardMaterial({ map: cTex, roughness: 0.8 })
+    new THREE.MeshStandardMaterial({ map: sfTex, roughness: 0.8 })
   );
-  sfMesh.position.copy(sfPt); sfMesh.position.y = 0.26;
-  sfMesh.lookAt(sfPt.clone().add(sfTan));
-  sfMesh.rotateX(-Math.PI/2);
-  scene.add(sfMesh);
+  sf.position.copy(sfPt); sf.position.y = 0.05;
+  sf.lookAt(sfPt.clone().add(sfTan));
+  sf.rotateX(-Math.PI / 2);
+  scene.add(sf);
 
-  // ─── 5) GUARDRAILS (concrete barriers along the outside edge) ───
-  // Simple repeated low-poly barriers on both sides of the road.
-  // Skip on mobile to save geometry budget — 200 barriers × 2 sides = 400 meshes.
-  var BARRIER_COUNT = IS_MOBILE ? 80 : 200;
-  var barrierGeo = new THREE.BoxGeometry(0.5, 1.0, 3.5);
-  var barrierMat = new THREE.MeshStandardMaterial({
-    color: 0xa8a8a8,
-    metalness: 0.1,
-    roughness: 0.85
-  });
-  for (var i=0;i<BARRIER_COUNT;i++) {
-    var bt = i / BARRIER_COUNT;
-    var bpt = trackCurve.getPointAt(bt);
-    var btan = trackCurve.getTangentAt(bt);
-    var bnorm = new THREE.Vector3(-btan.z, 0, btan.x).normalize();
-    var barrierOffset = (TRACK_WIDTH/2 + SHOULDER_W + 0.5);
-    [-1, 1].forEach(function(side) {
-      var bMesh = new THREE.Mesh(barrierGeo, barrierMat);
-      bMesh.position.copy(bpt);
-      bMesh.position.add(bnorm.clone().multiplyScalar(barrierOffset * side));
-      bMesh.position.y += 0.5;
-      // Orient barrier along track direction
-      bMesh.lookAt(bMesh.position.clone().add(btan));
-      if (!IS_MOBILE) bMesh.castShadow = true;
-      scene.add(bMesh);
-    });
-  }
-
-  // ─── 6) LAMP POSTS (proper street lights — no glow, just gray geometry) ───
-  // Tall pole, horizontal arm, lampshade head pointing toward road.
-  // NO glowing bulb. NO emissive sphere. Pure structural geometry.
-  var LAMP_COUNT = IS_MOBILE ? 16 : 30;
-  var lampPoleGeo = new THREE.CylinderGeometry(0.08, 0.12, 7, 8);
-  var lampMat = new THREE.MeshStandardMaterial({
-    color: 0x383838,
-    metalness: 0.6,
-    roughness: 0.5
-  });
-  var lampArmGeo = new THREE.BoxGeometry(0.08, 0.08, 2.5);
-  var lampHeadGeo = new THREE.ConeGeometry(0.4, 0.6, 8);
-
-  for (var i=0;i<LAMP_COUNT;i++) {
-    var lt = (i + 0.5) / LAMP_COUNT;  // offset so lamps don't sit on start line
-    var lpt = trackCurve.getPointAt(lt);
-    var ltan = trackCurve.getTangentAt(lt);
-    var lnorm = new THREE.Vector3(-ltan.z, 0, ltan.x).normalize();
-    var side = i % 2 === 0 ? 1 : -1;  // alternate sides for variety
-    var lampOffset = (TRACK_WIDTH/2 + SHOULDER_W + 2);
-
-    var basePos = lpt.clone().add(lnorm.clone().multiplyScalar(lampOffset * side));
-
-    var pole = new THREE.Mesh(lampPoleGeo, lampMat);
-    pole.position.copy(basePos);
-    pole.position.y += 3.5;
-    scene.add(pole);
-
-    var arm = new THREE.Mesh(lampArmGeo, lampMat);
-    arm.position.copy(basePos);
-    arm.position.y += 6.8;
-    // Move arm toward road
-    arm.position.add(lnorm.clone().multiplyScalar(-1.2 * side));
-    // Orient arm to point along normal
-    arm.lookAt(basePos.x, arm.position.y, basePos.z);
-    scene.add(arm);
-
-    var head = new THREE.Mesh(lampHeadGeo, lampMat);
-    head.position.copy(basePos);
-    head.position.y += 6.6;
-    head.position.add(lnorm.clone().multiplyScalar(-2.0 * side));
-    head.rotation.x = Math.PI;  // point down
-    scene.add(head);
-  }
-
-  // ─── 7) GROUND PLANE (grass/dirt extending to horizon) ───
-  // Replaces the dark blue ground grid. Uses HSL-noise canvas for natural feel.
-  var groundCanvas = document.createElement('canvas');
-  groundCanvas.width = 512; groundCanvas.height = 512;
-  var gCtx = groundCanvas.getContext('2d');
-  gCtx.fillStyle = '#3a4a2e';  // dark grass green
-  gCtx.fillRect(0, 0, 512, 512);
-  for (var n=0;n<6000;n++) {
-    var gx = Math.random() * 512, gy = Math.random() * 512;
-    var b = Math.random();
-    if (b < 0.5) gCtx.fillStyle = 'rgba(20,35,15,' + (b * 0.5) + ')';
-    else gCtx.fillStyle = 'rgba(120,130,80,' + ((b - 0.5) * 0.3) + ')';
-    gCtx.fillRect(gx, gy, 2, 2);
-  }
-  var groundTex = new THREE.CanvasTexture(groundCanvas);
-  groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
-  groundTex.repeat.set(50, 50);
-
-  var groundMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(800, 800, 32, 32),
-    new THREE.MeshStandardMaterial({
-      map: groundTex,
-      color: 0xffffff,
-      metalness: 0,
-      roughness: 1
-    })
-  );
-  groundMesh.rotation.x = -Math.PI/2;
-  groundMesh.position.y = -1.0;  // slightly below track surface
-  if (!IS_MOBILE) groundMesh.receiveShadow = true;
-  scene.add(groundMesh);
-
-  // ─── 8) DISTANT MOUNTAINS (silhouette ring for horizon depth) ───
-  // Low-poly cone mountains arranged in a circle around the track.
-  // Dark silhouette against the sunset sky, no detail.
-  var mountainMat = new THREE.MeshStandardMaterial({
-    color: 0x252535,
-    metalness: 0,
-    roughness: 1,
-    flatShading: true
-  });
-  for (var i=0;i<24;i++) {
-    var ang = (i / 24) * Math.PI * 2;
-    var dist = 200 + Math.random() * 80;
-    var mh = 30 + Math.random() * 50;
-    var mr = 30 + Math.random() * 20;
-    var mtn = new THREE.Mesh(
-      new THREE.ConeGeometry(mr, mh, 5),  // pentagonal — looks rough/mountain-like
-      mountainMat
-    );
-    mtn.position.set(
-      Math.cos(ang) * dist,
-      mh/2 - 1,
-      Math.sin(ang) * dist
-    );
-    scene.add(mtn);
-  }
-
-  // ─── 9) PARTICLE POOL (kept — gameplay-essential) ───
+  // 6) Particle pool (kept — used by spawnNitroParticles)
   var pCount = 300;
   var pGeo = new THREE.BufferGeometry();
   var pPos = new Float32Array(pCount * 3);
   var pCol = new Float32Array(pCount * 3);
   var pSiz = new Float32Array(pCount);
-  for (var i=0;i<pCount;i++) { pPos[i*3]=0; pPos[i*3+1]=-100; pPos[i*3+2]=0; pSiz[i]=0; }
+  for (var i = 0; i < pCount; i++) { pPos[i*3]=0; pPos[i*3+1]=-100; pPos[i*3+2]=0; pSiz[i]=0; }
   pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-  pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
-  pGeo.setAttribute('size', new THREE.BufferAttribute(pSiz, 1));
+  pGeo.setAttribute('color',    new THREE.BufferAttribute(pCol, 3));
+  pGeo.setAttribute('size',     new THREE.BufferAttribute(pSiz, 1));
   particleSystem = new THREE.Points(pGeo, new THREE.PointsMaterial({
-    size: 0.5,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.8,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
+    size: 0.5, vertexColors: true, transparent: true, opacity: 0.8,
+    blending: THREE.AdditiveBlending, depthWrite: false
   }));
   scene.add(particleSystem);
 
-  // ─── 10) SPEED LINES (kept — gameplay-essential) ───
-  for (var i=0;i<30;i++) {
+  // 7) Speed lines (kept — used by updateSpeedLines)
+  for (var i = 0; i < 30; i++) {
     var slGeo = new THREE.BufferGeometry();
     var slPos = new Float32Array(6);
     slGeo.setAttribute('position', new THREE.BufferAttribute(slPos, 3));
     var sl = new THREE.Line(slGeo, new THREE.LineBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0
+      color: 0xffffff, transparent: true, opacity: 0
     }));
     scene.add(sl);
     speedLines.push({ mesh: sl, active: false, speed: 0 });
@@ -1148,73 +974,52 @@ function generateTrack() {
 
 /* ============ 3D SCENE INIT ============ */
 function init3D() {
+  // Clean rebuild — minimal, verified-working renderer + scene + sky + lights.
   var canvas = el('game-canvas');
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x4a2840, 0.006);  // warm dusk haze, lighter density
 
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 500);
+  // Sunset gradient sky via CanvasTexture on a large sphere
+  var skyCanvas = document.createElement('canvas');
+  skyCanvas.width = 16; skyCanvas.height = 512;
+  var sCtx = skyCanvas.getContext('2d');
+  var grad = sCtx.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0.00, '#1a1f3a');  // upper sky — deep blue
+  grad.addColorStop(0.50, '#5a3a6a');  // mid — violet
+  grad.addColorStop(0.75, '#c66050');  // sunset pink-red
+  grad.addColorStop(1.00, '#f0b070');  // horizon — warm orange
+  sCtx.fillStyle = grad; sCtx.fillRect(0, 0, 16, 512);
+  var skyTex = new THREE.CanvasTexture(skyCanvas);
+  var skyMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(400, 32, 16),
+    new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, depthWrite: false })
+  );
+  scene.add(skyMesh);
 
-  // v5.4: Mobile-aware renderer. Antialiasing + shadows + high pixel ratio
-  // turn mid-range Android phones into slideshows. Detect mobile and downgrade.
+  // Mild fog for distance haze (dusk tone)
+  scene.fog = new THREE.FogExp2(0x553a48, 0.005);
+
+  // Camera — wide FOV for racing feel
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 600);
+
+  // Renderer — mobile-aware
   renderer = new THREE.WebGLRenderer({
-    canvas:canvas,
-    antialias: !IS_MOBILE,    // disable AA on mobile (huge GPU savings)
-    alpha:false,
+    canvas: canvas,
+    antialias: !IS_MOBILE,
+    alpha: false,
     powerPreference: IS_MOBILE ? 'low-power' : 'high-performance'
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
-  // Shadows are the single biggest mobile killer — disable entirely on phones.
-  renderer.shadowMap.enabled = !IS_MOBILE;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = false;  // off by default — keep mobile fast; can re-enable later
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.0;
   renderer.outputEncoding = THREE.sRGBEncoding;
 
-  // ── 3b. Sunset gradient skybox (procedural) ──
-  // Vertical gradient via CanvasTexture: deep blue at top → purple → pink → warm orange at horizon.
-  // No HDR file required; works with our existing renderer config.
-  var skyCanvas = document.createElement('canvas');
-  skyCanvas.width = 16; skyCanvas.height = 512;
-  var sCtx = skyCanvas.getContext('2d');
-  var skyGrad = sCtx.createLinearGradient(0, 0, 0, 512);
-  skyGrad.addColorStop(0.00, '#0d1428');   // top — deep night blue
-  skyGrad.addColorStop(0.35, '#2b1f4a');   // upper — deep violet
-  skyGrad.addColorStop(0.55, '#5a2960');   // mid — magenta dusk
-  skyGrad.addColorStop(0.72, '#a83a55');   // lower — sunset pink
-  skyGrad.addColorStop(0.88, '#dd6a3a');   // near horizon — warm orange
-  skyGrad.addColorStop(1.00, '#f0a065');   // horizon glow
-  sCtx.fillStyle = skyGrad;
-  sCtx.fillRect(0, 0, 16, 512);
-  var skyTex = new THREE.CanvasTexture(skyCanvas);
-  skyTex.wrapS = skyTex.wrapT = THREE.ClampToEdgeWrapping;
-
-  // Apply as inside-facing dome. SphereGeometry gives smooth wrap (no cube seams).
-  var skyGeo = new THREE.SphereGeometry(280, 32, 16);
-  var skyMat = new THREE.MeshBasicMaterial({
-    map: skyTex,
-    side: THREE.BackSide,
-    depthWrite: false
-  });
-  scene.add(new THREE.Mesh(skyGeo, skyMat));
-
-  // Lighting tuned for sunset — warm directional sun, soft warm ambient
-  scene.add(new THREE.AmbientLight(0x553344, IS_MOBILE ? 0.9 : 0.55));
-  var moon=new THREE.DirectionalLight(0xffaa66, IS_MOBILE ? 1.1 : 0.9);  // warm setting sun
-  moon.position.set(40,40,80);  // lower in sky for dusk angle
-  if (!IS_MOBILE) {
-    moon.castShadow = true;
-    moon.shadow.mapSize.width=2048; moon.shadow.mapSize.height=2048;
-    moon.shadow.camera.near=0.5; moon.shadow.camera.far=300;
-    moon.shadow.camera.left=-100; moon.shadow.camera.right=100;
-    moon.shadow.camera.top=100; moon.shadow.camera.bottom=-100;
-  }
-  scene.add(moon);
-  // Subtle accent lights — much dimmer than before, warm sunset tones
-  if (!IS_MOBILE) {
-    var n1=new THREE.PointLight(0xffb070, 0.6, 80); n1.position.set(0, 25, 0); scene.add(n1);
-    var n2=new THREE.PointLight(0xff8055, 0.4, 60); n2.position.set(60, 18, -40); scene.add(n2);
-  }
+  // Lighting — sunset
+  scene.add(new THREE.AmbientLight(0x554844, 0.7));         // soft warm ambient fill
+  var sun = new THREE.DirectionalLight(0xffd0a0, 1.0);      // warm directional sun
+  sun.position.set(80, 60, 100);
+  scene.add(sun);
 
   generateTrack();
   canvas.style.display = 'block';
@@ -1254,41 +1059,40 @@ function placeCarOnTrack(car, t, laneOff, bankAngle) {
 
 /* ============ CAMERA ============ */
 function updateCamera(dt, speedKmh) {
+  // Clean rebuild — SINGLE chase mode. Glued behind player car, looking ahead.
+  // No hood/cinematic branches. No mode switching. Just rear view.
   if (!playerCar) return;
-  var carPos = playerCar.position.clone();
+
+  var carPos = playerCar.position;
   var td = getTrackData(myProgress_t);
-  var tangent = td.tangent;
-  var shake = cameraShake * (speedKmh/300);
-  var sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake, sz=(Math.random()-.5)*shake;
+  var tangent = td.tangent;  // points FORWARD along track direction of travel
+
+  // Mild speed-based shake (kept — feels good during nitro)
+  var shake = cameraShake * (speedKmh / 300);
+  var sx = (Math.random() - 0.5) * shake;
+  var sy = (Math.random() - 0.5) * shake;
+  var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  if (cameraMode==='chase') {
-    var dist = 7 + Math.max(0,(300-speedKmh)/50);     // a bit farther back than before
-    var height = 3.0 + Math.max(0,(300-speedKmh)/100); // slightly higher for road visibility
-    var offset = tangent.clone().multiplyScalar(dist).add(td.normal.clone().multiplyScalar(1.5));
-    offset.y = height;
-    var target = carPos.clone().sub(offset).add(new THREE.Vector3(sx,sy,sz));
-    camera.position.lerp(target, Math.min(dt*3,1));
-    // v5.4: look at a point AHEAD of the car (along its tangent direction)
-    // instead of straight at the car. This shows the road the player is
-    // about to drive on — like every racing game's chase view.
-    var lookTarget = carPos.clone()
-      .add(tangent.clone().multiplyScalar(12))    // 12 units forward along the track
-      .add(new THREE.Vector3(0, 1.0, 0));         // 1 unit up
-    camera.lookAt(lookTarget);
-  } else if (cameraMode==='hood') {
-    var ho = tangent.clone().multiplyScalar(-1.5).add(new THREE.Vector3(0,1.2,0));
-    var hoodTarget = carPos.clone().add(ho).add(new THREE.Vector3(sx*.5,sy*.5,sz*.5));
-    // v5.4 3e: lerp instead of hard copy so mode change is smooth
-    camera.position.lerp(hoodTarget, Math.min(dt*4,1));
-    camera.lookAt(carPos.clone().add(tangent.clone().multiplyScalar(20)));
-  } else if (cameraMode==='cinematic') {
-    var ct = gameTime*.5;
-    var cinTarget = carPos.clone().add(new THREE.Vector3(Math.sin(ct)*8, 4+Math.sin(ct*.7)*2, Math.cos(ct)*8));
-    // v5.4 3e: lerp here too — cinematic was lurching
-    camera.position.lerp(cinTarget, Math.min(dt*2,1));
-    camera.lookAt(carPos.clone().add(new THREE.Vector3(0,1,0)));
-  }
+  // Camera position: behind the car (opposite of forward) and slightly up
+  var CHASE_DIST   = 8.5;   // units behind the car
+  var CHASE_HEIGHT = 3.2;   // units above the car
+  var behind = tangent.clone().multiplyScalar(-CHASE_DIST);  // -tangent = backward direction
+  var camTargetPos = carPos.clone()
+    .add(behind)                                    // place behind
+    .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))     // raise
+    .add(new THREE.Vector3(sx, sy, sz));            // mild shake
+
+  // Smooth camera follow (lerp)
+  camera.position.lerp(camTargetPos, Math.min(dt * 4, 1));
+
+  // Look at a point ahead of the car (along forward) so player sees the road ahead
+  var LOOK_AHEAD   = 14;     // units in front of car
+  var LOOK_HEIGHT  = 1.2;    // raise look point so we're looking slightly down at the road
+  var lookAtPos = carPos.clone()
+    .add(tangent.clone().multiplyScalar(LOOK_AHEAD))
+    .add(new THREE.Vector3(0, LOOK_HEIGHT, 0));
+  camera.lookAt(lookAtPos);
 }
 
 // v5.4: Camera mode locked to chase during gameplay. Previously the camera
@@ -1366,48 +1170,6 @@ function updateSpeedLines(speedKmh, dt) {
   });
 }
 
-/* ============ CINEMATIC LOOP (separate from game loop) ============ */
-function startCinematicLoop() {
-  cinematicRunning = true;
-  CINEMATIC_CAMERA_T = 0;
-  var startTime = performance.now();
-
-  function cinematicFrame(now) {
-    if (!cinematicRunning) return;
-    cinematicRafId = requestAnimationFrame(cinematicFrame);
-    var elapsed = (now - startTime) / 1000;
-    CINEMATIC_CAMERA_T = elapsed;
-
-    // Dramatic sweeping camera around the track's starting line
-    var startPt = trackCurve.getPointAt(0);
-    var sweep = CINEMATIC_CAMERA_T * 0.4;
-    camera.position.set(
-      startPt.x + Math.sin(sweep) * 35,
-      startPt.y + 8 + Math.sin(sweep * 0.5) * 3,
-      startPt.z + Math.cos(sweep) * 35
-    );
-    camera.lookAt(startPt.x, startPt.y + 2, startPt.z);
-
-    // Animate all player cars — they are already placed by the cinematic setup
-    Object.values(allPlayers).forEach(function(p) {
-      var car = p.pid === playerId ? playerCar : otherCars[p.pid];
-      if (!car) return;
-      if (car.userData.nameLabel) car.userData.nameLabel.lookAt(camera.position);
-      // Idle headlight flicker
-      var ug = car.userData.underglow;
-      if (ug) ug.intensity = 1.5 + Math.sin(now * 0.01 + p.laneX) * 0.5;
-    });
-
-    renderer.render(scene, camera);
-  }
-  cinematicRafId = requestAnimationFrame(cinematicFrame);
-}
-
-function stopCinematicLoop() {
-  cinematicRunning = false;
-  if (cinematicRafId) { cancelAnimationFrame(cinematicRafId); cinematicRafId = null; }
-}
-
 /* ============ PRE-RACE CINEMATIC SEQUENCE ============ */
 // v5.4 SYNC: total fixed intro duration (cinematic + countdown).
 // All players target gameplay-start at startedAt + RACE_INTRO_MS.
@@ -1416,166 +1178,101 @@ var RACE_INTRO_MS = 9000;         // ~5.5s cinematic + 3.45s countdown
 var RACE_COUNTDOWN_MS = 3450;     // 3 ticks × 900ms + 750ms final "GO!"
 
 function runPreRaceCinematic(serverStartedAt) {
-  // 1) Show canvas + cinematic overlay
-  el('game-canvas').style.display = 'block';
-  el('cinematic-overlay').classList.add('on');
+  // Clean rebuild — minimal pre-race. No dramatic camera sweep, no roll-in
+  // animation. Cars just appear on the grid. Synchronized countdown begins
+  // at the server-anchored moment. Then gameplay takes over with chase camera.
 
-  // v5.4 mobile fix: un-hide bottom-panel immediately with a placeholder
-  // so mobile users see the question area exists during the intro.
+  // 1) Show canvas
+  el('game-canvas').style.display = 'block';
+
+  // 2) Un-hide bottom panel with placeholder so mobile shows UI immediately
   el('bottom-panel').classList.remove('hidden');
   el('q-num').textContent = 'GET READY';
   el('q-txt').textContent = 'Race starting…';
   el('q-area').innerHTML = '';
 
-  // 2) Create ALL player cars. v5.4 3d: cars now ROLL into grid from behind
-  // the start line over the first ~1.2 sec of cinematic, instead of appearing
-  // already-parked. Stored target positions are read during cinematicFrame.
+  // 3) Create + place all player cars on the grid
   var playerList = Object.values(allPlayers);
-  var rollInStart = performance.now();
-  var ROLL_IN_DURATION_MS = 1200;
-
   playerList.forEach(function(p, i) {
-    var cIdx = Math.floor(Math.random() * NEON_COLORS.length);
+    var cIdx = i % NEON_COLORS.length;
     if (p.color) {
       var hi = NEON_HEX.indexOf(p.color);
       if (hi >= 0) cIdx = hi;
     }
     var cInt = NEON_COLORS[cIdx];
     var cHex = NEON_HEX[cIdx];
-
-    var isMe = p.pid === playerId;
+    var isMe = (p.pid === playerId);
     if (isMe) { cInt = playerColorInt; cHex = playerColorHex; }
 
     var car = createCar(cInt, cHex, p.name || '?', isMe);
-    var gridT = 0.98 - (i * 0.003);
+    var gridT = 0.98 - (i * 0.004);  // staggered slightly back from start line
     var laneOff = laneOffsets[i % laneOffsets.length];
-
-    // v5.4 3d: store target grid pos and current animated pos
-    // Initial position: ~12-15 units of track length BEHIND the grid spot.
-    // Animation lerps t from startT to gridT.
-    var startT = ((gridT - 0.03) % 1 + 1) % 1;  // 0.03 = ~12 units back along track
-    car.userData.gridT = gridT;
-    car.userData.gridLaneOff = laneOff;
-    car.userData.rollInStart = rollInStart + (i * 80);  // tiny stagger per car
-    car.userData.rollInFromT = startT;
-    placeCarOnTrack(car, startT, laneOff, 0);
+    placeCarOnTrack(car, gridT, laneOff, 0);
     scene.add(car);
-    if (isMe) { playerCar = car; } else { otherCars[p.pid] = car; }
+
+    if (isMe) { playerCar = car; }
+    else { otherCars[p.pid] = car; }
     allPlayers[p.pid].laneX = laneOff;
   });
 
-  // v5.4 3d: roll-in animation. Runs as its own RAF loop until all cars are
-  // at their grid positions. Easing: cubic ease-out (fast start, soft landing).
-  var rollInActive = true;
-  function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
-  function rollInFrame(now) {
-    if (!rollInActive) return;
-    var anyMoving = false;
-    var allCars = [playerCar].concat(Object.values(otherCars));
-    allCars.forEach(function(car) {
-      if (!car || !car.userData.rollInStart) return;
-      var elapsed = now - car.userData.rollInStart;
-      if (elapsed < 0) { anyMoving = true; return; }  // not started yet
-      if (elapsed >= ROLL_IN_DURATION_MS) {
-        // Snap to final grid position, clear state
-        placeCarOnTrack(car, car.userData.gridT, car.userData.gridLaneOff, 0);
-        car.userData.rollInStart = null;
-        return;
-      }
-      var raw = elapsed / ROLL_IN_DURATION_MS;
-      var eased = easeOutCubic(raw);
-      // Lerp track position from startT to gridT
-      var fromT = car.userData.rollInFromT;
-      var toT = car.userData.gridT;
-      // Handle wraparound (e.g. fromT=0.95, toT=0.98 — normal; but 0.97 → 0.00 across the loop)
-      var deltaT = toT - fromT;
-      if (deltaT < -0.5) deltaT += 1; else if (deltaT > 0.5) deltaT -= 1;
-      var currentT = ((fromT + deltaT * eased) % 1 + 1) % 1;
-      placeCarOnTrack(car, currentT, car.userData.gridLaneOff, 0);
-      anyMoving = true;
-    });
-    if (anyMoving) {
-      requestAnimationFrame(rollInFrame);
-    } else {
-      rollInActive = false;
-    }
+  // 4) Position camera once, behind player car, looking ahead.
+  // Pre-position so the first frame already shows the correct view —
+  // no jarring teleport when gameplay starts.
+  if (playerCar) {
+    var pcPos = playerCar.position.clone();
+    var pcT = (0.98 - ((playerList.findIndex(function(p){ return p.pid === playerId; }) || 0) * 0.004));
+    pcT = ((pcT % 1) + 1) % 1;
+    var pcTan = trackCurve.getTangentAt(pcT);
+    camera.position.copy(pcPos)
+      .add(pcTan.clone().multiplyScalar(-8.5))
+      .add(new THREE.Vector3(0, 3.2, 0));
+    camera.lookAt(pcPos.clone()
+      .add(pcTan.clone().multiplyScalar(14))
+      .add(new THREE.Vector3(0, 1.2, 0)));
   }
-  requestAnimationFrame(rollInFrame);
 
-  // 3) Start the sweeping cinematic camera
-  startCinematicLoop();
-
-  // 4) Show cinematic text immediately
-  showCinematicText('DRIVERS ON THE STARTING GRID', 'ALL SYSTEMS GO — PREPARE FOR LAUNCH');
-
-  // 5) Show player name cards (no setTimeout staggering — fire immediately)
-  var cardContainer = el('grid-cards');
-  cardContainer.innerHTML = '';
-  playerList.forEach(function(p, i) {
-    var card = document.createElement('div');
-    card.className = 'grid-card';
-    var cHex = p.pid === playerId ? playerColorHex : (p.color || NEON_HEX[i % NEON_HEX.length]);
-    card.style.borderColor = cHex;
-    card.style.color = cHex;
-    card.style.boxShadow = '0 0 12px ' + cHex + '55';
-    card.textContent = (p.pid === playerId ? '▶ ' : '') + (p.name || '?').toUpperCase();
-    cardContainer.appendChild(card);
-    // Stagger card pop-in only up to first 2 sec
-    var cardDelay = Math.min(400 + i * 150, 1800);
-    setTimeout(function() {
-      card.classList.add('in');
-      playRevEngine();
-    }, cardDelay);
-  });
-
-  // 6) ── SYNCHRONIZED COUNTDOWN ──
-  // Compute "time until gameplay" based on the server anchor.
-  // Every player works backward from the same target moment, so countdown
-  // and gameplay begin in perfect lockstep.
+  // 5) Synchronized timing — all players target the same gameplay-start moment
   var now = Date.now();
   var elapsedSinceStart = now - serverStartedAt;
   var msUntilGameplay = Math.max(0, RACE_INTRO_MS - elapsedSinceStart);
   var msUntilCountdown = Math.max(0, msUntilGameplay - RACE_COUNTDOWN_MS);
-
   console.log('[race-sync] startedAt=' + serverStartedAt + ' now=' + now +
               ' elapsed=' + elapsedSinceStart + 'ms' +
               ' countdown_in=' + msUntilCountdown + 'ms' +
               ' gameplay_in=' + msUntilGameplay + 'ms');
 
-  // If player is so late they've missed everything, skip straight to gameplay
+  // If player joined SO late they missed everything, skip straight to gameplay
   if (msUntilGameplay <= 100) {
     console.warn('[race-sync] player joined late, skipping intro');
-    hideCinematicText();
-    el('cinematic-overlay').classList.remove('on');
-    stopCinematicLoop();
     startRaceGameplay();
     return;
   }
 
-  // Schedule countdown to start at the exact synchronized moment
+  // 6) Render a few frames so the static grid view is visible during the wait.
+  // This is a minimal idle loop — just renders the static scene; cars don't move.
+  var preRaceRafId = null;
+  var preRaceActive = true;
+  function preRaceFrame() {
+    if (!preRaceActive) return;
+    // Keep nameplates facing camera
+    if (playerCar && playerCar.userData.nameLabel) playerCar.userData.nameLabel.lookAt(camera.position);
+    Object.values(otherCars).forEach(function(c) {
+      if (c.userData.nameLabel) c.userData.nameLabel.lookAt(camera.position);
+    });
+    renderer.render(scene, camera);
+    preRaceRafId = requestAnimationFrame(preRaceFrame);
+  }
+  preRaceFrame();
+
+  // 7) Schedule countdown
   setTimeout(function() {
-    hideCinematicText();
-    showCinematicText('RACE STARTING IN…', '');
+    el('q-txt').textContent = 'Starting…';
     setTimeout(function() {
-      el('cinematic-overlay').classList.remove('on');
-      stopCinematicLoop();
+      preRaceActive = false;
+      if (preRaceRafId) cancelAnimationFrame(preRaceRafId);
       runCountdown();
-    }, 200); // tiny visual breath between text-swap and countdown
+    }, 200);
   }, Math.max(0, msUntilCountdown - 200));
-}
-
-function showCinematicText(main, sub) {
-  var mt = el('cinematic-text');
-  var st = el('cinematic-sub');
-  mt.textContent = main;
-  st.textContent = sub;
-  mt.classList.add('show');
-  st.classList.add('show');
-}
-
-function hideCinematicText() {
-  el('cinematic-text').classList.remove('show');
-  el('cinematic-sub').classList.remove('show');
 }
 
 /* ============ COUNTDOWN ============ */
@@ -1998,7 +1695,6 @@ function updateTimingStrip() {
 function endRace() {
   gameRunning = false;
   if (rafId) { cancelAnimationFrame(rafId); rafId=null; }
-  stopCinematicLoop();
   stopAllMusic();
   if (gameRef) { try{ gameRef.off('value'); }catch(_){} gameRef=null; }
 }
@@ -2101,7 +1797,6 @@ function detachLobby() {
 /* ============ CLEANUP ============ */
 window.addEventListener('beforeunload', function() {
   if (rafId) { cancelAnimationFrame(rafId); rafId=null; }
-  stopCinematicLoop();
   [lobbyPRef, phaseRef, gameRef].forEach(function(r){ if(r){ try{ r.off('value'); }catch(_){} } });
   stopAllMusic();
 });
