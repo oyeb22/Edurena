@@ -1050,8 +1050,16 @@ function placeCarOnTrack(car, t, laneOff, bankAngle) {
   pos.add(td.normal.clone().multiplyScalar(laneOff));
   pos.y += 0.5;
   car.position.copy(pos);
-  var la = trackCurve.getPointAt(((clamped+0.01)%1+1)%1);
-  car.lookAt(la.x, la.y+0.5, la.z);
+
+  // v5.4: yaw-only rotation. Three.js lookAt() can tilt the car (roll)
+  // on curves because it tries to align with the up vector dynamically.
+  // We force the car upright (no roll) by setting rotation.y from the
+  // forward tangent only. This is "the side lifting on turns" fix.
+  var tan = td.tangent;
+  // atan2(x, z) gives the yaw such that +Z is forward. createCar puts
+  // headlights at -Z (front of car), so we offset by PI to face forward.
+  car.rotation.set(0, Math.atan2(tan.x, tan.z) + Math.PI, 0);
+
   if (bankAngle) car.rotateZ(bankAngle);
   if (car.userData.wheels) car.userData.wheels.forEach(function(w){ w.rotation.x+=0.3; });
   if (car.userData.nameLabel) car.userData.nameLabel.lookAt(camera.position);
@@ -1059,13 +1067,13 @@ function placeCarOnTrack(car, t, laneOff, bankAngle) {
 
 /* ============ CAMERA ============ */
 function updateCamera(dt, speedKmh) {
-  // Clean rebuild — SINGLE chase mode. Glued behind player car, looking ahead.
-  // No hood/cinematic branches. No mode switching. Just rear view.
+  // Clean rebuild — SINGLE chase mode. Glued CLOSE behind player car.
+  // No hood/cinematic branches. Just tight rear view, like real racing games.
   if (!playerCar) return;
 
   var carPos = playerCar.position;
   var td = getTrackData(myProgress_t);
-  var tangent = td.tangent;  // points FORWARD along track direction of travel
+  var tangent = td.tangent;  // forward direction along track
 
   // Mild speed-based shake (kept — feels good during nitro)
   var shake = cameraShake * (speedKmh / 300);
@@ -1074,21 +1082,25 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // Camera position: behind the car (opposite of forward) and slightly up
-  var CHASE_DIST   = 8.5;   // units behind the car
-  var CHASE_HEIGHT = 3.2;   // units above the car
-  var behind = tangent.clone().multiplyScalar(-CHASE_DIST);  // -tangent = backward direction
+  // v5.4: tightened chase camera — closer to the car so player sees the
+  // taillights + nitro flames + car rear. Previous distance (8.5) felt
+  // like watching from afar; this is "right behind the car" feel.
+  var CHASE_DIST   = 5.5;   // tighter — sit just behind the rear bumper
+  var CHASE_HEIGHT = 1.9;   // lower — eye-level near the roof, not above it
+  var behind = tangent.clone().multiplyScalar(-CHASE_DIST);
   var camTargetPos = carPos.clone()
-    .add(behind)                                    // place behind
-    .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))     // raise
-    .add(new THREE.Vector3(sx, sy, sz));            // mild shake
+    .add(behind)
+    .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))
+    .add(new THREE.Vector3(sx, sy, sz));
 
-  // Smooth camera follow (lerp)
-  camera.position.lerp(camTargetPos, Math.min(dt * 4, 1));
+  // v5.4: tighter lerp (was dt*4, now dt*8) so the camera follows the
+  // car through turns without drifting laterally. Previous lag caused
+  // the "camera is at a side angle" effect on curves.
+  camera.position.lerp(camTargetPos, Math.min(dt * 8, 1));
 
-  // Look at a point ahead of the car (along forward) so player sees the road ahead
-  var LOOK_AHEAD   = 14;     // units in front of car
-  var LOOK_HEIGHT  = 1.2;    // raise look point so we're looking slightly down at the road
+  // Look at a point ahead of the car, slightly above road level
+  var LOOK_AHEAD   = 10;     // further to see the road, but not so far the car gets tiny
+  var LOOK_HEIGHT  = 0.8;    // near car-height — looking along the road, not down at it
   var lookAtPos = carPos.clone()
     .add(tangent.clone().multiplyScalar(LOOK_AHEAD))
     .add(new THREE.Vector3(0, LOOK_HEIGHT, 0));
@@ -1224,11 +1236,11 @@ function runPreRaceCinematic(serverStartedAt) {
     pcT = ((pcT % 1) + 1) % 1;
     var pcTan = trackCurve.getTangentAt(pcT);
     camera.position.copy(pcPos)
-      .add(pcTan.clone().multiplyScalar(-8.5))
-      .add(new THREE.Vector3(0, 3.2, 0));
+      .add(pcTan.clone().multiplyScalar(-5.5))
+      .add(new THREE.Vector3(0, 1.9, 0));
     camera.lookAt(pcPos.clone()
-      .add(pcTan.clone().multiplyScalar(14))
-      .add(new THREE.Vector3(0, 1.2, 0)));
+      .add(pcTan.clone().multiplyScalar(10))
+      .add(new THREE.Vector3(0, 0.8, 0)));
   }
 
   // 5) Synchronized timing — all players target the same gameplay-start moment
