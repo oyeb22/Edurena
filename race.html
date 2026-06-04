@@ -387,6 +387,20 @@ var NEON_HEX = [
 ];
 
 /* ============ GAME STATE ============ */
+// v5.4: Detect mobile / low-end devices BEFORE init3D so we can downgrade
+// graphics quality. Heuristic: touch device + screen width < 900 OR pointer:coarse.
+// This catches all phones and most tablets, leaves desktops untouched.
+var IS_MOBILE = (function(){
+  try {
+    var ua = (navigator.userAgent || '').toLowerCase();
+    var isUA = /android|iphone|ipad|ipod|mobile|opera mini|iemobile/i.test(ua);
+    var isCoarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+    var isSmall = window.innerWidth < 900;
+    return isUA || (isCoarse && isSmall);
+  } catch(_) { return false; }
+})();
+console.log('[race] IS_MOBILE =', IS_MOBILE);
+
 var raceId = '';
 var playerId = '';
 var playerName = '';
@@ -671,13 +685,13 @@ function createCar(colorInt, colorHex, name, isPlayer) {
     var bodyG = new THREE.BoxGeometry(1.8,0.5,4.2);
     var bodyM = new THREE.MeshStandardMaterial({ color:colorInt, metalness:0.9, roughness:0.1 });
     var body = new THREE.Mesh(bodyG, bodyM);
-    body.position.y = 0.5; body.castShadow = true;
+    body.position.y = 0.5; if (!IS_MOBILE) body.castShadow = true;
     group.add(body);
 
     var cabinG = new THREE.BoxGeometry(1.4,0.4,2.2);
     var cabinM = new THREE.MeshStandardMaterial({ color:0x111111, metalness:0.95, roughness:0.05, transparent:true, opacity:0.85 });
     var cabin = new THREE.Mesh(cabinG, cabinM);
-    cabin.position.set(0,0.95,-0.2); cabin.castShadow = true;
+    cabin.position.set(0,0.95,-0.2); if (!IS_MOBILE) cabin.castShadow = true;
     group.add(cabin);
 
     var wsG = new THREE.PlaneGeometry(1.3,0.5);
@@ -702,7 +716,7 @@ function createCar(colorInt, colorHex, name, isPlayer) {
       var wg = new THREE.Group();
       var tw = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,0.25,16),
         new THREE.MeshStandardMaterial({ color:0x1a1a2e, metalness:0.7, roughness:0.3 }));
-      tw.rotation.z = Math.PI/2; tw.castShadow = true;
+      tw.rotation.z = Math.PI/2; if (!IS_MOBILE) tw.castShadow = true;
       wg.add(tw);
       var rim = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.26,8),
         new THREE.MeshStandardMaterial({ color:0x888888, metalness:0.95, roughness:0.1 }));
@@ -723,25 +737,31 @@ function createCar(colorInt, colorHex, name, isPlayer) {
   var hl2=new THREE.Mesh(hlG,hlM); hl2.position.set(0.5,0.55,-2.1);
   group.add(hl1); group.add(hl2);
 
-  // Headlight beams — work on both paths, important for night atmosphere
-  var b1=new THREE.SpotLight(0xffffaa,3,30,Math.PI/6,0.5,1);
-  b1.position.set(-0.5,0.55,-2.1); b1.target.position.set(-0.5,0,-10);
-  group.add(b1); group.add(b1.target);
-  var b2=new THREE.SpotLight(0xffffaa,3,30,Math.PI/6,0.5,1);
-  b2.position.set(0.5,0.55,-2.1); b2.target.position.set(0.5,0,-10);
-  group.add(b2); group.add(b2.target);
+  // Headlight beams — desktop only. Each SpotLight adds significant GPU
+  // cost; with 10 cars on mobile that's 20 spotlights — guaranteed lag.
+  // Mobile keeps the emissive headlight mesh (no light cost) for visual cue.
+  if (!IS_MOBILE) {
+    var b1=new THREE.SpotLight(0xffffaa,3,30,Math.PI/6,0.5,1);
+    b1.position.set(-0.5,0.55,-2.1); b1.target.position.set(-0.5,0,-10);
+    group.add(b1); group.add(b1.target);
+    var b2=new THREE.SpotLight(0xffffaa,3,30,Math.PI/6,0.5,1);
+    b2.position.set(0.5,0.55,-2.1); b2.target.position.set(0.5,0,-10);
+    group.add(b2); group.add(b2.target);
+  }
 
-  // Tail lights
+  // Tail lights (emissive mesh, no light cost — keep on mobile)
   var tlG=new THREE.BoxGeometry(0.3,0.12,0.08);
   var tlM=new THREE.MeshStandardMaterial({ color:0xff0000, emissive:0xff0000, emissiveIntensity:3 });
   var tl1=new THREE.Mesh(tlG,tlM); tl1.position.set(-0.5,0.6,2.1);
   var tl2=new THREE.Mesh(tlG,tlM); tl2.position.set(0.5,0.6,2.1);
   group.add(tl1); group.add(tl2);
 
-  // Under-glow — works on both, signature look
-  var ug = new THREE.PointLight(colorInt,2,8);
-  ug.position.set(0,0.1,0); group.add(ug);
-  group.userData.underglow = ug;
+  // Under-glow PointLight — desktop only (each is another GPU light)
+  if (!IS_MOBILE) {
+    var ug = new THREE.PointLight(colorInt,2,8);
+    ug.position.set(0,0.1,0); group.add(ug);
+    group.userData.underglow = ug;
+  }
 
   // Neon side strips
   var neonG=new THREE.BoxGeometry(0.05,0.05,3.8);
@@ -861,20 +881,26 @@ function generateTrack() {
     var fix=new THREE.Mesh(new THREE.SphereGeometry(0.3),
       new THREE.MeshStandardMaterial({ color:0x00d4ff, emissive:0x00d4ff, emissiveIntensity:3 }));
     fix.position.copy(fixPos); scene.add(fix);
-    var pl=new THREE.PointLight(0x00d4ff,1,25);
-    pl.position.copy(fixPos); scene.add(pl);
+    // v5.4 mobile: skip PointLight per pole. 40 streetlights × 1 light each
+    // = 40 dynamic lights, which destroys mid-range Android GPU performance.
+    // The emissive sphere above still glows visually.
+    if (!IS_MOBILE) {
+      var pl=new THREE.PointLight(0x00d4ff,1,25);
+      pl.position.copy(fixPos); scene.add(pl);
+    }
   }
 
   // Ground grid
   var groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(600,600,100,100),
     new THREE.MeshStandardMaterial({ color:0x0a0a15, metalness:0.3, roughness:0.9 }));
   groundMesh.rotation.x=-Math.PI/2; groundMesh.position.y=-2;
-  groundMesh.receiveShadow=true; scene.add(groundMesh);
+  if (!IS_MOBILE) groundMesh.receiveShadow=true; scene.add(groundMesh);
   var grid=new THREE.GridHelper(600,120,0x1a1a35,0x0f0f20);
   grid.position.y=-1.9; scene.add(grid);
 
-  // City buildings
-  for(var i=0;i<80;i++){
+  // City buildings — fewer on mobile (geometry + PBR material cost adds up)
+  var BUILDING_COUNT = IS_MOBILE ? 40 : 80;
+  for(var i=0;i<BUILDING_COUNT;i++){
     var bt=Math.random();
     var bpt=trackCurve.getPointAt(bt);
     var btan=trackCurve.getTangentAt(bt);
@@ -886,7 +912,7 @@ function generateTrack() {
       new THREE.MeshStandardMaterial({ color:new THREE.Color().setHSL(0.6+Math.random()*.15,0.3,0.08+Math.random()*.05), metalness:0.8, roughness:0.2 }));
     bMesh.position.copy(bpt);
     bMesh.position.add(bnorm.multiplyScalar(bdist*bside));
-    bMesh.position.y=bh/2-2; bMesh.castShadow=true; scene.add(bMesh);
+    bMesh.position.y=bh/2-2; if (!IS_MOBILE) bMesh.castShadow=true; scene.add(bMesh);
     // Window glow plane
     var wMesh=new THREE.Mesh(new THREE.PlaneGeometry(bw*.8,bh*.6),
       new THREE.MeshBasicMaterial({ color:new THREE.Color().setHSL(Math.random(),0.8,0.5), transparent:true, opacity:.15+Math.random()*.2 }));
@@ -926,31 +952,46 @@ function init3D() {
 
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 500);
 
-  renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:false });
+  // v5.4: Mobile-aware renderer. Antialiasing + shadows + high pixel ratio
+  // turn mid-range Android phones into slideshows. Detect mobile and downgrade.
+  renderer = new THREE.WebGLRenderer({
+    canvas:canvas,
+    antialias: !IS_MOBILE,    // disable AA on mobile (huge GPU savings)
+    alpha:false,
+    powerPreference: IS_MOBILE ? 'low-power' : 'high-performance'
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
+  // Shadows are the single biggest mobile killer — disable entirely on phones.
+  renderer.shadowMap.enabled = !IS_MOBILE;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
   renderer.outputEncoding = THREE.sRGBEncoding;
 
-  // Sky box (procedural, simple — Phase B.1 HDR removed)
+  // Sky box (procedural, simple)
   var skyG=new THREE.BoxGeometry(300,300,300);
   var skyM=new THREE.MeshBasicMaterial({ color:0x050810, side:THREE.BackSide });
   scene.add(new THREE.Mesh(skyG,skyM));
 
-  // Lighting
-  scene.add(new THREE.AmbientLight(0x1a1a3a, 0.5));
-  var moon=new THREE.DirectionalLight(0x4466aa, 0.8);
-  moon.position.set(50,100,50); moon.castShadow=true;
-  moon.shadow.mapSize.width=2048; moon.shadow.mapSize.height=2048;
-  moon.shadow.camera.near=0.5; moon.shadow.camera.far=300;
-  moon.shadow.camera.left=-100; moon.shadow.camera.right=100;
-  moon.shadow.camera.top=100; moon.shadow.camera.bottom=-100;
+  // Lighting — mobile uses simpler setup
+  // Boost ambient on mobile to compensate for no shadows / fewer lights
+  scene.add(new THREE.AmbientLight(0x2a2a4a, IS_MOBILE ? 0.9 : 0.5));
+  var moon=new THREE.DirectionalLight(0x6688cc, IS_MOBILE ? 1.0 : 0.8);
+  moon.position.set(50,100,50);
+  if (!IS_MOBILE) {
+    moon.castShadow = true;
+    moon.shadow.mapSize.width=2048; moon.shadow.mapSize.height=2048;
+    moon.shadow.camera.near=0.5; moon.shadow.camera.far=300;
+    moon.shadow.camera.left=-100; moon.shadow.camera.right=100;
+    moon.shadow.camera.top=100; moon.shadow.camera.bottom=-100;
+  }
   scene.add(moon);
-  var n1=new THREE.PointLight(0x00d4ff,2,100); n1.position.set(0,20,0); scene.add(n1);
-  var n2=new THREE.PointLight(0xff00aa,1.5,80); n2.position.set(60,15,-40); scene.add(n2);
+  // Track-side neon point lights — desktop only. Mobile GPU can't handle them.
+  if (!IS_MOBILE) {
+    var n1=new THREE.PointLight(0x00d4ff,2,100); n1.position.set(0,20,0); scene.add(n1);
+    var n2=new THREE.PointLight(0xff00aa,1.5,80); n2.position.set(60,15,-40); scene.add(n2);
+  }
 
   generateTrack();
   canvas.style.display = 'block';
