@@ -799,7 +799,7 @@ function createCar(colorInt, colorHex, name, isPlayer) {
 
 /* ============ TRACK GENERATION ============ */
 function generateTrack() {
-  // ─── TRACK CURVE (kept — same hilly racing line) ───
+  // ─── TRACK CURVE (v5.4: FLAT — no vertical undulation, road sits on ground) ───
   var pts = [];
   var numPts = 60;
   var radius = 80;
@@ -808,8 +808,8 @@ function generateTrack() {
     var r = radius + Math.sin(t*3)*20 + Math.cos(t*5)*10;
     var x = Math.cos(t)*r;
     var z = Math.sin(t)*r;
-    var y = Math.sin(t*2)*15 + Math.cos(t*4)*5;
-    pts.push(new THREE.Vector3(x,y,z));
+    // y stays 0 — no hills. Track is a flat winding loop, sits on ground plane.
+    pts.push(new THREE.Vector3(x, 0, z));
   }
   trackCurve = new THREE.CatmullRomCurve3(pts, true);
   trackCurve.tension = 0.5;
@@ -1263,13 +1263,19 @@ function updateCamera(dt, speedKmh) {
   cameraShake *= cameraShakeDecay;
 
   if (cameraMode==='chase') {
-    var dist = 6 + Math.max(0,(300-speedKmh)/50);
-    var height = 2.5 + Math.max(0,(300-speedKmh)/100);
+    var dist = 7 + Math.max(0,(300-speedKmh)/50);     // a bit farther back than before
+    var height = 3.0 + Math.max(0,(300-speedKmh)/100); // slightly higher for road visibility
     var offset = tangent.clone().multiplyScalar(dist).add(td.normal.clone().multiplyScalar(1.5));
     offset.y = height;
     var target = carPos.clone().sub(offset).add(new THREE.Vector3(sx,sy,sz));
     camera.position.lerp(target, Math.min(dt*3,1));
-    camera.lookAt(carPos.clone().add(new THREE.Vector3(0,1,0)));
+    // v5.4: look at a point AHEAD of the car (along its tangent direction)
+    // instead of straight at the car. This shows the road the player is
+    // about to drive on — like every racing game's chase view.
+    var lookTarget = carPos.clone()
+      .add(tangent.clone().multiplyScalar(12))    // 12 units forward along the track
+      .add(new THREE.Vector3(0, 1.0, 0));         // 1 unit up
+    camera.lookAt(lookTarget);
   } else if (cameraMode==='hood') {
     var ho = tangent.clone().multiplyScalar(-1.5).add(new THREE.Vector3(0,1.2,0));
     var hoodTarget = carPos.clone().add(ho).add(new THREE.Vector3(sx*.5,sy*.5,sz*.5));
@@ -1285,28 +1291,15 @@ function updateCamera(dt, speedKmh) {
   }
 }
 
-// v5.4 3e: Camera mode cooldown. The setCameraMode function was being
-// called repeatedly by checkOvertakes() whenever player ranks shifted —
-// every Firebase tick (~every 200ms-1s for active races). Result: camera
-// flipped to "hood" / "cinematic" multiple times per second, looking glitchy.
-// Now: once a mode change fires, ignore further requests for COOLDOWN_MS.
-var cameraModeChangedAt = 0;
-var CAMERA_MODE_COOLDOWN_MS = 4000;
-
+// v5.4: Camera mode locked to chase during gameplay. Previously the camera
+// would flip to 'hood' on overtakes and 'cinematic' on wrong answers, which
+// felt disorienting — players lost their sense of where they were going.
+// Now setCameraMode is a no-op for everything except 'chase'. Dramatic
+// camera moves (slow-motion side-wheel shots on overtake, etc.) are reserved
+// for the future host spectator view, not the player's own view.
 function setCameraMode(mode, ms) {
-  var now = Date.now();
-  // If a non-default mode is already active and within cooldown, ignore new requests.
-  // Exception: explicit 'chase' (default) calls always go through, so internal
-  // timeouts can reset cleanly.
-  if (mode !== 'chase' && cameraMode !== 'chase' && (now - cameraModeChangedAt) < CAMERA_MODE_COOLDOWN_MS) {
-    return; // honor cooldown — silently drop the duplicate request
-  }
-  cameraMode = mode;
-  cameraModeChangedAt = now;
-  if (ms) setTimeout(function(){
-    cameraMode = 'chase';
-    cameraModeChangedAt = Date.now();
-  }, ms);
+  // Always force chase — ignore the requested mode entirely.
+  cameraMode = 'chase';
 }
 
 /* ============ PARTICLES ============ */
@@ -1720,8 +1713,8 @@ function checkOvertakes() {
     if (lastPos !== undefined) {
       if (lastPos < myRank && currentPos > myRank) {
         showOvertakeNotif('YOU OVERTOOK ' + (p.name||'?').toUpperCase());
-        setCameraMode('hood', 2000);
-        cameraShake = 0.3;
+        // v5.4: removed setCameraMode('hood', 2000) + cameraShake=0.3 — those
+        // disoriented the player. Notification text alone signals the overtake.
         lastOvertakeTime = now;
       } else if (lastPos > myRank && currentPos < myRank) {
         showPosChange('down','P'+currentPos);
@@ -1930,7 +1923,8 @@ function submitAns(answer, btnEl) {
         if (streak>=3) {
           nitroUntil=Date.now()+3000;
           showBanner('nitro'); playNitro(); playStreakMilestone(streak);
-          setCameraMode('hood',1500); cameraShake=0.2;
+          // v5.4: removed setCameraMode + cameraShake — banner + sound + speed boost
+          // signal the nitro without disorienting the player's view.
         } else {
           boostUntil=Date.now()+1500;
         }
@@ -1947,7 +1941,7 @@ function submitAns(answer, btnEl) {
         }
         flashScreen('wrong'); playWrong();
         wrongUntil=Date.now()+2000;
-        showBanner('wrong'); setCameraMode('cinematic',1500);
+        showBanner('wrong'); // v5.4: removed setCameraMode('cinematic') — chase view stays
         db.ref('race/'+raceId+'/players/'+playerId).update({ streak:0 });
       }
       setTimeout(function(){ currentQ++; loadQ(); }, 1500);
