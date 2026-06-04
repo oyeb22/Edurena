@@ -1051,16 +1051,15 @@ function placeCarOnTrack(car, t, laneOff, bankAngle) {
   pos.y += 0.5;
   car.position.copy(pos);
 
-  // v5.4: yaw-only rotation. Three.js lookAt() can tilt the car (roll)
-  // on curves because it tries to align with the up vector dynamically.
-  // We force the car upright (no roll) by setting rotation.y from the
-  // forward tangent only. This is "the side lifting on turns" fix.
+  // v5.4: yaw-only rotation. The bankAngle parameter is IGNORED — the
+  // renderLoop still computes a bank from track curvature and passes it
+  // in, but applying it caused the "car tilting on curves" bug. The car
+  // stays perfectly upright; only its yaw (Y-axis rotation) changes.
   var tan = td.tangent;
-  // atan2(x, z) gives the yaw such that +Z is forward. createCar puts
-  // headlights at -Z (front of car), so we offset by PI to face forward.
+  // atan2(x, z) gives yaw such that +Z is forward. createCar puts
+  // headlights at -Z (front of car), so add PI to face forward.
   car.rotation.set(0, Math.atan2(tan.x, tan.z) + Math.PI, 0);
 
-  if (bankAngle) car.rotateZ(bankAngle);
   if (car.userData.wheels) car.userData.wheels.forEach(function(w){ w.rotation.x+=0.3; });
   if (car.userData.nameLabel) car.userData.nameLabel.lookAt(camera.position);
 }
@@ -1476,6 +1475,23 @@ function startRaceGameplay() {
   gameRunning = true;
   el('game-hud').classList.add('on');
   el('bottom-panel').classList.remove('hidden');
+
+  // v5.4: Initialize playerPos so the FIRST frame of renderLoop computes
+  // myProgress_t matching where the car actually is (gridT in pre-race).
+  // Previously playerPos=0 made the camera fetch tangent for t=0 while the
+  // car was still at t≈0.98, causing the "camera jumps to weird angle on
+  // race start" bug. Player index = position in lobby; their gridT was
+  // 0.98 - (index * 0.004) from runPreRaceCinematic.
+  if (trackCurve) {
+    var playerList = Object.values(allPlayers);
+    var myIdx = playerList.findIndex(function(p){ return p.pid === playerId; });
+    if (myIdx < 0) myIdx = 0;
+    var gridT = 0.98 - (myIdx * 0.004);
+    gridT = ((gridT % 1) + 1) % 1;
+    var trackLen = trackCurve.getLength();
+    playerPos = gridT * trackLen;
+    myProgress_t = gridT;
+  }
 
   // v5.4 mobile diagnostic: log panel state every 2 sec for 30 sec so we
   // can see if anything is hiding the panel intermittently. Remove this
