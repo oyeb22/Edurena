@@ -1205,16 +1205,15 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // Fixed chase camera — positioned ABOVE the car, looking DOWN.
-  // v5.4 final approach: camera at height 3.5 (well above car roof at 1.55),
-  // looking at a point close to the car at base level (0.3). This gives a
-  // STEEP downward angle. Perspective puts close objects HIGH in the frame
-  // when camera is looking down — so the car appears in upper portion of
-  // screen, well above the question panel.
-  var CHASE_DIST   = 4.0;   // a touch further back
-  var CHASE_HEIGHT = 3.5;   // HIGH — looking down on the car
-  var LOOK_AHEAD   = 5;     // close look-target = steep down angle
-  var LOOK_HEIGHT  = 0.3;   // road level — camera tilts DOWN
+  // v5.4 final: camera positioned at car eye-level, looking SLIGHTLY UP.
+  // This pushes the car into the upper portion of the frame — above the
+  // question panel. (Previous "high camera looking down" approach put the
+  // car too low because steep downward angles push close objects to the
+  // bottom of the view.)
+  var CHASE_DIST   = 4.5;   // a bit further back so full rear is in frame
+  var CHASE_HEIGHT = 1.8;   // eye-level with car roof — same height as cabin top
+  var LOOK_AHEAD   = 12;    // longer look ahead = more level camera
+  var LOOK_HEIGHT  = 2.5;   // look at point ABOVE car — camera tilts UP slightly
 
   // Camera position = car position - forward * distance + up * height
   // Direct copy, no lerp.
@@ -1362,11 +1361,11 @@ function runPreRaceCinematic(serverStartedAt) {
     var pcYaw = Math.atan2(pcTan.x, pcTan.z) + Math.PI;
     var pcForward = new THREE.Vector3(-Math.sin(pcYaw), 0, -Math.cos(pcYaw));
     camera.position.copy(pcPos)
-      .sub(pcForward.clone().multiplyScalar(4.0))
-      .add(new THREE.Vector3(0, 3.5, 0));
+      .sub(pcForward.clone().multiplyScalar(4.5))
+      .add(new THREE.Vector3(0, 1.8, 0));
     camera.lookAt(pcPos.clone()
-      .add(pcForward.clone().multiplyScalar(5))
-      .add(new THREE.Vector3(0, 0.3, 0)));
+      .add(pcForward.clone().multiplyScalar(12))
+      .add(new THREE.Vector3(0, 2.5, 0)));
   }
 
   // 5) Synchronized timing — all players target the same gameplay-start moment
