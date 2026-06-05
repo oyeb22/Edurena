@@ -1159,25 +1159,14 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // v5.4 SIMPLIFIED: Single chase distance at ALL speeds. User's spec:
-  // "the camera view and size when normal... that is how it should be when
-  // on acceleration and when on nitro." So we lock the distance and only
-  // vary the lerp catch-up speed. Result: car appears the SAME size at
-  // every speed, no shrinking on boost/nitro.
-  var now = Date.now();
-  var inNitro = nitroUntil > now;
-  var inBoost = boostUntil > now;
-
+  // v5.4 FIXED: PIN camera to car. No lerp = no chance for the car to
+  // drift ahead of the camera during boost/nitro. The car appears at
+  // EXACTLY the same on-screen size at every speed. Sense of speed
+  // comes from the world scrolling past (track, ground, scenery),
+  // not from the car physically separating from the camera. This is
+  // how Asphalt, NFS, GT all handle their chase cam at high speed.
   var CHASE_DIST   = 3.0;
   var CHASE_HEIGHT = 1.5;
-  var lerpRate;
-  if (inNitro) {
-    lerpRate = 22;  // very fast catch-up — keeps car glued at 3.0 even at nitro speed
-  } else if (inBoost) {
-    lerpRate = 16;  // fast catch-up
-  } else {
-    lerpRate = 10;
-  }
 
   var behind = tangent.clone().multiplyScalar(-CHASE_DIST);
   var camTargetPos = carPos.clone()
@@ -1185,7 +1174,8 @@ function updateCamera(dt, speedKmh) {
     .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))
     .add(new THREE.Vector3(sx, sy, sz));
 
-  camera.position.lerp(camTargetPos, Math.min(dt * lerpRate, 1));
+  // Direct copy — no lerp. Camera is locked to car's frame.
+  camera.position.copy(camTargetPos);
 
   // Look at a point ahead of the car
   // v5.4: LOOK_HEIGHT raised to 1.0 so the camera pitches up slightly,
@@ -1732,16 +1722,16 @@ function loadQ() {
     db.ref('race/' + raceId + '/players/' + playerId).update({
       finished:true, progress:1, updatedAt:firebase.database.ServerValue.TIMESTAMP
     });
-    // v5.4: reposition finish line right ahead of player so they drive
-    // into it. Place at +12% of track from current position — close enough
-    // to reach in a few seconds even at base speed, far enough for a
-    // dramatic nitro approach.
-    if (typeof repositionFinishLine === 'function') {
-      // Override the standard 0.25 placement with a closer one (0.12).
-      var trackLenR = trackCurve.getLength();
-      var newT = (myProgress_t + 0.12) % 1;
+    // v5.4: place + REVEAL finish line right ahead of player ONLY now —
+    // after the last question is answered. Previously the line was
+    // revealed during the last Q which caused it to be visible while
+    // the player was still driving and could loop past it. Now: revealed
+    // here, placed 15% ahead, player drives into it once.
+    if (trackCurve) {
+      var newT = (myProgress_t + 0.15) % 1;
       window.__finishT = newT;
-      window.__finishCrossed = false;  // reset in case the line was already nearby
+      window.__finishCrossed = false;
+      finishLineRevealed = true;  // critical: renderLoop reads this for visibility
       repositionFinishLineTo(newT);
     }
     // Dramatic nitro burst as they head for the line
@@ -1758,16 +1748,10 @@ function loadQ() {
     return;
   }
 
-  // v5.4: if THIS is the last question, reveal the finish arch + stripe NOW
-  // AND reposition them to appear ~25% of track ahead of player's current
-  // position. This avoids the cross-loop visibility issue (where players
-  // could see the line on the OTHER side of the loop, looking like two
-  // finish lines). The line is dynamically placed so it's always AHEAD on
-  // the player's path, regardless of where they are when last Q loads.
-  if (currentQ === totalQ - 1 && !finishLineRevealed) {
-    finishLineRevealed = true;
-    repositionFinishLine();
-  }
+  // v5.4: Finish line is NOT revealed during the last question anymore.
+  // Previously this caused issues where the player would loop past the
+  // line while still answering the last Q. Now it only appears AFTER
+  // answering the last Q (handled in the currentQ >= totalQ branch above).
 
   var q = questions[currentQ];
   el('q-num').textContent = 'Q ' + (currentQ+1) + ' / ' + totalQ;
