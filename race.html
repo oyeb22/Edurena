@@ -1159,30 +1159,24 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // v5.4: DYNAMIC chase distance based on player state. When the car
-  // accelerates (boost or nitro), the lerp can't catch up immediately —
-  // car drifts forward, appearing smaller on screen. Fix: pull the
-  // camera CLOSER during boost/nitro so the apparent on-screen size
-  // stays consistent. Also tighten lerp speed so it catches up quickly.
+  // v5.4 SIMPLIFIED: Single chase distance at ALL speeds. User's spec:
+  // "the camera view and size when normal... that is how it should be when
+  // on acceleration and when on nitro." So we lock the distance and only
+  // vary the lerp catch-up speed. Result: car appears the SAME size at
+  // every speed, no shrinking on boost/nitro.
   var now = Date.now();
   var inNitro = nitroUntil > now;
   var inBoost = boostUntil > now;
 
-  var CHASE_DIST;
-  var CHASE_HEIGHT;
+  var CHASE_DIST   = 3.0;
+  var CHASE_HEIGHT = 1.5;
   var lerpRate;
   if (inNitro) {
-    CHASE_DIST   = 1.7;   // tightest — counteracts max lerp lag + makes car BIG
-    CHASE_HEIGHT = 1.2;
-    lerpRate     = 18;
+    lerpRate = 22;  // very fast catch-up — keeps car glued at 3.0 even at nitro speed
   } else if (inBoost) {
-    CHASE_DIST   = 2.2;
-    CHASE_HEIGHT = 1.3;
-    lerpRate     = 14;
+    lerpRate = 16;  // fast catch-up
   } else {
-    CHASE_DIST   = 3.0;   // normal — rear bumper close
-    CHASE_HEIGHT = 1.5;
-    lerpRate     = 10;
+    lerpRate = 10;
   }
 
   var behind = tangent.clone().multiplyScalar(-CHASE_DIST);
@@ -1449,7 +1443,33 @@ function renderLoop(now) {
   currentSpeed += (targetSpeed - currentSpeed) * Math.min(dt * 5, 1);
 
   // Advance position
-  playerPos += currentSpeed * dt;
+  // v5.4 finish behavior:
+  //  - During the race: advance normally.
+  //  - After last Q answered (myFinished=true): keep advancing UNTIL the
+  //    player actually reaches the finish line position; then freeze.
+  //  Prevents the car from looping past the finish line and the "I saw two
+  //  finish lines" bug, while still giving the satisfying drive-into-line
+  //  moment with nitro.
+  if (myFinished && typeof window.__finishT === 'number' && !window.__finishCrossed) {
+    // Compute distance from current progress to finish line (shortest along loop)
+    var dT = (window.__finishT - myProgress_t + 1) % 1;
+    if (dT < 0.02) {
+      // Reached the line — freeze here for dramatic stop
+      window.__finishCrossed = true;
+      var trackLenF = trackCurve.getLength();
+      playerPos = window.__finishT * trackLenF;
+    } else {
+      playerPos += currentSpeed * dt;
+    }
+  } else if (myFinished && window.__finishCrossed) {
+    // After crossing: hold position, coast speed down for visual stop
+    var trackLenF2 = trackCurve.getLength();
+    playerPos = window.__finishT * trackLenF2;
+    currentSpeed *= 0.85;
+  } else {
+    // Normal race progression
+    playerPos += currentSpeed * dt;
+  }
   var trackLen = trackCurve ? trackCurve.getLength() : 2000;
   myProgress_t = ((playerPos / trackLen) % 1 + 1) % 1;
 
@@ -1656,18 +1676,12 @@ function startRaceGameplay() {
 }
 
 /* ============ FINISH LINE PLACEMENT ============ */
-// v5.4: dynamically reposition the finish arch + checker stripe to be ~25%
-// of track ahead of the player's current position. Solves the cross-loop
-// visibility issue where the player could see the finish line on the OTHER
-// side of the loop, making it look like "two finish lines."
-function repositionFinishLine() {
+// v5.4: dynamically reposition the finish arch + checker stripe to a chosen
+// track position. Solves the cross-loop visibility issue where the player
+// could see the finish line on the OTHER side of the loop.
+function repositionFinishLineTo(finishT) {
   if (!trackCurve || !window.__finishStripe || !window.__finishArch) return;
-
-  // Place finish line 25% of track ahead of current player position.
-  // This gives the player enough distance to "approach" it dramatically
-  // while answering the last question, without it being so far they wonder
-  // where it is.
-  var finishT = (myProgress_t + 0.25) % 1;
+  window.__finishT = finishT;
   var finishPt = trackCurve.getPointAt(finishT);
   var finishTan = trackCurve.getTangentAt(finishT);
   var finishNorm = new THREE.Vector3(-finishTan.z, 0, finishTan.x).normalize();
@@ -1676,16 +1690,12 @@ function repositionFinishLine() {
   var stripe = window.__finishStripe;
   stripe.position.copy(finishPt);
   stripe.position.y = 0.05;
-  // The stripe was rotated by -PI/2 on X at creation. To re-orient it for
-  // a new tangent direction, easiest is to rebuild the rotation: lookAt
-  // forward, then rotateX(-PI/2) to lie flat on road.
+  stripe.rotation.set(0, 0, 0);  // reset before re-orienting
   stripe.lookAt(finishPt.clone().add(finishTan));
   stripe.rotateX(-Math.PI / 2);
 
-  // Reposition the arch group
+  // Reposition the arch group children
   var arch = window.__finishArch;
-  // Move all children of the archGroup to the new location.
-  // Posts are at offsets +/- (TRACK_WIDTH/2 + 1) from center along norm.
   var children = arch.children;
   if (children.length >= 3) {
     var postL = children[0];
@@ -1697,9 +1707,15 @@ function repositionFinishLine() {
     postR.position.y = 4.5;
     banner.position.copy(finishPt);
     banner.position.y = 8.5;
-    // Re-orient banner to face along the new track direction
+    banner.rotation.set(0, 0, 0);
     banner.lookAt(finishPt.clone().add(finishTan).setY(8.5));
   }
+}
+// Auto-placement: 25% of track ahead of current player position
+function repositionFinishLine() {
+  if (!trackCurve) return;
+  var finishT = (myProgress_t + 0.25) % 1;
+  repositionFinishLineTo(finishT);
 }
 
 /* ============ QUESTIONS ============ */
@@ -1712,14 +1728,24 @@ function loadQ() {
   if (currentQ >= totalQ) {
     el('q-txt').textContent = '🏁 FINISH AHEAD!';
     el('q-area').innerHTML = '<div class="answered-msg">' + totalQ + ' / ' + totalQ + ' complete — cross the line!</div>';
-    myProgress_t = 1; myFinished = true;
+    myFinished = true;
     db.ref('race/' + raceId + '/players/' + playerId).update({
       finished:true, progress:1, updatedAt:firebase.database.ServerValue.TIMESTAMP
     });
-    // v5.4: dramatic finish — give the player ~3.5s to drive into the
-    // (already-revealed) finish arch before the congrats overlay covers
-    // the view. Plus extra nitro burst as they cross.
-    nitroUntil = Date.now() + 3000;
+    // v5.4: reposition finish line right ahead of player so they drive
+    // into it. Place at +12% of track from current position — close enough
+    // to reach in a few seconds even at base speed, far enough for a
+    // dramatic nitro approach.
+    if (typeof repositionFinishLine === 'function') {
+      // Override the standard 0.25 placement with a closer one (0.12).
+      var trackLenR = trackCurve.getLength();
+      var newT = (myProgress_t + 0.12) % 1;
+      window.__finishT = newT;
+      window.__finishCrossed = false;  // reset in case the line was already nearby
+      repositionFinishLineTo(newT);
+    }
+    // Dramatic nitro burst as they head for the line
+    nitroUntil = Date.now() + 4000;
     spawnNitroParticles(playerCar);
     playFinish();
     setTimeout(function() {
@@ -1824,7 +1850,8 @@ function submitAns(answer, btnEl) {
       }
       flashScreen('correct'); playCorrect();
       if (streak >= 3) {
-        nitroUntil = Date.now() + 3000;
+        // v5.4: nitro lasts longer than boost (4s vs 1.5s) so streak feels powerful
+        nitroUntil = Date.now() + 4000;
         showBanner('nitro'); playNitro(); playStreakMilestone(streak);
       } else {
         boostUntil = Date.now() + 1500;
