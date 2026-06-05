@@ -1129,28 +1129,45 @@ function placeCarOnTrack(car, t, laneOff, bankAngle) {
   pos.y += 0.5;
   car.position.copy(pos);
 
-  // v5.4: yaw-only rotation. The bankAngle parameter is IGNORED — the
-  // renderLoop still computes a bank from track curvature and passes it
-  // in, but applying it caused the "car tilting on curves" bug. The car
-  // stays perfectly upright; only its yaw (Y-axis rotation) changes.
+  // v5.4 HexGL-inspired: SMOOTH yaw transition. The car's actual rotation.y
+  // lerps toward the target yaw (derived from track tangent). Without this
+  // smoothing, the camera (which is derived from car position+rotation)
+  // snaps direction whenever tangent changes sharply on curves = "zigzag."
+  // With smoothing, both car and camera transition gently through turns.
   var tan = td.tangent;
-  // atan2(x, z) gives yaw such that +Z is forward. createCar puts
-  // headlights at -Z (front of car), so add PI to face forward.
-  car.rotation.set(0, Math.atan2(tan.x, tan.z) + Math.PI, 0);
+  var targetYaw = Math.atan2(tan.x, tan.z) + Math.PI;
+  if (typeof car.userData.smoothYaw !== 'number') {
+    car.userData.smoothYaw = targetYaw;  // initialize on first frame
+  }
+  // Lerp the smoothYaw toward targetYaw. Handle wrap-around (yaw mod 2π).
+  var TWO_PI = Math.PI * 2;
+  var diff = ((targetYaw - car.userData.smoothYaw) % TWO_PI + TWO_PI) % TWO_PI;
+  if (diff > Math.PI) diff -= TWO_PI;  // take the shorter angular path
+  car.userData.smoothYaw += diff * 0.15;  // 15% per frame — smooth but responsive
+  car.rotation.set(0, car.userData.smoothYaw, 0);
 
   if (car.userData.wheels) car.userData.wheels.forEach(function(w){ w.rotation.x+=0.3; });
   if (car.userData.nameLabel) car.userData.nameLabel.lookAt(camera.position);
 }
 
-/* ============ CAMERA ============ */
+/* ============ CAMERA — HexGL-inspired chase ============ */
+// Adapted from BKcore/HexGL CameraChase.js — direct-copy chase camera
+// (no lerp on position). Smoothness comes from the CAR's rotation being
+// lerped, not the camera. Camera derives its direction from the car's
+// current rotation, so when the car rotates smoothly through a turn,
+// the camera also moves smoothly — no zigzag.
 function updateCamera(dt, speedKmh) {
-  // Clean rebuild — SINGLE chase mode. Glued CLOSE behind player car.
-  // No hood/cinematic branches. Just tight rear view, like real racing games.
   if (!playerCar) return;
 
   var carPos = playerCar.position;
-  var td = getTrackData(myProgress_t);
-  var tangent = td.tangent;  // forward direction along track
+
+  // Derive forward direction from the car's CURRENT rotation (not raw track
+  // tangent). Since car.rotation.y is smoothed (lerped in placeCarOnTrack),
+  // this direction transitions smoothly even on sharp curves.
+  // Forward = -Z in local space (createCar puts headlights at -Z).
+  // After Y rotation: forward in world = (-sin(yaw), 0, -cos(yaw)).
+  var yaw = playerCar.rotation.y;
+  var forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
 
   // Mild speed-based shake (kept — feels good during nitro)
   var shake = cameraShake * (speedKmh / 300);
@@ -1159,33 +1176,23 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // v5.4 FIXED: PIN camera to car. No lerp = no chance for the car to
-  // drift ahead of the camera during boost/nitro. The car appears at
-  // EXACTLY the same on-screen size at every speed. Sense of speed
-  // comes from the world scrolling past (track, ground, scenery),
-  // not from the car physically separating from the camera. This is
-  // how Asphalt, NFS, GT all handle their chase cam at high speed.
-  var CHASE_DIST   = 3.0;
-  var CHASE_HEIGHT = 1.5;
+  // Fixed chase distance — no pull-back at speed. Car stays same size.
+  var CHASE_DIST   = 3.2;
+  var CHASE_HEIGHT = 1.6;
 
-  var behind = tangent.clone().multiplyScalar(-CHASE_DIST);
-  var camTargetPos = carPos.clone()
-    .add(behind)
+  // Camera position = car position - forward * distance + up * height
+  // Direct copy, no lerp. (HexGL pattern: smooth rotation, snap position.)
+  var camPos = carPos.clone()
+    .sub(forward.clone().multiplyScalar(CHASE_DIST))
     .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))
     .add(new THREE.Vector3(sx, sy, sz));
+  camera.position.copy(camPos);
 
-  // Direct copy — no lerp. Camera is locked to car's frame.
-  camera.position.copy(camTargetPos);
-
-  // Look at a point ahead of the car
-  // v5.4: LOOK_HEIGHT raised to 1.0 so the camera pitches up slightly,
-  // which puts the car in the lower-center of view but still ABOVE the
-  // question panel. Without this, the closer camera + low look point
-  // would push the car down behind the panel.
-  var LOOK_AHEAD   = 8;
-  var LOOK_HEIGHT  = 1.0;
+  // Look at a point AHEAD of the car along its forward direction.
+  var LOOK_AHEAD   = 10;
+  var LOOK_HEIGHT  = 0.9;
   var lookAtPos = carPos.clone()
-    .add(tangent.clone().multiplyScalar(LOOK_AHEAD))
+    .add(forward.clone().multiplyScalar(LOOK_AHEAD))
     .add(new THREE.Vector3(0, LOOK_HEIGHT, 0));
   camera.lookAt(lookAtPos);
 }
@@ -1318,12 +1325,15 @@ function runPreRaceCinematic(serverStartedAt) {
     var pcT = (0.98 - ((playerList.findIndex(function(p){ return p.pid === playerId; }) || 0) * 0.004));
     pcT = ((pcT % 1) + 1) % 1;
     var pcTan = trackCurve.getTangentAt(pcT);
+    // v5.4: derive forward from yaw computed exactly like updateCamera does
+    var pcYaw = Math.atan2(pcTan.x, pcTan.z) + Math.PI;
+    var pcForward = new THREE.Vector3(-Math.sin(pcYaw), 0, -Math.cos(pcYaw));
     camera.position.copy(pcPos)
-      .add(pcTan.clone().multiplyScalar(-3.0))
-      .add(new THREE.Vector3(0, 1.5, 0));
+      .sub(pcForward.clone().multiplyScalar(3.2))
+      .add(new THREE.Vector3(0, 1.6, 0));
     camera.lookAt(pcPos.clone()
-      .add(pcTan.clone().multiplyScalar(8))
-      .add(new THREE.Vector3(0, 1.0, 0)));
+      .add(pcForward.clone().multiplyScalar(10))
+      .add(new THREE.Vector3(0, 0.9, 0)));
   }
 
   // 5) Synchronized timing — all players target the same gameplay-start moment
