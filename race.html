@@ -236,6 +236,9 @@
     @keyframes posDown{0%{transform:translateX(-50%) scale(0.5);opacity:0}50%{transform:translateX(-50%) scale(1.3);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:0}}
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- v5.4: GLTFLoader for loading the Pagani Zonda .glb model.
+       Using a specific known-good r128-compatible build. -->
+  <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <base target="_blank">
@@ -354,9 +357,20 @@
 var P = new URLSearchParams(window.location.search);
 var GAS_URL = (P.get('script') || '').trim();
 var preCode = (P.get('room') || '').trim().toUpperCase();
+// v5.4: spectator mode — host can view the race as a dramatic broadcast
+// without participating. URL: race.html?script=...&room=XXX&spectator=1
+var SPECTATOR_MODE = (P.get('spectator') === '1');
 
 if (!GAS_URL) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Missing backend URL.'; return; }
-showScreen('s-join');
+// v5.4: spectator mode bypass — go directly into observe-only mode
+if (SPECTATOR_MODE && preCode) {
+  showScreen('s-lobby');
+  el('lby-code').textContent = preCode;
+  raceId = preCode;
+  enterSpectatorMode();
+} else {
+  showScreen('s-join');
+}
 
 /* ============ FIREBASE ============ */
 // v5.4: Migrated from standalone examrace-31854 project to the existing
@@ -468,6 +482,7 @@ var wrongUntil = 0;
 
 /* ============ 3D ENGINE STATE ============ */
 var scene, camera, renderer, trackCurve;
+var sceneInitialized = false;
 // v5.4 (hofk pattern): pre-computed curve data for O(1) lookup at runtime
 var trackSamples = 0;
 var trackPoints = [];
@@ -760,10 +775,99 @@ function roundRect(ctx,x,y,w,h,r){
   ctx.closePath();
 }
 
+// v5.4: shared GLB car model — loaded once, cloned per player.
+// Source: Pagani Zonda Cinque Roadster (CC-BY) at /assets/race/cars/sportcar.glb
+var carGlbModel = null;
+var carGlbLoadAttempted = false;
+function loadCarGlbModel(onReady) {
+  if (carGlbModel) { onReady(); return; }
+  if (carGlbLoadAttempted) { onReady(); return; }  // already failed, skip
+  carGlbLoadAttempted = true;
+  if (typeof THREE.GLTFLoader !== 'function') {
+    console.warn('[race] GLTFLoader not available — falling back to procedural cars');
+    onReady();
+    return;
+  }
+  var loader = new THREE.GLTFLoader();
+  loader.load(
+    '/Edurena/assets/race/cars/sportcar.glb',
+    function(gltf) {
+      console.log('[race] GLB car loaded successfully');
+      carGlbModel = gltf.scene;
+      // Pre-compute bounds to normalize size + center
+      var box = new THREE.Box3().setFromObject(carGlbModel);
+      var size = box.getSize(new THREE.Vector3());
+      var center = box.getCenter(new THREE.Vector3());
+      // Normalize: target length ≈ 4 units (matches our previous procedural car length)
+      var targetLength = 4;
+      var scale = targetLength / size.z;
+      carGlbModel.userData.scale = scale;
+      carGlbModel.userData.centerOffset = new THREE.Vector3(-center.x * scale, -box.min.y * scale, -center.z * scale);
+      onReady();
+    },
+    undefined,
+    function(err) {
+      console.warn('[race] GLB car load failed, using procedural fallback:', err);
+      onReady();
+    }
+  );
+}
+
 function createCar(colorInt, colorHex, name, isPlayer) {
-  // Clean rebuild — simple car body, wheels, lights, nameplate.
-  // No neon strips, no underglow PointLight, no per-car SpotLights.
-  // Forward direction = +Z (matches placeCarOnTrack which lookAts t+0.01).
+  // v5.4: if the GLB car model has loaded, use it (cloned per player, tinted
+  // with their color). Falls through to procedural geometry if GLB isn't ready.
+  if (carGlbModel) {
+    var glbCar = carGlbModel.clone(true);
+    var s = carGlbModel.userData.scale || 1;
+    var off = carGlbModel.userData.centerOffset || new THREE.Vector3();
+    glbCar.scale.set(s, s, s);
+    glbCar.position.copy(off);
+
+    // Tint: walk the cloned tree, replace each material's color with the player's
+    glbCar.traverse(function(child) {
+      if (child.isMesh && child.material) {
+        // Clone material so each car can have independent color
+        var mat = child.material.clone();
+        if (mat.color) mat.color.setHex(colorInt);
+        child.material = mat;
+      }
+    });
+
+    // Wrap in a group so we have a stable parent for nameplate + userData
+    var group = new THREE.Group();
+    group.add(glbCar);
+
+    // Nameplate (other cars only; player's own car doesn't get one)
+    if (!isPlayer && name) {
+      var cv = document.createElement('canvas');
+      cv.width = 256; cv.height = 64;
+      var ctx = cv.getContext('2d');
+      ctx.fillStyle = 'rgba(8,12,20,0.95)';
+      ctx.fillRect(0,0,256,64);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(name).slice(0,12), 128, 32);
+      var nTex = new THREE.CanvasTexture(cv);
+      var nMat = new THREE.MeshBasicMaterial({ map: nTex, transparent: true });
+      var lbl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), nMat);
+      lbl.position.set(0, 2.4, 0);
+      group.add(lbl);
+      group.userData.nameLabel = lbl;
+    }
+
+    group.userData.wheels = [];  // wheels are part of GLB mesh, not separately animated
+    group.userData.exhaustPos = new THREE.Vector3(0, 0.3, 2.2);
+    group.userData.color = colorInt;
+    group.userData.colorHex = colorHex;
+    group.userData.name = name;
+    group.userData.isPlayer = isPlayer;
+    group.userData.isGlb = true;
+    return group;
+  }
+
+  // ===== Fallback: procedural geometry (when GLB not yet loaded) =====
   var group = new THREE.Group();
   group.userData.wheels = [];
 
@@ -1234,9 +1338,22 @@ function init3D() {
   resizeCanvasAbovePanel();  // v5.4: fit canvas above panel from frame 1
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', function() {
-    // Delay to let the new orientation's viewport settle
     setTimeout(onResize, 250);
   });
+  // v5.4: visualViewport is the proper API for tracking the visible area on
+  // mobile (handles keyboard, address bar collapse, pinch-zoom). Without this,
+  // first-load on mobile leaves the panel below the visible area until the
+  // user interacts with the screen.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onResize);
+    window.visualViewport.addEventListener('scroll', onResize);
+  }
+  // v5.4: force recalculation a few times during the first 3 seconds —
+  // mobile browsers settle their viewport over the first few hundred ms.
+  setTimeout(onResize, 100);
+  setTimeout(onResize, 500);
+  setTimeout(onResize, 1500);
+  setTimeout(onResize, 3000);
 }
 
 function onResize() {
@@ -1257,8 +1374,12 @@ function resizeCanvasAbovePanel() {
   if (panel && !panel.classList.contains('hidden')) {
     panelHeight = panel.getBoundingClientRect().height;
   }
-  var w = window.innerWidth;
-  var h = Math.max(120, window.innerHeight - panelHeight);  // safety floor
+  // v5.4: prefer visualViewport (the actually-visible area on mobile) over
+  // window.innerHeight (which includes hidden parts behind address bars).
+  var vv = window.visualViewport;
+  var w = vv ? vv.width : window.innerWidth;
+  var vh = vv ? vv.height : window.innerHeight;
+  var h = Math.max(120, vh - panelHeight);
   canvas.style.height = h + 'px';
   canvas.style.bottom = panelHeight + 'px';
   renderer.setSize(w, h);
@@ -2197,6 +2318,122 @@ function doJoin() {
   });
 }
 
+/* ============ SPECTATOR MODE ============ */
+// v5.4: host spectator view. Joins as observer (no player record, no car).
+// Listens to race state; when started, enters a free-camera following the
+// race leader. Useful for projecting the race onto a class screen.
+function enterSpectatorMode() {
+  console.log('[race] entering SPECTATOR mode for race:', raceId);
+  // Listen for race state changes
+  db.ref('race/' + raceId + '/state').on('value', function(snap) {
+    var st = (snap && snap.val()) || {};
+    if (st.phase === 'started' && !gameRunning) {
+      serverStartedAt = st.startedAt || Date.now();
+      // Load questions from Firebase (host already wrote them there)
+      db.ref('race/' + raceId + '/questions').once('value', function(qsnap) {
+        var qs = (qsnap && qsnap.val()) || null;
+        if (Array.isArray(qs)) {
+          questions = qs;
+          totalQ = qs.length;
+        }
+        // Listen for player updates
+        db.ref('race/' + raceId + '/players').on('value', function(psnap) {
+          allPlayers = (psnap && psnap.val()) || {};
+        });
+        startSpectatorGameplay();
+      });
+    }
+  });
+}
+
+function startSpectatorGameplay() {
+  if (!sceneInitialized) {
+    init3D();
+    sceneInitialized = true;
+  }
+  // v5.4: load GLB then start the actual gameplay setup
+  loadCarGlbModel(function() {
+    _startSpectatorGameplayInner();
+  });
+}
+function _startSpectatorGameplayInner() {
+  // Hide question panel — spectators don't answer questions
+  var bp = el('bottom-panel');
+  if (bp) bp.style.display = 'none';
+  // Show game canvas full screen
+  el('game-canvas').style.display = 'block';
+  showScreen('s-game');
+  // Custom resize: canvas takes WHOLE viewport (no panel)
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  el('game-canvas').style.height = '100%';
+  el('game-canvas').style.bottom = '0';
+  gameRunning = true;
+  // Create cars for all players
+  Object.values(allPlayers).forEach(function(p, i) {
+    if (!otherCars[p.pid]) {
+      var colorInt = p.color ? parseInt(p.color.replace('#',''), 16) : NEON_COLORS[i % NEON_COLORS.length];
+      var colorHex = '#' + colorInt.toString(16).padStart(6,'0');
+      otherCars[p.pid] = createCar(colorInt, colorHex, p.name || '?', false);
+      scene.add(otherCars[p.pid]);
+    }
+  });
+  // Start the spectator render loop
+  spectatorLoop();
+}
+
+var spectatorTargetPid = null;
+function spectatorLoop() {
+  if (!gameRunning) return;
+  requestAnimationFrame(spectatorLoop);
+
+  // Update all cars positions from Firebase data
+  var players = Object.values(allPlayers || {});
+  players.forEach(function(p) {
+    if (!otherCars[p.pid]) {
+      var colorInt = p.color ? parseInt(p.color.replace('#',''), 16) : 0xff5599;
+      var colorHex = '#' + colorInt.toString(16).padStart(6,'0');
+      otherCars[p.pid] = createCar(colorInt, colorHex, p.name || '?', false);
+      scene.add(otherCars[p.pid]);
+    }
+    var car = otherCars[p.pid];
+    placeCarOnTrack(car, p.progress || 0, p.laneX || 0, 0);
+  });
+
+  // Pick the LEADER (highest progress) as the camera target
+  var leader = null;
+  players.forEach(function(p) {
+    if (!leader || (p.progress || 0) > (leader.progress || 0)) leader = p;
+  });
+
+  if (leader && otherCars[leader.pid]) {
+    spectatorTargetPid = leader.pid;
+    var targetCar = otherCars[leader.pid];
+    var idx = Math.floor((leader.progress || 0) * trackSamples);
+    if (idx > trackSamples) idx = trackSamples;
+    if (idx < 0) idx = 0;
+    var tg = trackTangents[idx];
+    var carPos = targetCar.position;
+
+    // Dramatic broadcast cam: a bit higher and further back than chase
+    var DIST = 8;
+    var HEIGHT = 4;
+    camera.position.set(
+      carPos.x - tg.x * DIST,
+      carPos.y + HEIGHT,
+      carPos.z - tg.z * DIST
+    );
+    camera.lookAt(
+      carPos.x + tg.x * 6,
+      carPos.y + 1,
+      carPos.z + tg.z * 6
+    );
+  }
+
+  renderer.render(scene, camera);
+}
+
 /* ============ LOBBY ============ */
 function watchLobby() {
   lobbyPRef = db.ref('race/'+raceId+'/players');
@@ -2226,7 +2463,12 @@ function watchLobby() {
       // Falls back to 0 if startedAt missing (shouldn't happen post-v5.4 host).
       var startedAt = state.startedAt || Date.now();
       init3D();
-      runPreRaceCinematic(startedAt);
+      sceneInitialized = true;
+      // v5.4: kick off GLB car load — it'll be ready by the time cinematic
+      // creates cars. If it loads too slow, procedural fallback is used.
+      loadCarGlbModel(function() {
+        runPreRaceCinematic(startedAt);
+      });
     } else if (phase==='ended') {
       endRace();
     }
