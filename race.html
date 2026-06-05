@@ -801,22 +801,51 @@ function generateTrack() {
   // No mountains, no buildings, no guardrails, no lamp posts, no shoulders.
   // We add those back later, piece by piece, only after camera+track work.
 
-  // 1) Track curve — flat (y=0), LONG sweeping loop.
-  // v5.4: Track ENLARGED to radius 400 (was 220). Circumference ~2500 units,
-  // almost 2× longer. Also REMOVED the high-frequency curve terms (the *5
-  // and *7 sin/cos) that caused zigzag at high speed — only gentle *3
-  // remains. Result: long, sweeping curves like a real highway loop,
-  // not rapid wiggling that whips the car back-and-forth during nitro.
+  // 1) Track curve — flat (y=0), HAND-DESIGNED waypoints.
+  // v5.4: ABANDONED the sinusoidal formula entirely. Real race tracks have
+  // long STRAIGHTS connected by deliberate CORNERS — not continuous waves.
+  // The old sine-curve approach put bends at regular intervals along the
+  // entire loop, so at nitro speed the car would zigzag through 4-5 bends
+  // in one boost. Now: long straight stretches with discrete corners.
+  // Track shape: a stretched stadium-like loop with 4 sweeping corners
+  // and 4 long straights, similar to a real racing oval.
   var pts = [];
-  var numPts = 140;
-  var radius = 400;
-  for (var i = 0; i <= numPts; i++) {
-    var t = (i / numPts) * Math.PI * 2;
-    // Gentle single-frequency variation — broad sweeping bends only
-    var r = radius + Math.sin(t * 3) * 80;
-    var x = Math.cos(t) * r;
-    var z = Math.sin(t) * r;
-    pts.push(new THREE.Vector3(x, 0, z));
+  // Stadium-shaped track: 4 long straights + 4 wide arcs at the corners.
+  // Total track length ~3000 units, mostly straight driving.
+  var L = 400;  // half-length of straights
+  var W = 200;  // half-width (curve radius)
+  var arcRes = 16;  // points along each corner arc
+
+  // Straight 1: (-L, 0, +W) → (+L, 0, +W)
+  for (var i = 0; i < 12; i++) {
+    pts.push(new THREE.Vector3(-L + (2*L * i/12), 0, W));
+  }
+  // Corner 1 (top-right): quarter arc from (+L, 0, +W) sweeping to (+L+W, 0, 0)
+  for (var i = 0; i <= arcRes; i++) {
+    var a = (Math.PI/2) * (i/arcRes);  // 0 to π/2
+    pts.push(new THREE.Vector3(L + W*Math.sin(a), 0, W*Math.cos(a)));
+  }
+  // Straight 2: down the right side (+L+W, 0, 0) → (+L+W, 0, -W) — but actually
+  // we want a continuous loop, so reverse direction: (+L+W, 0, 0) → ... back.
+  // Simpler: just continue with corner placement.
+  // Corner 2 (bottom-right): (+L+W, 0, 0) → (+L, 0, -W) via arc
+  for (var i = 1; i <= arcRes; i++) {
+    var a = (Math.PI/2) * (i/arcRes);
+    pts.push(new THREE.Vector3(L + W*Math.cos(a), 0, -W*Math.sin(a)));
+  }
+  // Straight 3: (+L, 0, -W) → (-L, 0, -W)
+  for (var i = 1; i < 12; i++) {
+    pts.push(new THREE.Vector3(L - (2*L * i/12), 0, -W));
+  }
+  // Corner 3 (bottom-left): (-L, 0, -W) → (-L-W, 0, 0)
+  for (var i = 0; i <= arcRes; i++) {
+    var a = (Math.PI/2) * (i/arcRes);
+    pts.push(new THREE.Vector3(-L - W*Math.sin(a), 0, -W*Math.cos(a)));
+  }
+  // Corner 4 (top-left): (-L-W, 0, 0) → (-L, 0, +W)
+  for (var i = 1; i <= arcRes; i++) {
+    var a = (Math.PI/2) * (i/arcRes);
+    pts.push(new THREE.Vector3(-L - W*Math.cos(a), 0, W*Math.sin(a)));
   }
   trackCurve = new THREE.CatmullRomCurve3(pts, true);
   trackCurve.tension = 0.5;
@@ -1176,26 +1205,25 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // Fixed chase distance — no pull-back at speed. Car stays same size.
-  // v5.4: tuned so the car sits HIGHER on screen, above the question panel.
-  // Camera height + look-target are tuned to push the car up in the frame.
-  var CHASE_DIST   = 3.5;
-  var CHASE_HEIGHT = 1.4;   // a bit lower
+  // Fixed chase camera — positioned ABOVE the car, looking DOWN.
+  // v5.4 final approach: camera at height 3.5 (well above car roof at 1.55),
+  // looking at a point close to the car at base level (0.3). This gives a
+  // STEEP downward angle. Perspective puts close objects HIGH in the frame
+  // when camera is looking down — so the car appears in upper portion of
+  // screen, well above the question panel.
+  var CHASE_DIST   = 4.0;   // a touch further back
+  var CHASE_HEIGHT = 3.5;   // HIGH — looking down on the car
+  var LOOK_AHEAD   = 5;     // close look-target = steep down angle
+  var LOOK_HEIGHT  = 0.3;   // road level — camera tilts DOWN
 
   // Camera position = car position - forward * distance + up * height
-  // Direct copy, no lerp. (HexGL pattern: smooth rotation, snap position.)
+  // Direct copy, no lerp.
   var camPos = carPos.clone()
     .sub(forward.clone().multiplyScalar(CHASE_DIST))
     .add(new THREE.Vector3(0, CHASE_HEIGHT, 0))
     .add(new THREE.Vector3(sx, sy, sz));
   camera.position.copy(camPos);
 
-  // Look at a point ABOVE car height — pushes the car UP in the frame,
-  // clear of the question panel at the bottom. Looking at y=2.0 from
-  // camera height 1.4 = camera tilts UP slightly, car rear visible
-  // in the middle/upper portion of screen.
-  var LOOK_AHEAD   = 10;
-  var LOOK_HEIGHT  = 2.0;
   var lookAtPos = carPos.clone()
     .add(forward.clone().multiplyScalar(LOOK_AHEAD))
     .add(new THREE.Vector3(0, LOOK_HEIGHT, 0));
@@ -1334,11 +1362,11 @@ function runPreRaceCinematic(serverStartedAt) {
     var pcYaw = Math.atan2(pcTan.x, pcTan.z) + Math.PI;
     var pcForward = new THREE.Vector3(-Math.sin(pcYaw), 0, -Math.cos(pcYaw));
     camera.position.copy(pcPos)
-      .sub(pcForward.clone().multiplyScalar(3.5))
-      .add(new THREE.Vector3(0, 1.4, 0));
+      .sub(pcForward.clone().multiplyScalar(4.0))
+      .add(new THREE.Vector3(0, 3.5, 0));
     camera.lookAt(pcPos.clone()
-      .add(pcForward.clone().multiplyScalar(10))
-      .add(new THREE.Vector3(0, 2.0, 0)));
+      .add(pcForward.clone().multiplyScalar(5))
+      .add(new THREE.Vector3(0, 0.3, 0)));
   }
 
   // 5) Synchronized timing — all players target the same gameplay-start moment
