@@ -797,13 +797,19 @@ function generateTrack() {
   // No mountains, no buildings, no guardrails, no lamp posts, no shoulders.
   // We add those back later, piece by piece, only after camera+track work.
 
-  // 1) Track curve — flat (y=0), gentle bends, large loop
+  // 1) Track curve — flat (y=0), large winding loop.
+  // v5.4: Track DRASTICALLY enlarged. Was radius 80 (~600 unit circumference).
+  // Now radius 220 with stronger variation — circumference ~1500 units, 2.5× the
+  // race length. Players no longer see the finish line across the loop while
+  // racing, and the loop doesn't feel "on repeat".
   var pts = [];
-  var numPts = 60;
-  var radius = 80;
+  var numPts = 100;
+  var radius = 220;
   for (var i = 0; i <= numPts; i++) {
     var t = (i / numPts) * Math.PI * 2;
-    var r = radius + Math.sin(t * 3) * 18 + Math.cos(t * 5) * 8;
+    // Stronger curve variation — a longer track needs interesting bends or
+    // it just feels like driving a circle for longer.
+    var r = radius + Math.sin(t * 3) * 50 + Math.cos(t * 5) * 25 + Math.sin(t * 7) * 15;
     var x = Math.cos(t) * r;
     var z = Math.sin(t) * r;
     pts.push(new THREE.Vector3(x, 0, z));
@@ -815,7 +821,7 @@ function generateTrack() {
   // Use BufferGeometry from a strip of polygons along the curve, so the road
   // sits AT y=0 (flat top, no extruded depth). Previous extrusion created
   // a thick box that showed brown underside from below.
-  var STEPS = 800;
+  var STEPS = 1600;  // v5.4: doubled from 800 for the bigger track — keeps the road smooth
   var halfWidth = TRACK_WIDTH / 2;
   var positions = new Float32Array((STEPS + 1) * 2 * 3);
   var uvs       = new Float32Array((STEPS + 1) * 2 * 2);
@@ -830,8 +836,8 @@ function generateTrack() {
     var right = pt.clone().add(norm.clone().multiplyScalar(-halfWidth));
     positions[s * 6 + 0] = left.x;  positions[s * 6 + 1] = 0.02; positions[s * 6 + 2] = left.z;
     positions[s * 6 + 3] = right.x; positions[s * 6 + 4] = 0.02; positions[s * 6 + 5] = right.z;
-    uvs[s * 4 + 0] = 0; uvs[s * 4 + 1] = tt * 40;
-    uvs[s * 4 + 2] = 1; uvs[s * 4 + 3] = tt * 40;
+    uvs[s * 4 + 0] = 0; uvs[s * 4 + 1] = tt * 100;
+    uvs[s * 4 + 2] = 1; uvs[s * 4 + 3] = tt * 100;
     if (s < STEPS) {
       var i0 = s * 2, i1 = s * 2 + 1, i2 = (s + 1) * 2, i3 = (s + 1) * 2 + 1;
       indices.push(i0, i2, i1);
@@ -871,8 +877,8 @@ function generateTrack() {
   // 3) Lane markings — solid yellow center + solid white edge lines
   function makeLine(offset, color, dashed) {
     var pts = [];
-    for (var i = 0; i <= 400; i++) {
-      var t2 = i / 400;
+    for (var i = 0; i <= 1000; i++) {  // v5.4: 1000 samples for the longer track
+      var t2 = i / 1000;
       var p2 = trackCurve.getPointAt(t2);
       var tan = trackCurve.getTangentAt(t2);
       var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
@@ -882,7 +888,7 @@ function generateTrack() {
     }
     var geo = new THREE.BufferGeometry().setFromPoints(pts);
     var mat = dashed
-      ? new THREE.LineDashedMaterial({ color: color, dashSize: 2.5, gapSize: 2.5, transparent: true, opacity: 0.9 })
+      ? new THREE.LineDashedMaterial({ color: color, dashSize: 4, gapSize: 4, transparent: true, opacity: 0.9 })
       : new THREE.LineBasicMaterial({ color: color });
     var line = new THREE.Line(geo, mat);
     if (dashed) line.computeLineDistances();
@@ -914,16 +920,23 @@ function generateTrack() {
   groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
   groundTex.repeat.set(60, 60);
   var ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(800, 800),
+    new THREE.PlaneGeometry(2000, 2000),  // v5.4: 800→2000 for the bigger track
     new THREE.MeshStandardMaterial({ map: groundTex, metalness: 0, roughness: 1 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = 0;  // sit at y=0, road sits at y=0.02 on top of it
   scene.add(ground);
 
-  // 5) Start/finish stripe (small checker patch)
+  // 5) Start/finish stripe + overhead arch.
+  // v5.4: stored as scene globals so renderLoop can show/hide them based on
+  // player progress. Hidden by default during gameplay — revealed only in the
+  // final ~15% of the track (when player is approaching the finish line).
+  // Visible during pre-race so players see where the line is.
   var sfPt = trackCurve.getPointAt(0);
   var sfTan = trackCurve.getTangentAt(0);
+  var sfNorm = new THREE.Vector3(-sfTan.z, 0, sfTan.x).normalize();
+
+  // Checker stripe on the road
   var cCanvas = document.createElement('canvas');
   cCanvas.width = 64; cCanvas.height = 64;
   var cCtx = cCanvas.getContext('2d');
@@ -934,14 +947,73 @@ function generateTrack() {
   var sfTex = new THREE.CanvasTexture(cCanvas);
   sfTex.wrapS = sfTex.wrapT = THREE.RepeatWrapping;
   sfTex.repeat.set(8, 1);
-  var sf = new THREE.Mesh(
+  var sfStripe = new THREE.Mesh(
     new THREE.PlaneGeometry(TRACK_WIDTH, 2.5),
     new THREE.MeshStandardMaterial({ map: sfTex, roughness: 0.8 })
   );
-  sf.position.copy(sfPt); sf.position.y = 0.05;
-  sf.lookAt(sfPt.clone().add(sfTan));
-  sf.rotateX(-Math.PI / 2);
-  scene.add(sf);
+  sfStripe.position.copy(sfPt); sfStripe.position.y = 0.05;
+  sfStripe.lookAt(sfPt.clone().add(sfTan));
+  sfStripe.rotateX(-Math.PI / 2);
+  scene.add(sfStripe);
+
+  // Overhead arch — two posts + horizontal banner with "FINISH" text.
+  // Built as one group so we can toggle visibility together.
+  var archGroup = new THREE.Group();
+
+  var postMat = new THREE.MeshStandardMaterial({
+    color: 0xeeeeee, metalness: 0.4, roughness: 0.5
+  });
+  var postGeo = new THREE.BoxGeometry(0.6, 9, 0.6);
+  var postL = new THREE.Mesh(postGeo, postMat);
+  postL.position.copy(sfPt).add(sfNorm.clone().multiplyScalar(TRACK_WIDTH/2 + 1));
+  postL.position.y = 4.5;
+  archGroup.add(postL);
+  var postR = new THREE.Mesh(postGeo, postMat);
+  postR.position.copy(sfPt).add(sfNorm.clone().multiplyScalar(-(TRACK_WIDTH/2 + 1)));
+  postR.position.y = 4.5;
+  archGroup.add(postR);
+
+  // Banner — a wide panel with FINISH text baked into a canvas
+  var bannerCanvas = document.createElement('canvas');
+  bannerCanvas.width = 512; bannerCanvas.height = 96;
+  var bCtx = bannerCanvas.getContext('2d');
+  // Black-and-white checker border top and bottom
+  for (var bcx = 0; bcx < 64; bcx++) {
+    bCtx.fillStyle = bcx % 2 === 0 ? '#000' : '#fff';
+    bCtx.fillRect(bcx * 8, 0, 8, 12);
+    bCtx.fillStyle = bcx % 2 === 0 ? '#fff' : '#000';
+    bCtx.fillRect(bcx * 8, 84, 8, 12);
+  }
+  // Red banner middle
+  bCtx.fillStyle = '#c41e3a';
+  bCtx.fillRect(0, 12, 512, 72);
+  // "FINISH" text
+  bCtx.fillStyle = '#fff';
+  bCtx.font = 'bold 48px Orbitron, monospace';
+  bCtx.textAlign = 'center';
+  bCtx.textBaseline = 'middle';
+  bCtx.fillText('FINISH', 256, 50);
+  var bannerTex = new THREE.CanvasTexture(bannerCanvas);
+  var bannerMat = new THREE.MeshStandardMaterial({
+    map: bannerTex, side: THREE.DoubleSide, roughness: 0.8
+  });
+  var banner = new THREE.Mesh(
+    new THREE.PlaneGeometry(TRACK_WIDTH + 3, 2.2),
+    bannerMat
+  );
+  banner.position.copy(sfPt);
+  banner.position.y = 8.5;
+  banner.lookAt(sfPt.clone().add(sfTan).setY(8.5));
+  archGroup.add(banner);
+
+  scene.add(archGroup);
+
+  // Store globals so renderLoop can show/hide based on progress
+  window.__finishStripe = sfStripe;
+  window.__finishArch = archGroup;
+  // Hidden initially — shown in pre-race + final-stretch logic in renderLoop
+  sfStripe.visible = true;   // shown during pre-race
+  archGroup.visible = true;  // shown during pre-race
 
   // 6) Particle pool (kept — used by spawnNitroParticles)
   var pCount = 300;
@@ -990,16 +1062,17 @@ function init3D() {
   sCtx.fillStyle = grad; sCtx.fillRect(0, 0, 16, 512);
   var skyTex = new THREE.CanvasTexture(skyCanvas);
   var skyMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(400, 32, 16),
+    new THREE.SphereGeometry(1000, 32, 16),  // v5.4: 400→1000 for the bigger track
     new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, depthWrite: false })
   );
   scene.add(skyMesh);
 
-  // Mild fog for distance haze (dusk tone)
-  scene.fog = new THREE.FogExp2(0x553a48, 0.005);
+  // Mild fog for distance haze (dusk tone). Density 0.0025 — light enough to see
+  // the far side of the bigger track, dense enough for atmospheric depth.
+  scene.fog = new THREE.FogExp2(0x553a48, 0.0025);
 
   // Camera — wide FOV for racing feel
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 600);
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2000);
 
   // Renderer — mobile-aware
   renderer = new THREE.WebGLRenderer({
@@ -1354,6 +1427,18 @@ function renderLoop(now) {
   playerPos += currentSpeed * dt;
   var trackLen = trackCurve ? trackCurve.getLength() : 2000;
   myProgress_t = ((playerPos / trackLen) % 1 + 1) % 1;
+
+  // v5.4: Finish line visibility — show only when player is approaching
+  // OR just left it. With t∈[0,1) wrapping at the start/finish point:
+  //   - t > 0.82  → approaching finish (last 18% of track)
+  //   - t < 0.08  → just crossed (still visible behind for a bit)
+  // Outside that range, the checker + arch are hidden so the player isn't
+  // seeing the finish line from across the loop during the middle of the race.
+  if (window.__finishStripe && window.__finishArch) {
+    var nearFinish = (myProgress_t > 0.82 || myProgress_t < 0.08);
+    window.__finishStripe.visible = nearFinish;
+    window.__finishArch.visible   = nearFinish;
+  }
 
   // Banking
   var bankAcc = 0;
