@@ -128,58 +128,61 @@
     }
     .grid-card.in{transform:scale(1) translateY(0);opacity:1}
 
-    /* ── BOTTOM PANEL (question area) — slimmed down v3 ── */
+    /* ── BOTTOM PANEL (question area) — slimmed v4 to free up 3D view ── */
     .bottom-panel{
       position:fixed;bottom:0;left:0;right:0;
       z-index:50;
       background:linear-gradient(to top,rgba(5,8,16,.97),rgba(5,8,16,.85));
       border-top:2px solid var(--acc);
-      padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
+      padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));
       pointer-events:auto;backdrop-filter:blur(10px);
-      /* v5.4: smaller min-height + max-height — give the 3D scene more room.
-         Was min:180 max:55vh; now min:130 max:40vh. */
-      min-height:130px;
-      max-height:40vh;overflow-y:auto;
+      /* v5.4 v4: drastically smaller. Was min:130 max:40vh — now min:84 max:30vh.
+         Frees ~80px of vertical space for the 3D scene. */
+      min-height:84px;
+      max-height:30vh;overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       box-shadow:0 -6px 20px rgba(0,0,0,0.45);
     }
     .bottom-panel.hidden{display:none}
-    .timing-strip{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;flex-shrink:0;margin-bottom:6px}
+    .timing-strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;flex-shrink:0;margin-bottom:3px}
     .timing-strip::-webkit-scrollbar{display:none}
-    /* v5.4: smaller timing cards. min-width 50 (was 70), tighter padding */
-    .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 7px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:6px;min-width:50px;transition:all .2s}
+    .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 6px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:5px;min-width:44px;transition:all .2s}
     .ts-item.me{border-color:rgba(0,212,255,.5);background:rgba(0,212,255,.08);box-shadow:0 0 8px rgba(0,212,255,0.12)}
     .ts-item.leader{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.08);box-shadow:0 0 8px rgba(255,204,0,0.12)}
     .ts-pos{font-family:var(--display);font-size:9px;font-weight:700;color:var(--muted)}
     .ts-pos.p1{color:var(--yel);text-shadow:0 0 6px rgba(255,204,0,0.5)}
-    .ts-name{font-size:9px;font-weight:600;white-space:nowrap;max-width:55px;overflow:hidden;text-overflow:ellipsis}
+    .ts-name{font-size:9px;font-weight:600;white-space:nowrap;max-width:50px;overflow:hidden;text-overflow:ellipsis}
     .ts-pct{font-family:var(--display);font-size:8px;color:var(--muted)}
-    .q-card{background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:10px 14px}
-    .q-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-    .q-num{font-family:var(--display);font-size:11px;color:var(--muted);letter-spacing:1px}
-    .streak-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);border-radius:20px;padding:3px 10px;font-family:var(--display);font-size:10px;font-weight:700;color:var(--yel);box-shadow:0 0 8px rgba(255,204,0,0.1)}
+    /* v5.4 v4: q-card and contents shrunk */
+    .q-card{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px}
+    .q-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+    .q-num{font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px}
+    .streak-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);border-radius:14px;padding:2px 8px;font-family:var(--display);font-size:9px;font-weight:700;color:var(--yel);box-shadow:0 0 6px rgba(255,204,0,0.1)}
     .streak-badge.nitro{background:rgba(255,100,0,.2);border-color:rgba(255,100,0,.5);color:#ff6400;box-shadow:0 0 12px rgba(255,100,0,0.3);animation:nitroPulse .8s ease-in-out infinite}
-    @keyframes nitroPulse{0%,100%{box-shadow:0 0 12px rgba(255,100,0,0.3)}50%{box-shadow:0 0 25px rgba(255,100,0,0.6)}}
-    .q-txt{font-size:clamp(13px,2.2vw,16px);font-weight:600;color:var(--txt);line-height:1.5;margin-bottom:12px}
-    .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @keyframes nitroPulse{0%,100%{box-shadow:0 0 10px rgba(255,100,0,0.3)}50%{box-shadow:0 0 20px rgba(255,100,0,0.6)}}
+    .q-txt{font-size:clamp(12px,2vw,15px);font-weight:600;color:var(--txt);line-height:1.35;margin-bottom:6px}
+    .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     @media(max-width:400px){.opts-grid{grid-template-columns:1fr}}
-    .opt-btn{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:10px;background:#0a0e1a;border:1.5px solid #1a2035;color:var(--txt);font-size:14px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent;min-height:48px;position:relative;overflow:hidden}
-    .opt-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent);transform:translateX(-100%);transition:transform .4s}
+    /* v5.4 v4: shorter buttons — was min-height 48 + padding 12/14, now 36 + 8/12 */
+    .opt-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:#0a0e1a;border:1.5px solid #1a2035;color:var(--txt);font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;transition:all .12s;width:100%;-webkit-tap-highlight-color:transparent;min-height:36px;position:relative;overflow:hidden}
+    .opt-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent);transform:translateX(-100%);transition:transform .35s}
     .opt-btn:hover::after{transform:translateX(100%)}
     .opt-btn:not(:disabled):active{transform:scale(.97)}
     .opt-btn:disabled{cursor:not-allowed;opacity:.6}
     .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn);box-shadow:0 0 15px rgba(0,255,136,0.2)}
     .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red);box-shadow:0 0 15px rgba(255,51,85,0.2)}
-    .opt-key{width:26px;height:26px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:11px;font-weight:700;background:#1a2035;color:var(--muted);transition:all .2s}
+    /* v5.4: instant click feedback (before server response) — bright teal pulse */
+    .opt-btn.selected{border-color:var(--acc);background:rgba(0,212,255,.12);color:var(--acc);box-shadow:0 0 12px rgba(0,212,255,0.35);transform:scale(.98)}
+    .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#1a2035;color:var(--muted);transition:all .2s}
     .opt-btn.correct .opt-key{background:rgba(0,255,136,.2);color:var(--grn)}
     .opt-btn.wrong .opt-key{background:rgba(255,51,85,.15);color:var(--red)}
-    .short-area{display:flex;gap:8px}
-    .short-inp{flex:1;padding:12px 14px;background:#0a0e1a;border:1.5px solid #1a2035;border-radius:10px;color:var(--txt);font-size:15px;font-family:var(--f);outline:none;-webkit-appearance:none;transition:border-color .15s}
+    .short-area{display:flex;gap:6px}
+    .short-inp{flex:1;padding:8px 12px;background:#0a0e1a;border:1.5px solid #1a2035;border-radius:8px;color:var(--txt);font-size:14px;font-family:var(--f);outline:none;-webkit-appearance:none;transition:border-color .15s}
     .short-inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
-    .sub-btn{padding:12px 20px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#000;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:var(--display);cursor:pointer;letter-spacing:1px;min-height:48px;transition:all .2s;box-shadow:0 4px 15px rgba(0,212,255,0.3)}
+    .sub-btn{padding:8px 16px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);cursor:pointer;letter-spacing:1px;min-height:36px;transition:all .2s;box-shadow:0 4px 15px rgba(0,212,255,0.3)}
     .sub-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,212,255,0.4)}
-    .answered-msg{text-align:center;padding:20px;font-family:var(--display);font-size:13px;color:var(--muted);letter-spacing:1px}
-    .opt-img{max-width:100%;max-height:70px;border-radius:6px;margin-top:4px;object-fit:contain;display:block}
+    .answered-msg{text-align:center;padding:14px;font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:1px}
+    .opt-img{max-width:100%;max-height:60px;border-radius:6px;margin-top:4px;object-fit:contain;display:block}
 
     /* ── FINISH ── */
     .finish-overlay{position:fixed;inset:0;background:rgba(5,8,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .8s;backdrop-filter:blur(10px)}
@@ -1078,9 +1081,9 @@ function updateCamera(dt, speedKmh) {
   var sz = (Math.random() - 0.5) * shake;
   cameraShake *= cameraShakeDecay;
 
-  // v5.4: tightened chase camera — even closer per user request "go closer to car"
-  var CHASE_DIST   = 4.2;   // closer — just behind rear bumper
-  var CHASE_HEIGHT = 1.7;   // low — see taillights
+  // v5.4: tighter still per user — closer but car must stay above panel
+  var CHASE_DIST   = 3.8;   // closer — rear bumper right in your face
+  var CHASE_HEIGHT = 1.5;   // low — see taillights at eye level
   var behind = tangent.clone().multiplyScalar(-CHASE_DIST);
   var camTargetPos = carPos.clone()
     .add(behind)
@@ -1093,8 +1096,12 @@ function updateCamera(dt, speedKmh) {
   camera.position.lerp(camTargetPos, Math.min(dt * 10, 1));
 
   // Look at a point ahead of the car
-  var LOOK_AHEAD   = 9;
-  var LOOK_HEIGHT  = 0.7;
+  // v5.4: LOOK_HEIGHT raised to 1.0 so the camera pitches up slightly,
+  // which puts the car in the lower-center of view but still ABOVE the
+  // question panel. Without this, the closer camera + low look point
+  // would push the car down behind the panel.
+  var LOOK_AHEAD   = 8;
+  var LOOK_HEIGHT  = 1.0;
   var lookAtPos = carPos.clone()
     .add(tangent.clone().multiplyScalar(LOOK_AHEAD))
     .add(new THREE.Vector3(0, LOOK_HEIGHT, 0));
@@ -1230,11 +1237,11 @@ function runPreRaceCinematic(serverStartedAt) {
     pcT = ((pcT % 1) + 1) % 1;
     var pcTan = trackCurve.getTangentAt(pcT);
     camera.position.copy(pcPos)
-      .add(pcTan.clone().multiplyScalar(-4.2))
-      .add(new THREE.Vector3(0, 1.7, 0));
+      .add(pcTan.clone().multiplyScalar(-3.8))
+      .add(new THREE.Vector3(0, 1.5, 0));
     camera.lookAt(pcPos.clone()
-      .add(pcTan.clone().multiplyScalar(9))
-      .add(new THREE.Vector3(0, 0.7, 0)));
+      .add(pcTan.clone().multiplyScalar(8))
+      .add(new THREE.Vector3(0, 1.0, 0)));
   }
 
   // 5) Synchronized timing — all players target the same gameplay-start moment
@@ -1608,12 +1615,18 @@ function submitAns(answer, btnEl) {
   answering = true;
   el('q-area').querySelectorAll('button,input').forEach(function(b){ b.disabled=true; });
 
-  var q = questions[currentQ];
+  // v5.4: INSTANT visual click feedback — teal "selected" state appears
+  // the moment you tap, before any network call.
+  if (btnEl) btnEl.classList.add('selected');
 
-  // v5.4: server-side scoring. The /getRaceQuestions endpoint strips
-  // correctAnswer from its response (so students can't cheat by reading
-  // the network response), so the client genuinely doesn't know what's
-  // correct. validateRaceAnswer is the authoritative source.
+  var q = questions[currentQ];
+  var capturedQIndex = currentQ;  // capture: server result may arrive after currentQ advances
+
+  // v5.4 SPEED FIX: PARALLEL timing instead of serial. Previously we waited
+  // for the server response (400-800ms GAS round-trip) BEFORE advancing to
+  // the next question. Now: advance on a fixed timer, server validation
+  // runs in background and updates streak/score whenever it lands — even
+  // if the question has already changed. This is how Kahoot stays snappy.
   gasPost({
     action:     'validateRaceAnswer',
     raceId:     raceId,
@@ -1622,52 +1635,56 @@ function submitAns(answer, btnEl) {
     answer:     answer
   }, function(err, res) {
     var correct = false;
-    var correctText = '';
     if (!err && res && res.status === 'success' && res.data) {
       correct = res.data.isCorrect === true;
-      // Server doesn't return the correct text — for highlighting we
-      // still need it. Fall back to nothing if missing.
-      correctText = res.data.correctText || '';
     } else {
-      // Network/server failure — treat as wrong, but keep streak intact so
-      // a momentary blip doesn't cost the player. They'll see "wrong" UX
-      // but won't be penalized server-side because the call didn't land.
       console.warn('[race] validateRaceAnswer failed:', err || (res && res.message));
     }
 
-    // v5.4: feedback shown IMMEDIATELY after server responds — no artificial
-    // 400ms delay. Kahoot-snappy response.
-    (function() {
-      if (correct) {
-        streak++;
-        if (btnEl) { btnEl.classList.add('correct'); }
-        flashScreen('correct'); playCorrect();
-        if (streak>=3) {
-          nitroUntil=Date.now()+3000;
-          showBanner('nitro'); playNitro(); playStreakMilestone(streak);
-        } else {
-          boostUntil=Date.now()+1500;
-        }
-        var prevCorrect = (allPlayers[playerId]&&allPlayers[playerId].correct)||0;
-        db.ref('race/'+raceId+'/players/'+playerId).update({ correct:prevCorrect+1, streak:streak });
-      } else {
-        streak = 0;
-        if (btnEl) { btnEl.classList.add('wrong'); }
-        if (correctText) {
-          el('q-area').querySelectorAll('.opt-btn').forEach(function(b) {
-            if (b.innerHTML.indexOf(correctText)>=0) b.classList.add('correct');
-          });
-        }
-        flashScreen('wrong'); playWrong();
-        wrongUntil=Date.now()+2000;
-        showBanner('wrong');
-        db.ref('race/'+raceId+'/players/'+playerId).update({ streak:0 });
+    // Only do visual feedback on the button if user is STILL on the same
+    // question. If question has advanced, server response just updates
+    // streak/score quietly in the background.
+    var stillOnSameQ = (capturedQIndex === currentQ);
+
+    if (correct) {
+      streak++;
+      if (stillOnSameQ && btnEl) {
+        btnEl.classList.remove('selected');
+        btnEl.classList.add('correct');
       }
-      // v5.4: shorter inter-question wait — 800ms vs 1500ms.
-      // Just long enough for player to register feedback, not so long it drags.
-      setTimeout(function(){ currentQ++; loadQ(); }, 800);
-    })();
+      flashScreen('correct'); playCorrect();
+      if (streak >= 3) {
+        nitroUntil = Date.now() + 3000;
+        showBanner('nitro'); playNitro(); playStreakMilestone(streak);
+      } else {
+        boostUntil = Date.now() + 1500;
+      }
+      var prevCorrect = (allPlayers[playerId] && allPlayers[playerId].correct) || 0;
+      db.ref('race/'+raceId+'/players/'+playerId).update({
+        correct: prevCorrect + 1,
+        streak: streak
+      });
+    } else {
+      streak = 0;
+      if (stillOnSameQ && btnEl) {
+        btnEl.classList.remove('selected');
+        btnEl.classList.add('wrong');
+      }
+      flashScreen('wrong'); playWrong();
+      wrongUntil = Date.now() + 2000;
+      showBanner('wrong');
+      db.ref('race/'+raceId+'/players/'+playerId).update({ streak: 0 });
+    }
   });
+
+  // Advance to next question on a fixed 600ms timer — independent of network.
+  // The selected teal flash + a brief pause is the visible feedback;
+  // green/red comes when the server responds (often before the 600ms is up
+  // on a fast connection, sometimes after on a slow one).
+  setTimeout(function() {
+    currentQ++;
+    loadQ();
+  }, 600);
 }
 
 /* ============ EFFECTS ============ */
