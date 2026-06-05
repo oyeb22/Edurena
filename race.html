@@ -1077,7 +1077,7 @@ function init3D() {
   scene.fog = new THREE.FogExp2(0x553a48, 0.0025);
 
   // Camera — wide FOV for racing feel
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000);
 
   // Renderer — mobile-aware
   renderer = new THREE.WebGLRenderer({
@@ -1172,15 +1172,15 @@ function updateCamera(dt, speedKmh) {
   var CHASE_HEIGHT;
   var lerpRate;
   if (inNitro) {
-    CHASE_DIST   = 2.0;   // tightest — counteracts max lerp lag
-    CHASE_HEIGHT = 1.3;   // slightly lower for speed feel
-    lerpRate     = 18;    // very fast catch-up
+    CHASE_DIST   = 1.7;   // tightest — counteracts max lerp lag + makes car BIG
+    CHASE_HEIGHT = 1.2;
+    lerpRate     = 18;
   } else if (inBoost) {
-    CHASE_DIST   = 2.6;   // tighter
-    CHASE_HEIGHT = 1.4;
+    CHASE_DIST   = 2.2;
+    CHASE_HEIGHT = 1.3;
     lerpRate     = 14;
   } else {
-    CHASE_DIST   = 3.8;   // normal — rear bumper in view
+    CHASE_DIST   = 3.0;   // normal — rear bumper close
     CHASE_HEIGHT = 1.5;
     lerpRate     = 10;
   }
@@ -1335,7 +1335,7 @@ function runPreRaceCinematic(serverStartedAt) {
     pcT = ((pcT % 1) + 1) % 1;
     var pcTan = trackCurve.getTangentAt(pcT);
     camera.position.copy(pcPos)
-      .add(pcTan.clone().multiplyScalar(-3.8))
+      .add(pcTan.clone().multiplyScalar(-3.0))
       .add(new THREE.Vector3(0, 1.5, 0));
     camera.lookAt(pcPos.clone()
       .add(pcTan.clone().multiplyScalar(8))
@@ -1655,6 +1655,53 @@ function startRaceGameplay() {
   }, 1500);
 }
 
+/* ============ FINISH LINE PLACEMENT ============ */
+// v5.4: dynamically reposition the finish arch + checker stripe to be ~25%
+// of track ahead of the player's current position. Solves the cross-loop
+// visibility issue where the player could see the finish line on the OTHER
+// side of the loop, making it look like "two finish lines."
+function repositionFinishLine() {
+  if (!trackCurve || !window.__finishStripe || !window.__finishArch) return;
+
+  // Place finish line 25% of track ahead of current player position.
+  // This gives the player enough distance to "approach" it dramatically
+  // while answering the last question, without it being so far they wonder
+  // where it is.
+  var finishT = (myProgress_t + 0.25) % 1;
+  var finishPt = trackCurve.getPointAt(finishT);
+  var finishTan = trackCurve.getTangentAt(finishT);
+  var finishNorm = new THREE.Vector3(-finishTan.z, 0, finishTan.x).normalize();
+
+  // Position the checker stripe
+  var stripe = window.__finishStripe;
+  stripe.position.copy(finishPt);
+  stripe.position.y = 0.05;
+  // The stripe was rotated by -PI/2 on X at creation. To re-orient it for
+  // a new tangent direction, easiest is to rebuild the rotation: lookAt
+  // forward, then rotateX(-PI/2) to lie flat on road.
+  stripe.lookAt(finishPt.clone().add(finishTan));
+  stripe.rotateX(-Math.PI / 2);
+
+  // Reposition the arch group
+  var arch = window.__finishArch;
+  // Move all children of the archGroup to the new location.
+  // Posts are at offsets +/- (TRACK_WIDTH/2 + 1) from center along norm.
+  var children = arch.children;
+  if (children.length >= 3) {
+    var postL = children[0];
+    var postR = children[1];
+    var banner = children[2];
+    postL.position.copy(finishPt).add(finishNorm.clone().multiplyScalar(TRACK_WIDTH/2 + 1));
+    postL.position.y = 4.5;
+    postR.position.copy(finishPt).add(finishNorm.clone().multiplyScalar(-(TRACK_WIDTH/2 + 1)));
+    postR.position.y = 4.5;
+    banner.position.copy(finishPt);
+    banner.position.y = 8.5;
+    // Re-orient banner to face along the new track direction
+    banner.lookAt(finishPt.clone().add(finishTan).setY(8.5));
+  }
+}
+
 /* ============ QUESTIONS ============ */
 function loadQ() {
   if (bestStreak < streak) bestStreak = streak;
@@ -1686,11 +1733,14 @@ function loadQ() {
   }
 
   // v5.4: if THIS is the last question, reveal the finish arch + stripe NOW
-  // so the player sees the dramatic landmark ahead while answering. Combined
-  // with the renderLoop visibility logic, this is the only way the finish
-  // line shows during gameplay — pure "you're almost there" moment.
-  if (currentQ === totalQ - 1) {
+  // AND reposition them to appear ~25% of track ahead of player's current
+  // position. This avoids the cross-loop visibility issue (where players
+  // could see the line on the OTHER side of the loop, looking like two
+  // finish lines). The line is dynamically placed so it's always AHEAD on
+  // the player's path, regardless of where they are when last Q loads.
+  if (currentQ === totalQ - 1 && !finishLineRevealed) {
     finishLineRevealed = true;
+    repositionFinishLine();
   }
 
   var q = questions[currentQ];
