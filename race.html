@@ -53,7 +53,11 @@
     .lobby-wait{font-size:13px;color:var(--muted);letter-spacing:1px}
 
     /* ── CANVAS & HUD ── */
-    #game-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:none}
+    /* v5.4: canvas no longer fills full viewport. Bottom is offset to leave
+       room for the question panel. JS resizeCanvasAbovePanel() handles the
+       exact pixel size. This GUARANTEES the car is never covered by the
+       panel — it's a separate layer that ends where the panel begins. */
+    #game-canvas{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;display:none}
     #game-hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
     #game-hud.on{display:block}
 
@@ -1130,14 +1134,35 @@ function init3D() {
 
   generateTrack();
   canvas.style.display = 'block';
+  resizeCanvasAbovePanel();  // v5.4: fit canvas above panel from frame 1
   window.addEventListener('resize', onResize);
 }
 
 function onResize() {
   if (!camera || !renderer) return;
-  camera.aspect = window.innerWidth/window.innerHeight;
+  resizeCanvasAbovePanel();
+}
+
+// v5.4: resize the 3D canvas so it ONLY occupies the area above the
+// question panel. This solves "car covered by panel" without any camera
+// math gymnastics — the 3D scene physically doesn't extend into the
+// panel area. The canvas's bottom edge is moved up to where the panel
+// starts.
+function resizeCanvasAbovePanel() {
+  if (!camera || !renderer) return;
+  var canvas = el('game-canvas');
+  var panel  = el('bottom-panel');
+  var panelHeight = 0;
+  if (panel && !panel.classList.contains('hidden')) {
+    panelHeight = panel.getBoundingClientRect().height;
+  }
+  var w = window.innerWidth;
+  var h = Math.max(120, window.innerHeight - panelHeight);  // safety floor
+  canvas.style.height = h + 'px';
+  canvas.style.bottom = panelHeight + 'px';
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 /* ============ TRACK POSITIONING ============ */
@@ -1324,6 +1349,8 @@ function runPreRaceCinematic(serverStartedAt) {
   el('q-num').textContent = 'GET READY';
   el('q-txt').textContent = 'Race starting…';
   el('q-area').innerHTML = '';
+  // v5.4: resize canvas to fit ABOVE the now-visible panel
+  setTimeout(resizeCanvasAbovePanel, 50);
 
   // 3) Create + place all player cars on the grid
   var playerList = Object.values(allPlayers);
@@ -1830,6 +1857,10 @@ function loadQ() {
     el('q-area').appendChild(area);
     setTimeout(function(){ inp.focus(); }, 60);
   }
+
+  // v5.4: re-fit canvas above the panel since this Q's content height may
+  // differ from the previous (e.g. switching MCQ/TF/short-answer).
+  setTimeout(resizeCanvasAbovePanel, 30);
 }
 
 function submitAns(answer, btnEl) {
