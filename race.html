@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Neon Night Circuit 3D — Edurena Racing</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -15,7 +15,10 @@
       --display:'Orbitron',monospace;
     }
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:var(--f);overflow:hidden}
+    /* v5.4: dvh handles mobile address-bar dynamics — visible viewport height.
+       Without this, position:fixed bottom:0 lands BELOW the visible area on mobile
+       (user has to scroll/pinch down to see the question panel). */
+    html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(--txt);font-family:var(--f);overflow:hidden}
 
     /* ── SCREENS ── */
     .screen{display:none;position:fixed;inset:0;z-index:100}
@@ -527,7 +530,36 @@ function initAudio() {
     engineOsc2.connect(filter);
     engineOsc2.start();
     startBgMusic(master);
+    // v5.4: pre-load MP3 sound effects for richer audio. Async fetch +
+    // decode. If a file fails to load, the corresponding sfx() call is a
+    // silent no-op — synth fallbacks already cover the same events.
+    loadSfx('start_beep', '/Edurena/assets/race/sounds/start_beep.mp3');
+    loadSfx('nitro_whoosh', '/Edurena/assets/race/sounds/nitro_whoosh.mp3');
+    loadSfx('crash_thud', '/Edurena/assets/race/sounds/crash_thud.mp3');
+    loadSfx('tire_screech', '/Edurena/assets/race/sounds/tire_screech.mp3');
+    loadSfx('crowd', '/Edurena/assets/race/sounds/crowd.mp3');
   } catch(e) { audioReady = false; }
+}
+
+// v5.4: pre-loaded MP3 sound effects. Each loaded once into an AudioBuffer.
+var sfxBuffers = {};
+function loadSfx(name, url) {
+  if (!audioCtx) return;
+  fetch(url)
+    .then(function(r){ return r.arrayBuffer(); })
+    .then(function(buf){ return audioCtx.decodeAudioData(buf); })
+    .then(function(decoded){ sfxBuffers[name] = decoded; })
+    .catch(function(e){ console.warn('[race] sfx load failed:', name, e.message); });
+}
+function sfx(name, gain) {
+  if (!audioReady || !sfxBuffers[name]) return;
+  var src = audioCtx.createBufferSource();
+  src.buffer = sfxBuffers[name];
+  var g = audioCtx.createGain();
+  g.gain.value = gain || 0.7;
+  src.connect(g);
+  g.connect(audioCtx.destination);
+  src.start();
 }
 
 function updateEngineSound(speedKmh) {
@@ -546,6 +578,8 @@ function muteEngine() {
 }
 function playNitro() {
   if (!audioReady) return;
+  // v5.4: layer MP3 whoosh on top of synth swoop for richer sound
+  sfx('nitro_whoosh', 0.6);
   var buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.8, audioCtx.sampleRate);
   var d = buf.getChannelData(0);
   for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
@@ -583,6 +617,9 @@ function playCorrect() {
 }
 function playWrong() {
   if (!audioReady) return;
+  // v5.4: tire screech + crash thud layered for impactful wrong-answer feedback
+  sfx('tire_screech', 0.5);
+  sfx('crash_thud', 0.4);
   var osc = audioCtx.createOscillator();
   osc.type='square';
   osc.frequency.setValueAtTime(220, audioCtx.currentTime);
@@ -607,6 +644,8 @@ function playStreakMilestone(sc) {
 }
 function playFinish() {
   if (!audioReady) return;
+  // v5.4: crowd cheer layered with finish melody for celebration feel
+  sfx('crowd', 0.5);
   var melody=[523,659,784,1047,784,1047,1175,1319];
   melody.forEach(function(freq,i){
     var osc=audioCtx.createOscillator(); var g=audioCtx.createGain();
@@ -636,6 +675,8 @@ function playRevEngine() {
 }
 function playGoSound() {
   if (!audioReady) return;
+  // v5.4: start beep MP3 layered with synth chord for big start moment
+  sfx('start_beep', 0.7);
   // Big dramatic GO! chord
   [330,415,523,659].forEach(function(freq, i) {
     var osc = audioCtx.createOscillator(); var g = audioCtx.createGain();
@@ -1192,6 +1233,10 @@ function init3D() {
   canvas.style.display = 'block';
   resizeCanvasAbovePanel();  // v5.4: fit canvas above panel from frame 1
   window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', function() {
+    // Delay to let the new orientation's viewport settle
+    setTimeout(onResize, 250);
+  });
 }
 
 function onResize() {
@@ -1608,6 +1653,11 @@ function renderLoop(now) {
       window.__finishCrossed = true;
       var trackLenF = trackCurve.getLength();
       playerPos = window.__finishT * trackLenF;
+      // v5.4: dramatic celebration at finish line crossing
+      cameraShake = 0.8;       // big shake
+      if (typeof sfx === 'function') sfx('crowd', 0.6);
+      spawnNitroParticles(playerCar);
+      spawnNitroParticles(playerCar);  // double burst
     } else {
       playerPos += currentSpeed * dt;
     }
