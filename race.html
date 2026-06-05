@@ -801,19 +801,19 @@ function generateTrack() {
   // No mountains, no buildings, no guardrails, no lamp posts, no shoulders.
   // We add those back later, piece by piece, only after camera+track work.
 
-  // 1) Track curve — flat (y=0), large winding loop.
-  // v5.4: Track DRASTICALLY enlarged. Was radius 80 (~600 unit circumference).
-  // Now radius 220 with stronger variation — circumference ~1500 units, 2.5× the
-  // race length. Players no longer see the finish line across the loop while
-  // racing, and the loop doesn't feel "on repeat".
+  // 1) Track curve — flat (y=0), LONG sweeping loop.
+  // v5.4: Track ENLARGED to radius 400 (was 220). Circumference ~2500 units,
+  // almost 2× longer. Also REMOVED the high-frequency curve terms (the *5
+  // and *7 sin/cos) that caused zigzag at high speed — only gentle *3
+  // remains. Result: long, sweeping curves like a real highway loop,
+  // not rapid wiggling that whips the car back-and-forth during nitro.
   var pts = [];
-  var numPts = 100;
-  var radius = 220;
+  var numPts = 140;
+  var radius = 400;
   for (var i = 0; i <= numPts; i++) {
     var t = (i / numPts) * Math.PI * 2;
-    // Stronger curve variation — a longer track needs interesting bends or
-    // it just feels like driving a circle for longer.
-    var r = radius + Math.sin(t * 3) * 50 + Math.cos(t * 5) * 25 + Math.sin(t * 7) * 15;
+    // Gentle single-frequency variation — broad sweeping bends only
+    var r = radius + Math.sin(t * 3) * 80;
     var x = Math.cos(t) * r;
     var z = Math.sin(t) * r;
     pts.push(new THREE.Vector3(x, 0, z));
@@ -825,7 +825,7 @@ function generateTrack() {
   // Use BufferGeometry from a strip of polygons along the curve, so the road
   // sits AT y=0 (flat top, no extruded depth). Previous extrusion created
   // a thick box that showed brown underside from below.
-  var STEPS = 1600;  // v5.4: doubled from 800 for the bigger track — keeps the road smooth
+  var STEPS = 2400;  // v5.4: bumped from 1600 for the longer track
   var halfWidth = TRACK_WIDTH / 2;
   var positions = new Float32Array((STEPS + 1) * 2 * 3);
   var uvs       = new Float32Array((STEPS + 1) * 2 * 2);
@@ -840,8 +840,8 @@ function generateTrack() {
     var right = pt.clone().add(norm.clone().multiplyScalar(-halfWidth));
     positions[s * 6 + 0] = left.x;  positions[s * 6 + 1] = 0.02; positions[s * 6 + 2] = left.z;
     positions[s * 6 + 3] = right.x; positions[s * 6 + 4] = 0.02; positions[s * 6 + 5] = right.z;
-    uvs[s * 4 + 0] = 0; uvs[s * 4 + 1] = tt * 100;
-    uvs[s * 4 + 2] = 1; uvs[s * 4 + 3] = tt * 100;
+    uvs[s * 4 + 0] = 0; uvs[s * 4 + 1] = tt * 180;
+    uvs[s * 4 + 2] = 1; uvs[s * 4 + 3] = tt * 180;
     if (s < STEPS) {
       var i0 = s * 2, i1 = s * 2 + 1, i2 = (s + 1) * 2, i3 = (s + 1) * 2 + 1;
       indices.push(i0, i2, i1);
@@ -881,8 +881,8 @@ function generateTrack() {
   // 3) Lane markings — solid yellow center + solid white edge lines
   function makeLine(offset, color, dashed) {
     var pts = [];
-    for (var i = 0; i <= 1000; i++) {  // v5.4: 1000 samples for the longer track
-      var t2 = i / 1000;
+    for (var i = 0; i <= 1500; i++) {  // v5.4: more samples for the longer track
+      var t2 = i / 1500;
       var p2 = trackCurve.getPointAt(t2);
       var tan = trackCurve.getTangentAt(t2);
       var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
@@ -924,7 +924,7 @@ function generateTrack() {
   groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
   groundTex.repeat.set(60, 60);
   var ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(2000, 2000),  // v5.4: 800→2000 for the bigger track
+    new THREE.PlaneGeometry(3000, 3000),  // v5.4: bigger for the bigger track
     new THREE.MeshStandardMaterial({ map: groundTex, metalness: 0, roughness: 1 })
   );
   ground.rotation.x = -Math.PI / 2;
@@ -1067,7 +1067,7 @@ function init3D() {
   sCtx.fillStyle = grad; sCtx.fillRect(0, 0, 16, 512);
   var skyTex = new THREE.CanvasTexture(skyCanvas);
   var skyMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(1000, 32, 16),  // v5.4: 400→1000 for the bigger track
+    new THREE.SphereGeometry(1500, 32, 16),  // v5.4: 1000→1500 for the even bigger track
     new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, depthWrite: false })
   );
   scene.add(skyMesh);
@@ -1077,7 +1077,7 @@ function init3D() {
   scene.fog = new THREE.FogExp2(0x553a48, 0.0025);
 
   // Camera — wide FOV for racing feel
-  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 3000);
 
   // Renderer — mobile-aware
   renderer = new THREE.WebGLRenderer({
@@ -1143,7 +1143,7 @@ function placeCarOnTrack(car, t, laneOff, bankAngle) {
   var TWO_PI = Math.PI * 2;
   var diff = ((targetYaw - car.userData.smoothYaw) % TWO_PI + TWO_PI) % TWO_PI;
   if (diff > Math.PI) diff -= TWO_PI;  // take the shorter angular path
-  car.userData.smoothYaw += diff * 0.15;  // 15% per frame — smooth but responsive
+  car.userData.smoothYaw += diff * 0.20;  // 20% per frame — responsive but smooth
   car.rotation.set(0, car.userData.smoothYaw, 0);
 
   if (car.userData.wheels) car.userData.wheels.forEach(function(w){ w.rotation.x+=0.3; });
@@ -1177,8 +1177,10 @@ function updateCamera(dt, speedKmh) {
   cameraShake *= cameraShakeDecay;
 
   // Fixed chase distance — no pull-back at speed. Car stays same size.
-  var CHASE_DIST   = 3.2;
-  var CHASE_HEIGHT = 1.6;
+  // v5.4: tuned so the car sits HIGHER on screen, above the question panel.
+  // Camera height + look-target are tuned to push the car up in the frame.
+  var CHASE_DIST   = 3.5;
+  var CHASE_HEIGHT = 1.4;   // a bit lower
 
   // Camera position = car position - forward * distance + up * height
   // Direct copy, no lerp. (HexGL pattern: smooth rotation, snap position.)
@@ -1188,9 +1190,12 @@ function updateCamera(dt, speedKmh) {
     .add(new THREE.Vector3(sx, sy, sz));
   camera.position.copy(camPos);
 
-  // Look at a point AHEAD of the car along its forward direction.
+  // Look at a point ABOVE car height — pushes the car UP in the frame,
+  // clear of the question panel at the bottom. Looking at y=2.0 from
+  // camera height 1.4 = camera tilts UP slightly, car rear visible
+  // in the middle/upper portion of screen.
   var LOOK_AHEAD   = 10;
-  var LOOK_HEIGHT  = 0.9;
+  var LOOK_HEIGHT  = 2.0;
   var lookAtPos = carPos.clone()
     .add(forward.clone().multiplyScalar(LOOK_AHEAD))
     .add(new THREE.Vector3(0, LOOK_HEIGHT, 0));
@@ -1329,11 +1334,11 @@ function runPreRaceCinematic(serverStartedAt) {
     var pcYaw = Math.atan2(pcTan.x, pcTan.z) + Math.PI;
     var pcForward = new THREE.Vector3(-Math.sin(pcYaw), 0, -Math.cos(pcYaw));
     camera.position.copy(pcPos)
-      .sub(pcForward.clone().multiplyScalar(3.2))
-      .add(new THREE.Vector3(0, 1.6, 0));
+      .sub(pcForward.clone().multiplyScalar(3.5))
+      .add(new THREE.Vector3(0, 1.4, 0));
     camera.lookAt(pcPos.clone()
       .add(pcForward.clone().multiplyScalar(10))
-      .add(new THREE.Vector3(0, 0.9, 0)));
+      .add(new THREE.Vector3(0, 2.0, 0)));
   }
 
   // 5) Synchronized timing — all players target the same gameplay-start moment
