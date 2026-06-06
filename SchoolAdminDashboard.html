@@ -71,6 +71,24 @@
     .btn-out{width:100%;padding:6px;background:var(--red-g);border:1px solid rgba(255,92,92,.18);color:var(--red);border-radius:var(--rs);cursor:pointer;font-size:11px;font-family:var(--font);}
     .btn-out:hover{background:rgba(255,92,92,.2);}
 
+    /* v5.5: sidebar mini-stats with spotlight hover + slot usage bar */
+    .sb-stats{padding:8px;display:flex;flex-direction:column;gap:6px;}
+    .sb-stat{position:relative;overflow:hidden;background:var(--surf);border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;transition:border-color .2s, transform .2s;}
+    .sb-stat::before{content:'';position:absolute;inset:0;background:radial-gradient(180px circle at 50% 0%, rgba(245,166,35,0.08), transparent 70%);opacity:0;transition:opacity .25s;pointer-events:none;}
+    .sb-stat:hover{border-color:rgba(245,166,35,0.3);transform:translateY(-1px);}
+    .sb-stat:hover::before{opacity:1;}
+    .sb-stat-lbl{font-size:10px;color:var(--txt2);letter-spacing:0.04em;}
+    .sb-stat-val{font-size:17px;font-weight:600;color:var(--txt);margin-top:2px;line-height:1;font-family:var(--mono);}
+    .sb-stat-val.amber{color:#f5a623;}
+    .sb-stat-val.green{color:#22c55e;}
+    .sb-stat-val.red{color:#ef4444;}
+    .sb-stat-bar{height:3px;background:var(--surf2);border-radius:2px;margin-top:6px;overflow:hidden;}
+    .sb-stat-fill{height:100%;background:#f5a623;border-radius:2px;transition:width .4s ease;}
+    .sb-stat-fill.warn{background:#f59e0b;}
+    .sb-stat-fill.full{background:#ef4444;}
+    
+    .sb-logo-row .logo-box{flex-shrink:0;}
+
     /* MAIN */
     .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
     .topbar{padding:11px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--surf);position:sticky;top:0;z-index:10;}
@@ -242,8 +260,12 @@
   <aside class="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <div class="logo-box">⚡</div>
-        <div class="logo-txt"><h1>Edurena</h1><p>School Admin v5.1</p></div>
+        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
+          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
+          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
+          <circle cx="35" cy="20" r="7" fill="#03060f"/>
+        </svg>
+        <div class="logo-txt"><h1>edurena</h1><p>School Admin</p></div>
       </div>
     </div>
 
@@ -274,7 +296,22 @@
       <button class="ni"     onclick="nav('settings',this)"><span class="ico">⚙️</span>Settings</button>
       <button class="ni"     onclick="nav('profile',this)"><span class="ico">👤</span>My Profile</button>
     </nav>
-
+    <!-- v5.5: live mini-stats — Teachers, Student slots, Live sessions -->
+    <div class="sb-stats" id="sb-stats">
+      <div class="sb-stat">
+        <div class="sb-stat-lbl">Teachers</div>
+        <div class="sb-stat-val" id="sb-stat-teachers">—</div>
+      </div>
+      <div class="sb-stat" id="sb-stat-slots-card">
+        <div class="sb-stat-lbl">Student slots</div>
+        <div class="sb-stat-val amber" id="sb-stat-slots">—</div>
+        <div class="sb-stat-bar" id="sb-stat-slots-bar"><div class="sb-stat-fill" id="sb-stat-fill" style="width:0%"></div></div>
+      </div>
+      <div class="sb-stat">
+        <div class="sb-stat-lbl">Active quizzes</div>
+        <div class="sb-stat-val green" id="sb-stat-quizzes">—</div>
+      </div>
+    </div>
     <div class="sb-foot">
       <button class="btn-out" onclick="doLogout()">→ Sign Out</button>
     </div>
@@ -316,6 +353,28 @@
           <div class="sc"><div class="sv" id="s-students">—</div><div class="sl">Students</div></div>
           <div class="sc"><div class="sv" id="s-classes">—</div><div class="sl">Classes</div></div>
           <div class="sc"><div class="sv" id="s-quizzes">—</div><div class="sl">Active Quizzes</div></div>
+        </div>
+
+        <!-- v5.5: Student slot usage card — wired to getSchoolUsage -->
+        <div class="card" id="slot-usage-card" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div>
+              <div class="ct" style="margin-bottom:2px">Student slots</div>
+              <div style="font-size:11.5px;color:var(--txt2)" id="slot-usage-sub">Loading…</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:22px;font-weight:700;font-family:var(--mono)">
+                <span id="slot-used">—</span> <span style="color:var(--txt2);font-weight:400;font-size:18px">/</span> <span id="slot-paid" style="color:var(--txt2)">—</span>
+              </div>
+              <div style="font-size:11px;color:var(--txt2);margin-top:2px"><span id="slot-pct">—</span>% used</div>
+            </div>
+          </div>
+          <div style="height:6px;background:var(--surf2);border-radius:3px;overflow:hidden">
+            <div id="slot-bar-fill" style="height:100%;width:0%;background:#f5a623;border-radius:3px;transition:width .4s ease"></div>
+          </div>
+          <div id="slot-warning" style="display:none;margin-top:10px;padding:8px 10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.25);border-radius:6px;font-size:11.5px;color:#f59e0b">
+            <strong>⚠ Approaching limit.</strong> <span id="slot-warning-msg"></span>
+          </div>
         </div>
 
         <!-- Pending teachers alert -->
@@ -500,7 +559,7 @@
           </p>
           <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:11px;margin-bottom:10px;font-family:var(--mono);font-size:10.5px;color:var(--txt2);line-height:1.7">
             <div style="color:var(--acc2);font-weight:600;margin-bottom:3px;font-family:var(--font)">Format:</div>
-[{ "name": "Adisa Oyebola", "email": "adisa@gmail.com", "class": "SS2A" }]
+[{ "name": "Jane Doe", "email": "jane@school.com", "class": "SS2A" }]
           </div>
           <div class="fg" style="margin-bottom:10px">
             <label>Override Class (optional)</label>
@@ -658,7 +717,7 @@
       </p>
       <div class="fg" style="margin-bottom:10px">
         <label>Full Name *</label>
-        <input type="text" id="inv-name" placeholder="e.g. Adisa Oyebola" autocomplete="off">
+        <input type="text" id="inv-name" placeholder="e.g. Jane Doe" autocomplete="off">
       </div>
       <div class="fg" style="margin-bottom:10px">
         <label>Email Address *</label>
@@ -712,7 +771,7 @@
       <span class="mc" onclick="closeMo('student-mo')">✕</span>
     </div>
     <div class="mb">
-      <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Adisa Oyebola"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Jane Doe"></div>
       <div class="fg" style="margin-bottom:10px">
         <label>Email / Student ID *</label>
         <input type="text" id="st-email" placeholder="e.g. student@gmail.com or ADM/2025/001">
@@ -915,6 +974,81 @@ function loadOverview() {
     } else {
       alert.style.display = 'none';
     }
+
+    // v5.5: refresh sidebar mini-stats + load slot usage
+    refreshSidebarStats(d);
+    loadSlotUsage();
+  });
+}
+
+// v5.5: sidebar mini-stats — Teachers / Slots / Active Quizzes.
+// Driven by getSchoolDashboard for teachers + quizzes, getSchoolUsage for slots.
+function refreshSidebarStats(d) {
+  setText('sb-stat-teachers', d.teacherCount != null ? d.teacherCount : '—');
+  setText('sb-stat-quizzes', d.activeQuizCount != null ? d.activeQuizCount : '—');
+}
+
+// v5.5: fetch slot usage and render both the overview card + sidebar mini-stat
+function loadSlotUsage() {
+  call('getSchoolUsage', { school: S.school }, function(u) {
+    var used = u.used || 0;
+    var paid = u.paid || 0;
+    var pct = u.percentage || 0;
+    var available = u.available;
+    var unlimited = u.unlimited;
+
+    // Overview card
+    setText('slot-used', used);
+    setText('slot-paid', unlimited ? '∞' : paid);
+    setText('slot-pct', unlimited ? '—' : pct);
+
+    var subEl = document.getElementById('slot-usage-sub');
+    if (subEl) {
+      if (unlimited) {
+        subEl.textContent = 'Unlimited slots on this plan';
+      } else {
+        subEl.textContent = available + ' slot' + (available !== 1 ? 's' : '') + ' remaining';
+      }
+    }
+
+    var fill = document.getElementById('slot-bar-fill');
+    if (fill) {
+      fill.style.width = unlimited ? '20%' : Math.min(100, pct) + '%';
+      // Color shifts based on usage
+      if (unlimited)      fill.style.background = '#7a8db0';
+      else if (pct >= 95) fill.style.background = '#ef4444';
+      else if (pct >= 85) fill.style.background = '#f59e0b';
+      else                fill.style.background = '#f5a623';
+    }
+
+    // Warning state when near or at limit
+    var warn = document.getElementById('slot-warning');
+    var warnMsg = document.getElementById('slot-warning-msg');
+    if (warn && warnMsg) {
+      if (!unlimited && pct >= 90) {
+        warn.style.display = 'block';
+        if (u.atLimit) {
+          warnMsg.textContent = 'You\'ve reached your student slot limit. New student signups will fail. Contact your platform admin to add more slots.';
+        } else {
+          warnMsg.textContent = 'Only ' + available + ' slot' + (available !== 1 ? 's' : '') + ' left. Plan ahead for new enrolments.';
+        }
+      } else {
+        warn.style.display = 'none';
+      }
+    }
+
+    // Sidebar mini-stat
+    setText('sb-stat-slots', unlimited ? '∞' : (used + ' / ' + paid));
+    var sbFill = document.getElementById('sb-stat-fill');
+    if (sbFill) {
+      sbFill.style.width = unlimited ? '15%' : Math.min(100, pct) + '%';
+      sbFill.className = 'sb-stat-fill' +
+        (unlimited ? '' : pct >= 95 ? ' full' : pct >= 85 ? ' warn' : '');
+    }
+  }, function() {
+    // Silently fail — slot column is optional, don't toast errors
+    var subEl = document.getElementById('slot-usage-sub');
+    if (subEl) subEl.textContent = '—';
   });
 }
 
