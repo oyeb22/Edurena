@@ -755,24 +755,12 @@ function loadPricing() {
         var d = new Date(pr.updatedAt);
         meta.innerHTML = 'Last updated: <strong style="color:var(--txt)">' +
           d.toLocaleDateString() + '</strong>' +
-          (pr.updatedBy ? ' by ' + esc(pr.updatedBy) : '');
+          (pr.updatedBy ? ' by ' + escH(pr.updatedBy) : '');
       } else {
         meta.textContent = 'Default — never updated';
       }
     }
-    // Render example rows
-    var examples = document.getElementById('pr-examples');
-    if (examples) {
-      var tiers = [10, 50, 100, 300, 500, 1000];
-      examples.innerHTML = tiers.map(function(n) {
-        var total = n * (pr.pricePerStudentNgn || 0);
-        return '<tr>' +
-          '<td style="padding:5px 8px;border-bottom:1px solid var(--bdr);font-family:var(--mono)">' + n + '</td>' +
-          '<td style="padding:5px 8px;border-bottom:1px solid var(--bdr);text-align:right;font-family:var(--mono);color:var(--accent)">₦' + total.toLocaleString() + '</td>' +
-          '</tr>';
-      }).join('');
-    }
-    // Pre-fill input
+    renderPricingExamples(pr.pricePerStudentNgn || 0);
     var inp = document.getElementById('pr-new');
     if (inp) inp.value = pr.pricePerStudentNgn || '';
   });
@@ -792,13 +780,32 @@ function saveNewPricing() {
   call('updatePricing', { pricePerStudentNgn: newPrice }, function(r) {
     statusEl.style.display = 'block';
     statusEl.style.color = 'var(--grn)';
-    statusEl.textContent = '✓ ' + (r.message || 'Price updated to ' + r.formatted);
+    statusEl.textContent = '✓ ' + (r.message || 'Price updated');
+    // v5.5 fix: directly update the visible UI so it reflects new price
+    // even if loadPricing fails for some reason. Belt + braces.
+    setText('pr-current', r.formatted || ('₦' + newPrice.toLocaleString() + ' / student'));
+    renderPricingExamples(newPrice);
+    // Then do a full reload to refresh the metadata too
     loadPricing();
   }, function(errMsg) {
     statusEl.style.display = 'block';
     statusEl.style.color = 'var(--red)';
     statusEl.textContent = '✗ ' + (errMsg || 'Update failed');
   });
+}
+
+// v5.5: extracted so saveNewPricing can call it directly without waiting on loadPricing
+function renderPricingExamples(pricePerStudent) {
+  var examples = document.getElementById('pr-examples');
+  if (!examples) return;
+  var tiers = [10, 50, 100, 300, 500, 1000];
+  examples.innerHTML = tiers.map(function(n) {
+    var total = n * (pricePerStudent || 0);
+    return '<tr>' +
+      '<td style="padding:5px 8px;border-bottom:1px solid var(--bdr);font-family:var(--mono)">' + n + '</td>' +
+      '<td style="padding:5px 8px;border-bottom:1px solid var(--bdr);text-align:right;font-family:var(--mono);color:var(--accent)">₦' + total.toLocaleString() + '</td>' +
+      '</tr>';
+  }).join('');
 }
 
 // ── v5.5: SECURITY ────────────────────────────────────────────────
