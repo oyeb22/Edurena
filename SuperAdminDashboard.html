@@ -54,6 +54,21 @@
     .btn-out{width:100%;padding:7px;background:var(--red-glow);border:1px solid rgba(240,100,90,.2);color:var(--red);border-radius:var(--rs);cursor:pointer;font-size:11px;font-family:var(--font);transition:all .15s;}
     .btn-out:hover{background:rgba(240,100,90,.22);}
 
+    /* v5.5: sidebar mini-stats with spotlight hover */
+    .sb-stats{padding:8px;display:flex;flex-direction:column;gap:6px;}
+    .sb-stat{position:relative;overflow:hidden;background:var(--surf);border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;transition:border-color .2s, transform .2s;}
+    .sb-stat::before{content:'';position:absolute;inset:0;background:radial-gradient(180px circle at 50% 0%, rgba(245,166,35,0.08), transparent 70%);opacity:0;transition:opacity .25s;pointer-events:none;}
+    .sb-stat:hover{border-color:rgba(245,166,35,0.3);transform:translateY(-1px);}
+    .sb-stat:hover::before{opacity:1;}
+    .sb-stat-lbl{font-size:10px;color:var(--txt2);letter-spacing:0.04em;}
+    .sb-stat-val{font-size:17px;font-weight:600;color:var(--txt);margin-top:2px;line-height:1;font-family:var(--mono);}
+    .sb-stat-val.amber{color:#f5a623;}
+    .sb-stat-val.green{color:#22c55e;}
+    .sb-stat-val.red{color:#ef4444;}
+    
+    /* v5.5: logo box now contains an SVG instead of emoji — flex-shrink prevents squish */
+    .sb-logo-row .logo-box{flex-shrink:0;}
+
     .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
     .topbar{padding:13px 22px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--surf);position:sticky;top:0;z-index:10;}
     .tb-title{font-size:15px;font-weight:700;}
@@ -166,16 +181,20 @@
   <aside class="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <div class="logo-box">👑</div>
-        <div class="logo-txt"><h1>Super Admin</h1><p>Edurena Platform</p></div>
+        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
+          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
+          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
+          <circle cx="35" cy="20" r="7" fill="#03060f"/>
+        </svg>
+        <div class="logo-txt"><h1>edurena</h1><p>Super Admin</p></div>
       </div>
     </div>
     <div class="sb-profile">
       <div class="sp-row">
-        <div class="sp-av">👑</div>
+        <div class="sp-av" id="sb-av">SU</div>
         <div class="sp-info">
-          <div class="sp-name" id="sb-name">Founder</div>
-          <div class="sp-role">Super Admin</div>
+          <div class="sp-name" id="sb-name">—</div>
+          <div class="sp-role">Platform Owner</div>
         </div>
       </div>
     </div>
@@ -184,8 +203,26 @@
       <button class="ni on" onclick="navTo('overview',this)"><span class="ico">📊</span>Overview</button>
       <button class="ni"    onclick="navTo('schools',this)"><span class="ico">🏫</span>Schools &amp; Subs</button>
       <button class="ni"    onclick="navTo('activate',this)"><span class="ico">⚡</span>Activate School</button>
+      <button class="ni"    onclick="navTo('pricing',this)"><span class="ico">₦</span>Pricing</button>
       <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
+      <div class="nsec">Account</div>
+      <button class="ni"    onclick="navTo('security',this)"><span class="ico">🔒</span>Security</button>
     </nav>
+    <!-- v5.5: live mini-stats fill the sidebar gap with platform-level numbers -->
+    <div class="sb-stats" id="sb-stats">
+      <div class="sb-stat">
+        <div class="sb-stat-lbl">Active schools</div>
+        <div class="sb-stat-val amber" id="sb-stat-schools">—</div>
+      </div>
+      <div class="sb-stat">
+        <div class="sb-stat-lbl">Total students</div>
+        <div class="sb-stat-val" id="sb-stat-students">—</div>
+      </div>
+      <div class="sb-stat">
+        <div class="sb-stat-lbl">Monthly revenue</div>
+        <div class="sb-stat-val green" id="sb-stat-mrr">—</div>
+      </div>
+    </div>
     <div class="sb-foot">
       <button class="btn-out" onclick="doLogout()">→ Sign Out</button>
     </div>
@@ -352,6 +389,71 @@
             <button class="btn btn-g btn-sm" onclick="sendTestEmail()">Send Test Email to Self</button>
           </div>
           <div id="email-test-result" style="margin-top:10px;font-size:12px;color:var(--txt2);display:none"></div>
+        </div>
+      </div>
+
+      <!-- v5.5: PRICING — per-student price control (mutable anytime) -->
+      <div class="tp" id="tp-pricing">
+        <div class="sh"><h2>Per-Student Pricing</h2></div>
+        <div class="card">
+          <div class="ct">Current Price</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 14px;line-height:1.6">
+            This is the price charged per student slot at signup/upgrade. Changes apply <strong>immediately</strong> to all new transactions. Existing subscriptions are not affected.
+          </p>
+          <div style="background:var(--surface2);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Live now</div>
+                <div style="font-size:28px;font-weight:600;color:var(--accent);font-family:var(--mono)" id="pr-current">—</div>
+              </div>
+              <div style="margin-left:auto;font-size:11px;color:var(--txt2)" id="pr-meta">Loading…</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:160px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">New price (₦ per student)</label>
+              <input type="number" id="pr-new" min="0" max="100000" step="50" placeholder="e.g. 500" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:15px;outline:none">
+            </div>
+            <button class="btn btn-p" onclick="saveNewPricing()">Update Price</button>
+          </div>
+          <div id="pr-status" style="margin-top:10px;font-size:12px;display:none"></div>
+        </div>
+        <div class="card">
+          <div class="ct">Pricing Examples</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 10px;line-height:1.6">
+            What schools will see at common slot tiers:
+          </p>
+          <table style="width:100%;font-size:13px">
+            <thead><tr><th style="text-align:left;padding:6px 8px;color:var(--txt2);font-size:11px;text-transform:uppercase">Slots</th><th style="text-align:right;padding:6px 8px;color:var(--txt2);font-size:11px;text-transform:uppercase">Total</th></tr></thead>
+            <tbody id="pr-examples"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- v5.5: SECURITY — change password -->
+      <div class="tp" id="tp-security">
+        <div class="sh"><h2>Account Security</h2></div>
+        <div class="card">
+          <div class="ct">Change Password</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 14px;line-height:1.6">
+            Use 12+ characters with a mix of letters, numbers, and symbols. You'll stay signed in on this device after the change.
+          </p>
+          <div style="max-width:420px;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Current password</label>
+              <input type="password" id="pwd-current" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">New password</label>
+              <input type="password" id="pwd-new" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Confirm new password</label>
+              <input type="password" id="pwd-confirm" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+            </div>
+            <button class="btn btn-p" onclick="savePassword()" style="margin-top:6px;align-self:flex-start">Update Password</button>
+            <div id="pwd-status" style="margin-top:4px;font-size:12px;display:none"></div>
+          </div>
         </div>
       </div>
 
@@ -535,7 +637,17 @@ function goLogin() { DASH.goLogin(); }
 function boot() {
   document.getElementById('gate').classList.remove('on');
   document.getElementById('shell').style.display = 'flex';
-  setText('sb-name', S.name || S.email || 'Founder');
+  setText('sb-name', S.name || S.email || '');
+  // v5.5: also populate avatar initials from real name
+  var av = document.getElementById('sb-av');
+  if (av && S.name) {
+    var parts = S.name.trim().split(/\s+/);
+    av.textContent = parts.length >= 2
+      ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase()
+      : S.name.substring(0,2).toUpperCase();
+  } else if (av && S.email) {
+    av.textContent = S.email.substring(0,2).toUpperCase();
+  }
   setText('tb-right', S.email || '');
   loadOverview();
   loadSchoolsTable();
@@ -552,7 +664,9 @@ var tabTitles = {
   overview: ['Overview', 'Platform-wide metrics'],
   schools:  ['Schools & Subscriptions', 'Manage school access and billing'],
   activate: ['Activate School', 'Manually activate or renew a school subscription'],
-  settings: ['Global Settings', 'Platform configuration']
+  pricing:  ['Pricing', 'Per-student pricing — changes apply immediately'],
+  settings: ['Global Settings', 'Platform configuration'],
+  security: ['Account Security', 'Change your password']
 };
 
 function navTo(name, el) {
@@ -565,6 +679,8 @@ function navTo(name, el) {
   setText('tb-title', t[0]);
   setText('tb-sub', t[1]);
   if (name === 'settings') loadSettings();
+  if (name === 'pricing')  loadPricing();
+  if (name === 'security') loadSecurity();
 }
 
 // ── OVERVIEW ────────────────────────────────────────────────────
@@ -599,8 +715,136 @@ function loadOverview() {
     renderPlanChart();
     schoolsDisplay = schoolsAll.slice();
     renderSchoolRows(schoolsDisplay);
+    // v5.5: also refresh sidebar mini-stats
+    refreshSidebarStats(d);
   });
 }
+
+// v5.5: sidebar mini-stats — driven by getSuperadminDashboard data + getPricing.
+// MRR estimated as: total active students × current price-per-student.
+function refreshSidebarStats(d) {
+  setText('sb-stat-schools', d.schools ? d.schools.length : 0);
+  setText('sb-stat-students', d.totalStudents || 0);
+  // Fetch pricing to compute MRR
+  call('getPricing', {}, function(pr) {
+    var students = d.totalStudents || 0;
+    var pricePerStudent = pr && pr.pricePerStudentNgn ? pr.pricePerStudentNgn : 0;
+    var mrr = students * pricePerStudent;
+    if (mrr >= 1000000) {
+      setText('sb-stat-mrr', '₦' + (mrr / 1000000).toFixed(1) + 'M');
+    } else if (mrr >= 1000) {
+      setText('sb-stat-mrr', '₦' + Math.round(mrr / 1000) + 'k');
+    } else {
+      setText('sb-stat-mrr', '₦' + mrr.toLocaleString());
+    }
+  }, function() {
+    setText('sb-stat-mrr', '—');
+  });
+}
+
+// ── v5.5: PRICING ─────────────────────────────────────────────────
+function loadPricing() {
+  var statusEl = document.getElementById('pr-status');
+  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+  call('getPricing', {}, function(pr) {
+    var fmt = pr.formatted || ('₦' + (pr.pricePerStudentNgn||0).toLocaleString() + ' / student');
+    setText('pr-current', fmt);
+    var meta = document.getElementById('pr-meta');
+    if (meta) {
+      if (pr.updatedAt) {
+        var d = new Date(pr.updatedAt);
+        meta.innerHTML = 'Last updated: <strong style="color:var(--txt)">' +
+          d.toLocaleDateString() + '</strong>' +
+          (pr.updatedBy ? ' by ' + esc(pr.updatedBy) : '');
+      } else {
+        meta.textContent = 'Default — never updated';
+      }
+    }
+    // Render example rows
+    var examples = document.getElementById('pr-examples');
+    if (examples) {
+      var tiers = [10, 50, 100, 300, 500, 1000];
+      examples.innerHTML = tiers.map(function(n) {
+        var total = n * (pr.pricePerStudentNgn || 0);
+        return '<tr>' +
+          '<td style="padding:5px 8px;border-bottom:1px solid var(--bdr);font-family:var(--mono)">' + n + '</td>' +
+          '<td style="padding:5px 8px;border-bottom:1px solid var(--bdr);text-align:right;font-family:var(--mono);color:var(--accent)">₦' + total.toLocaleString() + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+    // Pre-fill input
+    var inp = document.getElementById('pr-new');
+    if (inp) inp.value = pr.pricePerStudentNgn || '';
+  });
+}
+
+function saveNewPricing() {
+  var inp = document.getElementById('pr-new');
+  var statusEl = document.getElementById('pr-status');
+  var newPrice = parseInt(inp.value, 10);
+  if (isNaN(newPrice) || newPrice < 0) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'Please enter a valid price (0 or higher)';
+    return;
+  }
+  if (!confirm('Set per-student price to ₦' + newPrice.toLocaleString() + '?\n\nThis applies to all new signups and upgrades immediately.')) return;
+  call('updatePricing', { pricePerStudentNgn: newPrice }, function(r) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--grn)';
+    statusEl.textContent = '✓ ' + (r.message || 'Price updated to ' + r.formatted);
+    loadPricing();
+  }, function(errMsg) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '✗ ' + (errMsg || 'Update failed');
+  });
+}
+
+// ── v5.5: SECURITY ────────────────────────────────────────────────
+function loadSecurity() {
+  // Clear any previous state on entry
+  ['pwd-current','pwd-new','pwd-confirm'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var statusEl = document.getElementById('pwd-status');
+  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+}
+
+function savePassword() {
+  var cur = document.getElementById('pwd-current').value;
+  var newP = document.getElementById('pwd-new').value;
+  var conf = document.getElementById('pwd-confirm').value;
+  var statusEl = document.getElementById('pwd-status');
+  statusEl.style.display = 'block';
+  if (!cur || !newP || !conf) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'All three fields are required';
+    return;
+  }
+  if (newP.length < 8) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'New password must be at least 8 characters';
+    return;
+  }
+  if (newP !== conf) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'New password and confirmation do not match';
+    return;
+  }
+  call('changePassword', { currentPassword: cur, newPassword: newP }, function(r) {
+    statusEl.style.color = 'var(--grn)';
+    statusEl.textContent = '✓ Password updated successfully';
+    // Clear inputs
+    ['pwd-current','pwd-new','pwd-confirm'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+  }, function(errMsg) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '✗ ' + (errMsg || 'Update failed');
+  });
+}
+
 
 function renderPlanChart() {
   var counts = {};
