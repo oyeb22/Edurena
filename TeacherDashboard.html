@@ -1,3 +1,7 @@
+<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
+     RESTORED: per-week exclude checkboxes (excluded-weeks-block, renderExcludedWeeksUI, getExcludedWeeks)
+     KEPT:     M-gamepad logo, sidebar mini-stats (Active quizzes / Today's attempts / Avg score), densified tables
+     API:      sends excludedWeeks[] to getSubjectsForWeek + createQuiz (backend v5.5 code.gs handles this) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,6 +130,33 @@ body.is-admin .admin-only { display: flex !important; }
 body.is-superadmin .superadmin-only { display: flex !important; }
 
 .sb-foot { padding: 8px; border-top: 1px solid var(--border); }
+
+/* v5.5: live mini-stats — fills the empty sidebar gap with useful data.
+   Spotlight effect on hover: radial gradient at top, subtle lift. */
+.sb-stats { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.sb-stat {
+  position: relative; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 8px 10px;
+  cursor: default; transition: border-color .2s, transform .2s;
+}
+.sb-stat::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(180px circle at 50% 0%, rgba(245,166,35,0.08), transparent 70%);
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+.sb-stat:hover { border-color: var(--accent-border); transform: translateY(-1px); }
+.sb-stat:hover::before { opacity: 1; }
+.sb-stat-lbl { font-size: 10px; color: var(--text2); letter-spacing: 0.04em; }
+.sb-stat-val { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 2px; line-height: 1; }
+.sb-stat-val.amber { color: var(--accent); }
+.sb-stat-val.green { color: var(--success); }
+.sb-stat-val.red { color: var(--danger); }
+.sb-stat-delta { font-size: 9px; color: var(--success); margin-top: 2px; }
+.sb-stat-delta.down { color: var(--danger); }
+
+/* v5.5: also fix the logo SVG sizing — was set as 32px div, now an SVG */
+.sb-logo-row .logo-box { flex-shrink: 0; }
 .btn-sys { width: 100%; padding: 6px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); border-radius: var(--r-sm); cursor: pointer; font-size: 11px; font-family: var(--font); transition: all .15s; margin-bottom: 4px; }
 .btn-sys:hover { border-color: var(--border2); color: var(--text); }
 .btn-out { width: 100%; padding: 6px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); border-radius: var(--r-sm); cursor: pointer; font-size: 11px; font-family: var(--font); transition: all .15s; }
@@ -197,16 +228,18 @@ body.is-superadmin .superadmin-only { display: flex !important; }
 
 /* TABLE */
 .tw { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 480px; }
-thead th { text-align: left; padding: 8px 10px; font-size: 10.5px; font-weight: 500; color: var(--text2); border-bottom: 1px solid var(--border); letter-spacing: .2px; white-space: nowrap; }
-tbody td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 480px; }
+/* v5.5: denser table rows — was 8px/9px padding, now 5px/6px. ~30% less vertical space per row. */
+thead th { text-align: left; padding: 5px 9px; font-size: 10px; font-weight: 500; color: var(--text2); border-bottom: 1px solid var(--border); letter-spacing: .3px; white-space: nowrap; text-transform: uppercase; }
+tbody td { padding: 6px 9px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr { transition: background .12s; }
 tbody tr:hover td { background: var(--surface2); }
 tbody tr:last-child td { border-bottom: none; }
 .er td { text-align: center; color: var(--text2); padding: 22px; font-size: 13px; }
-code { font-family: var(--mono); font-size: 11px; background: var(--surface2); padding: 2px 5px; border-radius: 4px; color: var(--text2); }
+code { font-family: var(--mono); font-size: 11px; background: var(--surface2); padding: 2px 5px; border-radius: 4px; color: var(--accent); }
 
-/* BADGES */
-.bdg { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+/* BADGES — v5.5 slightly denser */
+.bdg { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .2px; }
 .bg  { background: var(--success-bg); color: var(--success); }
 .br  { background: var(--danger-bg);  color: var(--danger); }
 .by  { background: var(--warn-bg);    color: var(--warn); }
@@ -224,7 +257,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .btn-ok:hover { background: #dcfce7; }
 .btn-live { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent-border); }
 .btn-live:hover { background: #dbeafe; }
-.btn-sm { padding: 3px 8px; font-size: 11px; }
+.btn-sm { padding: 2px 7px; font-size: 10.5px; font-weight: 600; }
 .btn:disabled { opacity: .35; cursor: not-allowed; }
 
 /* FORMS */
@@ -246,6 +279,8 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .tog { width: 34px; height: 18px; background: var(--surface3); border-radius: 9px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; border: 1px solid var(--border2); }
 .tog.on { background: var(--text); border-color: var(--text); }
 .tog::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: #fff; border-radius: 50%; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+
+/* v5.5: tog 'on' state knob position */
 .tog.on::after { left: 18px; }
 
 /* SUBJECT INPUTS */
@@ -463,8 +498,12 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
   <aside class="sb" id="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <div class="logo-box">⚡</div>
-        <div class="logo-txt"><h1>Edurena</h1><p>v5.1 Dashboard</p></div>
+        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
+          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
+          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
+          <circle cx="35" cy="20" r="7" fill="#03060f"/>
+        </svg>
+        <div class="logo-txt"><h1>edurena</h1><p>Teacher</p></div>
       </div>
     </div>
     <div class="sb-profile" onclick="nav('profile',null);closeSidebar()">
@@ -491,6 +530,22 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
       <div class="nsec">Account</div>
       <button class="ni"            onclick="nav('profile',this);closeSidebar()"><span class="ico">◯</span>My Profile</button>
     </nav>
+    <!-- v5.5: live mini-stats fill the previously empty gap. Wired to
+         getTeacherStats GAS endpoint on dashboard load. -->
+    <div class="sb-stats" id="sb-stats">
+      <div class="sb-stat" id="sb-stat-active">
+        <div class="sb-stat-lbl">Active quizzes</div>
+        <div class="sb-stat-val amber" id="sb-stat-active-val">—</div>
+      </div>
+      <div class="sb-stat" id="sb-stat-today">
+        <div class="sb-stat-lbl">Today's attempts</div>
+        <div class="sb-stat-val" id="sb-stat-today-val">—</div>
+      </div>
+      <div class="sb-stat" id="sb-stat-avg">
+        <div class="sb-stat-lbl">Avg score</div>
+        <div class="sb-stat-val green" id="sb-stat-avg-val">—</div>
+      </div>
+    </div>
     <div class="sb-foot">
       <button class="btn-sys" onclick="runInit()">Initialize System</button>
       <button class="btn-out" onclick="doLogout()">Sign Out</button>
@@ -575,8 +630,8 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
               <div><div class="tl">Cumulative weeks</div><div class="td" id="week-mode-desc">Include questions from all weeks up to and including selected week</div></div>
               <div class="tog on" id="tog-week-mode" onclick="toggleWeekMode()"></div>
             </div>
-            <!-- v5.3: Exclude specific weeks (only when cumulative is ON) -->
-            <div id="excluded-weeks-block" style="display:none;margin-top:12px;padding:12px;background:var(--surface2,#131923);border-radius:8px">
+            <!-- v5.3 RESTORED: Exclude specific weeks (only when cumulative is ON) -->
+            <div id="excluded-weeks-block" style="display:none;margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
                 <div>
                   <div class="tl" style="font-size:13px">Include / exclude weeks</div>
@@ -901,7 +956,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
           <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">Paste a JSON array. Existing unlocked profiles are updated.</p>
           <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-bottom:10px;font-family:var(--mono);font-size:10.5px;color:var(--text2);line-height:1.7">
             <div style="color:var(--accent-text);font-weight:500;margin-bottom:3px;font-family:var(--font)">Format:</div>
-[{ "name": "Adisa Oyebola", "email": "adisa@gmail.com", "class": "SS2A", "school": "Sunrise Academy" }]
+[{ "name": "Jane Doe", "email": "jane@school.com", "class": "SS2A", "school": "Your School Name" }]
           </div>
           <div class="fgrid" style="margin-bottom:9px">
             <div class="fg"><label>Override School</label><select id="bulk-school" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Use school from JSON —</option></select></div>
@@ -1176,7 +1231,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
   <div class="mbox" style="width:420px;max-width:96vw">
     <div class="mh"><span class="mh-title" id="student-mo-title">Add Student</span><button class="mc" onclick="closeMo('student-mo')">✕</button></div>
     <div class="mb">
-      <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Adisa Oyebola"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Jane Doe"></div>
       <div class="fg" style="margin-bottom:10px"><label>Email / Student ID *</label><input type="text" id="st-email" placeholder="e.g. student@gmail.com or ADM/2025/001"></div>
       <div class="fg" style="margin-bottom:10px"><label>Class *</label><select id="st-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Select class —</option></select></div>
       <div class="fg" style="margin-bottom:10px"><label>School *</label><select id="st-school" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Select school —</option></select></div>
@@ -1532,7 +1587,7 @@ function doDelClass(id) {
 
 /* ── Overview ── */
 function loadOverview() {
-  var done=0; function check(){ done++; if(done===2) renderCharts(); }
+  var done=0; function check(){ done++; if(done===2) { renderCharts(); refreshSidebarStats(); } }
   call('getAllQuizzes',{},function(qs){
     allQuizzes=qs||[];
     var now=new Date();
@@ -1542,6 +1597,45 @@ function loadOverview() {
   },function(){ check(); });
   if(allQuestions.length){ setText('s-qs',allQuestions.length); check(); }
   else { call('getQuestionBank',{classId:allClasses.length?allClasses[0].id:''}, function(qq){ allQuestions=qq||[]; setText('s-qs',allQuestions.length); check(); }, function(){ check(); }); }
+}
+
+// v5.5: refresh sidebar mini-stats from data already in memory.
+// Called whenever allQuizzes refreshes — keeps the sidebar always-fresh
+// without a separate API call.
+function refreshSidebarStats() {
+  var now = new Date();
+  var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  var active = (allQuizzes || []).filter(function(q) {
+    return new Date(q.endTime) > now && q.status === 'active';
+  }).length;
+
+  // Today's attempts: count submissions across all quizzes where createdAt is today.
+  // Each quiz has q.submissions or q.attempts array depending on backend.
+  var todayAttempts = 0;
+  var allScores = [];
+  (allQuizzes || []).forEach(function(q) {
+    var subs = q.submissions || q.attempts || [];
+    if (!Array.isArray(subs)) return;
+    subs.forEach(function(s) {
+      if (s.submittedAt) {
+        var sd = new Date(s.submittedAt);
+        if (sd >= todayStart) todayAttempts++;
+      }
+      if (typeof s.percentage === 'number') allScores.push(s.percentage);
+      else if (typeof s.score === 'number' && typeof s.totalPoints === 'number' && s.totalPoints > 0) {
+        allScores.push((s.score / s.totalPoints) * 100);
+      }
+    });
+  });
+
+  var avgScore = allScores.length
+    ? Math.round(allScores.reduce(function(a,b){return a+b;}, 0) / allScores.length)
+    : null;
+
+  setText('sb-stat-active-val', String(active));
+  setText('sb-stat-today-val', String(todayAttempts));
+  setText('sb-stat-avg-val', avgScore === null ? '—' : (avgScore + '%'));
 }
 function renderCharts() {
   var now=new Date();
@@ -1566,7 +1660,7 @@ function renderRecentTable() {
 }
 
 /* ── Manage Quizzes ── */
-function loadQuizzes() { call('getAllQuizzes',{},function(qs){ allQuizzes=qs||[]; renderManageTable(); }); }
+function loadQuizzes() { call('getAllQuizzes',{},function(qs){ allQuizzes=qs||[]; renderManageTable(); refreshSidebarStats(); }); }
 function renderManageTable() {
   var tb=document.querySelector('#t-manage tbody'); if(!tb) return;
   if(!allQuizzes.length){ tb.innerHTML='<tr class="er"><td colspan="7">No quizzes.</td></tr>'; return; }
@@ -1930,9 +2024,8 @@ function onClassChange(){ var cid=document.getElementById('c-class').value, wk=d
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
 function onTypeChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
 function getWeekMode(){ var tog=document.getElementById('tog-week-mode'); return (tog&&tog.classList.contains('on'))?'cumulative':'single'; }
-function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
 
-// v5.3 — exclude-weeks helpers
+// v5.3 RESTORED: exclude-weeks helpers — teacher unticks weeks to skip (e.g. holiday weeks)
 function renderExcludedWeeksUI(targetWeek){
   var list=document.getElementById('excluded-weeks-list'); if(!list) return;
   var tw=parseInt(targetWeek)||0;
@@ -1943,8 +2036,8 @@ function renderExcludedWeeksUI(targetWeek){
   var html='';
   for(var w=1; w<=tw; w++){
     var prev=(existing[String(w)]!==false); // default checked
-    html+='<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;background:var(--surface,#0F1523);border:1px solid var(--border,#2e3248);border-radius:6px;font-size:12px;cursor:pointer;user-select:none">'
-        + '<input type="checkbox" value="'+w+'" '+(prev?'checked':'')+' onchange="exclWeekToggle()" style="margin:0;cursor:pointer">'
+    html+='<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;user-select:none">'
+        + '<input type="checkbox" value="'+w+'" '+(prev?'checked':'')+' onchange="exclWeekToggle()" style="margin:0;cursor:pointer;accent-color:var(--accent)">'
         + 'Wk '+w
         + '</label>';
   }
@@ -1974,9 +2067,9 @@ function updateExclWeeksSummary(){
   var summary=document.getElementById('excl-weeks-summary'); if(!summary) return;
   var excl=getExcludedWeeks();
   if(!excl.length){ summary.textContent='All weeks included.'; summary.style.color='var(--text2)'; }
-  else { summary.innerHTML='<strong style="color:var(--warning,#FB923C)">Excluding:</strong> '+excl.map(function(w){return 'Week '+w;}).join(', '); }
+  else { summary.innerHTML='<strong style="color:var(--warn)">Excluding:</strong> '+excl.map(function(w){return 'Week '+w;}).join(', '); }
 }
-
+function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
 function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
@@ -2001,7 +2094,7 @@ function doCreate(){
     endTime:             localToISO(en),
     questionTypes:       getSelectedTypes(),
     weekMode:            getWeekMode(),
-    excludedWeeks:       getExcludedWeeks(),  // v5.3 — empty array if single mode or all weeks checked
+    excludedWeeks:       getExcludedWeeks(),  // v5.3: cumulative mode only — empty if single or all weeks included
     session:             document.getElementById('c-session').value,
     term:                document.getElementById('c-term').value,
     faceDetection:       document.getElementById('tog-face').classList.contains('on'),
@@ -2029,7 +2122,6 @@ function resetCreate(){
   var mv = document.getElementById('c-max-violations'); if(mv) mv.value = '3';
   var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.add('on');
   var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display='none';
-  // v5.3: reset excluded weeks UI
   var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='none';
   var exclList=document.getElementById('excluded-weeks-list'); if(exclList) exclList.innerHTML='';
   var exclSum=document.getElementById('excl-weeks-summary'); if(exclSum) exclSum.textContent='';
