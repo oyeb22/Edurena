@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ── Global error reporter — sends uncaught JS errors to GAS for logging ── */
+(function(){
+  function _reportErr(d){
+    try{
+      var url=(window.DASH&&DASH.scriptUrl)||'';
+      if(!url)return;
+      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
+      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
+    }catch(_){}
+  }
+  window.onerror=function(msg,src,line,col,err){
+    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
+    return false;
+  };
+  window.onunhandledrejection=function(e){
+    _reportErr({msg:'UnhandledRejection: '+String(e.reason&&(e.reason.message||e.reason)||''),stack:e.reason&&e.reason.stack||''});
+  };
+})();
+</script>
   <meta charset="UTF-8">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Edurena — Blitz Quiz</title>
+  <title>Edurena — Live Quiz</title>
   <style>
     :root{--bg:#0f172a;--panel:#1e293b;--track:#334155;--txt:#f8fafc;--muted:#94a3b8;--f:'Plus Jakarta Sans',system-ui,sans-serif;--k-red:#e21b3c;--k-blue:#1368ce;--k-yellow:#d89e00;--k-green:#26890c}
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -159,6 +179,9 @@
 
     .spin-icon{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spinR .7s linear infinite;vertical-align:middle;margin-right:8px}
     @keyframes spinR{to{transform:rotate(360deg)}}
+    /* 3-D characters */
+    #lby-char-canvas{display:block;margin:0 auto 8px;width:140px;height:190px;border-radius:12px}
+    .pod-char-canvas{display:block;margin:0 auto 4px;width:72px;height:108px;border-radius:8px}
     @media(max-width:520px){.opts-grid,.reveal-opts{grid-template-columns:1fr}.opt-btn{min-height:52px}}
   </style>
 </head>
@@ -196,6 +219,7 @@
     <div class="lby-code" id="lby-code">------</div>
     <div class="lby-player-count" id="lby-count">0</div>
     <div class="lby-count-lbl">players joined</div>
+    <canvas id="lby-char-canvas" width="140" height="190"></canvas>
     <div class="chips" id="lby-chips"></div>
     <div class="lby-wait pulse">Waiting for the teacher to start&hellip;</div>
   </div>
@@ -265,6 +289,9 @@ var P       = new URLSearchParams(window.location.search);
 var GAS_URL = (P.get('script') || '').trim();
 var preCode = (P.get('room')   || '').trim().toUpperCase();
 
+var myModelIdx    = 0;   // which character model this player uses
+var myCharSpawned = false;
+
 /* ── SOUND ── */
 var soundOn = true, actx = null;
 function getAC(){ if(!actx) try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){} return actx; }
@@ -320,7 +347,7 @@ try{
   var ex=null;
   firebase.apps.forEach(function(a){if(a.name==='kh')ex=a;});
   db=firebase.database(ex||firebase.initializeApp(cfg,'kh'));
-}catch(e){console.error('[kahoot] Firebase:',e.message);}
+}catch(e){console.error('[livequiz] Firebase:',e.message);}
 
 /* ── HELPERS ── */
 function show(id){
@@ -379,12 +406,12 @@ function doJoin(){
   }
 
   try{
-    db.ref('kahoot/'+sessionId+'/meta').once('value').then(function(metaSnap){
+    db.ref('livequiz/'+sessionId+'/meta').once('value').then(function(metaSnap){
       var meta=metaSnap&&metaSnap.val();
       if(!meta){joinFail('Room not found. Check the code with your teacher.');return;}
       totalQ   = meta.totalQ   || 0;
       timePerQ = meta.timePerQ || 20;
-      return db.ref('kahoot/'+sessionId+'/questions').once('value');
+      return db.ref('livequiz/'+sessionId+'/questions').once('value');
     }).then(function(qSnap){
       if(!qSnap) return;
       var raw = qSnap.val();
@@ -392,12 +419,12 @@ function doJoin(){
       if(!qArr.length){joinFail('Room not ready yet — ask your teacher to reload the host page.');return;}
       questions = qArr;
       totalQ    = totalQ || questions.length;
-      return db.ref('kahoot/'+sessionId+'/players/'+playerId).set({
+      return db.ref('livequiz/'+sessionId+'/players/'+playerId).set({
         name:playerName,score:0,streak:0,lastPoints:0,lastCorrect:false,
         answeredCount:0,joinedAt:firebase.database.ServerValue.TIMESTAMP,online:true
       });
     }).then(function(){
-      db.ref('kahoot/'+sessionId+'/players/'+playerId+'/online').onDisconnect().set(false);
+      db.ref('livequiz/'+sessionId+'/players/'+playerId+'/online').onDisconnect().set(false);
       el('lby-code').textContent=sessionId;
       buildDots();
       show('s-lobby');
@@ -430,7 +457,7 @@ function setDot(idx){
    WATCH ANSWER KEYS
 ════════════════════════════════════════ */
 function watchAnswerKeys(){
-  answerKeyRef=db.ref('kahoot/'+sessionId+'/answerKeys');
+  answerKeyRef=db.ref('livequiz/'+sessionId+'/answerKeys');
   answerKeyRef.on('child_added',function(snap){
     var qi=parseInt(snap.key);
     if(!isNaN(qi)) answerKeyCache[qi]=snap.val();
@@ -448,7 +475,7 @@ function watchAnswerKeys(){
    LOBBY PLAYERS
 ════════════════════════════════════════ */
 function watchLobbyPlayers(){
-  lobbyPRef=db.ref('kahoot/'+sessionId+'/players');
+  lobbyPRef=db.ref('livequiz/'+sessionId+'/players');
   lobbyPRef.on('value',function(snap){
     var players=(snap&&snap.val())||{};
     var names=Object.values(players).map(function(p){return p.name||'?';});
@@ -456,6 +483,14 @@ function watchLobbyPlayers(){
     el('lby-chips').innerHTML=names.map(function(n){
       return '<div class="chip">'+esc(n)+'</div>';
     }).join('');
+    // Spawn this player's 3-D character once when lobby is ready
+    if(!myCharSpawned && players[playerId] && window.CharJS){
+      myCharSpawned=true;
+      var ids=Object.keys(players).sort(); // stable order by Firebase key
+      myModelIdx=ids.indexOf(playerId)%2;
+      var lc=document.getElementById('lby-char-canvas');
+      if(lc) window.CharJS.spawn(lc, myModelIdx, 'idle');
+    }
   });
 }
 
@@ -463,7 +498,7 @@ function watchLobbyPlayers(){
    GAME STATE WATCHER
 ════════════════════════════════════════ */
 function watchGameState(){
-  stateRef=db.ref('kahoot/'+sessionId+'/state');
+  stateRef=db.ref('livequiz/'+sessionId+'/state');
   stateRef.on('value',function(snap){
     var st=(snap&&snap.val())||{};
     var phase=st.phase||'lobby';
@@ -498,7 +533,7 @@ function watchGameState(){
       showFinal();
     }
   });
-  if(!playersRef) playersRef=db.ref('kahoot/'+sessionId+'/players');
+  if(!playersRef) playersRef=db.ref('livequiz/'+sessionId+'/players');
 }
 
 function detachLobby(){
@@ -680,7 +715,7 @@ function submitAnswer(answer, btnEl){
   showAnsweredFeedback(btnEl, answer);
 
   var rawUpdate={};
-  rawUpdate['kahoot/'+sessionId+'/rawAnswers/'+playerId+'/'+currentQIdx]={
+  rawUpdate['livequiz/'+sessionId+'/rawAnswers/'+playerId+'/'+currentQIdx]={
     answer:        answer,
     timeRemaining: timeRemSec,
     currentStreak: streak,
@@ -688,15 +723,15 @@ function submitAnswer(answer, btnEl){
     pointsEarned:  pointsEarned,
     lockedAt:      firebase.database.ServerValue.TIMESTAMP
   };
-  rawUpdate['kahoot/'+sessionId+'/players/'+playerId+'/streak']       =streak;
-  rawUpdate['kahoot/'+sessionId+'/players/'+playerId+'/lastPoints']   =pointsEarned;
-  rawUpdate['kahoot/'+sessionId+'/players/'+playerId+'/lastCorrect']  =isCorrect;
-  rawUpdate['kahoot/'+sessionId+'/players/'+playerId+'/answeredCount']=currentQIdx+1;
-  rawUpdate['kahoot/'+sessionId+'/players/'+playerId+'/online']       =true;
+  rawUpdate['livequiz/'+sessionId+'/players/'+playerId+'/streak']       =streak;
+  rawUpdate['livequiz/'+sessionId+'/players/'+playerId+'/lastPoints']   =pointsEarned;
+  rawUpdate['livequiz/'+sessionId+'/players/'+playerId+'/lastCorrect']  =isCorrect;
+  rawUpdate['livequiz/'+sessionId+'/players/'+playerId+'/answeredCount']=currentQIdx+1;
+  rawUpdate['livequiz/'+sessionId+'/players/'+playerId+'/online']       =true;
   db.ref().update(rawUpdate);
 
   if(pointsEarned>0){
-    db.ref('kahoot/'+sessionId+'/players/'+playerId+'/score').transaction(function(current){
+    db.ref('livequiz/'+sessionId+'/players/'+playerId+'/score').transaction(function(current){
       return (current||0)+pointsEarned;
     });
   }
@@ -742,15 +777,15 @@ function timeOut(){
   el('q-body').querySelectorAll('.opt-btn,.sub-btn').forEach(function(b){b.disabled=true;});
 
   var updates={};
-  updates['kahoot/'+sessionId+'/rawAnswers/'+playerId+'/'+currentQIdx]={
+  updates['livequiz/'+sessionId+'/rawAnswers/'+playerId+'/'+currentQIdx]={
     answer:'',timeRemaining:0,currentStreak:0,timedOut:true,
     isCorrect:false,pointsEarned:0,
     lockedAt:firebase.database.ServerValue.TIMESTAMP
   };
-  updates['kahoot/'+sessionId+'/players/'+playerId+'/streak']       =0;
-  updates['kahoot/'+sessionId+'/players/'+playerId+'/lastCorrect']  =false;
-  updates['kahoot/'+sessionId+'/players/'+playerId+'/lastPoints']   =0;
-  updates['kahoot/'+sessionId+'/players/'+playerId+'/answeredCount']=currentQIdx+1;
+  updates['livequiz/'+sessionId+'/players/'+playerId+'/streak']       =0;
+  updates['livequiz/'+sessionId+'/players/'+playerId+'/lastCorrect']  =false;
+  updates['livequiz/'+sessionId+'/players/'+playerId+'/lastPoints']   =0;
+  updates['livequiz/'+sessionId+'/players/'+playerId+'/answeredCount']=currentQIdx+1;
   db.ref().update(updates);
 
   var body=el('q-body'); body.innerHTML='';
@@ -842,7 +877,7 @@ function showReveal(qi, serverCorrect, correctText){
    LEADERBOARD
 ════════════════════════════════════════ */
 function showLeaderboard(autoAdvanceAt){
-  if(!playersRef) playersRef=db.ref('kahoot/'+sessionId+'/players');
+  if(!playersRef) playersRef=db.ref('livequiz/'+sessionId+'/players');
   playersRef.once('value',function(snap){
     var players=(snap&&snap.val())||{};
     var sorted=Object.entries(players)
@@ -882,7 +917,7 @@ function showFinal(){
   [523,659,784,1047,1318].forEach(function(n,i){
     setTimeout(function(){playTone(n,'triangle',.4,.14,true);},i*140);
   });
-  if(!playersRef) playersRef=db.ref('kahoot/'+sessionId+'/players');
+  if(!playersRef) playersRef=db.ref('livequiz/'+sessionId+'/players');
   playersRef.once('value',function(snap){
     var players=(snap&&snap.val())||{};
     var sorted=Object.entries(players)
@@ -894,11 +929,20 @@ function showFinal(){
       var entry=sorted[rank]; if(!entry) return;
       var p=entry[1],div=document.createElement('div');
       div.className='podium-slot '+pClasses[slot];
-      div.innerHTML='<div class="podium-avatar">'+(p.name||'?').slice(0,2).toUpperCase()+'</div>'
+      var charId='pod-char-'+rank;
+      div.innerHTML='<canvas id="'+charId+'" class="pod-char-canvas" width="72" height="108"></canvas>'
         +'<div class="podium-name">'+esc(p.name)+'</div>'
         +'<div class="podium-score">'+((p.score||0).toLocaleString())+'</div>'
         +'<div class="podium-bar"></div>';
       podium.appendChild(div);
+      // Spawn character after DOM is ready
+      (function(id,r){
+        setTimeout(function(){
+          if(!window.CharJS) return;
+          var c=document.getElementById(id);
+          if(c) window.CharJS.spawn(c, r%2, r===0?'celebration':'defeat');
+        },300);
+      })(charId, rank);
     });
     var myRank=sorted.findIndex(function(e){return e[0]===playerId;});
     var myFinalScore=myRank>=0?(sorted[myRank][1].score||0):totalScore;
@@ -920,6 +964,83 @@ window.addEventListener('beforeunload',function(){
 });
 
 }());
+</script>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
+
+const MODELS = [
+  'assets/characters/aj.glb',
+  'assets/characters/claire.glb'
+];
+
+const instances = new Map();
+const loader    = new GLTFLoader();
+
+async function spawn(canvas, playerIndex, animName) {
+  if (instances.has(canvas.id)) {
+    playAnim(canvas.id, animName);
+    return;
+  }
+
+  const w = canvas.width, h = canvas.height;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(w, h, false);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, w / h, 0.01, 100);
+  camera.position.set(0, 1.1, 2.6);
+  camera.lookAt(0, 0.9, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9aaa, 2.8));
+  const dir = new THREE.DirectionalLight(0xffffff, 1.4);
+  dir.position.set(1, 2, 2);
+  scene.add(dir);
+
+  let gltf;
+  try {
+    gltf = await loader.loadAsync(MODELS[playerIndex % MODELS.length]);
+  } catch(e) {
+    console.warn('[CharJS] load failed', e);
+    return;
+  }
+
+  scene.add(gltf.scene);
+
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  const clips = {};
+  gltf.animations.forEach(clip => {
+    clips[clip.name] = mixer.clipAction(clip);
+  });
+
+  const inst = { renderer, scene, camera, mixer, clips, current: null };
+  instances.set(canvas.id, inst);
+
+  playAnim(canvas.id, animName || 'idle');
+
+  let last = 0;
+  (function tick(t) {
+    inst.raf = requestAnimationFrame(tick);
+    mixer.update((t - last) / 1000);
+    last = t;
+    renderer.render(scene, camera);
+  })(0);
+}
+
+function playAnim(canvasId, name) {
+  const inst = instances.get(canvasId);
+  if (!inst || !inst.clips[name]) return;
+  if (inst.current === inst.clips[name]) return;
+  if (inst.current) inst.current.fadeOut(0.25);
+  inst.clips[name].reset().fadeIn(0.25).play();
+  inst.current = inst.clips[name];
+}
+
+window.CharJS = { spawn, playAnim };
 </script>
 </body>
 </html>
