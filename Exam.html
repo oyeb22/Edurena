@@ -1873,7 +1873,7 @@ function renderQuestion(){
   var html='<div class="q-card">';
 
   if(q.instruction_text&&q.instruction_text.trim()){
-    html+='<div class="instruction-header"><span class="label">📋 Instructions</span>'+q.instruction_text+'</div>';
+    html+='<div class="instruction-header"><span class="label">📋 Instructions</span>'+esc(q.instruction_text)+'</div>';
   }
 
   if(isPhonics){
@@ -1902,7 +1902,7 @@ function renderQuestion(){
     +'<span class="q-pts">'+q.points+' pt'+(q.points!==1?'s':'')+'</span></div>';
 
   if(!isPhonics){
-    html+='<div class="q-text">'+q.question+'</div>';
+    html+='<div class="q-text">'+esc(q.question)+'</div>';
   }
 
   if(q.type==='MCQ'||q.type==='TF'){
@@ -1916,15 +1916,15 @@ function renderQuestion(){
       var imgHtml = img
         ? '<img src="' + img + '" style="max-width:100%;max-height:120px;border-radius:6px;margin-top:6px;display:block;object-fit:contain" onerror="this.remove()">'
         : '';
-      html += '<div class="option' + sel + '" onclick="selectAns(\'' + q.id + '\',\'' + letter + '\',this)">'
+      html += '<div class="option' + sel + '" data-qid="' + esc(String(q.id)) + '" data-letter="' + letter + '" onclick="selectAns(this.dataset.qid,this.dataset.letter,this)">'
         + '<div class="opt-letter">' + letter + '</div>'
-        + '<div class="opt-text">' + (opt || '') + imgHtml + '</div></div>';
+        + '<div class="opt-text">' + esc(opt || '') + imgHtml + '</div></div>';
     });
     html+='</div>';
   }else{
     var val=answers[q.id]||'';
-    html+='<textarea class="short-input" id="short_'+q.id+'" placeholder="Type your answer here…" '
-      +'onchange="answers[\''+q.id+'\']=this.value.trim();updateDots();">'+val+'</textarea>';
+    html+='<textarea class="short-input" data-qid="'+esc(String(q.id))+'" placeholder="Type your answer here…" '
+      +'onchange="answers[this.dataset.qid]=this.value.trim();updateDots();">'+esc(val)+'</textarea>';
   }
   html+='</div>';
 
@@ -1963,7 +1963,7 @@ function selectAns(qId,letter,el){
 
 function saveShort(){
   var q=questions[qIndex]; if(!q||q.type!=='SHORT')return;
-  var el=document.getElementById('short_'+q.id); if(el)answers[q.id]=el.value.trim();
+  var el=document.querySelector('.short-input[data-qid]'); if(el)answers[q.id]=el.value.trim();
 }
 function prevQ(){ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}}
 function nextQ(){ttsStop();saveShort();if(qIndex<questions.length-1){qIndex++;renderQuestion();}}
