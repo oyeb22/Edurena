@@ -262,6 +262,76 @@ body {
   border-top: 1px solid var(--border);
 }
 
+
+/* ============================================================
+   SECTION 2 — ABOUT CSS
+   ============================================================ */
+.s2-section{position:relative;width:100%;min-height:100vh;display:flex;align-items:stretch;overflow:hidden;background:var(--bg);}
+.s2-laptop-side{width:42%;display:flex;align-items:center;justify-content:center;padding:60px 24px 60px 48px;}
+.s2-laptop{position:relative;width:100%;max-width:480px;}
+.s2-laptop-lid{background:#1c1c1e;border-radius:12px 12px 4px 4px;padding:14px 14px 10px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.4);position:relative;}
+.s2-laptop-lid::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:#2a2a2c;}
+.s2-screen{background:#060d1e;border-radius:6px;aspect-ratio:16/10;overflow:hidden;border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;}
+.s2-screen-placeholder{text-align:center;color:var(--muted);}
+.s2-screen-placeholder .s2-ph-icon{width:48px;height:48px;border:2px solid var(--border);border-radius:10px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;}
+.s2-screen-placeholder p{font-size:12px;line-height:1.5;max-width:160px;margin:0 auto;opacity:.6;}
+.s2-laptop-base{background:#232325;height:18px;border-radius:0 0 8px 8px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.s2-laptop-base::after{content:'';position:absolute;top:5px;left:50%;transform:translateX(-50%);width:60px;height:4px;background:#1a1a1c;border-radius:2px;}
+.s2-brown-side{width:58%;background:var(--brown);border-radius:24px 0 0 24px;display:flex;align-items:center;padding:72px 64px 72px 56px;}
+.s2-copy{max-width:520px;}
+.s2-kicker{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.3em;text-transform:uppercase;margin-bottom:18px;}
+.s2-headline{font-size:clamp(26px,3vw,38px);font-weight:800;color:var(--white);line-height:1.15;margin-bottom:20px;}
+.s2-body{font-size:15px;color:rgba(240,244,255,.72);line-height:1.75;margin-bottom:36px;}
+.s2-outcomes{display:flex;flex-direction:column;gap:20px;}
+.s2-outcome{display:flex;gap:16px;align-items:flex-start;}
+.s2-outcome-num{font-size:28px;font-weight:800;color:var(--amber);line-height:1;flex-shrink:0;min-width:32px;}
+.s2-outcome-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.s2-outcome-desc{font-size:13px;color:rgba(240,244,255,.55);line-height:1.6;}
+
+/* SECTION 3 — FEATURES WHEEL */
+.s3-section{position:relative;width:100%;min-height:100vh;background:radial-gradient(circle at 12% 50%,#4a2810 0%,#3a1f08 38%,#1a0e02 100%);display:flex;align-items:stretch;overflow:hidden;}
+.s3-wheel-side{width:44%;position:relative;flex-shrink:0;min-height:600px;}
+.s3-wheel-side svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;width:100%;height:100%;}
+.s3-detail-side{width:56%;display:flex;flex-direction:column;justify-content:center;padding:60px 56px 60px 32px;opacity:0;transition:opacity .45s ease;}
+.s3-detail-side.show{opacity:1;}
+.s3-feat-num{font-size:10px;font-weight:700;color:rgba(245,166,35,.5);letter-spacing:.3em;text-transform:uppercase;margin-bottom:14px;}
+.s3-feat-title{font-size:clamp(26px,3vw,36px);font-weight:800;color:#ffe07a;line-height:1.1;margin-bottom:16px;}
+.s3-feat-desc{font-size:14px;color:rgba(240,244,255,.72);line-height:1.75;margin-bottom:22px;}
+.s3-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px;}
+.s3-tag{font-size:11px;font-weight:700;color:#f5a623;border:1px solid rgba(245,166,35,.35);padding:4px 12px;border-radius:20px;}
+.s3-dots{display:flex;gap:9px;margin-bottom:22px;}
+.s3-dot{width:8px;height:8px;border-radius:50%;background:rgba(245,166,35,.22);transition:background .3s,transform .3s;cursor:pointer;}
+.s3-dot.active{background:#f5a623;transform:scale(1.3);}
+.s3-nav{display:flex;gap:10px;}
+.s3-btn{background:transparent;color:#f5a623;border:1px solid rgba(245,166,35,.4);padding:9px 22px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;font-family:'Sora',system-ui,sans-serif;transition:background .2s;}
+.s3-btn:hover{background:rgba(245,166,35,.1);}
+.s3-btn:disabled{opacity:.28;cursor:default;}
+
+/* SECTION 4 — HOW IT WORKS */
+.s4-section{width:100%;padding:120px 60px;background:var(--bg);border-top:1px solid var(--border);}
+.s4-label{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.3em;text-transform:uppercase;text-align:center;margin-bottom:16px;}
+.s4-headline{font-size:clamp(28px,3.5vw,44px);font-weight:800;color:var(--white);text-align:center;line-height:1.15;margin-bottom:80px;max-width:640px;margin-left:auto;margin-right:auto;}
+.s4-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;max-width:1100px;margin:0 auto;}
+.s4-step{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
+.s4-step.in{opacity:1;transform:translateY(0);}
+.s4-step:nth-child(2){transition-delay:.15s;}
+.s4-step:nth-child(3){transition-delay:.30s;}
+.s4-step-num{font-size:64px;font-weight:800;color:rgba(245,166,35,.15);line-height:1;margin-bottom:20px;}
+.s4-step-title{font-size:20px;font-weight:800;color:var(--white);margin-bottom:12px;line-height:1.2;}
+.s4-step-desc{font-size:14.5px;color:var(--muted);line-height:1.75;}
+.s4-step-desc em{color:var(--white);font-style:normal;font-weight:600;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .s2-section{flex-direction:column;}
+  .s2-laptop-side{width:100%;padding:48px 24px 32px;}
+  .s2-brown-side{width:100%;border-radius:24px 24px 0 0;padding:48px 28px;}
+  .s3-section{flex-direction:column;min-height:auto;}
+  .s3-wheel-side{width:100%;height:360px;}
+  .s3-detail-side{width:100%;padding:40px 28px;}
+  .s4-steps{grid-template-columns:1fr;gap:48px;}
+  .s4-section{padding:80px 28px;}
+}
 </style>
 </head>
 <body>
@@ -317,96 +387,158 @@ body {
   </div>
 </section>
 
-<!-- PLACEHOLDER — Pass 2 will replace these -->
-<section id="about"      class="section-placeholder reveal">Section 2 — About (Pass 2)</section>
-<section id="features"   class="section-placeholder reveal">Section 3 — Features wheel (Pass 2)</section>
-<section id="howitworks" class="section-placeholder reveal">Section 4 — How it works (Pass 2)</section>
-<section id="pricing"    class="section-placeholder reveal">Section 5 — Pricing (Pass 3)</section>
-<section id="signup"     class="section-placeholder reveal">Section 6 — Signup CTA (Pass 3)</section>
-<footer  id="footer"     class="section-placeholder reveal">Section 7 — Footer (Pass 3)</footer>
+<!-- SECTION 2 — ABOUT -->
+<section id="about" class="s2-section reveal">
+  <div class="s2-laptop-side">
+    <div class="s2-laptop">
+      <div class="s2-laptop-lid">
+        <div class="s2-screen">
+          <div class="s2-screen-placeholder">
+            <div class="s2-ph-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+            <p>Dashboard screenshot<br>drops here</p>
+          </div>
+        </div>
+      </div>
+      <div class="s2-laptop-base"></div>
+    </div>
+  </div>
+  <div class="s2-brown-side">
+    <div class="s2-copy">
+      <div class="s2-kicker">Made in Lagos</div>
+      <h2 class="s2-headline">Stop choosing between exam integrity and the joy of learning.</h2>
+      <p class="s2-body">Edurena turns one set of questions into a proctored exam, a live race your students cheer through, or a classroom showdown — whichever fits the lesson. Write the test once. Students show up because they want to.</p>
+      <div class="s2-outcomes">
+        <div class="s2-outcome"><div class="s2-outcome-num">1</div><div><div class="s2-outcome-title">Stop printing exam papers.</div><div class="s2-outcome-desc">Face capture, violation logs, AI flags. The student answers — only the student.</div></div></div>
+        <div class="s2-outcome"><div class="s2-outcome-num">2</div><div><div class="s2-outcome-title">Stop fighting student boredom.</div><div class="s2-outcome-desc">Same questions, served as a multiplayer race or live game — the lesson they text their friends about after school.</div></div></div>
+        <div class="s2-outcome"><div class="s2-outcome-num">3</div><div><div class="s2-outcome-title">Stop paying for ghost users.</div><div class="s2-outcome-desc">Per-slot Naira pricing via Paystack. Set the cap, see the count, never get surprised by a bill.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3 — FEATURES WHEEL -->
+<section id="features" class="s3-section">
+  <div class="s3-wheel-side" id="s3WheelSide">
+    <svg id="s3svg">
+      <defs>
+        <radialGradient id="s3GoldGrad" cx="38%" cy="32%" r="60%">
+          <stop offset="0%" stop-color="#ffe07a"/>
+          <stop offset="55%" stop-color="#ffc144"/>
+          <stop offset="100%" stop-color="#b8761a"/>
+        </radialGradient>
+      </defs>
+      <g id="s3wheelG" transform="translate(-210,300)">
+        <g id="s3dashG"></g>
+        <g id="s3segsG"></g>
+        <g id="s3contG"></g>
+        <circle cx="0" cy="0" r="200" fill="#1a0e02" stroke="rgba(245,166,35,0.2)" stroke-width="1.5"/>
+        <text id="s3cLabel" x="0" y="4" text-anchor="middle" dominant-baseline="middle"
+          font-family="'Sora',system-ui,sans-serif" font-size="22" font-weight="800"
+          fill="#ffe07a" letter-spacing="2">FEATURES</text>
+      </g>
+      <polygon id="s3arrow" points="284,288 302,300 284,312" fill="#f5a623" opacity="0.9"/>
+    </svg>
+  </div>
+  <div class="s3-detail-side show" id="s3Detail">
+    <div class="s3-feat-num" id="s3FeatNum">01 / 04</div>
+    <div class="s3-feat-title" id="s3FeatTitle">Proctored Exam</div>
+    <div class="s3-feat-desc" id="s3FeatDesc">Face capture, violation logs, and AI-flagged answers. The student answers — only the student.</div>
+    <div class="s3-tags" id="s3FeatTags"></div>
+    <div class="s3-dots" id="s3FeatDots"></div>
+    <div class="s3-nav">
+      <button class="s3-btn" id="s3PrevBtn">&#8592; Prev</button>
+      <button class="s3-btn" id="s3NextBtn">Next &#8594;</button>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4 — HOW IT WORKS -->
+<section id="howitworks" class="s4-section">
+  <div class="s4-label">How it works</div>
+  <h2 class="s4-headline">Most of what you taught last month is already gone.</h2>
+  <div class="s4-steps">
+    <div class="s4-step">
+      <div class="s4-step-num">01</div>
+      <div class="s4-step-title">Upload your questions once.</div>
+      <div class="s4-step-desc">Paste from a document, type directly, or upload image-based questions. They go into your <em>Question Bank</em> and stay there — reusable across every mode, every term, forever.</div>
+    </div>
+    <div class="s4-step">
+      <div class="s4-step-num">02</div>
+      <div class="s4-step-title">Choose what today's lesson needs.</div>
+      <div class="s4-step-desc">The same questions become a <em>locked proctored exam</em>, a <em>multiplayer race</em> your students cheer through, or a <em>live classroom showdown</em>. One quiz. Three experiences.</div>
+    </div>
+    <div class="s4-step">
+      <div class="s4-step-num">03</div>
+      <div class="s4-step-title">See what they actually understood.</div>
+      <div class="s4-step-desc">Not just who passed. A <em>heatmap of every question</em> — which concept 60% of the class missed, which student is quietly falling behind, which topic from week one is already gone.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PLACEHOLDERS — Pass 3 fills these -->
+<section id="pricing" class="section-placeholder reveal" style="min-height:60vh">Section 5 — Pricing (Pass 3)</section>
+<section id="signup"  class="section-placeholder reveal" style="min-height:40vh">Section 6 — Signup CTA (Pass 3)</section>
+<footer  id="footer"  class="section-placeholder reveal" style="min-height:30vh">Section 7 — Footer (Pass 3)</footer>
 
 <script>
 (function(){
-
-  /* ---- Hero animation ---- */
-  const bgGrad  = document.getElementById('heroBgGrad');
-  const bgSat   = document.getElementById('heroBgSat');
-  const dring   = document.getElementById('heroDring');
-  const circle  = document.getElementById('heroCircle');
-  const logo    = document.getElementById('heroLogo');
-  const brown   = document.getElementById('heroBrown');
-  const wm      = document.getElementById('heroWm');
-  const scroll  = document.getElementById('heroScroll');
-  const pr1     = document.getElementById('heroPr1');
-  const pr2     = document.getElementById('heroPr2');
-  const pr3     = document.getElementById('heroPr3');
-
-  function heroReset() {
-    bgGrad.classList.remove('fade');
-    bgSat.classList.remove('on');
-    dring.classList.remove('shift');
-    circle.classList.remove('show','shifted');
-    logo.classList.remove('show','shifted');
-    brown.classList.remove('expand');
-    wm.classList.remove('show');
-    scroll.classList.remove('show');
-    [pr1,pr2,pr3].forEach(p => p.classList.remove('gone'));
-  }
-
-  function heroPlay() {
-    heroReset();
-    /* Phase 1 — logo + circle scale in */
-    setTimeout(() => {
-      circle.classList.add('show');
-      logo.classList.add('show');
-    }, 200);
-
-    /* Phase 2 — shift left, brown card, bg saturate, pulses gone */
-    setTimeout(() => {
-      bgGrad.classList.add('fade');
-      bgSat.classList.add('on');
-      circle.classList.add('shifted');
-      logo.classList.add('shifted');
-      dring.classList.add('shift');
-      brown.classList.add('expand');
-      [pr1,pr2,pr3].forEach(p => p.classList.add('gone'));
-    }, 4200);  /* GIF is 3.7s — shift after it finishes */
-
-    /* Phase 3 — wordmark */
-    setTimeout(() => wm.classList.add('show'), 5400);
-
-    /* Scroll hint after everything settles */
-    setTimeout(() => scroll.classList.add('show'), 6200);
-  }
-
+  /* HERO */
+  const bgGrad=document.getElementById('heroBgGrad'),bgSat=document.getElementById('heroBgSat'),
+        dring=document.getElementById('heroDring'),circle=document.getElementById('heroCircle'),
+        logo=document.getElementById('heroLogo'),brown=document.getElementById('heroBrown'),
+        wm=document.getElementById('heroWm'),scrollHint=document.getElementById('heroScroll'),
+        pr1=document.getElementById('heroPr1'),pr2=document.getElementById('heroPr2'),pr3=document.getElementById('heroPr3');
+  function heroReset(){bgGrad.classList.remove('fade');bgSat.classList.remove('on');dring.classList.remove('shift');circle.classList.remove('show','shifted');logo.classList.remove('show','shifted');brown.classList.remove('expand');wm.classList.remove('show');scrollHint.classList.remove('show');[pr1,pr2,pr3].forEach(p=>p.classList.remove('gone'));}
+  function heroPlay(){heroReset();setTimeout(()=>{circle.classList.add('show');logo.classList.add('show');},200);setTimeout(()=>{bgGrad.classList.add('fade');bgSat.classList.add('on');circle.classList.add('shifted');logo.classList.add('shifted');dring.classList.add('shift');brown.classList.add('expand');[pr1,pr2,pr3].forEach(p=>p.classList.add('gone'));},4200);setTimeout(()=>wm.classList.add('show'),5400);setTimeout(()=>scrollHint.classList.add('show'),6200);}
   heroPlay();
 
-  /* ---- Sticky nav — show once hero exits viewport ---- */
-  const nav  = document.getElementById('topnav');
-  const hero = document.getElementById('hero');
+  /* NAV */
+  const nav=document.getElementById('topnav'),hero=document.getElementById('hero');
+  new IntersectionObserver(([e])=>nav.classList.toggle('visible',!e.isIntersecting),{threshold:.05}).observe(hero);
 
-  const navObserver = new IntersectionObserver(
-    ([entry]) => {
-      nav.classList.toggle('visible', !entry.isIntersecting);
-    },
-    { threshold: 0.05 }
-  );
-  navObserver.observe(hero);
+  /* WHEEL */
+  const R_OUT=490,R_IN=280,R_DASH=558,N=8,SLOT=45,GAP=3.5,INIT_ROT=67.5;
+  const LOGO_P='M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z';
+  const SNS='http://www.w3.org/2000/svg';
+  const FEATURES=[
+    {idx:0,slot:0,num:'01 / 04',title:'Proctored Exam',desc:'Face capture, violation logs, and AI-flagged answers. The student answers — only the student. No outsourcing, no cheating.',tags:['Face capture','AI flags','Violation log','Anti-cheat']},
+    {idx:1,slot:2,num:'02 / 04',title:'Live Games',desc:'Classroom-wide competitive quiz. Live leaderboard, fast rounds — sharpens speed and accuracy under pressure.',tags:['Live leaderboard','Real-time','Classroom mode','Competitive']},
+    {idx:2,slot:4,num:'03 / 04',title:'Difficulty Analytics',desc:'See which question 60% of the class missed. A heatmap of what the class actually understood — not just who passed.',tags:['Heatmap','Per-question','Class-wide','Cumulative']},
+    {idx:3,slot:6,num:'04 / 04',title:'Image Questions',desc:'Upload an image as the question or answer. Diagrams, maps, biology labels, maths figures — the full curriculum.',tags:['Image Q','Image A','Any subject','Mobile-ready']},
+  ];
+  const SLOTS=[{type:'feat',name:['PROCTORED','EXAM'],icon:'🛡️'},{type:'logo'},{type:'feat',name:['LIVE','GAMES'],icon:'⚡'},{type:'logo'},{type:'feat',name:['DIFFICULTY','ANALYTICS'],icon:'📊'},{type:'logo'},{type:'feat',name:['IMAGE','QUESTIONS'],icon:'🖼️'},{type:'logo'}];
 
-  /* ---- Scroll reveal for all .reveal sections ---- */
-  const revealEls = document.querySelectorAll('.reveal');
-  const revealObs = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('in');
-          revealObs.unobserve(e.target);
-        }
-      });
-    },
-    { threshold: 0.12 }
-  );
-  revealEls.forEach(el => revealObs.observe(el));
+  function polar(r,deg){const rad=(deg-90)*Math.PI/180;return{x:r*Math.cos(rad),y:r*Math.sin(rad)};}
+  function arcD(rO,rI,s,e){const p1=polar(rO,s),p2=polar(rO,e),p3=polar(rI,e),p4=polar(rI,s),lg=(e-s)>180?1:0;return `M${p1.x} ${p1.y}A${rO} ${rO} 0 ${lg} 1 ${p2.x} ${p2.y}L${p3.x} ${p3.y}A${rI} ${rI} 0 ${lg} 0 ${p4.x} ${p4.y}Z`;}
+
+  const segsG=document.getElementById('s3segsG'),contG=document.getElementById('s3contG'),dashG=document.getElementById('s3dashG'),cLbl=document.getElementById('s3cLabel');
+
+  (function buildDash(){let d='';for(let i=0;i<44;i++){const a1=(360/44)*i-90,a2=a1+3;const p1=polar(R_DASH,a1),p2=polar(R_DASH,a2);d+=`M${p1.x} ${p1.y}A${R_DASH} ${R_DASH} 0 0 1 ${p2.x} ${p2.y}`;}const dp=document.createElementNS(SNS,'path');dp.setAttribute('d',d);dp.setAttribute('fill','none');dp.setAttribute('stroke','rgba(245,166,35,0.6)');dp.setAttribute('stroke-width','3');dp.setAttribute('stroke-linecap','round');dashG.appendChild(dp);const an=document.createElementNS(SNS,'animateTransform');an.setAttribute('attributeName','transform');an.setAttribute('type','rotate');an.setAttribute('from','0');an.setAttribute('to','360');an.setAttribute('dur','60s');an.setAttribute('repeatCount','indefinite');dashG.appendChild(an);})();
+
+  function buildSlots(rot){segsG.innerHTML='';contG.innerHTML='';for(let i=0;i<N;i++){const s=i*SLOT+rot+GAP/2,e=(i+1)*SLOT+rot-GAP/2,sl=SLOTS[i];const seg=document.createElementNS(SNS,'path');seg.setAttribute('d',arcD(R_OUT,R_IN,s,e));seg.setAttribute('fill',sl.type==='feat'?'#060d1e':'#2a1604');seg.setAttribute('stroke',sl.type==='feat'?'#f5a623':'rgba(245,166,35,0.28)');seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1');segsG.appendChild(seg);const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);if(sl.type==='logo'){const c=document.createElementNS(SNS,'circle');c.setAttribute('cx',mp.x);c.setAttribute('cy',mp.y);c.setAttribute('r','48');c.setAttribute('fill','url(#s3GoldGrad)');contG.appendChild(c);const g=document.createElementNS(SNS,'g');g.setAttribute('transform',`translate(${mp.x},${mp.y}) scale(0.34)`);const lp=document.createElementNS(SNS,'path');lp.setAttribute('d',LOGO_P);lp.setAttribute('fill','#3a1f08');const c1=document.createElementNS(SNS,'circle');c1.setAttribute('cx','-35');c1.setAttribute('cy','20');c1.setAttribute('r','9');c1.setAttribute('fill','#ffe07a');const c2=document.createElementNS(SNS,'circle');c2.setAttribute('cx','35');c2.setAttribute('cy','20');c2.setAttribute('r','9');c2.setAttribute('fill','#ffe07a');g.appendChild(lp);g.appendChild(c1);g.appendChild(c2);contG.appendChild(g);}else{const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-22);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','36');ic.textContent=sl.icon;contG.appendChild(ic);sl.name.forEach((line,li)=>{const t=document.createElementNS(SNS,'text');t.setAttribute('x',mp.x);t.setAttribute('y',mp.y+14+li*18);t.setAttribute('text-anchor','middle');t.setAttribute('font-family',"'Sora',system-ui,sans-serif");t.setAttribute('font-size','13');t.setAttribute('font-weight','800');t.setAttribute('fill','#ffc144');t.setAttribute('letter-spacing','0.5');t.textContent=line;contG.appendChild(t);});}}}
+
+  function setCenterLabel(text){cLbl.textContent='';const words=text.split(' ');if(words.length<=2){cLbl.setAttribute('y','4');cLbl.textContent=text;}else{cLbl.setAttribute('y','-9');cLbl.textContent=words.slice(0,2).join(' ');const sp=document.createElementNS(SNS,'tspan');sp.setAttribute('x','0');sp.setAttribute('dy','24');sp.textContent=words.slice(2).join(' ');cLbl.appendChild(sp);}}
+
+  let curFeat=0,curRot=INIT_ROT,s3Anim=false;
+  function s3Panel(f,anim=true){const p=document.getElementById('s3Detail');if(anim)p.classList.remove('show');setTimeout(()=>{document.getElementById('s3FeatNum').textContent=f.num;document.getElementById('s3FeatTitle').textContent=f.title;document.getElementById('s3FeatDesc').textContent=f.desc;document.getElementById('s3FeatTags').innerHTML=f.tags.map(t=>`<span class="s3-tag">${t}</span>`).join('');document.getElementById('s3FeatDots').innerHTML=FEATURES.map((_,i)=>`<div class="s3-dot${i===f.idx?' active':''}" onclick="window._s3goto(${i})"></div>`).join('');p.classList.add('show');},anim?280:0);}
+  function s3Rot(target,cb){if(s3Anim)return;s3Anim=true;const start=curRot;let diff=target-start;diff=((diff%360)+540)%360-180;const end=start+diff,dur=600,t0=performance.now();function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}function frame(now){const p=Math.min((now-t0)/dur,1);buildSlots(start+diff*ease(p));if(p<1)requestAnimationFrame(frame);else{curRot=end;s3Anim=false;if(cb)cb();}}requestAnimationFrame(frame);}
+  window._s3goto=function(idx){if(idx===curFeat||s3Anim)return;const f=FEATURES[idx];const tr=90-(f.slot*SLOT+SLOT/2);s3Rot(tr,()=>{curFeat=idx;});s3Panel(f);setCenterLabel(f.title.toUpperCase());document.getElementById('s3PrevBtn').disabled=idx===0;document.getElementById('s3NextBtn').disabled=idx===FEATURES.length-1;};
+  document.getElementById('s3NextBtn').addEventListener('click',()=>{if(curFeat<FEATURES.length-1)window._s3goto(curFeat+1);});
+  document.getElementById('s3PrevBtn').addEventListener('click',()=>{if(curFeat>0)window._s3goto(curFeat-1);});
+
+  buildSlots(INIT_ROT);setCenterLabel('FEATURES');s3Panel(FEATURES[0],false);
+  document.getElementById('s3PrevBtn').disabled=true;
+
+  function resizeWheel(){const side=document.getElementById('s3WheelSide');const svg=document.getElementById('s3svg');if(!side||!svg)return;const h=side.offsetHeight||600;const cy=Math.round(h/2)||300;svg.setAttribute('height',h);document.getElementById('s3wheelG').setAttribute('transform',`translate(-210,${cy})`);document.getElementById('s3arrow').setAttribute('points',`284,${cy-12} 302,${cy} 284,${cy+12}`);}
+  window.addEventListener('resize',resizeWheel);setTimeout(resizeWheel,100);
+
+  /* STEP REVEAL */
+  const s4Obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');s4Obs.unobserve(e.target);}});},{threshold:.2});
+  document.querySelectorAll('.s4-step').forEach(s=>s4Obs.observe(s));
+
+  /* GLOBAL REVEAL */
+  const revObs=new IntersectionObserver(([e])=>{if(e.isIntersecting){e.target.classList.add('in');revObs.unobserve(e.target);}},{threshold:.1});
+  document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
 })();
 </script>
