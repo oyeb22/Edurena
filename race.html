@@ -374,10 +374,10 @@ if (SPECTATOR_MODE && preCode) {
 
 /* ============ FIREBASE ============ */
 // v5.4: Migrated from standalone examrace-31854 project to the existing
-// kahoot-24063 Firebase RTDB (the same one Kahoot.html uses). The
+// kahoot-24063 Firebase RTDB (the same one LiveQuiz.html uses). The
 // examrace project's RTDB was never reachable from the browser
-// (ERR_NAME_NOT_RESOLVED). Race and Kahoot store their data under
-// distinct paths (/race/* vs /kahoot/*) so they don't conflict.
+// (ERR_NAME_NOT_RESOLVED). Race and LiveQuiz store their data under
+// distinct paths (/race/* vs /livequiz/*) so they don't conflict.
 var db;
 try {
   var cfg = {
