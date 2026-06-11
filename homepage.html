@@ -289,7 +289,9 @@ body {
 .s2-outcome-desc{font-size:13px;color:rgba(240,244,255,.55);line-height:1.6;}
 
 /* SECTION 3 — FEATURES WHEEL */
-.s3-section{position:relative;width:100%;min-height:100vh;background:radial-gradient(circle at 12% 50%,#4a2810 0%,#3a1f08 38%,#1a0e02 100%);display:flex;align-items:stretch;overflow:hidden;}
+.s3-section{position:relative;width:100%;background:radial-gradient(circle at 12% 50%,#4a2810 0%,#3a1f08 38%,#1a0e02 100%);}
+.s3-sticky-track{height:500vh;}
+.s3-sticky-inner{position:sticky;top:0;height:100vh;display:flex;align-items:stretch;overflow:hidden;}
 .s3-wheel-side{width:44%;position:relative;flex-shrink:0;min-height:600px;}
 .s3-wheel-side svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;width:100%;height:100%;}
 .s3-detail-side{width:56%;display:flex;flex-direction:column;justify-content:center;padding:60px 56px 60px 32px;opacity:0;transition:opacity .45s ease;}
@@ -320,6 +322,12 @@ body {
 .s4-step-title{font-size:20px;font-weight:800;color:var(--white);margin-bottom:12px;line-height:1.2;}
 .s4-step-desc{font-size:14.5px;color:var(--muted);line-height:1.75;}
 .s4-step-desc em{color:var(--white);font-style:normal;font-weight:600;}
+
+/* S3 scroll hint pulse */
+@keyframes s3HintPulse{0%,100%{opacity:.4;}50%{opacity:.9;}}
+#s3ScrollHint{animation:s3HintPulse 2s ease-in-out infinite;}
+/* Mobile: show buttons, hide scroll hint */
+@media(max-width:900px){#s3Nav{opacity:1!important;pointer-events:auto!important;}#s3ScrollHint{display:none;}}
 
 /* RESPONSIVE */
 @media(max-width:900px){
@@ -418,6 +426,8 @@ body {
 
 <!-- SECTION 3 — FEATURES WHEEL -->
 <section id="features" class="s3-section">
+  <div class="s3-sticky-track" id="s3Track">
+  <div class="s3-sticky-inner" id="s3StickyInner">
   <div class="s3-wheel-side" id="s3WheelSide">
     <svg id="s3svg">
       <defs>
@@ -445,11 +455,14 @@ body {
     <div class="s3-feat-desc" id="s3FeatDesc">Face capture, violation logs, and AI-flagged answers. The student answers — only the student.</div>
     <div class="s3-tags" id="s3FeatTags"></div>
     <div class="s3-dots" id="s3FeatDots"></div>
-    <div class="s3-nav">
+    <div class="s3-nav" id="s3Nav" style="opacity:0.4;pointer-events:none;">
       <button class="s3-btn" id="s3PrevBtn">&#8592; Prev</button>
       <button class="s3-btn" id="s3NextBtn">Next &#8594;</button>
     </div>
+    <div style="margin-top:16px;font-size:11px;color:rgba(245,166,35,0.4);letter-spacing:.15em;text-transform:uppercase;" id="s3ScrollHint">Scroll to explore</div>
   </div>
+  </div><!-- /s3-sticky-inner -->
+  </div><!-- /s3-sticky-track -->
 </section>
 
 <!-- SECTION 4 — HOW IT WORKS -->
@@ -522,11 +535,78 @@ body {
   let curFeat=0,curRot=INIT_ROT,s3Anim=false;
   function s3Panel(f,anim=true){const p=document.getElementById('s3Detail');if(anim)p.classList.remove('show');setTimeout(()=>{document.getElementById('s3FeatNum').textContent=f.num;document.getElementById('s3FeatTitle').textContent=f.title;document.getElementById('s3FeatDesc').textContent=f.desc;document.getElementById('s3FeatTags').innerHTML=f.tags.map(t=>`<span class="s3-tag">${t}</span>`).join('');document.getElementById('s3FeatDots').innerHTML=FEATURES.map((_,i)=>`<div class="s3-dot${i===f.idx?' active':''}" onclick="window._s3goto(${i})"></div>`).join('');p.classList.add('show');},anim?280:0);}
   function s3Rot(target,cb){if(s3Anim)return;s3Anim=true;const start=curRot;let diff=target-start;diff=((diff%360)+540)%360-180;const end=start+diff,dur=600,t0=performance.now();function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}function frame(now){const p=Math.min((now-t0)/dur,1);buildSlots(start+diff*ease(p));if(p<1)requestAnimationFrame(frame);else{curRot=end;s3Anim=false;if(cb)cb();}}requestAnimationFrame(frame);}
-  window._s3goto=function(idx){if(idx===curFeat||s3Anim)return;const f=FEATURES[idx];const tr=90-(f.slot*SLOT+SLOT/2);s3Rot(tr,()=>{curFeat=idx;});s3Panel(f);setCenterLabel(f.title.toUpperCase());document.getElementById('s3PrevBtn').disabled=idx===0;document.getElementById('s3NextBtn').disabled=idx===FEATURES.length-1;};
-  document.getElementById('s3NextBtn').addEventListener('click',()=>{if(curFeat<FEATURES.length-1)window._s3goto(curFeat+1);});
-  document.getElementById('s3PrevBtn').addEventListener('click',()=>{if(curFeat>0)window._s3goto(curFeat-1);});
+  /* SCROLL-DRIVEN WHEEL */
+  let curFeat=0,curRot=INIT_ROT,s3Anim=false,s3Done=false;
 
-  buildSlots(INIT_ROT);setCenterLabel('FEATURES');s3Panel(FEATURES[0],false);
+  function s3Panel(f,anim=true){
+    const p=document.getElementById('s3Detail');
+    if(anim)p.classList.remove('show');
+    setTimeout(()=>{
+      document.getElementById('s3FeatNum').textContent=f.num;
+      document.getElementById('s3FeatTitle').textContent=f.title;
+      document.getElementById('s3FeatDesc').textContent=f.desc;
+      document.getElementById('s3FeatTags').innerHTML=f.tags.map(t=>`<span class="s3-tag">${t}</span>`).join('');
+      document.getElementById('s3FeatDots').innerHTML=FEATURES.map((_,i)=>`<div class="s3-dot${i===f.idx?' active':''}" onclick="window._s3goto(${i})"></div>`).join('');
+      p.classList.add('show');
+    },anim?280:0);
+  }
+
+  function s3Rot(target,cb){
+    if(s3Anim)return;s3Anim=true;
+    const start=curRot;let diff=target-start;
+    diff=((diff%360)+540)%360-180;
+    const end=start+diff,dur=600,t0=performance.now();
+    function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+    function frame(now){const p=Math.min((now-t0)/dur,1);buildSlots(start+diff*ease(p));if(p<1)requestAnimationFrame(frame);else{curRot=end;s3Anim=false;if(cb)cb();}}
+    requestAnimationFrame(frame);
+  }
+
+  function s3GoTo(idx){
+    if(idx===curFeat||s3Anim)return;
+    const f=FEATURES[Math.max(0,Math.min(idx,FEATURES.length-1))];
+    const tr=90-(f.slot*SLOT+SLOT/2);
+    s3Rot(tr,()=>{curFeat=idx;});
+    s3Panel(f);
+    setCenterLabel(f.title.toUpperCase());
+    document.getElementById('s3PrevBtn').disabled=idx===0;
+    document.getElementById('s3NextBtn').disabled=idx===FEATURES.length-1;
+  }
+
+  window._s3goto=s3GoTo;
+  document.getElementById('s3NextBtn').addEventListener('click',()=>{if(curFeat<FEATURES.length-1)s3GoTo(curFeat+1);});
+  document.getElementById('s3PrevBtn').addEventListener('click',()=>{if(curFeat>0)s3GoTo(curFeat-1);});
+
+  /* Scroll driver */
+  const track=document.getElementById('s3Track');
+  let lastScrollFeat=-1;
+
+  function onScroll(){
+    if(!track)return;
+    const rect=track.getBoundingClientRect();
+    const trackH=track.offsetHeight;
+    const vh=window.innerHeight;
+
+    /* scrolled = how far into the track we are (0 → trackH) */
+    const scrolled=Math.max(0,-rect.top);
+    const scrollable=trackH-vh;
+    if(scrollable<=0)return;
+
+    /* Progress 0→1 across the sticky zone */
+    const progress=Math.min(1,scrolled/scrollable);
+
+    /* Map progress to feature index (4 steps = 0,1,2,3) */
+    const targetFeat=Math.min(FEATURES.length-1, Math.floor(progress*FEATURES.length));
+
+    if(targetFeat!==lastScrollFeat){
+      lastScrollFeat=targetFeat;
+      s3GoTo(targetFeat);
+      /* Hide scroll hint once they start scrolling */
+      const hint=document.getElementById('s3ScrollHint');
+      if(hint&&targetFeat>0)hint.style.opacity='0';
+    }
+  }
+
+  window.addEventListener('scroll',onScroll,{passive:true});
   document.getElementById('s3PrevBtn').disabled=true;
 
   function resizeWheel(){const side=document.getElementById('s3WheelSide');const svg=document.getElementById('s3svg');if(!side||!svg)return;const h=side.offsetHeight||600;const cy=Math.round(h/2)||300;svg.setAttribute('height',h);document.getElementById('s3wheelG').setAttribute('transform',`translate(-210,${cy})`);document.getElementById('s3arrow').setAttribute('points',`284,${cy-12} 302,${cy} 284,${cy+12}`);}
