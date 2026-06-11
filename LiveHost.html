@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ── Global error reporter — sends uncaught JS errors to GAS for logging ── */
+(function(){
+  function _reportErr(d){
+    try{
+      var url=(window.DASH&&DASH.scriptUrl)||'';
+      if(!url)return;
+      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
+      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
+    }catch(_){}
+  }
+  window.onerror=function(msg,src,line,col,err){
+    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
+    return false;
+  };
+  window.onunhandledrejection=function(e){
+    _reportErr({msg:'UnhandledRejection: '+String(e.reason&&(e.reason.message||e.reason)||''),stack:e.reason&&e.reason.stack||''});
+  };
+})();
+</script>
   
   <meta charset="UTF-8">
   <script src="edurena-dash.js"></script>
@@ -343,7 +363,7 @@
 var SCRIPT_URL = DASH.scriptUrl;
 DASH.ready.then(function(cfg){ SCRIPT_URL = cfg.scriptUrl || DASH.scriptUrl; });
 var RACE_URL   = (window.DASH && DASH.racePageUrl)   || 'https://oyeb22.github.io/Edurena/race.html';
-var KAHOOT_URL = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/kahoot.html';
+var KAHOOT_URL = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/livequiz.html';
 
 // If DASH resolves after this script, pick up the real URLs
 if (window.DASH && DASH.ready) {
@@ -445,11 +465,11 @@ function wireButtons(){
   el('launchBtn').addEventListener('click',doLaunch);
   el('startBtn').addEventListener('click',doStart);
   el('cancelBtn').addEventListener('click',doCancel);
-  el('newBtn').addEventListener('click',function(){clearErr();cleanupKahoot();show('s-setup');});
+  el('newBtn').addEventListener('click',function(){clearErr();cleanupLiveQuiz();show('s-setup');});
   el('copyUrlBtn').addEventListener('click',doCopyUrl);
   el('openUrlBtn').addEventListener('click',function(){if(_joinUrl)openExternal(_joinUrl);});
   el('kh-action-btn').addEventListener('click',doKahootAction);
-  el('khEndBtn').addEventListener('click',doKahootEnd);
+  el('khEndBtn').addEventListener('click',doLiveQuizEnd);
   el('raceEndBtn').addEventListener('click',doRaceEnd);
 }
 
@@ -489,7 +509,7 @@ function doLaunch(){
   var btn=el('launchBtn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
 
-  var action  =mode==='race'?'createRaceSession':'createKahootSession';
+  var action  =mode==='race'?'createRaceSession':'createLiveQuizSession';
   var payload =mode==='race'
     ?{token:TOKEN,examCode:examCode}
     :{token:TOKEN,examCode:examCode,timePerQ:timePerQ};
@@ -850,7 +870,7 @@ function doKahootAction(){
 
 function doNextQuestion(){
   var nextIdx=khCurrentQ+1;
-  if(nextIdx>=khTotalQ){doKahootFinal();return;}
+  if(nextIdx>=khTotalQ){doLiveQuizFinal();return;}
 
   cancelAutoAdvance();
   el('kh-lb').style.display='none';
@@ -949,7 +969,7 @@ function doReveal(){
   });
 
   // GAS authoritative scoring (non-blocking)
-  post('scoreKahootQuestion',{token:TOKEN,sessionId:sessionCode,qIndex:khCurrentQ},function(err){
+  post('scoreLiveQuizQuestion',{token:TOKEN,sessionId:sessionCode,qIndex:khCurrentQ},function(err){
     if(err) console.warn('[host] GAS scoring non-critical fail:',err.message);
   });
 
@@ -1003,7 +1023,7 @@ function doLeaderboard(){
   el('kh-q-num').textContent='Leaderboard after Q'+(khCurrentQ+1);
 }
 
-function doKahootFinal(){
+function doLiveQuizFinal(){
   khPhase='final';
   stopKhTimer();
   stopAnswerDistributionWatch();
@@ -1012,16 +1032,16 @@ function doKahootFinal(){
   el('kh-propagation-bar').classList.remove('on');
   khDb.ref('kahoot/'+sessionCode+'/state').update({phase:'final'});
   el('done-msg').textContent='Kahoot complete! Students see the final podium. Code: '+sessionCode;
-  cleanupKahoot();
+  cleanupLiveQuiz();
   show('s-done');
 }
 
-function doKahootEnd(){
-  if(!confirm('End this Kahoot for all students?'))return;
-  doKahootFinal();
+function doLiveQuizEnd(){
+  if(!confirm('End this Live Quiz for all students?'))return;
+  doLiveQuizFinal();
 }
 
-function cleanupKahoot(){
+function cleanupLiveQuiz(){
   stopKhTimer();
   stopAnswerDistributionWatch();
   cancelAutoAdvance();
