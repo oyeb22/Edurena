@@ -220,14 +220,14 @@
 // time a user clicks a button (extremely unlikely; <100ms typical).
 var SCRIPT_URL    = '';
 var EXAM_PAGE_URL = 'https://oyeb22.github.io/Edurena/Exam.html';
-var KAHOOT_URL    = 'https://oyeb22.github.io/Edurena/kahoot.html';
+var LIVEQUIZ_URL = 'https://oyeb22.github.io/Edurena/livequiz.html';
 var RACE_URL      = 'https://oyeb22.github.io/Edurena/race.html';
 
 function refreshFromDash() {
   if (!window.DASH) return;
   if (DASH.scriptUrl)     SCRIPT_URL    = DASH.scriptUrl;
   if (DASH.examPageUrl)   EXAM_PAGE_URL = DASH.examPageUrl;
-  if (DASH.kahootPageUrl) KAHOOT_URL    = DASH.kahootPageUrl;
+  if (DASH.kahootPageUrl) LIVEQUIZ_URL    = DASH.kahootPageUrl;
   if (DASH.racePageUrl)   RACE_URL      = DASH.racePageUrl;
 }
 // Apply immediately (in case DASH is already initialised) and again on .ready
@@ -331,7 +331,7 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
     'onmouseleave="this.style.background=\'transparent\'">',
     '<span style="font-size:20px">🎮</span>',
     '<div>',
-    '<div style="font-weight:600">Kahoot Style</div>',
+    '<div style="font-weight:600">Live Quiz</div>',
     '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">Host-controlled · questions appear one at a time · live leaderboard</div>',
     '</div>',
     '</button>',
@@ -358,7 +358,7 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
 
 function openGame(mode) {
   whenReady(function(){
-    var base = mode === 'race' ? RACE_URL : KAHOOT_URL;
+    var base = mode === 'race' ? RACE_URL : LIVEQUIZ_URL;
     var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
              + 'script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
