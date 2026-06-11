@@ -5,6 +5,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ── Global error reporter — sends uncaught JS errors to GAS for logging ── */
+(function(){
+  function _reportErr(d){
+    try{
+      var url=(window.DASH&&DASH.scriptUrl)||'';
+      if(!url)return;
+      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
+      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
+    }catch(_){}
+  }
+  window.onerror=function(msg,src,line,col,err){
+    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
+    return false;
+  };
+  window.onunhandledrejection=function(e){
+    _reportErr({msg:'UnhandledRejection: '+String(e.reason&&(e.reason.message||e.reason)||''),stack:e.reason&&e.reason.stack||''});
+  };
+})();
+</script>
   
   <meta charset="UTF-8">
   <script src="edurena-dash.js"></script>
@@ -769,6 +789,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
               <button class="btn btn-sm" onclick="addInlineRow()">+ Row</button>
               <button class="btn btn-sm" onclick="clearInlineTable()">Clear</button>
               <button class="btn btn-p btn-sm" onclick="importInlineTable()">Import →</button>
+              <button class="btn btn-sm" id="qb-img-toggle" onclick="toggleQBImgCols()" title="Show/hide image URL columns" style="font-size:10.5px">⊞ Show Image Cols</button>
             </div>
           </div>
           <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);-webkit-overflow-scrolling:touch">
@@ -784,10 +805,10 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option B</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option C</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option D</th>
-                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">A Img URL</th>
-                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">B Img URL</th>
-                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">C Img URL</th>
-                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">D Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">A Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">B Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">C Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">D Img URL</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:130px">Correct Answer *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:45px">Pts</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:140px">Explanation</th>
@@ -1748,7 +1769,7 @@ function renderDetails(code,d) {
 
   var hist='<div style="display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap"><input type="email" id="hist-inp" placeholder="Student email…" style="flex:1;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12.5px;outline:none"><button class="btn btn-p" onclick="loadHistory()">Search</button></div><div id="hist-res"></div>';
   var review='<div style="margin-bottom:10px"><select id="review-student-sel" onchange="renderAnswerReviewTab()" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">'+(rs.length?rs.map(function(r,i){ return '<option value="'+i+'">'+esc(r.name||r.email)+' — '+esc(r.percentage)+' (Attempt #'+(r.attemptNumber||1)+')</option>'; }).join(''):'<option>No submissions</option>')+'</select></div><div id="review-answer-body"></div>';
-  var photos='<div style="margin-bottom:10px"><select id="photos-student-sel" onchange="loadPhotosForSelected(\''+esc(code)+'\')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">'+(rs.length?rs.map(function(r){ return '<option value="'+esc(r.email)+'">'+esc(r.name||r.email)+'</option>'; }).join(''):'<option>No submissions</option>')+'</select></div><div id="photos-body"><p style="text-align:center;color:var(--text2);padding:14px">Select a student above.</p></div>';
+  var photos='<div style="background:var(--surface2);border-left:3px solid #f59e0b;border-radius:var(--r-sm);padding:8px 12px;font-size:11.5px;color:var(--text2);margin-bottom:10px"><strong style="color:var(--text)">&#9432; Storage notice:</strong> Proctoring photos are automatically deleted <strong>7 days</strong> after capture to free up storage space.</div><div style="margin-bottom:10px"><select id="photos-student-sel" onchange="loadPhotosForSelected(\''+esc(code)+'\')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">'+(rs.length?rs.map(function(r){ return '<option value="'+esc(r.email)+'">'+esc(r.name||r.email)+'</option>'; }).join(''):'<option>No submissions</option>')+'</select></div><div id="photos-body"><p style="text-align:center;color:var(--text2);padding:14px">Select a student above.</p></div>';
 
   var rubricTab='<div id="rubric-display">';
   if(rubric&&rubric.ranges&&rubric.ranges.length){
@@ -1797,7 +1818,8 @@ function loadPhotosForSelected(code) {
 }
 function renderPhotosGrid(photos,container,email) {
   if(!photos.length){ container.innerHTML='<p style="text-align:center;color:var(--text2);padding:18px">No photos found.</p>'; return; }
-  var html='<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">'+photos.length+' photo(s) · '+esc(email)+'</div><div class="photo-grid">'+
+  var notice='<div style="background:var(--surface2);border-left:3px solid #f59e0b;border-radius:var(--r-sm);padding:7px 11px;font-size:11px;color:var(--text2);margin-bottom:8px">&#9432; Photos are automatically deleted 7 days after capture.</div>';
+  var html=notice+'<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">'+photos.length+' photo(s) · '+esc(email)+'</div><div class="photo-grid">'+
     photos.map(function(p,i){ var reason=String(p.reason||'').toLowerCase(); var isStart=reason.indexOf('start')!==-1; var caption=(p.time?p.time.substring(0,16).replace('T',' '):'')+(p.reason?' · '+p.reason:''); return '<div class="photo-item"><img class="photo-thumb" src="'+esc(p.url)+'" alt="Photo '+(i+1)+'" onclick="openLightbox(\''+esc(p.url)+'\',\''+esc(caption)+'\')"><span class="photo-reason '+(isStart?'start':'violation')+'">'+(isStart?'Start':'Violation')+'</span>'+(p.time?'<span style="font-size:9.5px;color:var(--text3);text-align:center">'+p.time.substring(11,16)+'</span>':'')+'</div>'; }).join('')+'</div>';
   container.innerHTML=html;
 }
@@ -1975,10 +1997,10 @@ function addInlineRow(){
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option B')+'</td>'+
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option C')+'</td>'+
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option D')+'</td>'+
-    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Full text of correct option')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:38px')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Why this is correct')+'</td>'+
@@ -1989,6 +2011,13 @@ function addInlineRow(){
   var firstInput=tr.querySelector('textarea'); if(firstInput) setTimeout(function(){ firstInput.focus(); },50);
 }
 function clearInlineTable(){ document.getElementById('inline-qb-body').innerHTML=''; }
+function toggleQBImgCols(){
+  var cols=document.querySelectorAll('#inline-qb-table .qb-ext-col');
+  var btn=document.getElementById('qb-img-toggle');
+  var showing=cols.length&&cols[0].style.display!=='none';
+  cols.forEach(function(el){ el.style.display=showing?'none':''; });
+  if(btn) btn.textContent=showing?'⊞ Show Image Cols':'⊟ Hide Image Cols';
+}
 function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),correct_answer:cv(13),points:cv(14)||'1',explanation:cv(15),session:cv(16),term:cv(17) }; }
 function importInlineTable(){
   var cid=(document.getElementById('inline-class')||{}).value||'';
