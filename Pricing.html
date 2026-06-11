@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ── Global error reporter — sends uncaught JS errors to GAS for logging ── */
+(function(){
+  function _reportErr(d){
+    try{
+      var url=(window.DASH&&DASH.scriptUrl)||'';
+      if(!url)return;
+      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
+      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
+    }catch(_){}
+  }
+  window.onerror=function(msg,src,line,col,err){
+    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
+    return false;
+  };
+  window.onunhandledrejection=function(e){
+    _reportErr({msg:'UnhandledRejection: '+String(e.reason&&(e.reason.message||e.reason)||''),stack:e.reason&&e.reason.stack||''});
+  };
+})();
+</script>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -330,11 +350,13 @@ var PLANS = [
     features: [
       { text: 'Unlimited students', ok: true },
       { text: 'AI-proctored exams', ok: true },
-      { text: 'Live quiz games (Race + Kahoot)', ok: true },
+      { text: 'Live quiz games (Race + Live Quiz)', ok: true },
       { text: 'CSV/JSON question import', ok: true },
       { text: 'Broadsheet & analytics', ok: true },
-      { text: 'AI explanations', ok: false },
-      { text: 'Priority support', ok: false }
+      { text: 'Phonics / diction exam mode', ok: true },
+      { text: 'Image-based answer options', ok: true },
+      { text: 'Priority email support', ok: true },
+      { text: 'AI answer explanations', ok: false }
     ],
     btnLabel: 'Get Standard',
     btnClass: 'plan-btn-outline'
@@ -342,16 +364,13 @@ var PLANS = [
   {
     key:      'premium',
     name:     'Premium',
-    tagline:  'AI-powered learning advantage',
+    tagline:  'Standard + AI-powered explanations',
     popular:  true,
     features: [
       { text: 'Everything in Standard', ok: true },
       { text: 'AI answer explanations', ok: true },
-      { text: 'Phonics / diction exam mode', ok: true },
-      { text: 'Image-based answer options', ok: true },
-      { text: 'Priority email support', ok: true },
-      { text: 'Custom school branding (soon)', ok: true },
-      { text: 'API access (soon)', ok: false }
+      { text: 'Coming soon: custom school branding', ok: true },
+      { text: 'Coming soon: API access', ok: true }
     ],
     btnLabel: 'Get Premium',
     btnClass: 'plan-btn-pur'
