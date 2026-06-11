@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ── Global error reporter — sends uncaught JS errors to GAS for logging ── */
+(function(){
+  function _reportErr(d){
+    try{
+      var url=(window.DASH&&DASH.scriptUrl)||'';
+      if(!url)return;
+      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
+      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
+    }catch(_){}
+  }
+  window.onerror=function(msg,src,line,col,err){
+    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
+    return false;
+  };
+  window.onunhandledrejection=function(e){
+    _reportErr({msg:'UnhandledRejection: '+String(e.reason&&(e.reason.message||e.reason)||''),stack:e.reason&&e.reason.stack||''});
+  };
+})();
+</script>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
