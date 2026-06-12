@@ -1015,6 +1015,8 @@ function doLeaderboard(){
   }else{
     el('kh-action-btn').className='kh-action-btn go';
     el('kh-action-btn').textContent='▶ Next Question ('+(khCurrentQ+2)+' of '+khTotalQ+')';
+    el('kh-action-btn').disabled=true;
+    setTimeout(function(){ if(khPhase==='leaderboard') el('kh-action-btn').disabled=false; }, 2500);
     startAutoAdvanceCountdown(AUTO_DELAY,function(){
       if(khPhase==='leaderboard') doNextQuestion();
     });
