@@ -171,7 +171,7 @@
     .instruction-header{background:rgba(91,110,245,.08);border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;margin:0 0 16px;font-size:13px;line-height:1.5;color:var(--text);}
     .instruction-header .label{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;display:block;}
     .question-image{max-width:100%;margin:0 0 16px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border2);background:var(--surface2);}
-    .question-image img{width:100%;height:auto;display:block;object-fit:contain;max-height:300px;}
+    .question-image img{width:100%;height:auto;display:block;object-fit:contain;max-height:60vh;}
     .question-image .img-error{padding:12px;font-size:11px;color:var(--muted);text-align:center;}
     .passage-panel{border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2);margin:0 0 16px;}
     .passage-header{padding:8px 14px;background:rgba(91,110,245,.08);border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
@@ -192,7 +192,12 @@
     .q-type-badge{font-size:10px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);padding:2px 8px;border-radius:20px;color:var(--text2);margin-right:6px;}
     .q-text{font-size:clamp(14px,3.5vw,16px);font-weight:500;line-height:1.65;margin-bottom:20px;color:var(--text);}
     .options{display:flex;flex-direction:column;gap:9px;}
+    .options.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
     .option{display:flex;align-items:center;gap:12px;padding:clamp(11px,3vw,14px) clamp(12px,3vw,16px);background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;transition:all .18s;-webkit-user-select:none;user-select:none;}
+    .option.has-img{flex-direction:column;align-items:center;padding:14px;gap:10px}
+    .option.has-img .opt-letter{width:28px;height:28px;border-radius:6px;font-size:12px}
+    .option.has-img .opt-text{text-align:center;width:100%}
+    .option.has-img .opt-img-full{width:100%;max-height:160px;object-fit:contain;border-radius:8px;display:block}
     .option:active{transform:scale(.985);}
     .option:hover{border-color:var(--accent);background:rgba(91,110,245,.06);}
     .option.selected{border-color:var(--accent);background:rgba(91,110,245,.1);box-shadow:0 0 0 3px rgba(91,110,245,.1);}
@@ -1921,17 +1926,24 @@ function renderQuestion(){
   if(q.type==='MCQ'||q.type==='TF'){
     var opts=q.options||[];
     if(q.type==='TF'&&opts.length===0)opts=['True','False'];
-    html+='<div class="options">';
+    var hasAnyImg=opts.some(function(_,i){return !!(q.option_images&&q.option_images[i]);});
+    html+='<div class="options'+(hasAnyImg?' img-grid':'')+'">';
     opts.forEach(function(opt, i) {
       var letter = String.fromCharCode(65 + i);
       var img = (q.option_images && q.option_images[i]) ? q.option_images[i] : '';
       var sel = answers[q.id] === letter ? ' selected' : '';
-      var imgHtml = img
-        ? '<img src="' + img + '" style="max-width:100%;max-height:120px;border-radius:6px;margin-top:6px;display:block;object-fit:contain" onerror="this.remove()">'
-        : '';
-      html += '<div class="option' + sel + '" data-qid="' + esc(String(q.id)) + '" data-letter="' + letter + '" onclick="selectAns(this.dataset.qid,this.dataset.letter,this)">'
-        + '<div class="opt-letter">' + letter + '</div>'
-        + '<div class="opt-text">' + esc(opt || '') + imgHtml + '</div></div>';
+      if(img){
+        html += '<div class="option has-img' + sel + '" data-qid="' + esc(String(q.id)) + '" data-letter="' + letter + '" onclick="selectAns(this.dataset.qid,this.dataset.letter,this)">'
+          + '<div class="opt-letter">' + letter + '</div>'
+          + '<div class="opt-text">'
+          + '<img class="opt-img-full" src="' + img + '" alt="Option ' + letter + '" onerror="this.closest(\'.option\').classList.remove(\'has-img\')">'
+          + (opt ? '<span style="font-size:13px;margin-top:6px;display:block">' + esc(opt) + '</span>' : '')
+          + '</div></div>';
+      } else {
+        html += '<div class="option' + sel + '" data-qid="' + esc(String(q.id)) + '" data-letter="' + letter + '" onclick="selectAns(this.dataset.qid,this.dataset.letter,this)">'
+          + '<div class="opt-letter">' + letter + '</div>'
+          + '<div class="opt-text">' + esc(opt || '') + '</div></div>';
+      }
     });
     html+='</div>';
   }else{
