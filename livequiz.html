@@ -294,8 +294,7 @@ var P       = new URLSearchParams(window.location.search);
 var GAS_URL = (P.get('script') || '').trim();
 var preCode = (P.get('room')   || '').trim().toUpperCase();
 
-var myModelIdx    = 0;   // which character model this player uses
-var myCharSpawned = false;
+var myModelIdx = 0;
 
 /* ── SOUND ── */
 var soundOn = true, actx = null;
@@ -434,6 +433,10 @@ function doJoin(){
       buildDots();
       show('s-lobby');
       btn.disabled=false; btn.textContent='Join Quiz';
+      // Spawn avatar immediately — don't wait for Firebase callback
+      myModelIdx=hashCharIndex(playerId);
+      var av=document.getElementById('lby-char-avatar');
+      if(av){av.style.opacity='1';spawnCharAvatar('lby-char-avatar',myModelIdx,'idle');}
       watchLobbyPlayers();
       watchAnswerKeys();
       watchGameState();
@@ -488,19 +491,7 @@ function watchLobbyPlayers(){
     el('lby-chips').innerHTML=names.map(function(n){
       return '<div class="chip">'+esc(n)+'</div>';
     }).join('');
-    if(!myCharSpawned && players[playerId]){
-      var ids=Object.keys(players).sort();
-      myModelIdx=ids.indexOf(playerId)%2;
-      trySpawnLobbyChar();
-    }
   });
-}
-
-function trySpawnLobbyChar(){
-  if(myCharSpawned) return;
-  myCharSpawned=true;
-  var av=document.getElementById('lby-char-avatar');
-  if(av){ av.style.opacity='1'; spawnCharAvatar('lby-char-avatar', myModelIdx, 'idle'); }
 }
 
 /* ════════════════════════════════════════
@@ -955,6 +946,11 @@ function showFinal(){
 }
 
 /* ── BLOB AVATARS ── */
+function hashCharIndex(uid){
+  var h=0;
+  for(var i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))&0xffff;
+  return h%6;
+}
 var CHARS=[
   {bg:'#e21b3c',face:'😊',shape:'50% 50% 50% 50%/60% 60% 40% 40%'},
   {bg:'#1368ce',face:'🤩',shape:'60% 40% 60% 40%/60% 40% 60% 40%'},
