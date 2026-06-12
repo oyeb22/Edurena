@@ -816,6 +816,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
                   <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">B Img URL</th>
                   <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">C Img URL</th>
                   <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">D Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">Q Img URL</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:130px">Correct Answer *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:45px">Pts</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:140px">Explanation</th>
@@ -2008,6 +2009,7 @@ function addInlineRow(){
     '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
     '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
     '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Full text of correct option')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:38px')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Why this is correct')+'</td>'+
@@ -2025,7 +2027,7 @@ function toggleQBImgCols(){
   cols.forEach(function(el){ el.style.display=showing?'none':''; });
   if(btn) btn.textContent=showing?'⊞ Show Image Cols':'⊟ Hide Image Cols';
 }
-function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),correct_answer:cv(13),points:cv(14)||'1',explanation:cv(15),session:cv(16),term:cv(17) }; }
+function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),image_url:cv(13),correct_answer:cv(14),points:cv(15)||'1',explanation:cv(16),session:cv(17),term:cv(18) }; }
 function importInlineTable(){
   var cid=(document.getElementById('inline-class')||{}).value||'';
   if(!cid){ toast('error','Select a class first'); return; }
