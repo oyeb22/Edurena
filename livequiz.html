@@ -483,15 +483,20 @@ function watchLobbyPlayers(){
     el('lby-chips').innerHTML=names.map(function(n){
       return '<div class="chip">'+esc(n)+'</div>';
     }).join('');
-    // Spawn this player's 3-D character once when lobby is ready
-    if(!myCharSpawned && players[playerId] && window.CharJS){
-      myCharSpawned=true;
-      var ids=Object.keys(players).sort(); // stable order by Firebase key
+    if(!myCharSpawned && players[playerId]){
+      var ids=Object.keys(players).sort();
       myModelIdx=ids.indexOf(playerId)%2;
-      var lc=document.getElementById('lby-char-canvas');
-      if(lc) window.CharJS.spawn(lc, myModelIdx, 'idle');
+      trySpawnLobbyChar();
     }
   });
+}
+
+function trySpawnLobbyChar(){
+  if(myCharSpawned) return;
+  if(!window.CharJS){ setTimeout(trySpawnLobbyChar, 300); return; }
+  myCharSpawned=true;
+  var lc=document.getElementById('lby-char-canvas');
+  if(lc) window.CharJS.spawn(lc, myModelIdx, 'idle');
 }
 
 /* ════════════════════════════════════════
@@ -761,8 +766,7 @@ function showAnsweredFeedback(selectedBtn, answer){
   overlay.innerHTML=
     '<div style="font-size:48px;margin-bottom:6px">🔒</div>'+
     '<div style="font-size:17px;font-weight:700;color:#f8fafc;margin-bottom:4px">Answer locked in!</div>'+
-    '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Waiting for the teacher to reveal…</div>'+
-    '<div class="total-pill">Score so far: <span>'+totalScore.toLocaleString()+' pts</span></div>';
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Waiting for the teacher to reveal…</div>';
   body.appendChild(overlay);
 }
 
@@ -865,10 +869,7 @@ function showReveal(qi, serverCorrect, correctText){
     }
   }
 
-  // Score pill — just total score, no pass/fail label
-  el('reveal-score-pill').innerHTML=
-    '<div class="rsp-label">Your score</div>'
-    +'<div class="rsp-score">'+totalScore.toLocaleString()+' pts</div>';
+  el('reveal-score-pill').innerHTML='';
 
   show('s-reveal');
 }
