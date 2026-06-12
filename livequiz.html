@@ -128,11 +128,13 @@
     .reveal-q{font-size:15px;font-weight:600;color:var(--muted);margin-bottom:12px;max-width:580px;margin-left:auto;margin-right:auto;text-align:center}
     .reveal-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
     .reveal-opt{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:10px;font-size:14px;font-weight:600;position:relative}
-    /* Correct answer = bright green */
-    .reveal-opt.is-correct{background:var(--k-green);color:#fff;outline:3px solid #4ade80;outline-offset:-3px}
-    /* The option the player picked (but it's wrong) = dim with a border so they can see what they chose */
-    .reveal-opt.my-pick-wrong{background:var(--track);color:var(--muted);filter:brightness(.75);outline:2px solid #94a3b8;outline-offset:-2px}
-    /* Other wrong options = just dim */
+    /* Correct answer the player didn't pick */
+    .reveal-opt.is-correct{background:#16a34a;color:#fff}
+    /* Player picked this and it's correct */
+    .reveal-opt.my-pick-correct{background:#22c55e;color:#fff;outline:3px solid #4ade80;outline-offset:-3px}
+    /* Player picked this but it's wrong */
+    .reveal-opt.my-pick-wrong{background:#e21b3c;color:#fff;outline:3px solid #f87171;outline-offset:-3px}
+    /* Other wrong options = dim */
     .reveal-opt.not-picked{background:var(--track);color:var(--muted);filter:brightness(.55)}
     .reveal-opt-shape{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
     .reveal-correct-tick{margin-left:auto;font-size:16px}
@@ -180,12 +182,12 @@
     .spin-icon{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spinR .7s linear infinite;vertical-align:middle;margin-right:8px}
     @keyframes spinR{to{transform:rotate(360deg)}}
     /* Blob avatars */
-    .char-avatar{width:100px;height:100px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 12px;animation:charIdle 2.4s ease-in-out infinite;user-select:none}
-    .pod-char-avatar{width:60px;height:60px;font-size:26px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;user-select:none;animation:charIdle 2.4s ease-in-out infinite}
+    .char-avatar{width:80px;height:110px;display:block;margin:0 auto 12px;animation:charIdle 2.4s ease-in-out infinite;user-select:none}
+    .pod-char-avatar{width:48px;height:66px;display:block;margin:0 auto 4px;user-select:none;animation:charIdle 2.4s ease-in-out infinite}
     .char-avatar.celebrate,.pod-char-avatar.celebrate{animation:charCelebrate .5s ease-in-out infinite alternate}
-    .char-avatar.defeat,.pod-char-avatar.defeat{animation:charDefeat 3s ease-in-out infinite;filter:grayscale(.4)}
-    @keyframes charIdle{0%,100%{transform:translateY(0) scale(1) rotate(0deg)}30%{transform:translateY(-12px) scale(1.07) rotate(-3deg)}60%{transform:translateY(-8px) scale(1.04) rotate(2deg)}}
-    @keyframes charCelebrate{0%{transform:translateY(0) rotate(-8deg) scale(1)}100%{transform:translateY(-18px) rotate(8deg) scale(1.15)}}
+    .char-avatar.defeat,.pod-char-avatar.defeat{animation:charDefeat 3s ease-in-out infinite;filter:grayscale(.35)}
+    @keyframes charIdle{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-10px) scale(1.05)}70%{transform:translateY(-6px) scale(1.03)}}
+    @keyframes charCelebrate{0%{transform:translateY(0) rotate(-8deg) scale(1)}100%{transform:translateY(-16px) rotate(8deg) scale(1.12)}}
     @keyframes charDefeat{0%,100%{transform:translateY(0) rotate(-4deg) scale(.95)}50%{transform:translateY(5px) rotate(4deg) scale(.92)}}
     @media(max-width:520px){.opts-grid,.reveal-opts{grid-template-columns:1fr}.opt-btn{min-height:52px}}
   </style>
@@ -832,13 +834,15 @@ function showReveal(qi, serverCorrect, correctText){
       var cls='reveal-opt';
       var suffix='';
 
-      if(isCorrectOpt){
+      if(isCorrectOpt && playerPickedThis){
+        cls+=' my-pick-correct';
+        suffix='<span class="reveal-correct-tick">✓ Correct!</span>';
+      } else if(isCorrectOpt){
         cls+=' is-correct';
         suffix='<span class="reveal-correct-tick">✓</span>';
       } else if(playerPickedThis){
-        // Player picked this but it's wrong — show with a muted border so they know what they chose
         cls+=' my-pick-wrong';
-        suffix='<span class="reveal-my-marker">your pick</span>';
+        suffix='<span class="reveal-my-marker">✗ your pick</span>';
       } else {
         cls+=' not-picked';
       }
@@ -945,27 +949,65 @@ function showFinal(){
   });
 }
 
-/* ── BLOB AVATARS ── */
+/* ── CHARACTERS ── */
 function hashCharIndex(uid){
   var h=0;
   for(var i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))&0xffff;
   return h%6;
 }
+function makeSVG(m,d,behind,ontop,sad){
+  var mouth=sad
+    ?'<path d="M30 57 Q40 51 50 57" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+    :'<path d="M30 57 Q40 65 50 57" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 110" style="width:100%;height:100%;display:block">'
+    +'<ellipse cx="29" cy="104" rx="11" ry="7" fill="'+d+'"/>'
+    +'<ellipse cx="51" cy="104" rx="11" ry="7" fill="'+d+'"/>'
+    +'<ellipse cx="11" cy="70" rx="8" ry="17" fill="'+m+'" transform="rotate(-18 11 70)"/>'
+    +'<ellipse cx="69" cy="70" rx="8" ry="17" fill="'+m+'" transform="rotate(18 69 70)"/>'
+    +(behind||'')
+    +'<ellipse cx="40" cy="80" rx="25" ry="23" fill="'+m+'"/>'
+    +'<circle cx="40" cy="36" r="28" fill="'+m+'"/>'
+    +(ontop||'')
+    +'<circle cx="30" cy="31" r="9" fill="white"/>'
+    +'<circle cx="50" cy="31" r="9" fill="white"/>'
+    +'<circle cx="32" cy="32" r="5" fill="'+d+'"/>'
+    +'<circle cx="52" cy="32" r="5" fill="'+d+'"/>'
+    +'<circle cx="34" cy="30" r="2.2" fill="white"/>'
+    +'<circle cx="54" cy="30" r="2.2" fill="white"/>'
+    +mouth
+    +'</svg>';
+}
 var CHARS=[
-  {bg:'#e21b3c',face:'😊',shape:'50% 50% 50% 50%/60% 60% 40% 40%'},
-  {bg:'#1368ce',face:'🤩',shape:'60% 40% 60% 40%/60% 40% 60% 40%'},
-  {bg:'#d89e00',face:'😎',shape:'40% 60% 40% 60%/40% 60% 40% 60%'},
-  {bg:'#26890c',face:'🥳',shape:'50% 50% 50% 50%/40% 40% 60% 60%'},
-  {bg:'#8b5cf6',face:'😄',shape:'60% 40% 40% 60%/50% 50% 50% 50%'},
-  {bg:'#f97316',face:'🌟',shape:'40% 60% 60% 40%/60% 40% 40% 60%'}
+  // Red — cat ears
+  {m:'#e8294e',d:'#9e1a31',
+   behind:'<ellipse cx="17" cy="12" rx="9" ry="14" fill="#e8294e"/><ellipse cx="63" cy="12" rx="9" ry="14" fill="#e8294e"/><ellipse cx="17" cy="12" rx="5" ry="9" fill="#ff9eb5" opacity=".75"/><ellipse cx="63" cy="12" rx="5" ry="9" fill="#ff9eb5" opacity=".75"/>',
+   ontop:''},
+  // Blue — antenna
+  {m:'#1a7de8',d:'#0f4d9e',
+   behind:'',
+   ontop:'<circle cx="40" cy="4" r="7" fill="#60a5fa"/><rect x="37.5" y="9" width="5" height="11" rx="2" fill="#1a7de8"/>'},
+  // Yellow — spiky hair
+  {m:'#e8b01a',d:'#9e7010',
+   behind:'',
+   ontop:'<polygon points="24,19 18,3 32,15" fill="#9e7010"/><polygon points="40,14 36,2 46,13" fill="#9e7010"/><polygon points="56,19 62,3 48,15" fill="#9e7010"/>'},
+  // Green — unicorn horn
+  {m:'#2daa4e',d:'#1a7030',
+   behind:'',
+   ontop:'<polygon points="40,4 33,21 47,21" fill="#a7f3d0" opacity=".9"/>'},
+  // Purple — poofy hair
+  {m:'#8b5cf6',d:'#5b3aac',
+   behind:'',
+   ontop:'<circle cx="22" cy="20" r="12" fill="#8b5cf6"/><circle cx="40" cy="12" r="14" fill="#8b5cf6"/><circle cx="58" cy="20" r="12" fill="#8b5cf6"/>'},
+  // Orange — lightning bolt
+  {m:'#f97316',d:'#c05810',
+   behind:'',
+   ontop:'<polygon points="43,5 35,22 41,22 37,32 46,16 40,16" fill="#ffd60a"/>'}
 ];
 function spawnCharAvatar(elemId,playerIndex,animName){
   var c=CHARS[playerIndex%CHARS.length];
   var e=document.getElementById(elemId);
   if(!e)return;
-  e.style.background=c.bg;
-  e.style.borderRadius=c.shape;
-  e.textContent=c.face;
+  e.innerHTML=makeSVG(c.m,c.d,c.behind,c.ontop,animName==='defeat');
   var base=e.classList.contains('pod-char-avatar')?'pod-char-avatar':'char-avatar';
   e.className=base+(animName==='celebration'?' celebrate':animName==='defeat'?' defeat':'');
 }
