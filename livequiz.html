@@ -179,9 +179,14 @@
 
     .spin-icon{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spinR .7s linear infinite;vertical-align:middle;margin-right:8px}
     @keyframes spinR{to{transform:rotate(360deg)}}
-    /* 3-D characters */
-    #lby-char-canvas{display:block;margin:0 auto 8px;width:140px;height:190px;border-radius:12px}
-    .pod-char-canvas{display:block;margin:0 auto 4px;width:72px;height:108px;border-radius:8px}
+    /* Blob avatars */
+    .char-avatar{width:100px;height:100px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 12px;animation:charIdle 2.4s ease-in-out infinite;user-select:none}
+    .pod-char-avatar{width:60px;height:60px;font-size:26px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;user-select:none;animation:charIdle 2.4s ease-in-out infinite}
+    .char-avatar.celebrate,.pod-char-avatar.celebrate{animation:charCelebrate .5s ease-in-out infinite alternate}
+    .char-avatar.defeat,.pod-char-avatar.defeat{animation:charDefeat 3s ease-in-out infinite;filter:grayscale(.4)}
+    @keyframes charIdle{0%,100%{transform:translateY(0) scale(1) rotate(0deg)}30%{transform:translateY(-12px) scale(1.07) rotate(-3deg)}60%{transform:translateY(-8px) scale(1.04) rotate(2deg)}}
+    @keyframes charCelebrate{0%{transform:translateY(0) rotate(-8deg) scale(1)}100%{transform:translateY(-18px) rotate(8deg) scale(1.15)}}
+    @keyframes charDefeat{0%,100%{transform:translateY(0) rotate(-4deg) scale(.95)}50%{transform:translateY(5px) rotate(4deg) scale(.92)}}
     @media(max-width:520px){.opts-grid,.reveal-opts{grid-template-columns:1fr}.opt-btn{min-height:52px}}
   </style>
 </head>
@@ -219,7 +224,7 @@
     <div class="lby-code" id="lby-code">------</div>
     <div class="lby-player-count" id="lby-count">0</div>
     <div class="lby-count-lbl">players joined</div>
-    <canvas id="lby-char-canvas" width="140" height="190"></canvas>
+    <div id="lby-char-avatar" class="char-avatar" style="opacity:0"></div>
     <div class="chips" id="lby-chips"></div>
     <div class="lby-wait pulse">Waiting for the teacher to start&hellip;</div>
   </div>
@@ -493,10 +498,9 @@ function watchLobbyPlayers(){
 
 function trySpawnLobbyChar(){
   if(myCharSpawned) return;
-  if(!window.CharJS){ setTimeout(trySpawnLobbyChar, 300); return; }
   myCharSpawned=true;
-  var lc=document.getElementById('lby-char-canvas');
-  if(lc) window.CharJS.spawn(lc, myModelIdx, 'idle');
+  var av=document.getElementById('lby-char-avatar');
+  if(av){ av.style.opacity='1'; spawnCharAvatar('lby-char-avatar', myModelIdx, 'idle'); }
 }
 
 /* ════════════════════════════════════════
@@ -931,19 +935,12 @@ function showFinal(){
       var p=entry[1],div=document.createElement('div');
       div.className='podium-slot '+pClasses[slot];
       var charId='pod-char-'+rank;
-      div.innerHTML='<canvas id="'+charId+'" class="pod-char-canvas" width="72" height="108"></canvas>'
+      div.innerHTML='<div id="'+charId+'" class="pod-char-avatar"></div>'
         +'<div class="podium-name">'+esc(p.name)+'</div>'
         +'<div class="podium-score">'+((p.score||0).toLocaleString())+'</div>'
         +'<div class="podium-bar"></div>';
       podium.appendChild(div);
-      // Spawn character after DOM is ready
-      (function(id,r){
-        setTimeout(function(){
-          if(!window.CharJS) return;
-          var c=document.getElementById(id);
-          if(c) window.CharJS.spawn(c, r%2, r===0?'celebration':'defeat');
-        },300);
-      })(charId, rank);
+      spawnCharAvatar(charId, rank, rank===0?'celebration':'defeat');
     });
     var myRank=sorted.findIndex(function(e){return e[0]===playerId;});
     var myFinalScore=myRank>=0?(sorted[myRank][1].score||0):totalScore;
@@ -951,7 +948,30 @@ function showFinal(){
     el('final-rank-badge').textContent='You finished '+rankStr+' of '+sorted.length+' players';
     el('final-score-big').textContent=myFinalScore.toLocaleString();
     show('s-final');
+    if(typeof confetti==='function'){
+      setTimeout(function(){confetti({particleCount:180,spread:80,origin:{y:0.55}});},400);
+    }
   });
+}
+
+/* ── BLOB AVATARS ── */
+var CHARS=[
+  {bg:'#e21b3c',face:'😊',shape:'50% 50% 50% 50%/60% 60% 40% 40%'},
+  {bg:'#1368ce',face:'🤩',shape:'60% 40% 60% 40%/60% 40% 60% 40%'},
+  {bg:'#d89e00',face:'😎',shape:'40% 60% 40% 60%/40% 60% 40% 60%'},
+  {bg:'#26890c',face:'🥳',shape:'50% 50% 50% 50%/40% 40% 60% 60%'},
+  {bg:'#8b5cf6',face:'😄',shape:'60% 40% 40% 60%/50% 50% 50% 50%'},
+  {bg:'#f97316',face:'🌟',shape:'40% 60% 60% 40%/60% 40% 40% 60%'}
+];
+function spawnCharAvatar(elemId,playerIndex,animName){
+  var c=CHARS[playerIndex%CHARS.length];
+  var e=document.getElementById(elemId);
+  if(!e)return;
+  e.style.background=c.bg;
+  e.style.borderRadius=c.shape;
+  e.textContent=c.face;
+  var base=e.classList.contains('pod-char-avatar')?'pod-char-avatar':'char-avatar';
+  e.className=base+(animName==='celebration'?' celebrate':animName==='defeat'?' defeat':'');
 }
 
 /* ── CLEANUP ── */
@@ -967,81 +987,6 @@ window.addEventListener('beforeunload',function(){
 }());
 </script>
 
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
-
-const MODELS = [
-  'assets/characters/aj.glb',
-  'assets/characters/claire.glb'
-];
-
-const instances = new Map();
-const loader    = new GLTFLoader();
-
-async function spawn(canvas, playerIndex, animName) {
-  if (instances.has(canvas.id)) {
-    playAnim(canvas.id, animName);
-    return;
-  }
-
-  const w = canvas.width, h = canvas.height;
-
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-  renderer.setSize(w, h, false);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-  const scene  = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, w / h, 0.01, 100);
-  camera.position.set(0, 1.1, 2.6);
-  camera.lookAt(0, 0.9, 0);
-
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9aaa, 2.8));
-  const dir = new THREE.DirectionalLight(0xffffff, 1.4);
-  dir.position.set(1, 2, 2);
-  scene.add(dir);
-
-  let gltf;
-  try {
-    gltf = await loader.loadAsync(MODELS[playerIndex % MODELS.length]);
-  } catch(e) {
-    console.warn('[CharJS] load failed', e);
-    return;
-  }
-
-  scene.add(gltf.scene);
-
-  const mixer = new THREE.AnimationMixer(gltf.scene);
-  const clips = {};
-  gltf.animations.forEach(clip => {
-    clips[clip.name] = mixer.clipAction(clip);
-  });
-
-  const inst = { renderer, scene, camera, mixer, clips, current: null };
-  instances.set(canvas.id, inst);
-
-  playAnim(canvas.id, animName || 'idle');
-
-  let last = 0;
-  (function tick(t) {
-    inst.raf = requestAnimationFrame(tick);
-    mixer.update((t - last) / 1000);
-    last = t;
-    renderer.render(scene, camera);
-  })(0);
-}
-
-function playAnim(canvasId, name) {
-  const inst = instances.get(canvasId);
-  if (!inst || !inst.clips[name]) return;
-  if (inst.current === inst.clips[name]) return;
-  if (inst.current) inst.current.fadeOut(0.25);
-  inst.clips[name].reset().fadeIn(0.25).play();
-  inst.current = inst.clips[name];
-}
-
-window.CharJS = { spawn, playAnim };
-</script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </body>
 </html>
