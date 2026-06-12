@@ -800,7 +800,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
             </div>
           </div>
           <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);-webkit-overflow-scrolling:touch">
-            <table id="inline-qb-table" style="border-collapse:collapse;width:100%;min-width:1100px;font-size:12px">
+            <table id="inline-qb-table" style="border-collapse:collapse;width:100%;min-width:1100px;font-size:12px;table-layout:fixed">
               <thead>
                 <tr style="background:var(--surface2)">
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:30px">#</th>
@@ -812,11 +812,11 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option B</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option C</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option D</th>
-                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">A Img URL</th>
-                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">B Img URL</th>
-                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">C Img URL</th>
-                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">D Img URL</th>
-                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:100px">Q Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">A Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">B Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">C Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">D Img URL</th>
+                  <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">Q Img URL</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:130px">Correct Answer *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:45px">Pts</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:140px">Explanation</th>
@@ -831,7 +831,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
           <div id="inline-import-status"></div>
           <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text2)">
             <span>Type: MCQ · TF · SHORT</span>
-            <span>Correct Answer: full text matching an option, or True/False, or text for SHORT</span>
+            <span>Correct Answer: full text matching an option · True/False for TF · text for SHORT · <strong>A / B / C / D</strong> for image-only options</span>
             <span>SHORT variants: separate with | e.g. <code>6|six|Six</code></span>
           </div>
         </div>
@@ -1992,6 +1992,14 @@ function buildInlineCell(type,value,placeholder,extraStyle){
   if(type==='select-type') return '<select onchange="onInlineTypeChange(this)" style="'+base+'cursor:pointer"><option value="MCQ">MCQ</option><option value="TF">TF</option><option value="SHORT">SHORT</option></select>';
   return '<textarea rows="1" placeholder="'+placeholder+'" style="'+base+'" oninput="this.style.height=\'auto\';this.style.height=Math.max(28,this.scrollHeight)+\'px\'" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){var tbody=document.getElementById(\'inline-qb-body\');var rows=tbody.querySelectorAll(\'tr\');var myRow=this.closest(\'tr\');if(myRow===rows[rows.length-1]){event.preventDefault();addInlineRow();}}">'+(value||'')+'</textarea>';
 }
+function buildImgUrlCell(value){
+  /* Fixed-width URL input — never expands the column regardless of URL length.
+     Full URL shown in tooltip on hover. */
+  var v=value||'';
+  return '<input type="text" placeholder="https://..." value="'+v.replace(/"/g,'&quot;')+'" title="'+v.replace(/"/g,'&quot;')+'"'
+    +' oninput="this.title=this.value"'
+    +' style="width:100%;padding:4px 6px;background:transparent;border:none;outline:none;color:var(--text);font-size:10.5px;font-family:var(--font);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box">';
+}
 function onInlineTypeChange(sel){ var row=sel.closest('tr'), type=sel.value; var optCells=row.querySelectorAll('.opt-cell textarea'); optCells.forEach(function(ta){ ta.closest('td').style.opacity=(type==='SHORT')?'0.35':'1'; ta.closest('td').style.pointerEvents=(type==='SHORT')?'none':''; }); if(type==='TF'){ var optAs=row.querySelectorAll('.opt-cell'); if(optAs.length>=2){ optAs[0].querySelector('textarea').value='True'; optAs[1].querySelector('textarea').value='False'; if(optAs[2]) optAs[2].querySelector('textarea').value=''; if(optAs[3]) optAs[3].querySelector('textarea').value=''; } } }
 function addInlineRow(){
   var tbody=document.getElementById('inline-qb-body'), idx=tbody.querySelectorAll('tr').length+1;
@@ -2005,11 +2013,11 @@ function addInlineRow(){
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option B')+'</td>'+
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option C')+'</td>'+
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option D')+'</td>'+
-    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
-    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','https://...','width:110px')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
+    '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Full text of correct option')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:38px')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Why this is correct')+'</td>'+
@@ -2027,7 +2035,7 @@ function toggleQBImgCols(){
   cols.forEach(function(el){ el.style.display=showing?'none':''; });
   if(btn) btn.textContent=showing?'⊞ Show Image Cols':'⊟ Hide Image Cols';
 }
-function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),image_url:cv(13),correct_answer:cv(14),points:cv(15)||'1',explanation:cv(16),session:cv(17),term:cv(18) }; }
+function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var inp=td.querySelector('input[type="text"]'); if(inp) return inp.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),image_url:cv(13),correct_answer:cv(14),points:cv(15)||'1',explanation:cv(16),session:cv(17),term:cv(18) }; }
 function importInlineTable(){
   var cid=(document.getElementById('inline-class')||{}).value||'';
   if(!cid){ toast('error','Select a class first'); return; }
