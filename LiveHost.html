@@ -528,12 +528,14 @@ function doLaunch(){
 
       var safeQs=khQuestions.map(function(q){
         return {
-          id:       q.id,
-          type:     q.type||'MCQ',
-          subject:  q.subject||'',
-          question: q.question||'',
-          options:  q.options||[],
-          points:   q.points||1
+          id:           q.id,
+          type:         q.type||'MCQ',
+          subject:      q.subject||'',
+          question:     q.question||'',
+          options:      q.options||[],
+          points:       q.points||1,
+          image_url:    q.image_url||'',
+          option_images:q.option_images||[]
         };
       });
 
