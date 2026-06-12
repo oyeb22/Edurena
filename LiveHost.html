@@ -227,7 +227,7 @@
         </button>
         <button class="mode-card kahoot" id="mc-kahoot">
           <span class="mc-icon">&#x1F3AF;</span>
-          <span class="mc-title">Kahoot Quiz</span>
+          <span class="mc-title">Live Quiz</span>
           <span class="mc-desc">Timed questions &middot; instant feedback &middot; timer auto-advances</span>
         </button>
       </div>
@@ -239,7 +239,7 @@
         <select id="sel-quiz"><option value="">Loading quizzes&hellip;</option></select>
       </div>
       <div class="fg" id="time-row" style="display:none">
-        <label>Seconds per question (Kahoot only)</label>
+        <label>Seconds per question (Live Quiz only)</label>
         <input type="number" id="sel-time" value="20" min="5" max="120">
       </div>
     </div>
@@ -419,7 +419,7 @@ try{
   // v5.4: race and kahoot now share the same Firebase project (kahoot-24063).
   // The standalone examrace-31854 project's RTDB was never reachable
   // (ERR_NAME_NOT_RESOLVED), so race traffic also goes here. The two modes
-  // store data under distinct paths (/race/* vs /kahoot/*) so they don't
+  // store data under distinct paths (/race/* vs /livequiz/*) so they don't
   // conflict. Two Firebase Database refs over the SAME app still work.
   var sharedCfg={apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',authDomain:'kahoot-24063.firebaseapp.com',databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',projectId:'kahoot-24063',storageBucket:'kahoot-24063.firebasestorage.app',messagingSenderId:'962917873467',appId:'1:962917873467:web:a6b526aee30cd15c92291e'};
   var eR=null,eK=null;
@@ -540,7 +540,7 @@ function doLaunch(){
       if(!sessionCode){showErr('Server returned empty session code. Try again.');return;}
       btn.disabled=true;
       btn.innerHTML='<span class="spin"></span>Setting up room…';
-      khDb.ref('kahoot/'+sessionCode).update({
+      khDb.ref('livequiz/'+sessionCode).update({
         meta:      {totalQ:khTotalQ,timePerQ:khTimePerQ},
         questions: safeQs,
         state:     {phase:'lobby',qIndex:-1,qStartAt:0,correctAnswer:'',autoAdvanceAt:0}
@@ -564,14 +564,14 @@ function showLobby(){
   var isRace=mode==='race';
   _joinUrl=(isRace?RACE_URL:KAHOOT_URL)+'?script='+encodeURIComponent(SCRIPT_URL);
   el('lby-tag').className  ='lobby-mode-tag '+(isRace?'race':'kahoot');
-  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Kahoot';
+  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Live Quiz';
   el('lby-code').textContent=sessionCode;
   el('lby-url').textContent=_joinUrl;
   el('lby-count').textContent='0';
   el('lby-chips').innerHTML='';
   el('startBtn').disabled=true;
   show('s-lobby');
-  attachPlayersListener((isRace?'race/':'kahoot/')+sessionCode+'/players');
+  attachPlayersListener((isRace?'race/':'livequiz/')+sessionCode+'/players');
 }
 
 function doStart(){
@@ -594,7 +594,7 @@ function doStart(){
         showErr('Could not start: '+(err&&err.message?err.message:String(err)));
       });
   }else{
-    db.ref('kahoot/'+sessionCode+'/state').set({
+    db.ref('livequiz/'+sessionCode+'/state').set({
       phase:'lobby',qIndex:-1,qStartAt:0,correctAnswer:'',autoAdvanceAt:0
     })
       .then(function(){
@@ -604,7 +604,7 @@ function doStart(){
       })
       .catch(function(err){
         btn.disabled=false;btn.textContent='▶ Start Game';
-        showErr('Could not start Kahoot: '+(err&&err.message?err.message:String(err)));
+        showErr('Could not start Live Quiz: '+(err&&err.message?err.message:String(err)));
       });
   }
 }
@@ -667,7 +667,7 @@ function setupKahootHostPanel(){
   el('kh-action-btn').className='kh-action-btn go';
   el('kh-action-btn').textContent='▶ Start Question 1';
 
-  khPlayersRef=khDb.ref('kahoot/'+sessionCode+'/players');
+  khPlayersRef=khDb.ref('livequiz/'+sessionCode+'/players');
   khPlayersRef.on('value',function(snap){
     var players=(snap&&snap.val())||{};
     khPlayerCount=Object.keys(players).length;
@@ -717,7 +717,7 @@ function startAnswerDistributionWatch(qi){
   el('kh-ans-indicator').style.display='flex';
   el('kh-dist').style.display=isMCQ?'block':'none';
 
-  khRawAnswersRef=khDb.ref('kahoot/'+sessionCode+'/rawAnswers');
+  khRawAnswersRef=khDb.ref('livequiz/'+sessionCode+'/rawAnswers');
   khRawAnswersRef.on('value',function(snap){
     var all=(snap&&snap.val())||{};
     var answered=0;
@@ -898,7 +898,7 @@ function doNextQuestion(){
 
   var qStartAt_local=Date.now();
 
-  khDb.ref('kahoot/'+sessionCode+'/answerKeys/'+nextIdx).set(answerKeyPayload)
+  khDb.ref('livequiz/'+sessionCode+'/answerKeys/'+nextIdx).set(answerKeyPayload)
     .then(function(){
       var stateUpdate={
         phase:         'question',
@@ -910,8 +910,8 @@ function doNextQuestion(){
         timePerQ:      khTimePerQ
       };
       return khDb.ref().update({
-        ['kahoot/'+sessionCode+'/state']:      stateUpdate,
-        ['kahoot/'+sessionCode+'/rawAnswers']: null
+        ['livequiz/'+sessionCode+'/state']:      stateUpdate,
+        ['livequiz/'+sessionCode+'/rawAnswers']: null
       });
     })
     .then(function(){
@@ -961,7 +961,7 @@ function doReveal(){
   el('kh-dist').style.display='none';
 
   // Push reveal state to students
-  khDb.ref('kahoot/'+sessionCode+'/state').update({
+  khDb.ref('livequiz/'+sessionCode+'/state').update({
     phase:         'reveal',
     qIndex:        khCurrentQ,
     correctAnswer: correct,
@@ -999,13 +999,13 @@ function doLeaderboard(){
   var isLast=khCurrentQ>=khTotalQ-1;
   var AUTO_DELAY=8;
 
-  khDb.ref('kahoot/'+sessionCode+'/state').update({
+  khDb.ref('livequiz/'+sessionCode+'/state').update({
     phase:         'leaderboard',
     autoAdvanceAt: Date.now()+(AUTO_DELAY*1000)
   });
 
   // Fetch leaderboard live from Firebase — scores are now propagated
-  khDb.ref('kahoot/'+sessionCode+'/players').once('value',function(snap){
+  khDb.ref('livequiz/'+sessionCode+'/players').once('value',function(snap){
     renderKhLeaderboard((snap&&snap.val())||{});
   });
 
@@ -1030,8 +1030,8 @@ function doLiveQuizFinal(){
   cancelAutoAdvance();
   if(khPropagationRaf){cancelAnimationFrame(khPropagationRaf);khPropagationRaf=null;}
   el('kh-propagation-bar').classList.remove('on');
-  khDb.ref('kahoot/'+sessionCode+'/state').update({phase:'final'});
-  el('done-msg').textContent='Kahoot complete! Students see the final podium. Code: '+sessionCode;
+  khDb.ref('livequiz/'+sessionCode+'/state').update({phase:'final'});
+  el('done-msg').textContent='Live Quiz complete! Students see the final podium. Code: '+sessionCode;
   cleanupLiveQuiz();
   show('s-done');
 }
