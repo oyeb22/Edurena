@@ -87,7 +87,8 @@
     .locked-inner{background:rgba(41,201,138,.06);border:1px solid rgba(41,201,138,.25);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--green);display:flex;align-items:center;gap:8px;}
 
     /* ══ EXAM SCREEN ══ */
-    #examScreen{background:var(--bg);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;}
+    #examScreen{background:var(--bg);min-height:100vh;min-height:100dvh;flex-direction:column;}
+    #examScreen.active{display:flex;}
     .exam-header{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
     .exam-header-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px;}
     .exam-title-block{flex:1;min-width:0;}
@@ -478,6 +479,13 @@
         For diction/phonics questions, the audio player appears automatically when needed.
         Speed can be adjusted during the exam.
       </p>
+    </div>
+  </div>
+
+  <div id="exam-instruction-box" style="display:none;max-width:860px;margin:0 auto 16px;padding:0 16px">
+    <div style="background:rgba(79,120,255,.07);border:1px solid rgba(79,120,255,.3);border-radius:var(--radius-sm);padding:14px 16px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📋 Exam Instructions</div>
+      <div id="exam-instruction-text" style="font-size:13px;color:var(--text);line-height:1.8;white-space:pre-wrap"></div>
     </div>
   </div>
 
@@ -1523,6 +1531,11 @@ window.addEventListener('load',function(){
       quizMeta    = result.quizData;
       faceEnabled = quizMeta.faceDetection !== false;
       safeText('preTitle', quizMeta.title);
+      if (quizMeta.examInstruction) {
+        var instrBox = document.getElementById('exam-instruction-box');
+        var instrTxt = document.getElementById('exam-instruction-text');
+        if (instrBox && instrTxt) { instrTxt.textContent = quizMeta.examInstruction; instrBox.style.display = 'block'; }
+      }
       safeText('bannerCode', student.examCode);
       fetchStudentInfo();
       initMedia();
