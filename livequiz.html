@@ -189,6 +189,15 @@
     @keyframes charIdle{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-10px) scale(1.05)}70%{transform:translateY(-6px) scale(1.03)}}
     @keyframes charCelebrate{0%{transform:translateY(0) rotate(-8deg) scale(1)}100%{transform:translateY(-16px) rotate(8deg) scale(1.12)}}
     @keyframes charDefeat{0%,100%{transform:translateY(0) rotate(-4deg) scale(.95)}50%{transform:translateY(5px) rotate(4deg) scale(.92)}}
+    .q-img-wrap{margin:10px 0 0;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.15)}
+    .q-img-wrap img{width:100%;height:auto;max-height:45vh;object-fit:contain;display:block;border-radius:10px}
+    .opt-img{width:100%;height:auto;object-fit:contain;display:block;border-radius:8px}
+    .opt-txt{flex:1;display:flex;flex-direction:column;align-items:flex-start}
+    /* Image-centric option buttons */
+    .opt-btn.has-img{flex-direction:column;align-items:center;justify-content:flex-start;padding:10px;min-height:120px;gap:6px;text-align:center}
+    .opt-btn.has-img .opt-shape{margin:0}
+    .opt-btn.has-img .opt-img{max-height:85px;width:auto;max-width:100%;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    .opt-btn.has-img .opt-img-lbl{font-size:12px;margin-top:2px;opacity:.85}
     @media(max-width:520px){.opts-grid,.reveal-opts{grid-template-columns:1fr}.opt-btn{min-height:52px}}
   </style>
 </head>
@@ -254,6 +263,7 @@
         </div>
       </div>
       <div class="q-txt" id="q-txt">Loading&hellip;</div>
+      <div class="q-img-wrap" id="q-img-wrap" style="display:none"></div>
       <button class="q-tts-btn" id="q-tts-inner" onclick="readCurrentQuestion()" style="display:none">🔊 Read aloud</button>
     </div>
     <div class="q-body" id="q-body"></div>
@@ -586,6 +596,16 @@ function startQuestion(qi, serverTs){
   var q=questions[qi]; if(!q) return;
   setDot(qi);
   el('q-txt').textContent=q.question;
+  var qImgWrap=el('q-img-wrap');
+  if(qImgWrap){
+    if(q.image_url){
+      qImgWrap.style.display='';
+      qImgWrap.innerHTML='<img src="'+esc(q.image_url)+'" alt="Question image" onerror="this.parentElement.style.display=\'none\'">';
+    } else {
+      qImgWrap.style.display='none';
+      qImgWrap.innerHTML='';
+    }
+  }
   renderAnswerArea(q);
   show('s-question');
   resetTTSBtn();
@@ -604,13 +624,23 @@ function renderAnswerArea(q){
   if(q.type==='MCQ'||q.type==='TF'){
     var grid=document.createElement('div'); grid.className='opts-grid';
     (q.options||[]).forEach(function(opt,i){
+      var letter=String.fromCharCode(65+i);
+      var imgSrc=(q.option_images&&q.option_images[i])||'';
       var btn=document.createElement('button');
-      btn.className='opt-btn '+COLORS[i%4];
-      btn.innerHTML='<span class="opt-shape">'+SHAPES[i%4]+'</span><span class="opt-txt">'+esc(opt)+'</span>';
-      btn.dataset.answer=opt; btn.dataset.idx=i;
-      btn.addEventListener('pointerdown',(function(o,b){
-        return function(ev){ev.preventDefault();if(!answered)submitAnswer(o,b);};
-      })(opt,btn));
+      var ansVal=opt||letter;
+      btn.dataset.answer=ansVal; btn.dataset.idx=i;
+      if(imgSrc){
+        btn.className='opt-btn has-img '+COLORS[i%4];
+        btn.innerHTML='<span class="opt-shape">'+SHAPES[i%4]+'</span>'
+          +'<img class="opt-img" src="'+esc(imgSrc)+'" alt="Option '+letter+'" onerror="this.parentElement.classList.remove(\'has-img\')">'
+          +(opt?'<span class="opt-img-lbl">'+esc(opt)+'</span>':'');
+      } else {
+        btn.className='opt-btn '+COLORS[i%4];
+        btn.innerHTML='<span class="opt-shape">'+SHAPES[i%4]+'</span><span class="opt-txt">'+esc(opt)+'</span>';
+      }
+      btn.addEventListener('pointerdown',(function(a,b){
+        return function(ev){ev.preventDefault();if(!answered)submitAnswer(a,b);};
+      })(ansVal,btn));
       grid.appendChild(btn);
     });
     body.appendChild(grid);
@@ -822,13 +852,15 @@ function showReveal(qi, serverCorrect, correctText){
 
   if(q.type==='MCQ'||q.type==='TF'){
     (q.options||[]).forEach(function(opt,i){
+      var letter=String.fromCharCode(65+i);
+      var imgSrc=(q.option_images&&q.option_images[i])||'';
       // Is this the correct option?
       var isCorrectOpt=normAnswer(opt)===normAnswer(correct)
-                    || String.fromCharCode(65+i)===correct.toUpperCase()
+                    || letter===correct.toUpperCase()
                     || normAnswer(opt)===normAnswer(correctText||'');
 
-      // Did the player pick this option?
-      var playerPickedThis=myAns&&(normAnswer(opt)===myAns);
+      // Did the player pick this option? Also handles letter-based answers (image-only options)
+      var playerPickedThis=myAns&&(normAnswer(opt)===myAns || normAnswer(myR&&myR.myAnswer||'')===normAnswer(letter));
 
       var div=document.createElement('div');
       var cls='reveal-opt';
@@ -848,9 +880,11 @@ function showReveal(qi, serverCorrect, correctText){
       }
 
       div.className=cls;
+      var optContent=imgSrc
+        ?'<span style="flex:1;display:flex;flex-direction:column;gap:4px">'+(opt?esc(opt):'')+'<img src="'+esc(imgSrc)+'" style="max-height:70px;max-width:100%;object-fit:contain;border-radius:6px" onerror="this.remove()"></span>'
+        :'<span style="flex:1">'+esc(opt)+'</span>';
       div.innerHTML='<div class="reveal-opt-shape">'+SHAPES[i%4]+'</div>'
-        +'<span style="flex:1">'+esc(opt)+'</span>'
-        +suffix;
+        +optContent+suffix;
       optsWrap.appendChild(div);
     });
   } else {
@@ -935,7 +969,7 @@ function showFinal(){
         +'<div class="podium-score">'+((p.score||0).toLocaleString())+'</div>'
         +'<div class="podium-bar"></div>';
       podium.appendChild(div);
-      spawnCharAvatar(charId, rank, rank===0?'celebration':'defeat');
+      spawnCharAvatar(charId, hashCharIndex(entry[0]), rank===0?'celebration':'defeat');
     });
     var myRank=sorted.findIndex(function(e){return e[0]===playerId;});
     var myFinalScore=myRank>=0?(sorted[myRank][1].score||0):totalScore;
