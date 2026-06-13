@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Neon Night Circuit 3D — Edurena Racing</title>
+  <title>Kart Race — Edurena Racing</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -15,9 +15,6 @@
       --display:'Orbitron',monospace;
     }
     *{margin:0;padding:0;box-sizing:border-box}
-    /* v5.4: dvh handles mobile address-bar dynamics — visible viewport height.
-       Without this, position:fixed bottom:0 lands BELOW the visible area on mobile
-       (user has to scroll/pinch down to see the question panel). */
     html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(--txt);font-family:var(--f);overflow:hidden}
 
     /* ── SCREENS ── */
@@ -31,14 +28,12 @@
     #s-join{background:var(--bg)}
     .brand-title{font-family:var(--display);font-size:clamp(18px,5vw,32px);font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,var(--acc),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
     .brand-sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;text-align:center}
-    .join-card{max-width:340px;width:100%;background:var(--panel);border:1px solid var(--bdr);border-radius:16px;padding:24px;backdrop-filter:blur(10px)}
+    .join-card{max-width:340px;width:100%;background:var(--panel);border:1px solid var(--bdr);border-radius:16px;padding:24px}
     .field-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
     .inp{display:block;width:100%;padding:12px 14px;background:#0a0e1a;border:1.5px solid var(--bdr);border-radius:10px;color:var(--txt);font-size:15px;font-family:var(--f);outline:none;transition:border-color .15s;margin-bottom:14px;-webkit-appearance:none}
     .inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
     .inp-code{text-transform:uppercase;letter-spacing:4px;font-family:var(--display);font-size:16px;text-align:center}
     .join-btn{width:100%;padding:14px;background:linear-gradient(135deg,#0055aa,#5500cc);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--display);letter-spacing:1px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-    .join-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);transform:translateX(-100%);transition:transform .5s}
-    .join-btn:hover::before{transform:translateX(100%)}
     .join-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,212,255,0.3)}
     .join-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
     .join-err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
@@ -55,21 +50,10 @@
     @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
     .lobby-wait{font-size:13px;color:var(--muted);letter-spacing:1px}
 
-    /* ── CANVAS & HUD ── */
-    /* v5.4: canvas no longer fills full viewport. Bottom is offset to leave
-       room for the question panel. JS resizeCanvasAbovePanel() handles the
-       exact pixel size. This GUARANTEES the car is never covered by the
-       panel — it's a separate layer that ends where the panel begins. */
-    #game-canvas{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;display:none}
+    /* ── CANVAS ── */
+    #game-canvas{position:fixed;top:0;left:0;right:0;display:none;z-index:1}
     #game-hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
     #game-hud.on{display:block}
-
-    /* ── CINEMATIC OVERLAY (sits above canvas, below HUD) ── */
-    #cinematic-overlay{
-      position:fixed;inset:0;z-index:5;pointer-events:none;display:none;
-      flex-direction:column;align-items:center;justify-content:center;
-    }
-    #cinematic-overlay.on{display:flex}
 
     /* ── COUNTDOWN ── */
     #countdown-overlay{
@@ -95,9 +79,9 @@
     .hud-speed{font-family:var(--display);font-size:clamp(28px,5vw,42px);font-weight:900;color:var(--yel);line-height:1;text-shadow:0 0 15px rgba(255,204,0,0.4)}
     .hud-speed-lbl{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
     .hud-gear{font-family:var(--display);font-size:11px;color:var(--acc);margin-top:2px}
-    .hud-pos{position:absolute;top:50%;left:12px;transform:translateY(-50%);font-family:var(--display);font-size:clamp(36px,6vw,56px);font-weight:900;color:rgba(255,255,255,0.15);pointer-events:none;text-shadow:0 0 30px rgba(255,255,255,0.1);writing-mode:vertical-rl;text-orientation:mixed}
+    .hud-pos{position:absolute;top:50%;left:12px;transform:translateY(-50%);font-family:var(--display);font-size:clamp(36px,6vw,56px);font-weight:900;color:rgba(255,255,255,0.15);pointer-events:none;writing-mode:vertical-rl;text-orientation:mixed}
 
-    /* ── BANNERS & OVERLAYS ── */
+    /* ── BANNERS ── */
     .nitro-banner{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%) scale(0.8);font-family:var(--display);font-size:clamp(18px,4vw,32px);font-weight:900;color:#fff;letter-spacing:4px;pointer-events:none;z-index:20;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);text-shadow:0 0 30px #ffcc00,0 0 60px #ff8800;white-space:nowrap}
     .nitro-banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
     .wrong-banner{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:var(--display);font-size:clamp(14px,3vw,24px);font-weight:900;color:var(--red);letter-spacing:3px;pointer-events:none;z-index:20;opacity:0;transition:opacity .15s;white-space:nowrap;text-shadow:0 0 20px rgba(255,51,85,0.6)}
@@ -108,108 +92,55 @@
     .screen-flash.nitro{background:rgba(255,204,0,.18)}
     .screen-flash.show{opacity:1}
 
-    /* ── CINEMATIC TEXT ── */
-    .cinematic-text{
-      font-family:var(--display);font-size:clamp(13px,3vw,20px);font-weight:700;
-      color:#fff;letter-spacing:4px;text-transform:uppercase;
-      text-shadow:0 0 20px var(--acc);opacity:0;transition:opacity .6s;
-      text-align:center;white-space:nowrap;margin-bottom:16px
-    }
-    .cinematic-text.show{opacity:1}
-    .cinematic-sub{
-      font-family:var(--display);font-size:11px;color:var(--muted);letter-spacing:3px;
-      text-transform:uppercase;opacity:0;transition:opacity .5s .2s;text-align:center
-    }
-    .cinematic-sub.show{opacity:1}
-
-    /* ── PLAYER GRID (cinematic intro cards) ── */
-    .grid-cards{
-      display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
-      max-width:560px;margin-top:18px;min-height:50px
-    }
-    .grid-card{
-      padding:6px 14px;border-radius:8px;font-family:var(--display);font-size:11px;
-      font-weight:700;letter-spacing:1px;background:#0d1525;border:1px solid;
-      transform:scale(0) translateY(20px);opacity:0;
-      transition:all .5s cubic-bezier(.34,1.56,.64,1);
-    }
-    .grid-card.in{transform:scale(1) translateY(0);opacity:1}
-
-    /* ── BOTTOM PANEL (question area) — slimmed v4 to free up 3D view ── */
+    /* ── BOTTOM PANEL ── */
     .bottom-panel{
-      position:fixed;bottom:0;left:0;right:0;
-      z-index:9999;  /* v5.4: very high — defensive against ANY overlay */
+      position:fixed;bottom:0;left:0;right:0;z-index:9999;
       background:linear-gradient(to top,rgba(5,8,16,.97),rgba(5,8,16,.85));
       border-top:2px solid var(--acc);
       padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));
       pointer-events:auto;backdrop-filter:blur(10px);
-      /* v5.4 v4: drastically smaller. Was min:130 max:40vh — now min:84 max:30vh.
-         Frees ~80px of vertical space for the 3D scene. */
-      min-height:84px;
-      max-height:30vh;overflow-y:auto;
+      min-height:84px;max-height:30vh;overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       box-shadow:0 -6px 20px rgba(0,0,0,0.45);
-      /* v5.4: explicit visibility — defensive against browser viewport quirks */
-      visibility:visible !important;
+      visibility:visible!important;
     }
     .bottom-panel.hidden{display:none}
-    /* v5.4: mobile-specific bulletproofing for the question panel.
-       Mobile browsers have dynamic viewport heights (address bar appears/disappears).
-       We use dvh (dynamic viewport height) where supported to size relative to the
-       VISIBLE viewport, not the static one. */
-    @media (max-width: 768px) {
-      .bottom-panel {
-        max-height: 45vh !important;
-        max-height: 45dvh !important;
-        min-height: 120px !important;
-        z-index: 9999 !important;
-      }
-      #q-txt {
-        font-size: 14px !important;
-        line-height: 1.3 !important;
-      }
-      .opt-btn {
-        min-height: 40px !important;
-        font-size: 13px !important;
-      }
+    @media(max-width:768px){
+      .bottom-panel{max-height:45vh!important;max-height:45dvh!important;min-height:120px!important;z-index:9999!important}
+      #q-txt{font-size:14px!important;line-height:1.3!important}
+      .opt-btn{min-height:40px!important;font-size:13px!important}
     }
     .timing-strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;flex-shrink:0;margin-bottom:3px}
     .timing-strip::-webkit-scrollbar{display:none}
     .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 6px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:5px;min-width:44px;transition:all .2s}
     .ts-item.me{border-color:rgba(0,212,255,.5);background:rgba(0,212,255,.08);box-shadow:0 0 8px rgba(0,212,255,0.12)}
-    .ts-item.leader{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.08);box-shadow:0 0 8px rgba(255,204,0,0.12)}
+    .ts-item.leader{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.08)}
     .ts-pos{font-family:var(--display);font-size:9px;font-weight:700;color:var(--muted)}
     .ts-pos.p1{color:var(--yel);text-shadow:0 0 6px rgba(255,204,0,0.5)}
     .ts-name{font-size:9px;font-weight:600;white-space:nowrap;max-width:50px;overflow:hidden;text-overflow:ellipsis}
     .ts-pct{font-family:var(--display);font-size:8px;color:var(--muted)}
-    /* v5.4 v4: q-card and contents shrunk */
     .q-card{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px}
     .q-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
     .q-num{font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px}
     .streak-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);border-radius:14px;padding:2px 8px;font-family:var(--display);font-size:9px;font-weight:700;color:var(--yel);box-shadow:0 0 6px rgba(255,204,0,0.1)}
-    .streak-badge.nitro{background:rgba(255,100,0,.2);border-color:rgba(255,100,0,.5);color:#ff6400;box-shadow:0 0 12px rgba(255,100,0,0.3);animation:nitroPulse .8s ease-in-out infinite}
+    .streak-badge.nitro{background:rgba(255,100,0,.2);border-color:rgba(255,100,0,.5);color:#ff6400;animation:nitroPulse .8s ease-in-out infinite}
     @keyframes nitroPulse{0%,100%{box-shadow:0 0 10px rgba(255,100,0,0.3)}50%{box-shadow:0 0 20px rgba(255,100,0,0.6)}}
     .q-txt{font-size:clamp(12px,2vw,15px);font-weight:600;color:var(--txt);line-height:1.35;margin-bottom:6px}
     .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     @media(max-width:400px){.opts-grid{grid-template-columns:1fr}}
-    /* v5.4 v4: shorter buttons — was min-height 48 + padding 12/14, now 36 + 8/12 */
     .opt-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:#0a0e1a;border:1.5px solid #1a2035;color:var(--txt);font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;transition:all .12s;width:100%;-webkit-tap-highlight-color:transparent;min-height:36px;position:relative;overflow:hidden}
-    .opt-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent);transform:translateX(-100%);transition:transform .35s}
-    .opt-btn:hover::after{transform:translateX(100%)}
     .opt-btn:not(:disabled):active{transform:scale(.97)}
     .opt-btn:disabled{cursor:not-allowed;opacity:.6}
     .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn);box-shadow:0 0 15px rgba(0,255,136,0.2)}
     .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red);box-shadow:0 0 15px rgba(255,51,85,0.2)}
-    /* v5.4: instant click feedback (before server response) — bright teal pulse */
     .opt-btn.selected{border-color:var(--acc);background:rgba(0,212,255,.12);color:var(--acc);box-shadow:0 0 12px rgba(0,212,255,0.35);transform:scale(.98)}
     .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#1a2035;color:var(--muted);transition:all .2s}
     .opt-btn.correct .opt-key{background:rgba(0,255,136,.2);color:var(--grn)}
     .opt-btn.wrong .opt-key{background:rgba(255,51,85,.15);color:var(--red)}
     .short-area{display:flex;gap:6px}
     .short-inp{flex:1;padding:8px 12px;background:#0a0e1a;border:1.5px solid #1a2035;border-radius:8px;color:var(--txt);font-size:14px;font-family:var(--f);outline:none;-webkit-appearance:none;transition:border-color .15s}
-    .short-inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
-    .sub-btn{padding:8px 16px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);cursor:pointer;letter-spacing:1px;min-height:36px;transition:all .2s;box-shadow:0 4px 15px rgba(0,212,255,0.3)}
-    .sub-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,212,255,0.4)}
+    .short-inp:focus{border-color:var(--acc)}
+    .sub-btn{padding:8px 16px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);cursor:pointer;letter-spacing:1px;min-height:36px;transition:all .2s}
     .answered-msg{text-align:center;padding:14px;font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:1px}
     .opt-img{max-width:100%;max-height:60px;border-radius:6px;margin-top:4px;object-fit:contain;display:block}
 
@@ -225,20 +156,16 @@
     .finish-stat-val{font-family:var(--display);font-size:28px;font-weight:900;color:var(--acc)}
     .finish-stat-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
 
-    /* ── OVERTAKE / POS CHANGE NOTIFS ── */
-    .overtake-notif{position:absolute;top:25%;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(12px,2.5vw,18px);font-weight:900;color:var(--yel);letter-spacing:3px;text-shadow:0 0 15px rgba(255,204,0,0.5);z-index:20;opacity:0;transition:all .4s;white-space:nowrap}
+    /* ── OVERTAKE NOTIFS ── */
+    .overtake-notif{position:absolute;top:25%;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(12px,2.5vw,18px);font-weight:900;color:var(--yel);letter-spacing:3px;z-index:20;opacity:0;transition:all .4s;white-space:nowrap}
     .overtake-notif.show{opacity:1;animation:overtakeSlide .8s ease-out}
     @keyframes overtakeSlide{0%{transform:translateX(-50%) translateY(20px)}100%{transform:translateX(-50%) translateY(0)}}
     .pos-change{position:absolute;top:60%;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(24px,5vw,40px);font-weight:900;z-index:20;opacity:0;transition:all .5s}
-    .pos-change.up{color:var(--grn);text-shadow:0 0 20px rgba(0,255,136,0.5);animation:posUp .6s ease-out}
-    .pos-change.down{color:var(--red);text-shadow:0 0 20px rgba(255,51,85,0.5);animation:posDown .6s ease-out}
+    .pos-change.up{color:var(--grn);animation:posUp .6s ease-out}
+    .pos-change.down{color:var(--red);animation:posDown .6s ease-out}
     @keyframes posUp{0%{transform:translateX(-50%) scale(0.5);opacity:0}50%{transform:translateX(-50%) scale(1.3);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:0}}
     @keyframes posDown{0%{transform:translateX(-50%) scale(0.5);opacity:0}50%{transform:translateX(-50%) scale(1.3);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:0}}
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <!-- v5.4: GLTFLoader for loading the Pagani Zonda .glb model.
-       Using a specific known-good r128-compatible build. -->
-  <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <base target="_blank">
@@ -252,8 +179,8 @@
 </div>
 
 <div class="screen" id="s-join">
-  <div class="brand-title">NEON NIGHT CIRCUIT</div>
-  <div class="brand-sub">Edurena 3D Racing &nbsp;&#x25BA;&nbsp; Answer Fast. Drive Faster.</div>
+  <div class="brand-title">KART RACE</div>
+  <div class="brand-sub">Edurena Racing &nbsp;&#x25BA;&nbsp; Answer Fast. Drive Faster.</div>
   <div class="join-card">
     <div class="field-lbl">Race Code</div>
     <input class="inp inp-code" id="inp-code" type="text" placeholder="ABCDEF" maxlength="10" autocomplete="off" spellcheck="false">
@@ -265,7 +192,7 @@
 </div>
 
 <div class="screen" id="s-lobby">
-  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:3px">NEON NIGHT CIRCUIT</div>
+  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:3px">KART RACE</div>
   <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">STARTING GRID</div>
   <div style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">RACE CODE</div>
   <div class="lobby-code" id="lby-code">------</div>
@@ -275,15 +202,8 @@
   <div class="lobby-wait"><span class="pulse-dot"></span>Waiting for race director to start&hellip;</div>
 </div>
 
-<!-- 3D CANVAS -->
+<!-- 2D CANVAS -->
 <canvas id="game-canvas"></canvas>
-
-<!-- CINEMATIC OVERLAY — sits between canvas and HUD, used during pre-race sequence -->
-<div id="cinematic-overlay">
-  <div class="cinematic-text" id="cinematic-text"></div>
-  <div class="cinematic-sub" id="cinematic-sub"></div>
-  <div class="grid-cards" id="grid-cards"></div>
-</div>
 
 <!-- COUNTDOWN OVERLAY -->
 <div id="countdown-overlay">
@@ -353,31 +273,15 @@
 (function(){
 'use strict';
 
-/* ============ URL PARAMS ============ */
+/* ════════════════ URL PARAMS ════════════════ */
 var P = new URLSearchParams(window.location.search);
 var GAS_URL = (P.get('script') || '').trim();
-var preCode = (P.get('room') || '').trim().toUpperCase();
-// v5.4: spectator mode — host can view the race as a dramatic broadcast
-// without participating. URL: race.html?script=...&room=XXX&spectator=1
-var SPECTATOR_MODE = (P.get('spectator') === '1');
+var preCode  = (P.get('room')   || '').trim().toUpperCase();
 
 if (!GAS_URL) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Missing backend URL.'; return; }
-// v5.4: spectator mode bypass — go directly into observe-only mode
-if (SPECTATOR_MODE && preCode) {
-  showScreen('s-lobby');
-  el('lby-code').textContent = preCode;
-  raceId = preCode;
-  enterSpectatorMode();
-} else {
-  showScreen('s-join');
-}
+showScreen('s-join');
 
-/* ============ FIREBASE ============ */
-// v5.4: Migrated from standalone examrace-31854 project to the existing
-// kahoot-24063 Firebase RTDB (the same one LiveQuiz.html uses). The
-// examrace project's RTDB was never reachable from the browser
-// (ERR_NAME_NOT_RESOLVED). Race and LiveQuiz store their data under
-// distinct paths (/race/* vs /livequiz/*) so they don't conflict.
+/* ════════════════ FIREBASE ════════════════ */
 var db;
 try {
   var cfg = {
@@ -398,8 +302,7 @@ try {
   return;
 }
 
-
-/* ============ HELPERS ============ */
+/* ════════════════ HELPERS ════════════════ */
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
   var t = document.getElementById(id);
@@ -414,2076 +317,1036 @@ function gasPost(body, cb) {
     .catch(function(e){ cb(e,null); });
 }
 
-/* ============ CAR PAINT COLORS (v5.4: realistic palette, not neon) ============ */
-var NEON_COLORS = [
-  0xd62828, // Ferrari red
-  0x1a4ea8, // Racing blue
-  0xeeeeee, // White
-  0x111111, // Carbon black
-  0xf6c200, // Bright yellow
-  0xff7a1a, // Orange
-  0x2a8c4a, // Racing green
-  0x7a3a99, // Deep purple
-  0xc0c0c0, // Silver
-  0xff5599, // Magenta-pink
-  0x118ab2, // Teal
-  0x6a4f30  // Bronze
-];
+/* ════════════════ COLOR PALETTE ════════════════ */
 var NEON_HEX = [
-  '#d62828','#1a4ea8','#eeeeee','#111111',
-  '#f6c200','#ff7a1a','#2a8c4a','#7a3a99',
-  '#c0c0c0','#ff5599','#118ab2','#6a4f30'
+  '#d62828','#1a4ea8','#f6c200','#ff7a1a',
+  '#2a8c4a','#7a3a99','#ff5599','#118ab2',
+  '#c0c0c0','#eeeeee','#111111','#6a4f30'
 ];
 
-/* ============ GAME STATE ============ */
-// v5.4: Detect mobile / low-end devices BEFORE init3D so we can downgrade
-// graphics quality. Heuristic: touch device + screen width < 900 OR pointer:coarse.
-// This catches all phones and most tablets, leaves desktops untouched.
+/* ════════════════ GAME STATE ════════════════ */
 var IS_MOBILE = (function(){
   try {
-    var ua = (navigator.userAgent || '').toLowerCase();
-    var isUA = /android|iphone|ipad|ipod|mobile|opera mini|iemobile/i.test(ua);
-    var isCoarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
-    var isSmall = window.innerWidth < 900;
-    return isUA || (isCoarse && isSmall);
-  } catch(_) { return false; }
+    var ua=(navigator.userAgent||'').toLowerCase();
+    return /android|iphone|ipad|ipod|mobile/i.test(ua)||
+      (window.matchMedia&&window.matchMedia('(pointer:coarse)').matches&&window.innerWidth<900);
+  } catch(_){return false;}
 })();
-console.log('[race] IS_MOBILE =', IS_MOBILE);
 
-var raceId = '';
-var playerId = '';
-var playerName = '';
-var playerColorHex = '';
-var playerColorInt = 0;
-var questions = [];
-var currentQ = 0;
-var totalQ = 0;
-var streak = 0;
-var bestStreak = 0;
-var myProgress = 0;
-var myFinished = false;
-var answering = false;
-var allPlayers = {};
-var lobbyPRef = null;
-var phaseRef = null;
-var gameRef = null;
+var raceId='', playerId='', playerName='', playerColorHex='';
+var questions=[], currentQ=0, totalQ=0;
+var streak=0, bestStreak=0;
+var myProgress=0, myProgress_t=0, myFinished=false, answering=false;
+var allPlayers={};
+var lobbyPRef=null, phaseRef=null, gameRef=null;
+var gameRunning=false, rafId=null, lastTime=0;
 
-/* ============ PHYSICS ============ */
-var playerPos = 0;
-var baseSpeed = 240;
-var boostSpeed = 760;
-var nitroSpeed = 1300;
-var wrongSpeed  = 50;
+/* ════════════════ PHYSICS ════════════════ */
+// Speed in track-laps per second (1.0 = one full lap per second)
+// Calibrated so base = ~12s/lap, nitro = ~2.2s/lap
+var baseSpeed   = 0.084;
+var boostSpeed  = 0.266;
+var nitroSpeed  = 0.455;
+var wrongSpeed  = 0.017;
 var currentSpeed = 0;
-var targetSpeed = baseSpeed;
-var boostUntil = 0;
-var nitroUntil = 0;
-var wrongUntil = 0;
+var targetSpeed  = baseSpeed;
+var boostUntil=0, nitroUntil=0, wrongUntil=0;
 
-/* ============ 3D ENGINE STATE ============ */
-var scene, camera, renderer, trackCurve;
-var sceneInitialized = false;
-// v5.4 (hofk pattern): pre-computed curve data for O(1) lookup at runtime
-var trackSamples = 0;
-var trackPoints = [];
-var trackTangents = [];
-var trackNormals = [];
-var trackBinormals = [];
-var playerCar = null;
-var otherCars = {};
-var particleSystem, particleData = [];
-var speedLines = [];
-var gameRunning = false;
-var rafId = null;
-var lastTime = 0;
-var gameTime = 0;
-var cameraMode = 'chase';
-var cameraShake = 0;
-var cameraShakeDecay = 0.92;
-var myProgress_t = 0; // actual track t (0-1)
-// v5.4: Finish line is HIDDEN throughout the race. Flipped to true only when
-// the player has answered their last question — at which point the arch + stripe
-// appear dramatically ahead of them as they approach the finish.
-var finishLineRevealed = false;
-var laneOffsets = [-3.5, -1.2, 1.2, 3.5];
-var TRACK_WIDTH = 14;
-
-/* ============ CINEMATIC STATE ============ */
-var cinematicRunning = false;
-var cinematicRafId   = null;
-var CINEMATIC_CAMERA_T = 0; // animated camera sweep t
-
-/* ============ AUDIO ============ */
+/* ════════════════════════════════════════════════
+   AUDIO — full procedural synth + MP3 SFX
+════════════════════════════════════════════════ */
 var AudioCtx = window.AudioContext || window.webkitAudioContext;
-var audioCtx = null, engineGain = null, engineOsc = null, engineOsc2 = null;
-var musicNodes = [], audioReady = false;
+var audioCtx=null, engineGain=null, engineOsc=null, engineOsc2=null;
+var musicNodes=[], audioReady=false, sfxBuffers={};
 
 function initAudio() {
   if (audioReady) return;
   try {
-    audioCtx = new AudioCtx();
-    audioReady = true;
-    var master = audioCtx.createGain();
-    master.gain.value = 0.7;
-    master.connect(audioCtx.destination);
-    engineGain = audioCtx.createGain();
-    engineGain.gain.value = 0;
-    engineGain.connect(master);
-    var filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 1200;
-    filter.Q.value = 1.5;
-    filter.connect(engineGain);
-    engineOsc = audioCtx.createOscillator();
-    engineOsc.type = 'sawtooth';
-    engineOsc.frequency.value = 80;
-    engineOsc.connect(filter);
-    engineOsc.start();
-    engineOsc2 = audioCtx.createOscillator();
-    engineOsc2.type = 'sawtooth';
-    engineOsc2.frequency.value = 82;
-    engineOsc2.connect(filter);
-    engineOsc2.start();
+    audioCtx = new AudioCtx(); audioReady=true;
+    var master=audioCtx.createGain(); master.gain.value=0.7; master.connect(audioCtx.destination);
+    engineGain=audioCtx.createGain(); engineGain.gain.value=0; engineGain.connect(master);
+    var filt=audioCtx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=1200; filt.Q.value=1.5; filt.connect(engineGain);
+    engineOsc=audioCtx.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value=80; engineOsc.connect(filt); engineOsc.start();
+    engineOsc2=audioCtx.createOscillator(); engineOsc2.type='sawtooth'; engineOsc2.frequency.value=82; engineOsc2.connect(filt); engineOsc2.start();
     startBgMusic(master);
-    // v5.4: pre-load MP3 sound effects for richer audio. Async fetch +
-    // decode. If a file fails to load, the corresponding sfx() call is a
-    // silent no-op — synth fallbacks already cover the same events.
-    loadSfx('start_beep', '/Edurena/assets/race/sounds/start_beep.mp3');
-    loadSfx('nitro_whoosh', '/Edurena/assets/race/sounds/nitro_whoosh.mp3');
-    loadSfx('crash_thud', '/Edurena/assets/race/sounds/crash_thud.mp3');
-    loadSfx('tire_screech', '/Edurena/assets/race/sounds/tire_screech.mp3');
-    loadSfx('crowd', '/Edurena/assets/race/sounds/crowd.mp3');
-  } catch(e) { audioReady = false; }
+    ['start_beep','nitro_whoosh','crash_thud','tire_screech','crowd'].forEach(function(n){
+      loadSfx(n,'/Edurena/assets/race/sounds/'+n+'.mp3');
+    });
+  } catch(e){ audioReady=false; }
 }
-
-// v5.4: pre-loaded MP3 sound effects. Each loaded once into an AudioBuffer.
-var sfxBuffers = {};
-function loadSfx(name, url) {
-  if (!audioCtx) return;
-  fetch(url)
-    .then(function(r){ return r.arrayBuffer(); })
-    .then(function(buf){ return audioCtx.decodeAudioData(buf); })
-    .then(function(decoded){ sfxBuffers[name] = decoded; })
-    .catch(function(e){ console.warn('[race] sfx load failed:', name, e.message); });
+function loadSfx(name,url){
+  if(!audioCtx) return;
+  fetch(url).then(function(r){return r.arrayBuffer();})
+    .then(function(buf){return audioCtx.decodeAudioData(buf);})
+    .then(function(d){sfxBuffers[name]=d;}).catch(function(){});
 }
-function sfx(name, gain) {
-  if (!audioReady || !sfxBuffers[name]) return;
-  var src = audioCtx.createBufferSource();
-  src.buffer = sfxBuffers[name];
-  var g = audioCtx.createGain();
-  g.gain.value = gain || 0.7;
-  src.connect(g);
-  g.connect(audioCtx.destination);
-  src.start();
+function sfx(name,gain){
+  if(!audioReady||!sfxBuffers[name]) return;
+  var src=audioCtx.createBufferSource(); src.buffer=sfxBuffers[name];
+  var g=audioCtx.createGain(); g.gain.value=gain||0.7;
+  src.connect(g); g.connect(audioCtx.destination); src.start();
 }
-
-function updateEngineSound(speedKmh) {
-  if (!audioReady || !engineGain) return;
-  var norm = Math.min(speedKmh / 320, 1);
-  var pitch = 60 + norm * 200;
-  var vol = 0.08 + norm * 0.52;
-  var now = audioCtx.currentTime;
-  engineOsc.frequency.setTargetAtTime(pitch, now, 0.12);
-  engineOsc2.frequency.setTargetAtTime(pitch * 1.022, now, 0.12);
-  engineGain.gain.setTargetAtTime(vol, now, 0.08);
+function muteEngine(){ if(engineGain) engineGain.gain.setTargetAtTime(0,audioCtx.currentTime,0.1); }
+function updateEngineSound(kmh){
+  if(!audioReady||!engineGain) return;
+  var vol=Math.min(0.55,0.05+kmh/600);
+  var freq=80+kmh*1.8;
+  engineGain.gain.setTargetAtTime(vol,audioCtx.currentTime,0.05);
+  if(engineOsc) engineOsc.frequency.setTargetAtTime(freq,audioCtx.currentTime,0.05);
+  if(engineOsc2) engineOsc2.frequency.setTargetAtTime(freq+2,audioCtx.currentTime,0.05);
 }
-function muteEngine() {
-  if (!audioReady || !engineGain) return;
-  engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.2);
-}
-function playNitro() {
-  if (!audioReady) return;
-  // v5.4: layer MP3 whoosh on top of synth swoop for richer sound
-  sfx('nitro_whoosh', 0.6);
-  var buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.8, audioCtx.sampleRate);
-  var d = buf.getChannelData(0);
-  for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
-  var src = audioCtx.createBufferSource(); src.buffer = buf;
-  var flt = audioCtx.createBiquadFilter();
-  flt.type = 'bandpass'; flt.frequency.value = 2400; flt.Q.value = 0.6;
-  var g = audioCtx.createGain();
-  g.gain.setValueAtTime(0.6, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
-  src.start(); src.stop(audioCtx.currentTime + 0.85);
-  var osc = audioCtx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.6);
-  var og = audioCtx.createGain();
-  og.gain.setValueAtTime(0.4, audioCtx.currentTime);
-  og.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7);
-  osc.connect(og); og.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.75);
-}
-function playCorrect() {
-  if (!audioReady) return;
-  [660,880,1100].forEach(function(freq,i){
-    var osc = audioCtx.createOscillator();
-    var g = audioCtx.createGain();
-    osc.type='sine'; osc.frequency.value=freq;
-    g.gain.setValueAtTime(0, audioCtx.currentTime+i*.06);
-    g.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime+i*.06+.02);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+i*.06+.25);
-    osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(audioCtx.currentTime+i*.06);
-    osc.stop(audioCtx.currentTime+i*.06+.3);
+function playCorrect(){
+  if(!audioReady) return;
+  [523.25,659.25,783.99].forEach(function(f,i){
+    var t=audioCtx.currentTime+i*.07;
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.4,t+.03); g.gain.exponentialRampToValueAtTime(0.001,t+.3);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+.35);
   });
 }
-function playWrong() {
-  if (!audioReady) return;
-  // v5.4: tire screech + crash thud layered for impactful wrong-answer feedback
-  sfx('tire_screech', 0.5);
-  sfx('crash_thud', 0.4);
-  var osc = audioCtx.createOscillator();
-  osc.type='square';
-  osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-  osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime+.25);
-  var g = audioCtx.createGain();
-  g.gain.setValueAtTime(0.35, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+.3);
-  osc.connect(g); g.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime+.35);
-}
-function playStreakMilestone(sc) {
-  if (!audioReady) return;
-  var base = 440;
-  var notes = sc>=5?[base,base*1.25,base*1.5,base*2,base*2.5]:[base,base*1.25,base*1.5,base*2];
-  notes.forEach(function(freq,i){
-    var osc=audioCtx.createOscillator(); var g=audioCtx.createGain();
-    osc.type='triangle'; osc.frequency.value=freq;
+function playWrong(){
+  if(!audioReady) return;
+  [220,180].forEach(function(f,i){
     var t=audioCtx.currentTime+i*.08;
-    g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+.3);
-    osc.connect(g); g.connect(audioCtx.destination); osc.start(t); osc.stop(t+.35);
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sawtooth'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+.35);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+.4);
+  });
+  sfx('crash_thud',0.5); sfx('tire_screech',0.4);
+}
+function playNitro(){
+  if(!audioReady) return;
+  sfx('nitro_whoosh',0.8);
+  [880,1108,1320].forEach(function(f,i){
+    var t=audioCtx.currentTime+i*.05;
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.6,t+.04); g.gain.exponentialRampToValueAtTime(0.001,t+.8);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+.85);
   });
 }
-function playFinish() {
-  if (!audioReady) return;
-  // v5.4: crowd cheer layered with finish melody for celebration feel
-  sfx('crowd', 0.5);
-  var melody=[523,659,784,1047,784,1047,1175,1319];
-  melody.forEach(function(freq,i){
-    var osc=audioCtx.createOscillator(); var g=audioCtx.createGain();
-    osc.type=i%2===0?'sine':'triangle'; osc.frequency.value=freq;
+function playFinish(){
+  if(!audioReady) return;
+  sfx('crowd',0.7);
+  [523,659,784,1047].forEach(function(f,i){
     var t=audioCtx.currentTime+i*.12;
-    g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+.28);
-    osc.connect(g); g.connect(audioCtx.destination); osc.start(t); osc.stop(t+.32);
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.5,t+.05); g.gain.exponentialRampToValueAtTime(0.001,t+1);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+1.1);
   });
 }
-function playRevEngine() {
-  // Dramatic engine rev for cinematic entry
-  if (!audioReady) return;
-  var osc = audioCtx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(60, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(350, audioCtx.currentTime + 0.8);
-  osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 1.2);
-  var g = audioCtx.createGain();
-  g.gain.setValueAtTime(0, audioCtx.currentTime);
-  g.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
-  g.gain.setValueAtTime(0.5, audioCtx.currentTime + 0.8);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
-  var f = audioCtx.createBiquadFilter();
-  f.type = 'lowpass'; f.frequency.value = 800;
-  osc.connect(f); f.connect(g); g.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + 1.6);
+function playStreakMilestone(s){
+  if(!audioReady||s<3) return;
+  var f=440+s*80;
+  var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=f;
+  g.gain.setValueAtTime(0.4,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+.6);
+  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.65);
 }
-function playGoSound() {
-  if (!audioReady) return;
-  // v5.4: start beep MP3 layered with synth chord for big start moment
-  sfx('start_beep', 0.7);
-  // Big dramatic GO! chord
-  [330,415,523,659].forEach(function(freq, i) {
-    var osc = audioCtx.createOscillator(); var g = audioCtx.createGain();
-    osc.type = 'sine'; osc.frequency.value = freq;
-    var t = audioCtx.currentTime + i * 0.02;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.6, t + 0.04);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-    osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(t); osc.stop(t + 0.85);
-  });
-  // Tyre squeal
-  var noise = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.4, audioCtx.sampleRate);
-  var nd = noise.getChannelData(0);
-  for(var i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1);
-  var ns = audioCtx.createBufferSource(); ns.buffer = noise;
-  var nf = audioCtx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=3200; nf.Q.value=8;
-  var ng = audioCtx.createGain();
-  ng.gain.setValueAtTime(0.35, audioCtx.currentTime);
-  ng.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-  ns.connect(nf); nf.connect(ng); ng.connect(audioCtx.destination);
-  ns.start(); ns.stop(audioCtx.currentTime + 0.45);
-}
-function startBgMusic(masterNode) {
-  var bpm = 128;
-  var beat = 60 / bpm;
-  var step = 0;
-  var bassLine = [55,55,69,55,58,55,62,55];
-  var si = setInterval(function(){
-    if (!audioReady) { clearInterval(si); return; }
-    var s = step % 8;
-    if (s===0||s===4) kick();
-    if (s%2===0) hat(s===2||s===6?0.1:0.15);
-    if (s%2===0) bass(bassLine[Math.floor(step/2)%bassLine.length]);
+function startBgMusic(masterNode){
+  var bpm=128, beat=60/bpm, step=0;
+  var bassLine=[55,55,69,55,58,55,62,55];
+  var si=setInterval(function(){
+    if(!audioReady){clearInterval(si);return;}
+    var s=step%8;
+    if(s===0||s===4) kick(); if(s%2===0) hat(s===2||s===6?0.1:0.15); if(s%2===0) bass(bassLine[Math.floor(step/2)%bassLine.length]);
     step++;
-  }, beat * 500);
-  function kick(){
-    var o=audioCtx.createOscillator(); var g=audioCtx.createGain();
-    o.type='sine'; o.frequency.setValueAtTime(180,audioCtx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(35,audioCtx.currentTime+.14);
-    g.gain.setValueAtTime(0.55,audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+.22);
-    o.connect(g); g.connect(masterNode); o.start(); o.stop(audioCtx.currentTime+.25);
-  }
-  function hat(vol){
-    var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.06,audioCtx.sampleRate);
-    var d=buf.getChannelData(0);
-    for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
-    var s=audioCtx.createBufferSource(); s.buffer=buf;
-    var f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=9000;
-    var g=audioCtx.createGain(); g.gain.value=vol||.15;
-    s.connect(f); f.connect(g); g.connect(masterNode); s.start();
-  }
-  function bass(freq){
-    var o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=freq;
-    var f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=320;
-    var g=audioCtx.createGain();
-    g.gain.setValueAtTime(0.25,audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+beat*.85);
-    o.connect(f); f.connect(g); g.connect(masterNode); o.start(); o.stop(audioCtx.currentTime+beat);
-  }
-  musicNodes.push({ stop: function(){ clearInterval(si); } });
+  },beat*500);
+  function kick(){ var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(180,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(35,audioCtx.currentTime+.14); g.gain.setValueAtTime(0.55,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+.22); o.connect(g); g.connect(masterNode); o.start(); o.stop(audioCtx.currentTime+.25); }
+  function hat(vol){ var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.06,audioCtx.sampleRate); var d=buf.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1); var s=audioCtx.createBufferSource(); s.buffer=buf; var f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=9000; var g=audioCtx.createGain(); g.gain.value=vol||.15; s.connect(f); f.connect(g); g.connect(masterNode); s.start(); }
+  function bass(freq){ var o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=freq; var f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=320; var g=audioCtx.createGain(); g.gain.setValueAtTime(0.25,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+beat*.85); o.connect(f); f.connect(g); g.connect(masterNode); o.start(); o.stop(audioCtx.currentTime+beat); }
+  musicNodes.push({stop:function(){clearInterval(si);}});
 }
-function stopAllMusic() {
-  musicNodes.forEach(function(n){ try{ n.stop(); }catch(_){} });
-  musicNodes = [];
-  muteEngine();
+function stopAllMusic(){ musicNodes.forEach(function(n){try{n.stop();}catch(_){}});  musicNodes=[]; muteEngine(); }
+
+/* ════════════════════════════════════════════════
+   TRACK GEOMETRY — same as RaceHost, no HUD offset
+════════════════════════════════════════════════ */
+var RAW_WP = [
+  [0.44,0.08],[0.60,0.08],[0.72,0.09],[0.80,0.18],[0.82,0.30],
+  [0.82,0.50],[0.82,0.70],[0.80,0.82],[0.72,0.91],[0.56,0.92],
+  [0.44,0.92],[0.30,0.92],[0.16,0.91],[0.08,0.82],[0.06,0.70],
+  [0.06,0.50],[0.06,0.30],[0.08,0.18],[0.16,0.09],[0.30,0.08]
+];
+var N_SAMP=480;
+var trackSamples=[], outerEdge=[], innerEdge=[];
+var TRACK_W=0, KW=0, KH=0;
+var AREA_W=0, AREA_H=0;
+var trackBuilt=false, builtW=0, builtH=0;
+
+function cr1d(p0,p1,p2,p3,t){
+  var t2=t*t,t3=t2*t;
+  return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);
+}
+function splinePt(t){
+  t=((t%1)+1)%1;
+  var n=RAW_WP.length,seg=Math.floor(t*n),lt=t*n-seg;
+  var i0=(seg-1+n)%n,i1=seg,i2=(seg+1)%n,i3=(seg+2)%n;
+  return{x:cr1d(RAW_WP[i0][0],RAW_WP[i1][0],RAW_WP[i2][0],RAW_WP[i3][0],lt)*AREA_W,
+         y:cr1d(RAW_WP[i0][1],RAW_WP[i1][1],RAW_WP[i2][1],RAW_WP[i3][1],lt)*AREA_H};
+}
+function buildTrack(){
+  TRACK_W=Math.max(36,Math.min(AREA_W,AREA_H)*0.092);
+  KW=Math.max(13,TRACK_W*0.36); KH=KW*1.55;
+  trackSamples=[]; outerEdge=[]; innerEdge=[];
+  for(var i=0;i<N_SAMP;i++){
+    var t=i/N_SAMP,p=splinePt(t),p2=splinePt(t+0.001);
+    var dx=p2.x-p.x,dy=p2.y-p.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+    var tx=dx/len,ty=dy/len,nx=ty,ny=-tx;
+    trackSamples.push({x:p.x,y:p.y,angle:Math.atan2(ty,tx),nx:nx,ny:ny});
+    outerEdge.push({x:p.x+nx*TRACK_W*.5,y:p.y+ny*TRACK_W*.5});
+    innerEdge.push({x:p.x-nx*TRACK_W*.5,y:p.y-ny*TRACK_W*.5});
+  }
+  builtW=AREA_W; builtH=AREA_H; trackBuilt=true;
+  initPerspView();
+}
+function ensureTrack(){if(!trackBuilt||AREA_W!==builtW||AREA_H!==builtH) buildTrack();}
+function getTrackPos(t){
+  t=((t%1)+1)%1;
+  return trackSamples[Math.floor(t*N_SAMP)%N_SAMP];
 }
 
-/* ============ 3D CAR BUILDER ============ */
-function roundRect(ctx,x,y,w,h,r){
+/* ════════════════ CANVAS SETUP ════════════════ */
+var gCanvas=el('game-canvas');
+function resizeCanvas(){
+  var bp=el('bottom-panel');
+  var panH=(!bp||bp.classList.contains('hidden'))?0:bp.getBoundingClientRect().height;
+  var vv=window.visualViewport;
+  var w=vv?vv.width:window.innerWidth;
+  var vh=vv?vv.height:window.innerHeight;
+  var h=Math.max(120,vh-panH);
+  if(gCanvas.width!==Math.round(w)||gCanvas.height!==Math.round(h)){
+    gCanvas.width=Math.round(w); gCanvas.height=Math.round(h);
+    gCanvas.style.height=h+'px';
+    gCanvas.style.bottom=panH+'px';
+    AREA_W=gCanvas.width; AREA_H=gCanvas.height;
+    trackBuilt=false;
+  }
+}
+window.addEventListener('resize',function(){ if(gameRunning) resizeCanvas(); });
+if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){ if(gameRunning) resizeCanvas(); });
+
+/* ════════════════ RENDER UTILITIES ════════════════ */
+function rrFill(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
   ctx.beginPath();
   ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+r,r); ctx.lineTo(x+w,y+h-r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r);
+  ctx.arcTo(x,y,x+r,y,r); ctx.closePath(); ctx.fill();
+}
+function hexAdjust(hex,amt){
+  var r=parseInt(hex.slice(1,3),16)||0,g=parseInt(hex.slice(3,5),16)||0,b=parseInt(hex.slice(5,7),16)||0;
+  function cl(v){return Math.max(0,Math.min(255,v+amt));}
+  return '#'+[cl(r),cl(g),cl(b)].map(function(v){return('0'+v.toString(16)).slice(-2)}).join('');
+}
+function localCurv(i){
+  var prev=trackSamples[(i-3+N_SAMP)%N_SAMP].angle,curr=trackSamples[i].angle;
+  var d=curr-prev; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+  return Math.abs(d);
+}
+
+/* ════════════════════════════════════════════════
+   TRACK RENDERER
+════════════════════════════════════════════════ */
+function drawTrack(ctx){
+  // Grass background
+  var gGrad=ctx.createLinearGradient(0,0,AREA_W,AREA_H);
+  gGrad.addColorStop(0,'#3a7c41'); gGrad.addColorStop(.5,'#4a8e50'); gGrad.addColorStop(1,'#3a7c41');
+  ctx.fillStyle=gGrad; ctx.fillRect(0,0,AREA_W,AREA_H);
+  for(var s=0;s<14;s++){
+    ctx.fillStyle=s%2===0?'rgba(255,255,255,.024)':'rgba(0,0,0,.024)';
+    ctx.fillRect(s*(AREA_W/7),0,AREA_W/7,AREA_H);
+  }
+  // Infield
+  ctx.beginPath();
+  ctx.moveTo(innerEdge[0].x,innerEdge[0].y);
+  for(var i=1;i<N_SAMP;i++) ctx.lineTo(innerEdge[i].x,innerEdge[i].y);
+  ctx.closePath(); ctx.fillStyle='#2e6136'; ctx.fill();
+  // Track surface ring
+  ctx.beginPath();
+  ctx.moveTo(outerEdge[0].x,outerEdge[0].y);
+  for(var i=1;i<N_SAMP;i++) ctx.lineTo(outerEdge[i].x,outerEdge[i].y);
   ctx.closePath();
-}
-
-// v5.4: shared GLB car model — loaded once, cloned per player.
-// Source: Pagani Zonda Cinque Roadster (CC-BY) at /assets/race/cars/sportcar.glb
-var carGlbModel = null;
-var carGlbLoadAttempted = false;
-function loadCarGlbModel(onReady) {
-  if (carGlbModel) { onReady(); return; }
-  if (carGlbLoadAttempted) { onReady(); return; }  // already failed, skip
-  carGlbLoadAttempted = true;
-  if (typeof THREE.GLTFLoader !== 'function') {
-    console.warn('[race] GLTFLoader not available — falling back to procedural cars');
-    onReady();
-    return;
+  ctx.moveTo(innerEdge[N_SAMP-1].x,innerEdge[N_SAMP-1].y);
+  for(var j=N_SAMP-2;j>=0;j--) ctx.lineTo(innerEdge[j].x,innerEdge[j].y);
+  ctx.closePath();
+  var ag=ctx.createRadialGradient(AREA_W/2,AREA_H/2,0,AREA_W/2,AREA_H/2,Math.max(AREA_W,AREA_H)*.65);
+  ag.addColorStop(0,'#252538'); ag.addColorStop(1,'#191926');
+  ctx.fillStyle=ag; ctx.fill('evenodd');
+  // Borders
+  ctx.lineWidth=2.2; ctx.strokeStyle='rgba(255,255,255,.56)';
+  ctx.beginPath();
+  for(var i=0;i<N_SAMP;i++){if(!i)ctx.moveTo(outerEdge[i].x,outerEdge[i].y);else ctx.lineTo(outerEdge[i].x,outerEdge[i].y);}
+  ctx.closePath(); ctx.stroke();
+  ctx.beginPath();
+  for(var i=0;i<N_SAMP;i++){if(!i)ctx.moveTo(innerEdge[i].x,innerEdge[i].y);else ctx.lineTo(innerEdge[i].x,innerEdge[i].y);}
+  ctx.closePath(); ctx.stroke();
+  // Dashed center line
+  ctx.setLineDash([TRACK_W*.34,TRACK_W*.52]); ctx.strokeStyle='rgba(255,255,255,.13)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(var i=0;i<N_SAMP;i++){var s=trackSamples[i];if(!i)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y);}
+  ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  // Kerbs
+  var kw=TRACK_W*.09; ctx.lineWidth=kw; ctx.lineCap='butt';
+  var sl=Math.max(3,Math.round(N_SAMP*.009));
+  for(var i=0;i<N_SAMP;i++){
+    if(localCurv(i)<0.007) continue;
+    var seg=Math.floor(i/sl)%2; ctx.strokeStyle=seg===0?'#e74c3c':'#f0f0f0';
+    var ni=(i+1)%N_SAMP;
+    ctx.beginPath(); ctx.moveTo(outerEdge[i].x,outerEdge[i].y); ctx.lineTo(outerEdge[ni].x,outerEdge[ni].y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(innerEdge[i].x,innerEdge[i].y); ctx.lineTo(innerEdge[ni].x,innerEdge[ni].y); ctx.stroke();
   }
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    '/Edurena/assets/race/cars/sportcar.glb',
-    function(gltf) {
-      console.log('[race] GLB car loaded successfully');
-      carGlbModel = gltf.scene;
-      // Pre-compute bounds to normalize size + center
-      var box = new THREE.Box3().setFromObject(carGlbModel);
-      var size = box.getSize(new THREE.Vector3());
-      var center = box.getCenter(new THREE.Vector3());
-      // Normalize: target length ≈ 4 units (matches our previous procedural car length)
-      var targetLength = 4;
-      var scale = targetLength / size.z;
-      carGlbModel.userData.scale = scale;
-      carGlbModel.userData.centerOffset = new THREE.Vector3(-center.x * scale, -box.min.y * scale, -center.z * scale);
-      onReady();
-    },
-    undefined,
-    function(err) {
-      console.warn('[race] GLB car load failed, using procedural fallback:', err);
-      onReady();
-    }
-  );
+  ctx.lineCap='round';
+  // Finish line
+  var s0=trackSamples[0];
+  var TILE=Math.max(4,Math.round(TRACK_W/8)), nAcross=Math.ceil(TRACK_W/TILE)+2, nAlong=3;
+  ctx.save(); ctx.translate(s0.x,s0.y); ctx.rotate(s0.angle);
+  for(var r=0;r<nAlong;r++) for(var c=0;c<nAcross;c++){
+    ctx.fillStyle=(r+c)%2===0?'#fff':'#111';
+    ctx.fillRect((r-nAlong/2)*TILE,(c-nAcross/2)*TILE,TILE,TILE);
+  }
+  ctx.restore();
 }
 
-function createCar(colorInt, colorHex, name, isPlayer) {
-  // v5.4: if the GLB car model has loaded, use it (cloned per player, tinted
-  // with their color). Falls through to procedural geometry if GLB isn't ready.
-  if (carGlbModel) {
-    var glbCar = carGlbModel.clone(true);
-    var s = carGlbModel.userData.scale || 1;
-    var off = carGlbModel.userData.centerOffset || new THREE.Vector3();
-    glbCar.scale.set(s, s, s);
-    glbCar.position.copy(off);
+/* ════════════════════════════════════════════════
+   KART RENDERER — top-down cartoon karts
+════════════════════════════════════════════════ */
+function drawKart(ctx,cx,cy,angle,col,label,rank,isMe){
+  var dark=hexAdjust(col,-50), w=KW, h=KH;
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle+Math.PI/2);
+  // Shadow
+  ctx.globalAlpha=.26; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(w*.12,h*.1,w*.5,h*.35,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  // Rear tires
+  ctx.fillStyle='#141414';
+  rrFill(ctx,-w*.53,h*.22,w*.21,h*.30,3); rrFill(ctx,w*.32,h*.22,w*.21,h*.30,3);
+  // Body gradient
+  var bg=ctx.createLinearGradient(-w*.35,-h*.44,w*.35,h*.44);
+  bg.addColorStop(0,hexAdjust(col,40)); bg.addColorStop(.45,col); bg.addColorStop(1,hexAdjust(col,-20));
+  ctx.fillStyle=bg; rrFill(ctx,-w*.37,-h*.44,w*.74,h*.88,w*.21);
+  // Side pods
+  ctx.fillStyle=hexAdjust(col,-16);
+  rrFill(ctx,-w*.55,-h*.10,w*.20,h*.36,4); rrFill(ctx,w*.35,-h*.10,w*.20,h*.36,4);
+  // Engine cover
+  ctx.fillStyle=hexAdjust(col,-34); rrFill(ctx,-w*.22,h*.07,w*.44,h*.24,4);
+  // Cockpit
+  ctx.fillStyle=hexAdjust(col,-40); rrFill(ctx,-w*.21,-h*.37,w*.42,h*.30,w*.12);
+  // Windshield
+  ctx.fillStyle='rgba(120,200,255,.38)'; rrFill(ctx,-w*.16,-h*.34,w*.32,h*.17,w*.08);
+  // Driver head
+  ctx.fillStyle='#F0C898';
+  ctx.beginPath(); ctx.arc(0,-h*.15,w*.16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=dark;
+  ctx.beginPath(); ctx.arc(0,-h*.18,w*.16,-Math.PI*.93,.07); ctx.fill();
+  // Front tires
+  ctx.fillStyle='#141414';
+  rrFill(ctx,-w*.53,-h*.32,w*.19,h*.24,3); rrFill(ctx,w*.34,-h*.32,w*.19,h*.24,3);
+  // Front wing
+  ctx.fillStyle=dark; rrFill(ctx,-w*.47,-h*.46,w*.94,h*.08,2);
+  // Position number
+  ctx.fillStyle='#fff';
+  ctx.font='bold '+Math.round(w*.40)+'px Orbitron,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(rank||'?'),0,h*.22);
+  // ME glow ring
+  if(isMe){
+    ctx.strokeStyle='rgba(255,230,50,.9)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.ellipse(0,0,w*.62,h*.56,0,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.restore();
+  // Name label (world space, upright)
+  var lblY=cy-h*.82;
+  ctx.save();
+  ctx.font='600 '+Math.max(8,Math.round(KW*.50))+'px "Plus Jakarta Sans",sans-serif';
+  var tw=ctx.measureText(label).width;
+  ctx.fillStyle='rgba(5,8,16,.88)'; rrFill(ctx,cx-tw/2-5,lblY-9,tw+10,17,4);
+  ctx.fillStyle=isMe?'#ffe832':'#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label,cx,lblY);
+  ctx.restore();
+}
 
-    // Tint: walk the cloned tree, replace each material's color with the player's
-    glbCar.traverse(function(child) {
-      if (child.isMesh && child.material) {
-        // Clone material so each car can have independent color
-        var mat = child.material.clone();
-        if (mat.color) mat.color.setHex(colorInt);
-        child.material = mat;
-      }
+/* ════════════════ PARTICLES 2D ════════════════ */
+var particles2d=[];
+function spawnBoost2d(pos,laneOff,strong){
+  var bx=pos.x+pos.nx*laneOff-Math.cos(pos.angle)*KH*.55;
+  var by=pos.y+pos.ny*laneOff-Math.sin(pos.angle)*KH*.55;
+  var n=strong?5:2;
+  for(var i=0;i<n;i++){
+    var spd=.8+Math.random()*2.2,spr=(Math.random()-.5)*1.4;
+    particles2d.push({x:bx,y:by,
+      vx:-Math.cos(pos.angle)*spd+Math.sin(pos.angle)*spr,
+      vy:-Math.sin(pos.angle)*spd-Math.cos(pos.angle)*spr,
+      life:1,size:2.5+Math.random()*4,
+      col:['#ff9500','#ffe100','#ff5500','#ffdd44'][Math.floor(Math.random()*4)]
     });
-
-    // Wrap in a group so we have a stable parent for nameplate + userData
-    var group = new THREE.Group();
-    group.add(glbCar);
-
-    // Nameplate (other cars only; player's own car doesn't get one)
-    if (!isPlayer && name) {
-      var cv = document.createElement('canvas');
-      cv.width = 256; cv.height = 64;
-      var ctx = cv.getContext('2d');
-      ctx.fillStyle = 'rgba(8,12,20,0.95)';
-      ctx.fillRect(0,0,256,64);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(name).slice(0,12), 128, 32);
-      var nTex = new THREE.CanvasTexture(cv);
-      var nMat = new THREE.MeshBasicMaterial({ map: nTex, transparent: true });
-      var lbl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), nMat);
-      lbl.position.set(0, 2.4, 0);
-      group.add(lbl);
-      group.userData.nameLabel = lbl;
-    }
-
-    group.userData.wheels = [];  // wheels are part of GLB mesh, not separately animated
-    group.userData.exhaustPos = new THREE.Vector3(0, 0.3, 2.2);
-    group.userData.color = colorInt;
-    group.userData.colorHex = colorHex;
-    group.userData.name = name;
-    group.userData.isPlayer = isPlayer;
-    group.userData.isGlb = true;
-    return group;
   }
-
-  // ===== Fallback: procedural geometry (when GLB not yet loaded) =====
-  var group = new THREE.Group();
-  group.userData.wheels = [];
-
-  // Body — main hull
-  var bodyMat = new THREE.MeshStandardMaterial({
-    color: colorInt,
-    metalness: 0.45,
-    roughness: 0.45
+}
+function spawnWrong2d(pos,laneOff){
+  var bx=pos.x+pos.nx*laneOff,by=pos.y+pos.ny*laneOff;
+  for(var i=0;i<6;i++){
+    var a=Math.random()*Math.PI*2,spd=.5+Math.random()*1.5;
+    particles2d.push({x:bx,y:by,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,
+      life:1,size:3+Math.random()*3,col:'rgba(160,160,160,'});
+  }
+}
+function updateParticles2d(dt){
+  particles2d=particles2d.filter(function(p){
+    p.x+=p.vx; p.y+=p.vy; p.life-=dt*1.8; p.size*=.97;
+    return p.life>0&&p.size>.4;
   });
-  var body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.55, 4.0), bodyMat);
-  body.position.y = 0.55;
-  group.add(body);
-
-  // Cabin (greenhouse)
-  var cabinMat = new THREE.MeshStandardMaterial({
-    color: 0x111722,
-    metalness: 0.9,
-    roughness: 0.1,
-    transparent: true,
-    opacity: 0.9
+}
+function drawParticles2d(ctx){
+  particles2d.forEach(function(p){
+    ctx.save(); ctx.globalAlpha=p.life*.85;
+    ctx.fillStyle=p.col.startsWith('rgba')?p.col+p.life+')':p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+    ctx.restore();
   });
-  var cabin = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.45, 2.0), cabinMat);
-  cabin.position.set(0, 1.0, -0.15);
-  group.add(cabin);
+}
 
-  // Hood + trunk slope hint (small wedges to break up box shape)
-  var hood = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.18, 1.0), bodyMat);
-  hood.position.set(0, 0.85, -1.4);
-  group.add(hood);
-  var trunk = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.18, 0.7), bodyMat);
-  trunk.position.set(0, 0.85, 1.5);
-  group.add(trunk);
+/* ════════════════════════════════════════════════
+   PERSPECTIVE BEHIND-KART RENDERER
+════════════════════════════════════════════════ */
+var PERSP_H=0, PERSP_F=0, PERSP_CAM=0;
 
-  // Wheels — black tire, light rim
-  var wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.3, roughness: 0.85 });
-  var rimMat   = new THREE.MeshStandardMaterial({ color: 0xb0b0b0, metalness: 0.9, roughness: 0.25 });
-  var wheelPos = [
-    [-0.95, 0.4, -1.3], [0.95, 0.4, -1.3],
-    [-0.95, 0.4,  1.3], [0.95, 0.4,  1.3]
-  ];
-  wheelPos.forEach(function(p) {
-    var wg = new THREE.Group();
-    var tire = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
-    tire.rotation.z = Math.PI / 2;
-    wg.add(tire);
-    var rim = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.32, 12), rimMat);
-    rim.rotation.z = Math.PI / 2;
-    wg.add(rim);
-    wg.position.set(p[0], p[1], p[2]);
-    group.add(wg);
-    group.userData.wheels.push(wg);
-  });
+function initPerspView(){
+  PERSP_H   = AREA_H * 0.42;
+  PERSP_F   = AREA_H - PERSP_H;
+  PERSP_CAM = Math.max(8, TRACK_W * 0.4);
+}
 
-  // Headlights — small emissive blocks at front (-Z)
-  var hlMat = new THREE.MeshStandardMaterial({
-    color: 0xfff4d6, emissive: 0xfff0c0, emissiveIntensity: 1.0
-  });
-  var hl1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.1), hlMat);
-  hl1.position.set(-0.55, 0.6, -2.0); group.add(hl1);
-  var hl2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.1), hlMat);
-  hl2.position.set( 0.55, 0.6, -2.0); group.add(hl2);
+/* Project another player into screen space; returns {x, y, fwd} or null */
+function projectKart(p, pIdx, pSeg, cosA, sinA){
+  var t    = ((p.progress||0)%1+1)%1;
+  var oIdx = Math.floor(t*N_SAMP)%N_SAMP;
+  var oSeg = trackSamples[oIdx];
+  var lo   = (p.laneX||0)/14*TRACK_W;
+  var wx   = oSeg.x+oSeg.nx*lo, wy=oSeg.y+oSeg.ny*lo;
+  var dx   = wx-pSeg.x, dy=wy-pSeg.y;
+  var fwd  = dx*cosA+dy*sinA;
+  var lat  = -dx*sinA+dy*cosA;
+  if(fwd<PERSP_CAM*2.5) return null;
+  var sy   = PERSP_H+PERSP_F*PERSP_CAM/fwd;
+  if(sy<PERSP_H||sy>AREA_H) return null;
+  var sc   = PERSP_F/fwd;
+  return {x:AREA_W*0.5+lat*sc, y:sy, fwd:fwd};
+}
 
-  // Taillights — small red emissive blocks at rear (+Z)
-  var tlMat = new THREE.MeshStandardMaterial({
-    color: 0x550000, emissive: 0xff2020, emissiveIntensity: 1.2
-  });
-  var tl1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.08), tlMat);
-  tl1.position.set(-0.55, 0.65, 2.0); group.add(tl1);
-  var tl2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.08), tlMat);
-  tl2.position.set( 0.55, 0.65, 2.0); group.add(tl2);
+/* Roadside trees, drawn far-to-near */
+function drawRoadsideTrees(ctx, pIdx, pSeg, cosA, sinA){
+  var STEP=28;
+  for(var look=160; look>=8; look-=STEP){
+    for(var side=-1; side<=1; side+=2){
+      var idx=(pIdx+look)%N_SAMP;
+      var seg=trackSamples[idx];
+      var off=side*(TRACK_W*0.5+TRACK_W*1.1);
+      var wx=seg.x+seg.nx*off, wy=seg.y+seg.ny*off;
+      var dx=wx-pSeg.x, dy=wy-pSeg.y;
+      var fwd=dx*cosA+dy*sinA;
+      var lat=-dx*sinA+dy*cosA;
+      if(fwd<PERSP_CAM) continue;
+      var sy=PERSP_H+PERSP_F*PERSP_CAM/fwd;
+      if(sy<PERSP_H||sy>AREA_H) continue;
+      var sc=PERSP_F/fwd;
+      var sx=AREA_W*0.5+lat*sc;
+      var th=Math.max(4,64*sc), tw=Math.max(2,28*sc);
+      ctx.fillStyle='#5c3310';
+      ctx.fillRect(sx-tw*0.13, sy-th*0.36, tw*0.26, th*0.36);
+      ctx.fillStyle='#124a04';
+      ctx.beginPath(); ctx.ellipse(sx+tw*0.08,sy-th*0.72,tw*0.54,th*0.4,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#1c7a08';
+      ctx.beginPath(); ctx.ellipse(sx,sy-th*0.74,tw*0.54,th*0.4,0,0,Math.PI*2); ctx.fill();
+    }
+  }
+}
 
-  // Nameplate floating above — but NOT for the player's own car
-  // (you don't need to see your own name; it would just block the rear view).
-  // Other players still get nameplates so you can identify them.
-  if (name && !isPlayer) {
-    var canv = document.createElement('canvas');
-    canv.width = 256; canv.height = 64;
-    var ctx = canv.getContext('2d');
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    roundRect(ctx, 0, 0, 256, 64, 14); ctx.fill();
-    ctx.font = 'bold 22px Orbitron,monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = colorHex;
-    ctx.shadowColor = colorHex; ctx.shadowBlur = 10;
-    ctx.fillText((name || '?').slice(0, 12), 128, 40);
-    var nTex = new THREE.CanvasTexture(canv);
-    var nMat = new THREE.MeshBasicMaterial({
-      map: nTex, transparent: true, side: THREE.DoubleSide, depthWrite: false
+/* Draw a kart from behind: s = visual scale (own kart ≈ 0.88, others 0.1-1.2) */
+function drawKartBehind(ctx, kx, groundY, s, col, name, rank, fx){
+  if(s<0.04) return;
+  var dark=hexAdjust(col,-55), light=hexAdjust(col,55);
+  var BW=78*s, BH=36*s, TW=20*s, TH=26*s;
+  var WW=BW*1.55, WH=7*s;
+  var bodyTop=groundY-TH*0.55-BH;
+  ctx.save();
+  if(fx&&fx.nitro>0){ctx.shadowColor='#00aaff';ctx.shadowBlur=25*s;}
+  else if(fx&&fx.boost>0){ctx.shadowColor=col;ctx.shadowBlur=14*s;}
+  ctx.globalAlpha=Math.min(0.45,s*0.5); ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(kx,groundY+2*s,BW*0.9,TH*0.16,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+  ctx.fillStyle='#1a1a1a';
+  rrFill(ctx,kx-BW/2-TW*0.65,groundY-TH,TW,TH,3*s);
+  rrFill(ctx,kx+BW/2-TW*0.35,groundY-TH,TW,TH,3*s);
+  ctx.fillStyle='#2e2e2e';
+  rrFill(ctx,kx-BW/2-TW*0.65+TW*0.12,groundY-TH+TH*0.1,TW*0.76,TH*0.78,2*s);
+  rrFill(ctx,kx+BW/2-TW*0.35+TW*0.12,groundY-TH+TH*0.1,TW*0.76,TH*0.78,2*s);
+  ctx.fillStyle='#111'; rrFill(ctx,kx-BW/2-2,groundY-TH*0.3-4*s,BW+4,6*s,2);
+  var bg=ctx.createLinearGradient(kx-BW/2,bodyTop,kx+BW/2,bodyTop+BH);
+  bg.addColorStop(0,dark); bg.addColorStop(0.28,light); bg.addColorStop(0.7,col); bg.addColorStop(1,dark);
+  ctx.fillStyle=bg; rrFill(ctx,kx-BW/2,bodyTop,BW,BH,7*s);
+  ctx.fillStyle=hexAdjust(col,-22);
+  rrFill(ctx,kx-BW/2-6*s,bodyTop+BH*0.3,10*s,BH*0.5,3*s);
+  rrFill(ctx,kx+BW/2-4*s,bodyTop+BH*0.3,10*s,BH*0.5,3*s);
+  ctx.fillStyle=hexAdjust(col,-38); rrFill(ctx,kx-BW*0.25,bodyTop+BH*0.08,BW*0.5,BH*0.6,5*s);
+  ctx.fillStyle=dark;
+  rrFill(ctx,kx-WW/2,bodyTop-WH-8*s,6*s,WH+8*s,2*s);
+  rrFill(ctx,kx+WW/2-6*s,bodyTop-WH-8*s,6*s,WH+8*s,2*s);
+  ctx.fillStyle=hexAdjust(col,-10); rrFill(ctx,kx-WW/2,bodyTop-WH-2*s,WW,WH,2*s);
+  ctx.fillStyle=dark; rrFill(ctx,kx-BW*0.38,bodyTop-2*s,BW*0.76,4*s,2);
+  if(s>0.18){
+    ctx.fillStyle='#e8c890';
+    ctx.beginPath(); ctx.arc(kx,bodyTop+BH*0.18,11*s,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=col;
+    ctx.beginPath(); ctx.arc(kx,bodyTop+BH*0.14,11*s,Math.PI*0.08,Math.PI*0.92); ctx.fill();
+    ctx.fillStyle='rgba(80,200,255,0.5)';
+    ctx.beginPath(); ctx.ellipse(kx,bodyTop+BH*0.2,8*s,4*s,0,Math.PI*0.05,Math.PI*0.95); ctx.fill();
+  }
+  if(s>0.14){
+    ctx.save();
+    var pw=22*s, ph=15*s;
+    ctx.fillStyle='rgba(255,255,255,0.9)'; rrFill(ctx,kx-pw/2,groundY-TH*0.65-ph/2,pw,ph,2*s);
+    ctx.fillStyle='#111';
+    ctx.font='bold '+Math.round(Math.max(7,10*s))+'px Orbitron,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(rank||'?'),kx,groundY-TH*0.65);
+    ctx.restore();
+  }
+  if(s>0.22&&fx&&fx.nitro>0){
+    ctx.save(); ctx.globalAlpha=Math.max(0,fx.nitro)*0.8;
+    var fg=ctx.createLinearGradient(kx,groundY-TH*0.1,kx,groundY+TH*0.7);
+    fg.addColorStop(0,'rgba(80,200,255,1)'); fg.addColorStop(0.5,'rgba(0,80,255,0.7)'); fg.addColorStop(1,'rgba(0,0,200,0)');
+    ctx.fillStyle=fg;
+    ctx.beginPath(); ctx.ellipse(kx-BW*0.18,groundY-TH*0.1,4*s,20*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(kx+BW*0.18,groundY-TH*0.1,4*s,20*s,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+  if(s>0.15){
+    var lblY=bodyTop-WH-12*s;
+    ctx.save();
+    var fs=Math.round(Math.max(8,12*s));
+    ctx.font='700 '+fs+'px "Plus Jakarta Sans",sans-serif';
+    var tw2=ctx.measureText(name).width;
+    var px2=5*s,py2=3*s;
+    ctx.fillStyle='rgba(5,8,16,0.9)'; rrFill(ctx,kx-tw2/2-px2,lblY-py2,tw2+px2*2,fs+py2*2,3*s);
+    ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor=col; ctx.shadowBlur=5;
+    ctx.fillText(name,kx,lblY+fs/2);
+    ctx.restore();
+  }
+}
+
+/* Exhaust particles spawned from own kart fixed screen position */
+function spawnExhaustScreen(strong){
+  var bx=AREA_W*0.5, by=AREA_H*0.90;
+  var n=strong?5:2;
+  for(var i=0;i<n;i++){
+    var col=strong?'rgba(0,160,255,':'rgba(255,120,0,';
+    particles2d.push({
+      x:bx+(Math.random()-0.5)*22, y:by+(Math.random()*6),
+      vx:(Math.random()-0.5)*2.5, vy:Math.random()*3.5+1.5,
+      life:1, size:strong?(4+Math.random()*4):(2+Math.random()*2.5), col:col
     });
-    // Smaller plane (1.6 × 0.4 vs 2.5 × 0.6) + higher position (2.4 vs 2.0)
-    var lbl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), nMat);
-    lbl.position.set(0, 2.4, 0);
-    group.add(lbl);
-    group.userData.nameLabel = lbl;
   }
-
-  group.userData.exhaustPos = new THREE.Vector3(0, 0.3, 2.2);
-  group.userData.color = colorInt;
-  group.userData.colorHex = colorHex;
-  group.userData.name = name;
-  group.userData.isPlayer = isPlayer;
-  return group;
 }
 
-/* ============ TRACK GENERATION ============ */
-function generateTrack() {
-  // Clean rebuild — flat winding track, ground, sky, lane markings.
-  // No mountains, no buildings, no guardrails, no lamp posts, no shoulders.
-  // We add those back later, piece by piece, only after camera+track work.
+/* Main perspective render — replaces drawTrack + drawKart forEach */
+function drawPerspView(ctx, dt){
+  var pIdx   = Math.floor(myProgress_t*N_SAMP)%N_SAMP;
+  var pSeg   = trackSamples[pIdx];
+  var cosA   = Math.cos(pSeg.angle), sinA=Math.sin(pSeg.angle);
 
-  // 1) Track curve — flat (y=0), HAND-DESIGNED waypoints.
-  // v5.4: ABANDONED the sinusoidal formula entirely. Real race tracks have
-  // long STRAIGHTS connected by deliberate CORNERS — not continuous waves.
-  // The old sine-curve approach put bends at regular intervals along the
-  // entire loop, so at nitro speed the car would zigzag through 4-5 bends
-  // in one boost. Now: long straight stretches with discrete corners.
-  // Track shape: a stretched stadium-like loop with 4 sweeping corners
-  // and 4 long straights, similar to a real racing oval.
-  var pts = [];
-  // Stadium-shaped track: 4 long straights + 4 wide arcs at the corners.
-  // Total track length ~3000 units, mostly straight driving.
-  var L = 400;  // half-length of straights
-  var W = 200;  // half-width (curve radius)
-  var arcRes = 16;  // points along each corner arc
+  /* SKY */
+  var sg=ctx.createLinearGradient(0,0,0,PERSP_H);
+  sg.addColorStop(0,'#1a4fc8'); sg.addColorStop(0.55,'#87ceeb'); sg.addColorStop(1,'#c8e8f5');
+  ctx.fillStyle=sg; ctx.fillRect(0,0,AREA_W,PERSP_H);
+  ctx.save(); ctx.fillStyle='rgba(255,255,255,0.72)';
+  [[0.14,0.32,0.09,0.055],[0.48,0.2,0.12,0.048],[0.73,0.28,0.08,0.044]].forEach(function(c){
+    ctx.beginPath(); ctx.ellipse(c[0]*AREA_W,c[1]*PERSP_H,c[2]*AREA_W,c[3]*PERSP_H,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c[0]*AREA_W-c[2]*AREA_W*0.35,(c[1]+0.04)*PERSP_H,c[2]*AREA_W*0.7,c[3]*PERSP_H*0.8,0,0,Math.PI*2); ctx.fill();
+  }); ctx.restore();
+  var hg=ctx.createLinearGradient(0,PERSP_H-14,0,PERSP_H+8);
+  hg.addColorStop(0,'rgba(130,200,255,0)'); hg.addColorStop(0.5,'rgba(180,225,255,0.35)'); hg.addColorStop(1,'rgba(100,180,255,0)');
+  ctx.fillStyle=hg; ctx.fillRect(0,PERSP_H-14,AREA_W,22);
 
-  // Straight 1: (-L, 0, +W) → (+L, 0, +W)
-  for (var i = 0; i < 12; i++) {
-    pts.push(new THREE.Vector3(-L + (2*L * i/12), 0, W));
+  /* ROAD STRIPS — collect, sort far-to-near, draw */
+  var strips=[];
+  for(var look=2; look<=160; look+=2){
+    var idx=(pIdx+look)%N_SAMP;
+    var seg=trackSamples[idx];
+    var dx=seg.x-pSeg.x, dy=seg.y-pSeg.y;
+    var fwd=dx*cosA+dy*sinA, lat=-dx*sinA+dy*cosA;
+    if(fwd<PERSP_CAM) continue;
+    var sy=PERSP_H+PERSP_F*PERSP_CAM/fwd;
+    if(sy<PERSP_H||sy>AREA_H+6) continue;
+    var sc=PERSP_F/fwd;
+    strips.push({y:sy, x:AREA_W*0.5+lat*sc, hw:TRACK_W*0.5*sc, idx:idx, fwd:fwd, sc:sc});
   }
-  // Corner 1 (top-right): quarter arc from (+L, 0, +W) sweeping to (+L+W, 0, 0)
-  for (var i = 0; i <= arcRes; i++) {
-    var a = (Math.PI/2) * (i/arcRes);  // 0 to π/2
-    pts.push(new THREE.Vector3(L + W*Math.sin(a), 0, W*Math.cos(a)));
-  }
-  // Straight 2: down the right side (+L+W, 0, 0) → (+L+W, 0, -W) — but actually
-  // we want a continuous loop, so reverse direction: (+L+W, 0, 0) → ... back.
-  // Simpler: just continue with corner placement.
-  // Corner 2 (bottom-right): (+L+W, 0, 0) → (+L, 0, -W) via arc
-  for (var i = 1; i <= arcRes; i++) {
-    var a = (Math.PI/2) * (i/arcRes);
-    pts.push(new THREE.Vector3(L + W*Math.cos(a), 0, -W*Math.sin(a)));
-  }
-  // Straight 3: (+L, 0, -W) → (-L, 0, -W)
-  for (var i = 1; i < 12; i++) {
-    pts.push(new THREE.Vector3(L - (2*L * i/12), 0, -W));
-  }
-  // Corner 3 (bottom-left): (-L, 0, -W) → (-L-W, 0, 0)
-  for (var i = 0; i <= arcRes; i++) {
-    var a = (Math.PI/2) * (i/arcRes);
-    pts.push(new THREE.Vector3(-L - W*Math.sin(a), 0, -W*Math.cos(a)));
-  }
-  // Corner 4 (top-left): (-L-W, 0, 0) → (-L, 0, +W)
-  for (var i = 1; i <= arcRes; i++) {
-    var a = (Math.PI/2) * (i/arcRes);
-    pts.push(new THREE.Vector3(-L - W*Math.cos(a), 0, W*Math.sin(a)));
-  }
-  trackCurve = new THREE.CatmullRomCurve3(pts, true);
-  trackCurve.tension = 0.5;
-
-  // v5.4 (hofk pattern): pre-compute the WHOLE curve once. Cars use indexed
-  // lookup at runtime — no atan2, no smoothing, no zigzag. Rotation comes
-  // directly from the pre-computed tangent/binormal/normal vectors which
-  // ARE continuous along the curve by construction.
-  // Reference: https://github.com/hofk/threejsResources/tree/master/CarRacing
-  var SAMPLES = 1400;
-  trackSamples = SAMPLES;
-  trackPoints = [];
-  trackTangents = [];
-  trackNormals = [];
-  trackBinormals = [];
-  var prevBinormal = new THREE.Vector3(0, 1, 0);
-  for (var i = 0; i <= SAMPLES; i++) {
-    var ti = i / SAMPLES;
-    var p = trackCurve.getPointAt(ti);
-    var t = trackCurve.getTangentAt(ti);
-    var n = new THREE.Vector3().crossVectors(t, prevBinormal);
-    n.y = 0;
-    n.normalize();
-    var b = new THREE.Vector3().crossVectors(n, t);  // new binormal (up)
-    prevBinormal = b.clone();
-    trackPoints.push(p);
-    trackTangents.push(t);
-    trackNormals.push(n);
-    trackBinormals.push(b);
-  }
-  console.log('[race] pre-computed', SAMPLES, 'track samples');
-
-  // 2) Road extrusion — gray asphalt
-  // Use BufferGeometry from a strip of polygons along the curve, so the road
-  // sits AT y=0 (flat top, no extruded depth). Previous extrusion created
-  // a thick box that showed brown underside from below.
-  var STEPS = 2400;  // v5.4: bumped from 1600 for the longer track
-  var halfWidth = TRACK_WIDTH / 2;
-  var positions = new Float32Array((STEPS + 1) * 2 * 3);
-  var uvs       = new Float32Array((STEPS + 1) * 2 * 2);
-  var indices   = [];
-
-  for (var s = 0; s <= STEPS; s++) {
-    var tt = s / STEPS;
-    var pt = trackCurve.getPointAt(tt);
-    var tan = trackCurve.getTangentAt(tt);
-    var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
-    var left  = pt.clone().add(norm.clone().multiplyScalar( halfWidth));
-    var right = pt.clone().add(norm.clone().multiplyScalar(-halfWidth));
-    positions[s * 6 + 0] = left.x;  positions[s * 6 + 1] = 0.02; positions[s * 6 + 2] = left.z;
-    positions[s * 6 + 3] = right.x; positions[s * 6 + 4] = 0.02; positions[s * 6 + 5] = right.z;
-    uvs[s * 4 + 0] = 0; uvs[s * 4 + 1] = tt * 180;
-    uvs[s * 4 + 2] = 1; uvs[s * 4 + 3] = tt * 180;
-    if (s < STEPS) {
-      var i0 = s * 2, i1 = s * 2 + 1, i2 = (s + 1) * 2, i3 = (s + 1) * 2 + 1;
-      indices.push(i0, i2, i1);
-      indices.push(i1, i2, i3);
+  strips.sort(function(a,b){return a.y-b.y;});
+  for(var i=0;i<strips.length-1;i++){
+    var s0=strips[i], s1=strips[i+1];
+    if(s1.y<=s0.y) continue;
+    var alt=Math.floor(s0.idx/20)%2;
+    /* grass band */
+    ctx.fillStyle=alt?'#3e9444':'#4aac50';
+    ctx.fillRect(0,s0.y,AREA_W,s1.y-s0.y);
+    /* road surface */
+    ctx.fillStyle=alt?'#272730':'#33333a';
+    ctx.beginPath();
+    ctx.moveTo(s0.x-s0.hw,s0.y); ctx.lineTo(s0.x+s0.hw,s0.y);
+    ctx.lineTo(s1.x+s1.hw,s1.y); ctx.lineTo(s1.x-s1.hw,s1.y);
+    ctx.closePath(); ctx.fill();
+    /* centre dashes */
+    if(alt){
+      var cd=Math.max(0.5,s0.hw*0.05);
+      ctx.fillStyle='rgba(255,255,255,0.55)';
+      ctx.beginPath();
+      ctx.moveTo(s0.x-cd,s0.y); ctx.lineTo(s0.x+cd,s0.y);
+      ctx.lineTo(s1.x+cd,s1.y); ctx.lineTo(s1.x-cd,s1.y);
+      ctx.closePath(); ctx.fill();
+    }
+    /* yellow edge lines */
+    var ew=Math.max(0.5,s0.hw*0.055);
+    ctx.save(); ctx.shadowColor='#ffcc00'; ctx.shadowBlur=3*s0.sc;
+    ctx.fillStyle='#ffcc00';
+    ctx.beginPath();
+    ctx.moveTo(s0.x-s0.hw-ew,s0.y); ctx.lineTo(s0.x-s0.hw+ew,s0.y);
+    ctx.lineTo(s1.x-s1.hw+ew,s1.y); ctx.lineTo(s1.x-s1.hw-ew,s1.y);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(s0.x+s0.hw-ew,s0.y); ctx.lineTo(s0.x+s0.hw+ew,s0.y);
+    ctx.lineTo(s1.x+s1.hw+ew,s1.y); ctx.lineTo(s1.x+s1.hw-ew,s1.y);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    /* red/white kerbs on corners */
+    var curv=localCurv(s0.idx);
+    if(curv>0.007){
+      var ka=Math.floor(s0.idx/7)%2;
+      ctx.fillStyle=ka?'#ee2211':'#f0f0f0';
+      var kw=s0.hw*0.14;
+      ctx.beginPath();
+      ctx.moveTo(s0.x-s0.hw,s0.y); ctx.lineTo(s0.x-s0.hw-kw,s0.y);
+      ctx.lineTo(s1.x-s1.hw-kw,s1.y); ctx.lineTo(s1.x-s1.hw,s1.y);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(s0.x+s0.hw,s0.y); ctx.lineTo(s0.x+s0.hw+kw,s0.y);
+      ctx.lineTo(s1.x+s1.hw+kw,s1.y); ctx.lineTo(s1.x+s1.hw,s1.y);
+      ctx.closePath(); ctx.fill();
     }
   }
-  var roadGeo = new THREE.BufferGeometry();
-  roadGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  roadGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-  roadGeo.setIndex(indices);
-  roadGeo.computeVertexNormals();
 
-  // Asphalt canvas texture
-  var asphCanvas = document.createElement('canvas');
-  asphCanvas.width = 256; asphCanvas.height = 256;
-  var aCtx = asphCanvas.getContext('2d');
-  aCtx.fillStyle = '#2a2a2e'; aCtx.fillRect(0, 0, 256, 256);
-  for (var n = 0; n < 1500; n++) {
-    var ax = Math.random() * 256, ay = Math.random() * 256;
-    var b = Math.random();
-    aCtx.fillStyle = b < 0.5
-      ? 'rgba(0,0,0,' + (b * 0.45) + ')'
-      : 'rgba(255,255,255,' + ((b - 0.5) * 0.12) + ')';
-    aCtx.fillRect(ax, ay, 1.4, 1.4);
-  }
-  var asphaltTex = new THREE.CanvasTexture(asphCanvas);
-  asphaltTex.wrapS = asphaltTex.wrapT = THREE.RepeatWrapping;
+  /* ROADSIDE TREES */
+  drawRoadsideTrees(ctx, pIdx, pSeg, cosA, sinA);
 
-  var roadMat = new THREE.MeshStandardMaterial({
-    map: asphaltTex,
-    metalness: 0.05,
-    roughness: 0.92
+  /* OTHER PLAYER KARTS — far to near */
+  var allSorted=Object.values(allPlayers).sort(function(a,b){
+    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
+    return (b.progress||0)-(a.progress||0);
   });
-  var roadMesh = new THREE.Mesh(roadGeo, roadMat);
-  scene.add(roadMesh);
-
-  // 3) Lane markings — solid yellow center + solid white edge lines
-  function makeLine(offset, color, dashed) {
-    var pts = [];
-    for (var i = 0; i <= 1500; i++) {  // v5.4: more samples for the longer track
-      var t2 = i / 1500;
-      var p2 = trackCurve.getPointAt(t2);
-      var tan = trackCurve.getTangentAt(t2);
-      var norm = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
-      p2.add(norm.multiplyScalar(offset));
-      p2.y = 0.04;
-      pts.push(p2);
-    }
-    var geo = new THREE.BufferGeometry().setFromPoints(pts);
-    var mat = dashed
-      ? new THREE.LineDashedMaterial({ color: color, dashSize: 4, gapSize: 4, transparent: true, opacity: 0.9 })
-      : new THREE.LineBasicMaterial({ color: color });
-    var line = new THREE.Line(geo, mat);
-    if (dashed) line.computeLineDistances();
-    scene.add(line);
-  }
-  // Yellow center line, solid
-  makeLine(0, 0xf0c040, false);
-  // White outer edges, solid
-  makeLine( halfWidth - 0.3, 0xffffff, false);
-  makeLine(-halfWidth + 0.3, 0xffffff, false);
-  // Dashed white between center and edges (lane dividers)
-  makeLine( halfWidth / 2, 0xffffff, true);
-  makeLine(-halfWidth / 2, 0xffffff, true);
-
-  // 4) Ground plane (large green-brown grass field, extends past horizon)
-  var groundCanvas = document.createElement('canvas');
-  groundCanvas.width = 256; groundCanvas.height = 256;
-  var gCtx = groundCanvas.getContext('2d');
-  gCtx.fillStyle = '#3d4a30'; gCtx.fillRect(0, 0, 256, 256);
-  for (var n = 0; n < 2000; n++) {
-    var gx = Math.random() * 256, gy = Math.random() * 256;
-    var b = Math.random();
-    gCtx.fillStyle = b < 0.5
-      ? 'rgba(25,35,18,' + (b * 0.5) + ')'
-      : 'rgba(110,125,75,' + ((b - 0.5) * 0.35) + ')';
-    gCtx.fillRect(gx, gy, 1.6, 1.6);
-  }
-  var groundTex = new THREE.CanvasTexture(groundCanvas);
-  groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
-  groundTex.repeat.set(60, 60);
-  var ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(3000, 3000),  // v5.4: bigger for the bigger track
-    new THREE.MeshStandardMaterial({ map: groundTex, metalness: 0, roughness: 1 })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = 0;  // sit at y=0, road sits at y=0.02 on top of it
-  scene.add(ground);
-
-  // 5) Start/finish stripe + overhead arch.
-  // v5.4: stored as scene globals so renderLoop can show/hide them based on
-  // player progress. Hidden by default during gameplay — revealed only in the
-  // final ~15% of the track (when player is approaching the finish line).
-  // Visible during pre-race so players see where the line is.
-  var sfPt = trackCurve.getPointAt(0);
-  var sfTan = trackCurve.getTangentAt(0);
-  var sfNorm = new THREE.Vector3(-sfTan.z, 0, sfTan.x).normalize();
-
-  // Checker stripe on the road
-  var cCanvas = document.createElement('canvas');
-  cCanvas.width = 64; cCanvas.height = 64;
-  var cCtx = cCanvas.getContext('2d');
-  for (var cy = 0; cy < 8; cy++) for (var cx = 0; cx < 8; cx++) {
-    cCtx.fillStyle = (cx + cy) % 2 === 0 ? '#fff' : '#000';
-    cCtx.fillRect(cx * 8, cy * 8, 8, 8);
-  }
-  var sfTex = new THREE.CanvasTexture(cCanvas);
-  sfTex.wrapS = sfTex.wrapT = THREE.RepeatWrapping;
-  sfTex.repeat.set(8, 1);
-  var sfStripe = new THREE.Mesh(
-    new THREE.PlaneGeometry(TRACK_WIDTH, 2.5),
-    new THREE.MeshStandardMaterial({ map: sfTex, roughness: 0.8 })
-  );
-  sfStripe.position.copy(sfPt); sfStripe.position.y = 0.05;
-  sfStripe.lookAt(sfPt.clone().add(sfTan));
-  sfStripe.rotateX(-Math.PI / 2);
-  scene.add(sfStripe);
-
-  // Overhead arch — two posts + horizontal banner with "FINISH" text.
-  // Built as one group so we can toggle visibility together.
-  var archGroup = new THREE.Group();
-
-  var postMat = new THREE.MeshStandardMaterial({
-    color: 0xeeeeee, metalness: 0.4, roughness: 0.5
+  var myRank=1;
+  allSorted.forEach(function(p,rank){if(p.pid===playerId) myRank=rank+1;});
+  var toRender=[];
+  allSorted.forEach(function(p,rank){
+    if(p.pid===playerId) return;
+    var proj=projectKart(p,pIdx,pSeg,cosA,sinA);
+    if(!proj) return;
+    toRender.push({proj:proj, p:p, rank:rank+1});
   });
-  var postGeo = new THREE.BoxGeometry(0.6, 9, 0.6);
-  var postL = new THREE.Mesh(postGeo, postMat);
-  postL.position.copy(sfPt).add(sfNorm.clone().multiplyScalar(TRACK_WIDTH/2 + 1));
-  postL.position.y = 4.5;
-  archGroup.add(postL);
-  var postR = new THREE.Mesh(postGeo, postMat);
-  postR.position.copy(sfPt).add(sfNorm.clone().multiplyScalar(-(TRACK_WIDTH/2 + 1)));
-  postR.position.y = 4.5;
-  archGroup.add(postR);
-
-  // Banner — a wide panel with FINISH text baked into a canvas
-  var bannerCanvas = document.createElement('canvas');
-  bannerCanvas.width = 512; bannerCanvas.height = 96;
-  var bCtx = bannerCanvas.getContext('2d');
-  // Black-and-white checker border top and bottom
-  for (var bcx = 0; bcx < 64; bcx++) {
-    bCtx.fillStyle = bcx % 2 === 0 ? '#000' : '#fff';
-    bCtx.fillRect(bcx * 8, 0, 8, 12);
-    bCtx.fillStyle = bcx % 2 === 0 ? '#fff' : '#000';
-    bCtx.fillRect(bcx * 8, 84, 8, 12);
-  }
-  // Red banner middle
-  bCtx.fillStyle = '#c41e3a';
-  bCtx.fillRect(0, 12, 512, 72);
-  // "FINISH" text
-  bCtx.fillStyle = '#fff';
-  bCtx.font = 'bold 48px Orbitron, monospace';
-  bCtx.textAlign = 'center';
-  bCtx.textBaseline = 'middle';
-  bCtx.fillText('FINISH', 256, 50);
-  var bannerTex = new THREE.CanvasTexture(bannerCanvas);
-  var bannerMat = new THREE.MeshStandardMaterial({
-    map: bannerTex, side: THREE.DoubleSide, roughness: 0.8
+  toRender.sort(function(a,b){return b.proj.fwd-a.proj.fwd;});
+  toRender.forEach(function(item){
+    var ksc=Math.min(1.2, PERSP_CAM*2.4/item.proj.fwd);
+    drawKartBehind(ctx,item.proj.x,item.proj.y,ksc,item.p.color||'#888',(item.p.name||'?').slice(0,8),item.rank,{});
   });
-  var banner = new THREE.Mesh(
-    new THREE.PlaneGeometry(TRACK_WIDTH + 3, 2.2),
-    bannerMat
-  );
-  banner.position.copy(sfPt);
-  banner.position.y = 8.5;
-  banner.lookAt(sfPt.clone().add(sfTan).setY(8.5));
-  archGroup.add(banner);
 
-  scene.add(archGroup);
+  /* PARTICLES */
+  drawParticles2d(ctx);
+  updateParticles2d(dt);
 
-  // Store globals so renderLoop can show/hide based on flag
-  window.__finishStripe = sfStripe;
-  window.__finishArch = archGroup;
-  // v5.4: HIDDEN by default. renderLoop reveals them only after the player
-  // has answered the last question (finishLineRevealed flag flips true).
-  sfStripe.visible = false;
-  archGroup.visible = false;
-
-  // 6) Particle pool (kept — used by spawnNitroParticles)
-  var pCount = 300;
-  var pGeo = new THREE.BufferGeometry();
-  var pPos = new Float32Array(pCount * 3);
-  var pCol = new Float32Array(pCount * 3);
-  var pSiz = new Float32Array(pCount);
-  for (var i = 0; i < pCount; i++) { pPos[i*3]=0; pPos[i*3+1]=-100; pPos[i*3+2]=0; pSiz[i]=0; }
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-  pGeo.setAttribute('color',    new THREE.BufferAttribute(pCol, 3));
-  pGeo.setAttribute('size',     new THREE.BufferAttribute(pSiz, 1));
-  particleSystem = new THREE.Points(pGeo, new THREE.PointsMaterial({
-    size: 0.5, vertexColors: true, transparent: true, opacity: 0.8,
-    blending: THREE.AdditiveBlending, depthWrite: false
-  }));
-  scene.add(particleSystem);
-
-  // 7) Speed lines (kept — used by updateSpeedLines)
-  for (var i = 0; i < 30; i++) {
-    var slGeo = new THREE.BufferGeometry();
-    var slPos = new Float32Array(6);
-    slGeo.setAttribute('position', new THREE.BufferAttribute(slPos, 3));
-    var sl = new THREE.Line(slGeo, new THREE.LineBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: 0
-    }));
-    scene.add(sl);
-    speedLines.push({ mesh: sl, active: false, speed: 0 });
-  }
-}
-
-/* ============ 3D SCENE INIT ============ */
-function init3D() {
-  // Clean rebuild — minimal, verified-working renderer + scene + sky + lights.
-  var canvas = el('game-canvas');
-  scene = new THREE.Scene();
-
-  // Sunset gradient sky via CanvasTexture on a large sphere
-  var skyCanvas = document.createElement('canvas');
-  skyCanvas.width = 16; skyCanvas.height = 512;
-  var sCtx = skyCanvas.getContext('2d');
-  var grad = sCtx.createLinearGradient(0, 0, 0, 512);
-  grad.addColorStop(0.00, '#1a1f3a');  // upper sky — deep blue
-  grad.addColorStop(0.50, '#5a3a6a');  // mid — violet
-  grad.addColorStop(0.75, '#c66050');  // sunset pink-red
-  grad.addColorStop(1.00, '#f0b070');  // horizon — warm orange
-  sCtx.fillStyle = grad; sCtx.fillRect(0, 0, 16, 512);
-  var skyTex = new THREE.CanvasTexture(skyCanvas);
-  var skyMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(1500, 32, 16),  // v5.4: 1000→1500 for the even bigger track
-    new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, depthWrite: false })
-  );
-  scene.add(skyMesh);
-
-  // Mild fog for distance haze (dusk tone). Density 0.0025 — light enough to see
-  // the far side of the bigger track, dense enough for atmospheric depth.
-  scene.fog = new THREE.FogExp2(0x553a48, 0.0025);
-
-  // Camera — wide FOV for racing feel
-  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 3000);
-
-  // Renderer — mobile-aware
-  renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: !IS_MOBILE,
-    alpha: false,
-    powerPreference: IS_MOBILE ? 'low-power' : 'high-performance'
-  });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = false;  // off by default — keep mobile fast; can re-enable later
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
-  renderer.outputEncoding = THREE.sRGBEncoding;
-
-  // Lighting — sunset
-  scene.add(new THREE.AmbientLight(0x554844, 0.7));         // soft warm ambient fill
-  var sun = new THREE.DirectionalLight(0xffd0a0, 1.0);      // warm directional sun
-  sun.position.set(80, 60, 100);
-  scene.add(sun);
-
-  generateTrack();
-  canvas.style.display = 'block';
-  resizeCanvasAbovePanel();  // v5.4: fit canvas above panel from frame 1
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', function() {
-    setTimeout(onResize, 250);
-  });
-  // v5.4: visualViewport is the proper API for tracking the visible area on
-  // mobile (handles keyboard, address bar collapse, pinch-zoom). Without this,
-  // first-load on mobile leaves the panel below the visible area until the
-  // user interacts with the screen.
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', onResize);
-    window.visualViewport.addEventListener('scroll', onResize);
-  }
-  // v5.4: force recalculation a few times during the first 3 seconds —
-  // mobile browsers settle their viewport over the first few hundred ms.
-  setTimeout(onResize, 100);
-  setTimeout(onResize, 500);
-  setTimeout(onResize, 1500);
-  setTimeout(onResize, 3000);
-}
-
-function onResize() {
-  if (!camera || !renderer) return;
-  resizeCanvasAbovePanel();
-}
-
-// v5.4: resize the 3D canvas so it ONLY occupies the area above the
-// question panel. This solves "car covered by panel" without any camera
-// math gymnastics — the 3D scene physically doesn't extend into the
-// panel area. The canvas's bottom edge is moved up to where the panel
-// starts.
-function resizeCanvasAbovePanel() {
-  if (!camera || !renderer) return;
-  var canvas = el('game-canvas');
-  var panel  = el('bottom-panel');
-  var panelHeight = 0;
-  if (panel && !panel.classList.contains('hidden')) {
-    panelHeight = panel.getBoundingClientRect().height;
-  }
-  // v5.4: prefer visualViewport (the actually-visible area on mobile) over
-  // window.innerHeight (which includes hidden parts behind address bars).
-  var vv = window.visualViewport;
-  var w = vv ? vv.width : window.innerWidth;
-  var vh = vv ? vv.height : window.innerHeight;
-  var h = Math.max(120, vh - panelHeight);
-  canvas.style.height = h + 'px';
-  canvas.style.bottom = panelHeight + 'px';
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-}
-
-/* ============ TRACK POSITIONING ============ */
-function getTrackData(t) {
-  var clamped = ((t % 1) + 1) % 1;
-  return {
-    position: trackCurve.getPointAt(clamped),
-    tangent:  trackCurve.getTangentAt(clamped),
-    normal:   new THREE.Vector3(-trackCurve.getTangentAt(clamped).z, 0, trackCurve.getTangentAt(clamped).x).normalize()
+  /* OWN KART — fixed at bottom centre */
+  var now2=Date.now();
+  var myFx={
+    nitro: now2<nitroUntil?Math.min(1,(nitroUntil-now2)/2000):0,
+    boost: now2<boostUntil?Math.min(1,(boostUntil-now2)/800):0
   };
-}
+  var myCol=(allPlayers[playerId]&&allPlayers[playerId].color)||NEON_HEX[0];
+  drawKartBehind(ctx, AREA_W*0.5, AREA_H*0.90, 0.88, myCol, 'YOU', myRank, myFx);
 
-// Cached temp objects (avoid garbage collection per frame)
-var _tmpM3 = new THREE.Matrix3();
-var _tmpM4 = new THREE.Matrix4();
-
-function placeCarOnTrack(car, t, laneOff, bankAngle) {
-  // v5.4 (hofk pattern): use pre-computed curve data, set rotation from
-  // T/B/N matrix. This is the rotation = continuous along the track,
-  // no atan2 sampling, no smoothing lerp, no zigzag.
-  if (!trackPoints.length) return;
-  var clamped = ((t % 1) + 1) % 1;
-  var idx = Math.floor(clamped * trackSamples);
-  if (idx > trackSamples) idx = trackSamples;
-  if (idx < 0) idx = 0;
-
-  var p = trackPoints[idx];
-  var tg = trackTangents[idx];
-  var nm = trackNormals[idx];
-  var bn = trackBinormals[idx];
-
-  // Position = curve point + lane offset along normal + ride-height along binormal
-  car.position.set(
-    p.x + nm.x * laneOff,
-    p.y + bn.y * 0.5,
-    p.z + nm.z * laneOff
-  );
-
-  // Rotation matrix: car's local axes map to world axes via M3 columns.
-  //   Local +X (right)  → world N (normal)
-  //   Local +Y (up)     → world B (binormal)
-  //   Local +Z          → world -T (negative tangent)  ← negated!
-  // Why negated: createCar puts headlights at LOCAL -Z (front of car).
-  // We want the car's front to face the direction of motion = world +T.
-  // So local -Z must map to world +T, meaning local +Z maps to world -T.
-  // M3.set is row-major: each row is one row of the matrix.
-  // Row 0: M[0,0], M[0,1], M[0,2] = [N.x, B.x, -T.x]
-  // Row 1: [N.y, B.y, -T.y]
-  // Row 2: [N.z, B.z, -T.z]
-  _tmpM3.set(
-    nm.x,  bn.x,  -tg.x,
-    nm.y,  bn.y,  -tg.y,
-    nm.z,  bn.z,  -tg.z
-  );
-  _tmpM4.setFromMatrix3(_tmpM3);
-  car.setRotationFromMatrix(_tmpM4);
-
-  if (car.userData.wheels) car.userData.wheels.forEach(function(w){ w.rotation.x += 0.3; });
-  if (car.userData.nameLabel) car.userData.nameLabel.lookAt(camera.position);
-}
-
-/* ============ CAMERA — HexGL-inspired chase ============ */
-// Adapted from BKcore/HexGL CameraChase.js — direct-copy chase camera
-// (no lerp on position). Smoothness comes from the CAR's rotation being
-// lerped, not the camera. Camera derives its direction from the car's
-// current rotation, so when the car rotates smoothly through a turn,
-// the camera also moves smoothly — no zigzag.
-function updateCamera(dt, speedKmh) {
-  if (!playerCar) return;
-  if (!trackPoints.length) return;
-
-  // v5.4 (hofk pattern): use pre-computed tangent/binormal at the same
-  // index the car is at. Pre-computed arrays are CONTINUOUS along the
-  // curve by construction — no atan2, no smoothing lerp, no zigzag.
-  var clamped = ((myProgress_t % 1) + 1) % 1;
-  var idx = Math.floor(clamped * trackSamples);
-  if (idx > trackSamples) idx = trackSamples;
-  if (idx < 0) idx = 0;
-
-  var carPos = playerCar.position;
-  var tg = trackTangents[idx];        // forward direction
-  var bn = trackBinormals[idx];        // up direction
-  // forward in WORLD = tangent direction (car's local -Z aligned to this)
-  // To position camera BEHIND car, subtract tangent.
-
-  // Mild speed-based shake (kept — feels good during nitro)
-  var shake = cameraShake * (speedKmh / 300);
-  var sx = (Math.random() - 0.5) * shake;
-  var sy = (Math.random() - 0.5) * shake;
-  var sz = (Math.random() - 0.5) * shake;
-  cameraShake *= cameraShakeDecay;
-
-  // v5.4: camera framing tuned so the car appears in upper-middle of view,
-  // clear of the question panel.
-  var CHASE_DIST   = 4.5;
-  var CHASE_HEIGHT = 1.8;
-  var LOOK_AHEAD   = 12;
-  var LOOK_HEIGHT  = 2.5;
-
-  // Camera position = car position - forward * distance + up * height
-  // (NOTE: tangent points FORWARD along track. Car's front faces tangent.
-  //  To put camera BEHIND the car, subtract tangent × distance.)
-  camera.position.set(
-    carPos.x - tg.x * CHASE_DIST + sx,
-    carPos.y + CHASE_HEIGHT + sy,
-    carPos.z - tg.z * CHASE_DIST + sz
-  );
-
-  camera.lookAt(
-    carPos.x + tg.x * LOOK_AHEAD,
-    carPos.y + LOOK_HEIGHT,
-    carPos.z + tg.z * LOOK_AHEAD
-  );
-}
-
-// v5.4: Camera mode locked to chase during gameplay. Previously the camera
-// would flip to 'hood' on overtakes and 'cinematic' on wrong answers, which
-// felt disorienting — players lost their sense of where they were going.
-// Now setCameraMode is a no-op for everything except 'chase'. Dramatic
-// camera moves (slow-motion side-wheel shots on overtake, etc.) are reserved
-// for the future host spectator view, not the player's own view.
-function setCameraMode(mode, ms) {
-  // Always force chase — ignore the requested mode entirely.
-  cameraMode = 'chase';
-}
-
-/* ============ PARTICLES ============ */
-function spawnNitroParticles(car) {
-  var epos = car.userData.exhaustPos.clone().applyMatrix4(car.matrixWorld);
-  var pos=particleSystem.geometry.attributes.position.array;
-  var col=particleSystem.geometry.attributes.color.array;
-  var siz=particleSystem.geometry.attributes.size.array;
-  for(var i=0;i<10;i++){
-    var idx=Math.floor(Math.random()*(pos.length/3));
-    pos[idx*3]=epos.x+(Math.random()-.5)*.5;
-    pos[idx*3+1]=epos.y+(Math.random()-.5)*.3;
-    pos[idx*3+2]=epos.z+(Math.random()-.5)*.5;
-    var c=new THREE.Color(car.userData.color);
-    col[idx*3]=c.r; col[idx*3+1]=c.g; col[idx*3+2]=c.b;
-    siz[idx]=.3+Math.random()*.5;
-    particleData[idx]={ velocity:new THREE.Vector3((Math.random()-.5)*2,Math.random()*2,(Math.random()-.5)*2), life:1, decay:.02+Math.random()*.03 };
-  }
-  particleSystem.geometry.attributes.position.needsUpdate=true;
-  particleSystem.geometry.attributes.color.needsUpdate=true;
-  particleSystem.geometry.attributes.size.needsUpdate=true;
-}
-
-function updateParticles(dt) {
-  var pos=particleSystem.geometry.attributes.position.array;
-  var col=particleSystem.geometry.attributes.color.array;
-  var siz=particleSystem.geometry.attributes.size.array;
-  var dirty=false;
-  for(var i=0;i<particleData.length;i++){
-    if(!particleData[i]) continue;
-    var p=particleData[i]; p.life-=p.decay;
-    if(p.life<=0){ pos[i*3+1]=-100; siz[i]=0; particleData[i]=null; dirty=true; continue; }
-    pos[i*3]+=p.velocity.x*dt; pos[i*3+1]+=p.velocity.y*dt; pos[i*3+2]+=p.velocity.z*dt;
-    p.velocity.y+=0.5*dt; siz[i]*=.98;
-    col[i*3+1]*=.99; col[i*3+2]*=.99;
-    dirty=true;
-  }
-  if(dirty){
-    particleSystem.geometry.attributes.position.needsUpdate=true;
-    particleSystem.geometry.attributes.color.needsUpdate=true;
-    particleSystem.geometry.attributes.size.needsUpdate=true;
-  }
-}
-
-function updateSpeedLines(speedKmh, dt) {
-  var isNitro=nitroUntil>Date.now();
-  var intensity=isNitro?1:(speedKmh>200?.5:0);
-  speedLines.forEach(function(sl){
-    if(intensity<=0){ sl.mesh.material.opacity=0; return; }
-    if(!sl.active&&Math.random()<intensity*.3){
-      sl.active=true; sl.speed=50+Math.random()*100;
-      var p=sl.mesh.geometry.attributes.position.array;
-      var sx=(Math.random()-.5)*20, sy=Math.random()*10, sz=-5-Math.random()*10;
-      p[0]=sx;p[1]=sy;p[2]=sz; p[3]=sx;p[4]=sy;p[5]=sz-5;
-      sl.mesh.geometry.attributes.position.needsUpdate=true;
+  /* SPEED LINES during boost/nitro */
+  if(myFx.nitro>0||myFx.boost>0){
+    var intensity=myFx.nitro||myFx.boost*0.5;
+    ctx.save(); ctx.strokeStyle='rgba(0,180,255,'+(intensity*0.16)+')';
+    for(var li=0;li<12;li++){
+      ctx.lineWidth=Math.random()*1.5+0.5;
+      ctx.beginPath();
+      var lx=Math.random()*AREA_W, ly=PERSP_H+Math.random()*(AREA_H-PERSP_H);
+      ctx.moveTo(lx,ly); ctx.lineTo(lx+Math.random()*55+15,ly); ctx.stroke();
     }
-    if(sl.active){
-      var p=sl.mesh.geometry.attributes.position.array;
-      p[2]+=sl.speed*dt; p[5]+=sl.speed*dt;
-      sl.mesh.geometry.attributes.position.needsUpdate=true;
-      sl.mesh.material.opacity=intensity*(1-(p[2]+5)/50);
-      if(p[2]>20){ sl.active=false; sl.mesh.material.opacity=0; }
-    }
-  });
+    ctx.restore();
+  }
+
+  /* Spawn exhaust from own kart */
+  if(Math.random()<0.22) spawnExhaustScreen(now2<nitroUntil);
 }
 
-/* ============ PRE-RACE CINEMATIC SEQUENCE ============ */
-// v5.4 SYNC: total fixed intro duration (cinematic + countdown).
-// All players target gameplay-start at startedAt + RACE_INTRO_MS.
-// Cinematic phase = (RACE_INTRO_MS - RACE_COUNTDOWN_MS), countdown is locked.
-var RACE_INTRO_MS = 9000;         // ~5.5s cinematic + 3.45s countdown
-var RACE_COUNTDOWN_MS = 3450;     // 3 ticks × 900ms + 750ms final "GO!"
+/* ════════════════════════════════════════════════
+   2D RENDER LOOP
+════════════════════════════════════════════════ */
+function renderLoop(ts){
+  if(!gameRunning){rafId=null;return;}
+  rafId=requestAnimationFrame(renderLoop);
+  var dt=Math.min(.05,(ts-(lastTime||ts))/1000); lastTime=ts;
 
-function runPreRaceCinematic(serverStartedAt) {
-  // Clean rebuild — minimal pre-race. No dramatic camera sweep, no roll-in
-  // animation. Cars just appear on the grid. Synchronized countdown begins
-  // at the server-anchored moment. Then gameplay takes over with chase camera.
+  // Speed update
+  var now=Date.now();
+  if(now<nitroUntil)      targetSpeed=nitroSpeed;
+  else if(now<boostUntil) targetSpeed=boostSpeed;
+  else if(now<wrongUntil) targetSpeed=wrongSpeed;
+  else                    targetSpeed=baseSpeed;
+  currentSpeed+=(targetSpeed-currentSpeed)*Math.min(1,dt*5);
 
-  // 1) Show canvas
-  el('game-canvas').style.display = 'block';
-
-  // 2) Un-hide bottom panel with placeholder so mobile shows UI immediately
-  // v5.4: defensive — force all visibility styles
-  var bpCin = el('bottom-panel');
-  bpCin.classList.remove('hidden');
-  bpCin.style.display = 'block';
-  bpCin.style.visibility = 'visible';
-  bpCin.style.opacity = '1';
-  bpCin.style.zIndex = '9999';
-  el('q-num').textContent = 'GET READY';
-  el('q-txt').textContent = 'Race starting…';
-  el('q-area').innerHTML = '';
-  // v5.4: resize canvas to fit ABOVE the now-visible panel
-  setTimeout(resizeCanvasAbovePanel, 50);
-
-  // 3) Create + place all player cars on the grid
-  var playerList = Object.values(allPlayers);
-  playerList.forEach(function(p, i) {
-    var cIdx = i % NEON_COLORS.length;
-    if (p.color) {
-      var hi = NEON_HEX.indexOf(p.color);
-      if (hi >= 0) cIdx = hi;
-    }
-    var cInt = NEON_COLORS[cIdx];
-    var cHex = NEON_HEX[cIdx];
-    var isMe = (p.pid === playerId);
-    if (isMe) { cInt = playerColorInt; cHex = playerColorHex; }
-
-    var car = createCar(cInt, cHex, p.name || '?', isMe);
-    var gridT = 0.98 - (i * 0.004);  // staggered slightly back from start line
-    var laneOff = laneOffsets[i % laneOffsets.length];
-    placeCarOnTrack(car, gridT, laneOff, 0);
-    scene.add(car);
-
-    if (isMe) { playerCar = car; }
-    else { otherCars[p.pid] = car; }
-    allPlayers[p.pid].laneX = laneOff;
-  });
-
-  // 4) Position camera once, behind player car, looking ahead.
-  // Pre-position so the first frame already shows the correct view —
-  // no jarring teleport when gameplay starts.
-  if (playerCar) {
-    var pcPos = playerCar.position.clone();
-    var pcT = (0.98 - ((playerList.findIndex(function(p){ return p.pid === playerId; }) || 0) * 0.004));
-    pcT = ((pcT % 1) + 1) % 1;
-    // v5.4 hofk: use pre-computed tangent at the same index for consistency
-    var pcIdx = Math.floor(pcT * trackSamples);
-    if (pcIdx > trackSamples) pcIdx = trackSamples;
-    if (pcIdx < 0) pcIdx = 0;
-    var pcTg = trackTangents[pcIdx];
-    camera.position.set(
-      pcPos.x - pcTg.x * 4.5,
-      pcPos.y + 1.8,
-      pcPos.z - pcTg.z * 4.5
-    );
-    camera.lookAt(
-      pcPos.x + pcTg.x * 12,
-      pcPos.y + 2.5,
-      pcPos.z + pcTg.z * 12
-    );
+  // Advance my position
+  if(!myFinished){
+    myProgress+=currentSpeed*dt;
+    myProgress_t=myProgress%1;
   }
 
-  // 5) Synchronized timing — all players target the same gameplay-start moment
-  var now = Date.now();
-  var elapsedSinceStart = now - serverStartedAt;
-  var msUntilGameplay = Math.max(0, RACE_INTRO_MS - elapsedSinceStart);
-  var msUntilCountdown = Math.max(0, msUntilGameplay - RACE_COUNTDOWN_MS);
-  console.log('[race-sync] startedAt=' + serverStartedAt + ' now=' + now +
-              ' elapsed=' + elapsedSinceStart + 'ms' +
-              ' countdown_in=' + msUntilCountdown + 'ms' +
-              ' gameplay_in=' + msUntilGameplay + 'ms');
+  // Canvas & geometry
+  resizeCanvas();
+  if(!AREA_W||!AREA_H) return;
+  ensureTrack();
+  var ctx2=gCanvas.getContext('2d');
+  ctx2.clearRect(0,0,AREA_W,AREA_H);
+  drawPerspView(ctx2, dt);
 
-  // If player joined SO late they missed everything, skip straight to gameplay
-  if (msUntilGameplay <= 100) {
-    console.warn('[race-sync] player joined late, skipping intro');
-    startRaceGameplay();
-    return;
-  }
-
-  // 6) Render a few frames so the static grid view is visible during the wait.
-  // This is a minimal idle loop — just renders the static scene; cars don't move.
-  var preRaceRafId = null;
-  var preRaceActive = true;
-  function preRaceFrame() {
-    if (!preRaceActive) return;
-    // Keep nameplates facing camera
-    if (playerCar && playerCar.userData.nameLabel) playerCar.userData.nameLabel.lookAt(camera.position);
-    Object.values(otherCars).forEach(function(c) {
-      if (c.userData.nameLabel) c.userData.nameLabel.lookAt(camera.position);
+  // Firebase sync (~10% of frames)
+  if(!myFinished&&Math.random()<0.10){
+    db.ref('race/'+raceId+'/players/'+playerId).update({
+      progress:myProgress_t,
+      updatedAt:firebase.database.ServerValue.TIMESTAMP
     });
-    renderer.render(scene, camera);
-    preRaceRafId = requestAnimationFrame(preRaceFrame);
   }
-  preRaceFrame();
-
-  // 7) Schedule countdown
-  setTimeout(function() {
-    el('q-txt').textContent = 'Starting…';
-    setTimeout(function() {
-      preRaceActive = false;
-      if (preRaceRafId) cancelAnimationFrame(preRaceRafId);
-      runCountdown();
-    }, 200);
-  }, Math.max(0, msUntilCountdown - 200));
-}
-
-/* ============ COUNTDOWN ============ */
-function runCountdown() {
-  var overlay = el('countdown-overlay');
-  var numEl   = el('countdown-num');
-  var count   = 3;
-
-  overlay.classList.add('show');
-  numEl.style.color = '#fff';
-  numEl.style.textShadow = '0 0 60px var(--acc), 0 0 120px var(--pur)';
-
-  function tick() {
-    if (count > 0) {
-      numEl.textContent = count;
-      // Re-trigger animation
-      numEl.style.animation = 'none';
-      void numEl.offsetHeight;
-      numEl.style.animation = 'countPulse .85s cubic-bezier(.22,1,.36,1)';
-      // Beep
-      if (audioReady) {
-        var o=audioCtx.createOscillator(); var g=audioCtx.createGain();
-        o.type='sine'; o.frequency.value=count===1?880:440;
-        g.gain.setValueAtTime(0.5,audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+.3);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime+.35);
-      }
-      count--;
-      setTimeout(tick, 900);
-    } else {
-      numEl.textContent = 'GO!';
-      numEl.style.color = '#00ff88';
-      numEl.style.textShadow = '0 0 60px #00ff88, 0 0 120px #00ff88';
-      numEl.style.animation = 'none';
-      void numEl.offsetHeight;
-      numEl.style.animation = 'countPulse .85s cubic-bezier(.22,1,.36,1)';
-      playGoSound();
-      setTimeout(function() {
-        overlay.classList.remove('show');
-        startRaceGameplay();
-      }, 750);
-    }
-  }
-  tick();
-}
-
-/* ============ MAIN GAME RENDER LOOP ============ */
-function renderLoop(now) {
-  if (!gameRunning) return;
-  rafId = requestAnimationFrame(renderLoop);
-
-  var dt = Math.min((now - lastTime) / 1000, 0.05);
-  lastTime = now;
-  gameTime += dt;
-
-  // Physics
-  var time = Date.now();
-  if (nitroUntil > time)       targetSpeed = nitroSpeed;
-  else if (boostUntil > time)  targetSpeed = boostSpeed;
-  else if (wrongUntil > time)  targetSpeed = wrongSpeed;
-  else                          targetSpeed = baseSpeed;
-  currentSpeed += (targetSpeed - currentSpeed) * Math.min(dt * 5, 1);
-
-  // Advance position
-  // v5.4 finish behavior:
-  //  - During the race: advance normally.
-  //  - After last Q answered (myFinished=true): keep advancing UNTIL the
-  //    player actually reaches the finish line position; then freeze.
-  //  Prevents the car from looping past the finish line and the "I saw two
-  //  finish lines" bug, while still giving the satisfying drive-into-line
-  //  moment with nitro.
-  if (myFinished && typeof window.__finishT === 'number' && !window.__finishCrossed) {
-    // Compute distance from current progress to finish line (shortest along loop)
-    var dT = (window.__finishT - myProgress_t + 1) % 1;
-    if (dT < 0.02) {
-      // Reached the line — freeze here for dramatic stop
-      window.__finishCrossed = true;
-      var trackLenF = trackCurve.getLength();
-      playerPos = window.__finishT * trackLenF;
-      // v5.4: dramatic celebration at finish line crossing
-      cameraShake = 0.8;       // big shake
-      if (typeof sfx === 'function') sfx('crowd', 0.6);
-      spawnNitroParticles(playerCar);
-      spawnNitroParticles(playerCar);  // double burst
-    } else {
-      playerPos += currentSpeed * dt;
-    }
-  } else if (myFinished && window.__finishCrossed) {
-    // After crossing: hold position, coast speed down for visual stop
-    var trackLenF2 = trackCurve.getLength();
-    playerPos = window.__finishT * trackLenF2;
-    currentSpeed *= 0.85;
-  } else {
-    // Normal race progression
-    playerPos += currentSpeed * dt;
-  }
-  var trackLen = trackCurve ? trackCurve.getLength() : 2000;
-  myProgress_t = ((playerPos / trackLen) % 1 + 1) % 1;
-
-  // v5.4: Finish line visibility — HIDDEN throughout the race.
-  // Only appears after the player has answered their LAST question
-  // (finishLineRevealed = true). This creates a dramatic moment: as you
-  // submit the final answer, the FINISH arch suddenly appears ahead.
-  if (window.__finishStripe && window.__finishArch) {
-    window.__finishStripe.visible = finishLineRevealed;
-    window.__finishArch.visible   = finishLineRevealed;
-  }
-
-  // Banking
-  var bankAcc = 0;
-  for (var bi=0;bi<5;bi++) {
-    var bt = (myProgress_t + bi * 0.01) % 1;
-    var tan1 = trackCurve.getTangentAt(bt);
-    var tan2 = trackCurve.getTangentAt((bt+0.01)%1);
-    bankAcc += (tan2.x - tan1.x) * 10;
-  }
-  var bank = -bankAcc * 0.3;
-
-  // Update player car
-  var myLane = allPlayers[playerId] ? (allPlayers[playerId].laneX || 0) : 0;
-  if (playerCar) placeCarOnTrack(playerCar, myProgress_t, myLane, bank);
-
-  // Update other cars
-  Object.values(allPlayers).forEach(function(p) {
-    if (p.pid === playerId) return;
-    var car = otherCars[p.pid];
-    if (!car) {
-      var ci = Math.floor(Math.random() * NEON_COLORS.length);
-      car = createCar(NEON_COLORS[ci], NEON_HEX[ci], p.name||'?', false);
-      otherCars[p.pid] = car;
-      scene.add(car);
-    }
-    placeCarOnTrack(car, p.progress||0, p.laneX||0, 0);
-  });
-
-  // Camera & audio
-  var kmh = Math.round(currentSpeed * 0.012);
-  updateCamera(dt, kmh);
-  updateEngineSound(kmh);
-
-  // Effects
-  if (nitroUntil > time) { spawnNitroParticles(playerCar); cameraShake = 0.15; }
-  updateParticles(dt);
-  updateSpeedLines(kmh, dt);
 
   // HUD
-  el('hud-speed').textContent = kmh;
-  var gear = kmh<60?1:kmh<100?2:kmh<140?3:kmh<180?4:kmh<220?5:6;
-  el('hud-gear').textContent = 'GEAR ' + gear;
-
-  // Sync progress to Firebase (~every 10 frames)
-  if (!myFinished && Math.random() < 0.1) {
-    db.ref('race/' + raceId + '/players/' + playerId).update({
-      progress: myProgress_t,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
-    });
-  }
-
-  renderer.render(scene, camera);
+  var kmh=Math.round(currentSpeed*1400);
+  el('hud-speed').textContent=Math.min(kmh,699);
+  var gear=kmh<60?1:kmh<100?2:kmh<160?3:kmh<220?4:kmh<300?5:6;
+  el('hud-gear').textContent='GEAR '+gear;
+  updateEngineSound(kmh);
+  updateTimingStrip();
+  checkOvertakes();
 }
 
-/* ============ OVERTAKE SYSTEM ============ */
-var lastOvertakeTime = 0;
-var lastPositions = {};
-
-function checkOvertakes() {
-  var now = Date.now();
-  if (now - lastOvertakeTime < 3000) return;
-  var myRank = getMyRank();
-  Object.values(allPlayers).forEach(function(p) {
-    if (p.pid===playerId) return;
-    var lastPos = lastPositions[p.pid];
-    var currentPos = getPlayerRank(p.pid);
-    if (lastPos !== undefined) {
-      if (lastPos < myRank && currentPos > myRank) {
-        showOvertakeNotif('YOU OVERTOOK ' + (p.name||'?').toUpperCase());
-        // v5.4: removed setCameraMode('hood', 2000) + cameraShake=0.3 — those
-        // disoriented the player. Notification text alone signals the overtake.
-        lastOvertakeTime = now;
-      } else if (lastPos > myRank && currentPos < myRank) {
-        showPosChange('down','P'+currentPos);
-        lastOvertakeTime = now;
-      }
+/* ════════════════ COUNTDOWN / PRE-RACE ════════════════ */
+function runPreRaceCinematic(startedAt){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  gCanvas.style.display='block';
+  resizeCanvas();
+  // Sync countdown to server time
+  var now=Date.now(), elapsed=(now-startedAt)/1000;
+  var remaining=3-elapsed;
+  var overlay=el('countdown-overlay'), numEl=el('countdown-num');
+  if(remaining<=0){
+    startRaceGameplay(); return;
+  }
+  overlay.classList.add('show');
+  var startCount=Math.ceil(remaining);
+  function tick(){
+    var now2=Date.now(), el2=(now2-startedAt)/1000;
+    var cnt=Math.max(0,Math.ceil(3-el2));
+    numEl.className='countdown-num'; void numEl.offsetWidth;
+    numEl.className='countdown-num';
+    if(cnt===0){
+      numEl.textContent='GO!';
+      setTimeout(function(){overlay.classList.remove('show'); startRaceGameplay();},750);
+    } else {
+      numEl.textContent=String(cnt);
+      setTimeout(tick,1000);
     }
-    lastPositions[p.pid] = currentPos;
-  });
-  var myLastRank = lastPositions['me'];
-  if (myLastRank !== undefined && myLastRank !== myRank) {
-    if (myRank < myLastRank) showPosChange('up','P'+myRank);
   }
-  lastPositions['me'] = myRank;
+  // Start from the right count
+  numEl.textContent=String(startCount);
+  setTimeout(tick,1000);
 }
 
-function showOvertakeNotif(text) {
-  var e=el('overtake-notif');
-  e.textContent=text; e.classList.add('show');
-  setTimeout(function(){ e.classList.remove('show'); }, 2500);
-}
-function showPosChange(dir, text) {
-  var e=el('pos-change');
-  e.textContent=text; e.className='pos-change '+dir;
-  setTimeout(function(){ e.className='pos-change'; }, 1500);
-}
-
-function getMyRank() {
-  var ps=Object.values(allPlayers).sort(function(a,b){
-    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
-    return ((b.progress||0)-(a.progress||0));
+/* ════════════════════════════════════════════════
+   OVERTAKE SYSTEM
+════════════════════════════════════════════════ */
+var lastOvertakeTime=0, lastPositions={};
+function checkOvertakes(){
+  var now=Date.now(); if(now-lastOvertakeTime<3000) return;
+  var myRank=getMyRank();
+  Object.values(allPlayers).forEach(function(p){
+    if(p.pid===playerId) return;
+    var lastPos=lastPositions[p.pid], currentPos=getPlayerRank(p.pid);
+    if(lastPos!==undefined){
+      if(lastPos<myRank&&currentPos>myRank){ showOvertakeNotif('YOU OVERTOOK '+(p.name||'?').toUpperCase()); lastOvertakeTime=now; }
+      else if(lastPos>myRank&&currentPos<myRank){ showPosChange('down','P'+currentPos); lastOvertakeTime=now; }
+    }
+    lastPositions[p.pid]=currentPos;
   });
-  var idx=ps.findIndex(function(p){ return p.pid===playerId; });
-  return idx>=0?idx+1:ps.length+1;
+  var myLastRank=lastPositions['me'];
+  if(myLastRank!==undefined&&myLastRank!==myRank){ if(myRank<myLastRank) showPosChange('up','P'+myRank); }
+  lastPositions['me']=myRank;
 }
-function getPlayerRank(pid) {
-  var ps=Object.values(allPlayers).sort(function(a,b){
-    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
-    return ((b.progress||0)-(a.progress||0));
-  });
-  var idx=ps.findIndex(function(p){ return p.pid===pid; });
-  return idx>=0?idx+1:ps.length+1;
+function showOvertakeNotif(text){ var e=el('overtake-notif'); e.textContent=text; e.classList.add('show'); setTimeout(function(){e.classList.remove('show');},2500); }
+function showPosChange(dir,text){ var e=el('pos-change'); e.textContent=text; e.className='pos-change '+dir; setTimeout(function(){e.className='pos-change';},1500); }
+function getMyRank(){
+  var ps=Object.values(allPlayers).sort(function(a,b){ if(!!b.finished!==!!a.finished) return b.finished?1:-1; return (b.progress||0)-(a.progress||0); });
+  var idx=ps.findIndex(function(p){return p.pid===playerId;}); return idx>=0?idx+1:ps.length+1;
+}
+function getPlayerRank(pid){
+  var ps=Object.values(allPlayers).sort(function(a,b){ if(!!b.finished!==!!a.finished) return b.finished?1:-1; return (b.progress||0)-(a.progress||0); });
+  var idx=ps.findIndex(function(p){return p.pid===pid;}); return idx>=0?idx+1:ps.length+1;
 }
 
-/* ============ START RACE GAMEPLAY ============ */
-function startRaceGameplay() {
-  // Player car was already created during cinematic
-  // Just kick off the game loop and show question panel
-
-  el('hud-race-code').textContent = raceId;
-  gameRunning = true;
+/* ════════════════ START GAMEPLAY ════════════════ */
+function startRaceGameplay(){
+  el('hud-race-code').textContent=raceId;
+  gameRunning=true;
   el('game-hud').classList.add('on');
-  // v5.4: bulletproof panel visibility — explicitly set all visibility-related
-  // styles. Defends against any inline styles that may have been set elsewhere.
-  var bp = el('bottom-panel');
-  bp.classList.remove('hidden');
-  bp.style.display = 'block';
-  bp.style.visibility = 'visible';
-  bp.style.opacity = '1';
-  bp.style.zIndex = '9999';
-  console.log('[race] panel forced visible:', bp.getBoundingClientRect());
+  var bp=el('bottom-panel');
+  bp.classList.remove('hidden'); bp.style.display='block';
+  bp.style.visibility='visible'; bp.style.opacity='1'; bp.style.zIndex='9999';
 
-  // v5.4: Initialize playerPos so the FIRST frame of renderLoop computes
-  // myProgress_t matching where the car actually is (gridT in pre-race).
-  // Previously playerPos=0 made the camera fetch tangent for t=0 while the
-  // car was still at t≈0.98, causing the "camera jumps to weird angle on
-  // race start" bug. Player index = position in lobby; their gridT was
-  // 0.98 - (index * 0.004) from runPreRaceCinematic.
-  if (trackCurve) {
-    var playerList = Object.values(allPlayers);
-    var myIdx = playerList.findIndex(function(p){ return p.pid === playerId; });
-    if (myIdx < 0) myIdx = 0;
-    var gridT = 0.98 - (myIdx * 0.004);
-    gridT = ((gridT % 1) + 1) % 1;
-    var trackLen = trackCurve.getLength();
-    playerPos = gridT * trackLen;
-    myProgress_t = gridT;
-  }
-
-  // v5.4 mobile diagnostic: log panel state every 2 sec for 30 sec so we
-  // can see if anything is hiding the panel intermittently. Remove this
-  // logger after we confirm mobile UI is stable.
-  (function diagPanel(){
-    var iters = 0;
-    var diagTimer = setInterval(function(){
-      iters++;
-      var p = document.getElementById('bottom-panel');
-      if (!p) { console.warn('[race-mobile-diag] panel element missing!'); return; }
-      var rect = p.getBoundingClientRect();
-      var cs = window.getComputedStyle(p);
-      console.log('[race-mobile-diag] t=' + iters*2 + 's',
-        'hidden=' + p.classList.contains('hidden'),
-        'display=' + cs.display,
-        'visible-h=' + Math.round(rect.height),
-        'top=' + Math.round(rect.top),
-        'bot=' + Math.round(rect.bottom),
-        'inner-q=' + (el('q-txt') ? el('q-txt').textContent.slice(0,30) : 'n/a'));
-      if (iters >= 15) clearInterval(diagTimer);
-    }, 2000);
-  })();
+  // Place my kart at starting grid position
+  var playerList=Object.values(allPlayers);
+  var myIdx=playerList.findIndex(function(p){return p.pid===playerId;}); if(myIdx<0) myIdx=0;
+  myProgress=0.01+myIdx*0.004; // stagger start positions
+  myProgress_t=myProgress%1;
 
   // Watch all players
-  gameRef = db.ref('race/' + raceId + '/players');
-  gameRef.on('value', function(snap) {
-    var players = (snap && snap.val()) || {};
-    Object.entries(players).forEach(function(e) {
-      allPlayers[e[0]] = Object.assign({ pid:e[0] }, e[1]);
-    });
+  gameRef=db.ref('race/'+raceId+'/players');
+  gameRef.on('value',function(snap){
+    var players=(snap&&snap.val())||{};
+    Object.entries(players).forEach(function(e){ allPlayers[e[0]]=Object.assign({pid:e[0]},e[1]); });
     updateTimingStrip();
-    checkOvertakes();
   });
-
   // Watch for race end
-  db.ref('race/' + raceId + '/state/phase').on('value', function(snap) {
-    if (snap && snap.val() === 'ended') endRace();
+  db.ref('race/'+raceId+'/state/phase').on('value',function(snap){
+    if(snap&&snap.val()==='ended') endRace();
   });
-
-  lastTime = performance.now();
-  rafId = requestAnimationFrame(renderLoop);
-  loadQ();
-
-  // Periodic sync
-  setInterval(function() {
-    if (!myFinished && gameRunning) {
-      db.ref('race/' + raceId + '/players/' + playerId).update({
-        progress: myProgress_t,
-        updatedAt: firebase.database.ServerValue.TIMESTAMP
+  // Periodic strong sync
+  setInterval(function(){
+    if(!myFinished&&gameRunning){
+      db.ref('race/'+raceId+'/players/'+playerId).update({
+        progress:myProgress_t, updatedAt:firebase.database.ServerValue.TIMESTAMP
       });
     }
-  }, 1500);
+  },1500);
+  lastTime=performance.now();
+  rafId=requestAnimationFrame(renderLoop);
+  loadQ();
 }
 
-/* ============ FINISH LINE PLACEMENT ============ */
-// v5.4: dynamically reposition the finish arch + checker stripe to a chosen
-// track position. Solves the cross-loop visibility issue where the player
-// could see the finish line on the OTHER side of the loop.
-function repositionFinishLineTo(finishT) {
-  if (!trackCurve || !window.__finishStripe || !window.__finishArch) return;
-  window.__finishT = finishT;
-  var finishPt = trackCurve.getPointAt(finishT);
-  var finishTan = trackCurve.getTangentAt(finishT);
-  var finishNorm = new THREE.Vector3(-finishTan.z, 0, finishTan.x).normalize();
-
-  // Position the checker stripe
-  var stripe = window.__finishStripe;
-  stripe.position.copy(finishPt);
-  stripe.position.y = 0.05;
-  stripe.rotation.set(0, 0, 0);  // reset before re-orienting
-  stripe.lookAt(finishPt.clone().add(finishTan));
-  stripe.rotateX(-Math.PI / 2);
-
-  // Reposition the arch group children
-  var arch = window.__finishArch;
-  var children = arch.children;
-  if (children.length >= 3) {
-    var postL = children[0];
-    var postR = children[1];
-    var banner = children[2];
-    postL.position.copy(finishPt).add(finishNorm.clone().multiplyScalar(TRACK_WIDTH/2 + 1));
-    postL.position.y = 4.5;
-    postR.position.copy(finishPt).add(finishNorm.clone().multiplyScalar(-(TRACK_WIDTH/2 + 1)));
-    postR.position.y = 4.5;
-    banner.position.copy(finishPt);
-    banner.position.y = 8.5;
-    banner.rotation.set(0, 0, 0);
-    banner.lookAt(finishPt.clone().add(finishTan).setY(8.5));
-  }
-}
-// Auto-placement: 25% of track ahead of current player position
-function repositionFinishLine() {
-  if (!trackCurve) return;
-  var finishT = (myProgress_t + 0.25) % 1;
-  repositionFinishLineTo(finishT);
-}
-
-/* ============ QUESTIONS ============ */
-function loadQ() {
-  if (bestStreak < streak) bestStreak = streak;
-  var sb = el('streak-badge');
-  sb.innerHTML = '🔥 STREAK: ' + streak;
-  sb.className = 'streak-badge' + (streak>=3?' nitro':'');
-
-  if (currentQ >= totalQ) {
-    el('q-txt').textContent = '🏁 FINISH AHEAD!';
-    el('q-area').innerHTML = '<div class="answered-msg">' + totalQ + ' / ' + totalQ + ' complete — cross the line!</div>';
-    myFinished = true;
-    db.ref('race/' + raceId + '/players/' + playerId).update({
-      finished:true, progress:1, updatedAt:firebase.database.ServerValue.TIMESTAMP
-    });
-    // v5.4: place + REVEAL finish line right ahead of player ONLY now —
-    // after the last question is answered. Previously the line was
-    // revealed during the last Q which caused it to be visible while
-    // the player was still driving and could loop past it. Now: revealed
-    // here, placed 15% ahead, player drives into it once.
-    if (trackCurve) {
-      var newT = (myProgress_t + 0.15) % 1;
-      window.__finishT = newT;
-      window.__finishCrossed = false;
-      finishLineRevealed = true;  // critical: renderLoop reads this for visibility
-      repositionFinishLineTo(newT);
+/* ════════════════ QUESTIONS ════════════════ */
+function loadQ(){
+  if(currentQ>=totalQ){
+    if(!myFinished){
+      myFinished=true;
+      db.ref('race/'+raceId+'/players/'+playerId).update({
+        finished:true, progress:1, updatedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+      nitroUntil=Date.now()+4000; // victory boost!
+      playFinish();
+      setTimeout(function(){
+        el('finish-overlay').classList.add('show');
+        el('finish-rank-num').textContent='P'+getMyRank();
+        el('finish-streak').textContent=bestStreak;
+        el('finish-correct').textContent=allPlayers[playerId]?(allPlayers[playerId].correct||0):0;
+        el('finish-total').textContent=totalQ;
+      },3500);
     }
-    // Dramatic nitro burst as they head for the line
-    nitroUntil = Date.now() + 4000;
-    spawnNitroParticles(playerCar);
-    playFinish();
-    setTimeout(function() {
-      el('finish-overlay').classList.add('show');
-      el('finish-rank-num').textContent = 'P' + getMyRank();
-      el('finish-streak').textContent = bestStreak;
-      el('finish-correct').textContent = allPlayers[playerId] ? (allPlayers[playerId].correct||0) : 0;
-      el('finish-total').textContent = totalQ;
-    }, 3500);
     return;
   }
-
-  // v5.4: Finish line is NOT revealed during the last question anymore.
-  // Previously this caused issues where the player would loop past the
-  // line while still answering the last Q. Now it only appears AFTER
-  // answering the last Q (handled in the currentQ >= totalQ branch above).
-
-  var q = questions[currentQ];
-  el('q-num').textContent = 'Q ' + (currentQ+1) + ' / ' + totalQ;
-  el('q-txt').textContent = q.question;
-  el('q-area').innerHTML = '';
-  answering = false;
-
-  if (q.type==='MCQ'||q.type==='TF') {
-    var grid = document.createElement('div');
-    grid.className = 'opts-grid';
-    var labels = ['A','B','C','D'];
-    (q.options||[]).forEach(function(opt, i) {
-      var btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      var imgs = q.option_images||[];
-      var imgSrc = imgs[i]||'';
-      var txtPart = opt ? '<span>'+esc(opt)+'</span>' : '';
-      var imgPart = imgSrc ? '<img class="opt-img" src="'+esc(imgSrc)+'" alt="option '+(i+1)+'" onerror="this.remove()">' : '';
-      btn.innerHTML = '<div class="opt-key">'+(labels[i]||i+1)+'</div><div style="flex:1">'+txtPart+imgPart+'</div>';
-      btn.addEventListener('click', (function(o,b){ return function(){ submitAns(o,b); }; })(opt||labels[i], btn));
+  var q=questions[currentQ];
+  el('q-num').textContent='Q '+(currentQ+1)+' / '+totalQ;
+  el('q-txt').textContent=q.question;
+  el('q-area').innerHTML='';
+  answering=false;
+  if(q.type==='MCQ'||q.type==='TF'){
+    var grid=document.createElement('div'); grid.className='opts-grid';
+    var labels=['A','B','C','D'];
+    (q.options||[]).forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      var imgs=q.option_images||[], imgSrc=imgs[i]||'';
+      var txtPart=opt?'<span>'+esc(opt)+'</span>':'';
+      var imgPart=imgSrc?'<img class="opt-img" src="'+esc(imgSrc)+'" alt="option '+(i+1)+'" onerror="this.remove()">':'';
+      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><div style="flex:1">'+txtPart+imgPart+'</div>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt||labels[i],btn));
       grid.appendChild(btn);
     });
     el('q-area').appendChild(grid);
   } else {
-    var area = document.createElement('div');
-    area.className = 'short-area';
-    var inp = document.createElement('input');
-    inp.className='short-inp'; inp.type='text'; inp.placeholder='Type answer…'; inp.maxLength=120;
-    var sbtn = document.createElement('button');
-    sbtn.className='sub-btn'; sbtn.textContent='GO';
-    sbtn.addEventListener('click', function(){ if(!inp.disabled&&inp.value.trim()) submitAns(inp.value.trim(),null); });
-    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') sbtn.click(); });
+    var area=document.createElement('div'); area.className='short-area';
+    var inp=document.createElement('input'); inp.className='short-inp'; inp.type='text'; inp.placeholder='Type answer…'; inp.maxLength=120;
+    var sbtn=document.createElement('button'); sbtn.className='sub-btn'; sbtn.textContent='GO';
+    sbtn.addEventListener('click',function(){if(!inp.disabled&&inp.value.trim()) submitAns(inp.value.trim(),null);});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter') sbtn.click();});
     area.appendChild(inp); area.appendChild(sbtn);
     el('q-area').appendChild(area);
-    setTimeout(function(){ inp.focus(); }, 60);
+    setTimeout(function(){inp.focus();},60);
   }
-
-  // v5.4: re-fit canvas above the panel since this Q's content height may
-  // differ from the previous (e.g. switching MCQ/TF/short-answer).
-  setTimeout(resizeCanvasAbovePanel, 30);
+  setTimeout(resizeCanvas,30);
 }
 
-function submitAns(answer, btnEl) {
-  if (answering) return;
-  answering = true;
-  el('q-area').querySelectorAll('button,input').forEach(function(b){ b.disabled=true; });
-
-  // v5.4: INSTANT visual click feedback — teal "selected" state appears
-  // the moment you tap, before any network call.
-  if (btnEl) btnEl.classList.add('selected');
-
-  var q = questions[currentQ];
-  var capturedQIndex = currentQ;  // capture: server result may arrive after currentQ advances
-
-  // v5.4 SPEED FIX: PARALLEL timing instead of serial. Previously we waited
-  // for the server response (400-800ms GAS round-trip) BEFORE advancing to
-  // the next question. Now: advance on a fixed timer, server validation
-  // runs in background and updates streak/score whenever it lands — even
-  // if the question has already changed. This is how Kahoot stays snappy.
-  gasPost({
-    action:     'validateRaceAnswer',
-    raceId:     raceId,
-    playerId:   playerId,
-    questionId: q.id,
-    answer:     answer
-  }, function(err, res) {
-    var correct = false;
-    if (!err && res && res.status === 'success' && res.data) {
-      correct = res.data.isCorrect === true;
-    } else {
-      console.warn('[race] validateRaceAnswer failed:', err || (res && res.message));
-    }
-
-    // Only do visual feedback on the button if user is STILL on the same
-    // question. If question has advanced, server response just updates
-    // streak/score quietly in the background.
-    var stillOnSameQ = (capturedQIndex === currentQ);
-
-    if (correct) {
-      streak++;
-      if (stillOnSameQ && btnEl) {
-        btnEl.classList.remove('selected');
-        btnEl.classList.add('correct');
-      }
+function submitAns(answer,btnEl){
+  if(answering) return;
+  answering=true;
+  el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
+  if(btnEl) btnEl.classList.add('selected');
+  var q=questions[currentQ], capturedQIndex=currentQ;
+  gasPost({action:'validateRaceAnswer',raceId:raceId,playerId:playerId,questionId:q.id,answer:answer},
+  function(err,res){
+    var correct=false;
+    if(!err&&res&&res.status==='success'&&res.data) correct=res.data.isCorrect===true;
+    var stillOn=(capturedQIndex===currentQ);
+    if(correct){
+      streak++; if(streak>bestStreak) bestStreak=streak;
+      if(stillOn&&btnEl){btnEl.classList.remove('selected');btnEl.classList.add('correct');}
       flashScreen('correct'); playCorrect();
-      if (streak >= 3) {
-        // v5.4: nitro lasts longer than boost (4s vs 1.5s) so streak feels powerful
-        nitroUntil = Date.now() + 4000;
+      var sb=el('streak-badge');
+      if(streak>=3){
+        nitroUntil=Date.now()+4000;
+        sb.className='streak-badge nitro'; sb.textContent='⚡ STREAK: '+streak;
         showBanner('nitro'); playNitro(); playStreakMilestone(streak);
       } else {
-        boostUntil = Date.now() + 1500;
+        boostUntil=Date.now()+1500;
+        sb.className='streak-badge'; sb.textContent='🔥 STREAK: '+streak;
       }
-      var prevCorrect = (allPlayers[playerId] && allPlayers[playerId].correct) || 0;
-      db.ref('race/'+raceId+'/players/'+playerId).update({
-        correct: prevCorrect + 1,
-        streak: streak
-      });
+      var prev=(allPlayers[playerId]&&allPlayers[playerId].correct)||0;
+      db.ref('race/'+raceId+'/players/'+playerId).update({correct:prev+1,streak:streak});
     } else {
-      streak = 0;
-      if (stillOnSameQ && btnEl) {
-        btnEl.classList.remove('selected');
-        btnEl.classList.add('wrong');
-      }
+      streak=0;
+      if(stillOn&&btnEl){btnEl.classList.remove('selected');btnEl.classList.add('wrong');}
       flashScreen('wrong'); playWrong();
-      wrongUntil = Date.now() + 2000;
+      wrongUntil=Date.now()+2000;
+      var sb2=el('streak-badge'); sb2.className='streak-badge'; sb2.textContent='🔥 STREAK: 0';
       showBanner('wrong');
-      db.ref('race/'+raceId+'/players/'+playerId).update({ streak: 0 });
+      db.ref('race/'+raceId+'/players/'+playerId).update({streak:0});
     }
   });
-
-  // Advance to next question on a fixed 600ms timer — independent of network.
-  // The selected teal flash + a brief pause is the visible feedback;
-  // green/red comes when the server responds (often before the 600ms is up
-  // on a fast connection, sometimes after on a slow one).
-  setTimeout(function() {
-    currentQ++;
-    loadQ();
-  }, 600);
+  setTimeout(function(){currentQ++; loadQ();},600);
 }
 
-/* ============ EFFECTS ============ */
-var nitroTimer=null, wrongTimer=null, flashTimer=null;
-
-function showBanner(type) {
-  if (type==='nitro') {
+/* ════════════════ EFFECTS ════════════════ */
+var nitroTimer=null,wrongTimer=null,flashTimer=null;
+function showBanner(type){
+  if(type==='nitro'){
     var b=el('nitro-banner'); b.classList.add('show');
-    clearTimeout(nitroTimer);
-    nitroTimer=setTimeout(function(){ b.classList.remove('show'); }, 2000);
+    clearTimeout(nitroTimer); nitroTimer=setTimeout(function(){b.classList.remove('show');},2000);
   } else {
     var w=el('wrong-banner'); w.classList.add('show');
-    clearTimeout(wrongTimer);
-    wrongTimer=setTimeout(function(){ w.classList.remove('show'); }, 1000);
+    clearTimeout(wrongTimer); wrongTimer=setTimeout(function(){w.classList.remove('show');},1000);
   }
 }
-function flashScreen(type) {
-  var f=el('screen-flash');
-  f.className='screen-flash '+type+' show';
-  clearTimeout(flashTimer);
-  flashTimer=setTimeout(function(){ f.className='screen-flash '+type; }, 200);
+function flashScreen(type){
+  var f=el('screen-flash'); f.className='screen-flash '+type+' show';
+  clearTimeout(flashTimer); flashTimer=setTimeout(function(){f.className='screen-flash '+type;},200);
 }
 
-/* ============ TIMING STRIP ============ */
-function updateTimingStrip() {
+/* ════════════════ TIMING STRIP ════════════════ */
+function updateTimingStrip(){
   var players=Object.values(allPlayers).sort(function(a,b){
     if(!!b.finished!==!!a.finished) return b.finished?1:-1;
-    return ((b.progress||0)-(a.progress||0));
+    return (b.progress||0)-(a.progress||0);
   });
-  var medals=['🥇','🥈','🥉'];
-  var html='';
+  var medals=['🥇','🥈','🥉'], html='';
   players.forEach(function(p,i){
     var isMe=p.pid===playerId;
     var cls=isMe?' me':i===0?' leader':'';
-    var pct=Math.round((p.progress||0)*100);
+    var pct=p.finished?'DONE':Math.round((p.progress||0)*100)+'%';
     html+='<div class="ts-item'+cls+'">'
       +'<div class="ts-pos'+(i===0?' p1':'')+'">'+(medals[i]||(i+1))+'</div>'
-      +'<div style="width:8px;height:8px;border-radius:50%;background:'+esc(p.color||'#888')+';box-shadow:0 0 4px '+esc(p.color||'#888')+'"></div>'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+esc(p.color||'#888')+'"></div>'
       +'<div class="ts-name">'+esc((p.name||'?').slice(0,8))+(isMe?' ★':'')+'</div>'
-      +(p.finished?'<div class="ts-pct" style="color:var(--grn)">DONE</div>':'<div class="ts-pct">'+pct+'%</div>')
+      +(p.finished?'<div class="ts-pct" style="color:var(--grn)">DONE</div>':'<div class="ts-pct">'+pct+'</div>')
       +'</div>';
   });
-  var myRank=getMyRank();
-  el('hud-pos').textContent='P'+myRank;
+  el('hud-pos').textContent='P'+getMyRank();
   el('timing-strip').innerHTML=html;
 }
 
-/* ============ END RACE ============ */
-function endRace() {
-  gameRunning = false;
-  if (rafId) { cancelAnimationFrame(rafId); rafId=null; }
+/* ════════════════ END RACE ════════════════ */
+function endRace(){
+  gameRunning=false;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   stopAllMusic();
-  if (gameRef) { try{ gameRef.off('value'); }catch(_){} gameRef=null; }
+  if(gameRef){try{gameRef.off('value');}catch(_){}gameRef=null;}
 }
 
-/* ============ JOIN FLOW ============ */
-document.addEventListener('DOMContentLoaded', function() {
-  if (preCode) el('inp-code').value = preCode;
-  el('inp-code').addEventListener('keydown', function(e){ if(e.key==='Enter') el('inp-name').focus(); });
-  el('inp-name').addEventListener('keydown', function(e){ if(e.key==='Enter') doJoin(); });
-  el('joinBtn').addEventListener('click', doJoin);
+/* ════════════════ JOIN FLOW ════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  if(preCode) el('inp-code').value=preCode;
+  el('inp-code').addEventListener('keydown',function(e){if(e.key==='Enter') el('inp-name').focus();});
+  el('inp-name').addEventListener('keydown',function(e){if(e.key==='Enter') doJoin();});
+  el('joinBtn').addEventListener('click',doJoin);
 });
 
-function doJoin() {
+function doJoin(){
   var btn=el('joinBtn'), errE=el('joinErr');
-  raceId = (el('inp-code').value||'').trim().toUpperCase();
-  playerName = (el('inp-name').value||'').trim();
+  raceId=(el('inp-code').value||'').trim().toUpperCase();
+  playerName=(el('inp-name').value||'').trim();
   errE.textContent='';
-  if (raceId.length<4) { errE.textContent='Enter a valid race code'; return; }
-  if (playerName.length<2) { errE.textContent='Enter driver name (min 2 chars)'; return; }
-
+  if(raceId.length<4){errE.textContent='Enter a valid race code';return;}
+  if(playerName.length<2){errE.textContent='Enter driver name (min 2 chars)';return;}
   btn.disabled=true; btn.textContent='ENTERING GRID…';
-
-  playerId = 'p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  playerId='p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
   initAudio();
-
-  // Choose color
-  var cIdx = Math.floor(Math.random() * NEON_COLORS.length);
-  playerColorInt = NEON_COLORS[cIdx];
-  playerColorHex = NEON_HEX[cIdx];
-  var laneX = laneOffsets[Math.floor(Math.random() * laneOffsets.length)];
-
-  gasPost({ action:'getRaceQuestions', raceId:raceId }, function(err, res) {
-    if (err||!res||res.status!=='success') {
+  var cIdx=Math.floor(Math.random()*NEON_HEX.length);
+  playerColorHex=NEON_HEX[cIdx];
+  var laneOffsets=[-3.5,-1.2,1.2,3.5];
+  var laneX=laneOffsets[Math.floor(Math.random()*laneOffsets.length)];
+  gasPost({action:'getRaceQuestions',raceId:raceId},function(err,res){
+    if(err||!res||res.status!=='success'){
       errE.textContent=(res&&res.message)||'Race not found. Check your code.';
-      btn.disabled=false; btn.textContent='▶ ENTER RACE';
-      return;
+      btn.disabled=false; btn.textContent='▶ ENTER RACE'; return;
     }
-    questions = res.data||[];
-    totalQ = questions.length;
-
+    questions=res.data||[]; totalQ=questions.length;
     db.ref('race/'+raceId+'/players/'+playerId).set({
       name:playerName, color:playerColorHex, laneX:laneX,
       progress:0, correct:0, streak:0, finished:false,
       joinedAt:firebase.database.ServerValue.TIMESTAMP
     });
-
-    allPlayers[playerId] = {
-      pid:playerId, name:playerName, color:playerColorHex,
-      laneX:laneX, progress:0, correct:0, streak:0, finished:false
-    };
-
-    el('lby-code').textContent = raceId;
+    allPlayers[playerId]={pid:playerId,name:playerName,color:playerColorHex,
+      laneX:laneX,progress:0,correct:0,streak:0,finished:false};
+    el('lby-code').textContent=raceId;
     showScreen('s-lobby');
     watchLobby();
     btn.disabled=false; btn.textContent='▶ ENTER RACE';
   });
 }
 
-/* ============ SPECTATOR MODE ============ */
-// v5.4: host spectator view. Joins as observer (no player record, no car).
-// Listens to race state; when started, enters a free-camera following the
-// race leader. Useful for projecting the race onto a class screen.
-function enterSpectatorMode() {
-  console.log('[race] entering SPECTATOR mode for race:', raceId);
-  // Listen for race state changes
-  db.ref('race/' + raceId + '/state').on('value', function(snap) {
-    var st = (snap && snap.val()) || {};
-    if (st.phase === 'started' && !gameRunning) {
-      serverStartedAt = st.startedAt || Date.now();
-      // Load questions from Firebase (host already wrote them there)
-      db.ref('race/' + raceId + '/questions').once('value', function(qsnap) {
-        var qs = (qsnap && qsnap.val()) || null;
-        if (Array.isArray(qs)) {
-          questions = qs;
-          totalQ = qs.length;
-        }
-        // Listen for player updates
-        db.ref('race/' + raceId + '/players').on('value', function(psnap) {
-          allPlayers = (psnap && psnap.val()) || {};
-        });
-        startSpectatorGameplay();
-      });
-    }
-  });
-}
-
-function startSpectatorGameplay() {
-  if (!sceneInitialized) {
-    init3D();
-    sceneInitialized = true;
-  }
-  // v5.4: load GLB then start the actual gameplay setup
-  loadCarGlbModel(function() {
-    _startSpectatorGameplayInner();
-  });
-}
-function _startSpectatorGameplayInner() {
-  // Hide question panel — spectators don't answer questions
-  var bp = el('bottom-panel');
-  if (bp) bp.style.display = 'none';
-  // Show game canvas full screen
-  el('game-canvas').style.display = 'block';
-  showScreen('s-game');
-  // Custom resize: canvas takes WHOLE viewport (no panel)
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  el('game-canvas').style.height = '100%';
-  el('game-canvas').style.bottom = '0';
-  gameRunning = true;
-  // Create cars for all players
-  Object.values(allPlayers).forEach(function(p, i) {
-    if (!otherCars[p.pid]) {
-      var colorInt = p.color ? parseInt(p.color.replace('#',''), 16) : NEON_COLORS[i % NEON_COLORS.length];
-      var colorHex = '#' + colorInt.toString(16).padStart(6,'0');
-      otherCars[p.pid] = createCar(colorInt, colorHex, p.name || '?', false);
-      scene.add(otherCars[p.pid]);
-    }
-  });
-  // Start the spectator render loop
-  spectatorLoop();
-}
-
-var spectatorTargetPid = null;
-function spectatorLoop() {
-  if (!gameRunning) return;
-  requestAnimationFrame(spectatorLoop);
-
-  // Update all cars positions from Firebase data
-  var players = Object.values(allPlayers || {});
-  players.forEach(function(p) {
-    if (!otherCars[p.pid]) {
-      var colorInt = p.color ? parseInt(p.color.replace('#',''), 16) : 0xff5599;
-      var colorHex = '#' + colorInt.toString(16).padStart(6,'0');
-      otherCars[p.pid] = createCar(colorInt, colorHex, p.name || '?', false);
-      scene.add(otherCars[p.pid]);
-    }
-    var car = otherCars[p.pid];
-    placeCarOnTrack(car, p.progress || 0, p.laneX || 0, 0);
-  });
-
-  // Pick the LEADER (highest progress) as the camera target
-  var leader = null;
-  players.forEach(function(p) {
-    if (!leader || (p.progress || 0) > (leader.progress || 0)) leader = p;
-  });
-
-  if (leader && otherCars[leader.pid]) {
-    spectatorTargetPid = leader.pid;
-    var targetCar = otherCars[leader.pid];
-    var idx = Math.floor((leader.progress || 0) * trackSamples);
-    if (idx > trackSamples) idx = trackSamples;
-    if (idx < 0) idx = 0;
-    var tg = trackTangents[idx];
-    var carPos = targetCar.position;
-
-    // Dramatic broadcast cam: a bit higher and further back than chase
-    var DIST = 8;
-    var HEIGHT = 4;
-    camera.position.set(
-      carPos.x - tg.x * DIST,
-      carPos.y + HEIGHT,
-      carPos.z - tg.z * DIST
-    );
-    camera.lookAt(
-      carPos.x + tg.x * 6,
-      carPos.y + 1,
-      carPos.z + tg.z * 6
-    );
-  }
-
-  renderer.render(scene, camera);
-}
-
-/* ============ LOBBY ============ */
-function watchLobby() {
-  lobbyPRef = db.ref('race/'+raceId+'/players');
-  lobbyPRef.on('value', function(snap) {
+/* ════════════════ LOBBY WATCHING ════════════════ */
+function watchLobby(){
+  lobbyPRef=db.ref('race/'+raceId+'/players');
+  lobbyPRef.on('value',function(snap){
     var players=(snap&&snap.val())||{};
-    var names=Object.values(players).map(function(p){ return p.name||'?'; });
+    var names=Object.values(players).map(function(p){return p.name||'?';});
     el('lby-count').textContent=names.length;
-    el('lby-chips').innerHTML=names.map(function(n){ return '<div class="chip">'+esc(n)+'</div>'; }).join('');
-    Object.entries(players).forEach(function(e){
-      allPlayers[e[0]]=Object.assign({ pid:e[0] }, e[1]);
-    });
+    el('lby-chips').innerHTML=names.map(function(n){return '<div class="chip">'+esc(n)+'</div>';}).join('');
+    Object.entries(players).forEach(function(e){allPlayers[e[0]]=Object.assign({pid:e[0]},e[1]);});
   });
-
-  phaseRef = db.ref('race/'+raceId+'/state');
-  phaseRef.on('value', function(snap) {
-    if (!snap||!snap.val()) return;
-    var state = snap.val();
-    var phase = state.phase;
-    if (phase==='started') {
-      // Detach lobby listeners
+  phaseRef=db.ref('race/'+raceId+'/state');
+  phaseRef.on('value',function(snap){
+    if(!snap||!snap.val()) return;
+    var state=snap.val(), phase=state.phase;
+    if(phase==='started'){
       detachLobby();
-      // Hide all screens
-      document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
-      // v5.4 SYNC: use server's startedAt as anchor. All players target the
-      // SAME gameplay-start moment so the race is genuinely synchronous,
-      // regardless of when each device received the phase change.
-      // Falls back to 0 if startedAt missing (shouldn't happen post-v5.4 host).
-      var startedAt = state.startedAt || Date.now();
-      init3D();
-      sceneInitialized = true;
-      // v5.4: kick off GLB car load — it'll be ready by the time cinematic
-      // creates cars. If it loads too slow, procedural fallback is used.
-      loadCarGlbModel(function() {
-        runPreRaceCinematic(startedAt);
-      });
-    } else if (phase==='ended') {
+      var startedAt=state.startedAt||Date.now();
+      runPreRaceCinematic(startedAt);
+    } else if(phase==='ended'){
       endRace();
     }
   });
 }
-
-function detachLobby() {
-  if (lobbyPRef) { try{ lobbyPRef.off('value'); }catch(_){} lobbyPRef=null; }
-  if (phaseRef)  { try{ phaseRef.off('value');  }catch(_){} phaseRef=null; }
+function detachLobby(){
+  if(lobbyPRef){try{lobbyPRef.off('value');}catch(_){}lobbyPRef=null;}
+  if(phaseRef){try{phaseRef.off('value');}catch(_){}phaseRef=null;}
 }
 
-/* ============ CLEANUP ============ */
-window.addEventListener('beforeunload', function() {
-  if (rafId) { cancelAnimationFrame(rafId); rafId=null; }
-  [lobbyPRef, phaseRef, gameRef].forEach(function(r){ if(r){ try{ r.off('value'); }catch(_){} } });
+/* ════════════════ CLEANUP ════════════════ */
+window.addEventListener('beforeunload',function(){
+  if(rafId){cancelAnimationFrame(rafId);}
+  [lobbyPRef,phaseRef,gameRef].forEach(function(r){if(r){try{r.off('value');}catch(_){}}});
   stopAllMusic();
 });
 
