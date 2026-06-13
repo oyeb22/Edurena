@@ -226,10 +226,10 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   </a>
   <div class="nav-links">
     <a href="#howitworks">How it works</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#signup">Sign up</a>
-    <a href="#" style="color:var(--white)">Sign in</a>
-    <a class="nav-cta" href="#signup">Get started</a>
+    <a href="Pricing.html">Pricing</a>
+    <a href="Pricing.html">Sign up</a>
+    <a href="TeacherLogin.html" style="color:var(--white)">Sign in</a>
+    <a class="nav-cta" href="Pricing.html">Get started</a>
   </div>
 </nav>
 
@@ -363,8 +363,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="s5-cards" style="grid-template-columns:repeat(2,1fr);max-width:760px;">
     <div class="s5-card">
       <div class="s5-tier">Standard</div>
-      <div class="s5-price">₦500<span>/student/mo</span></div>
-      <div class="s5-price-note">Billed monthly · Paystack · First 10 students free</div>
+      <div class="s5-price" id="hp-std-price">₦500<span>/student/mo</span></div>
+      <div class="s5-price-note">Billed monthly · Paystack</div>
       <ul class="s5-features">
         <li>All quiz modes (Exam, Race, Live)</li>
         <li>Full analytics &amp; heatmaps</li>
@@ -372,19 +372,19 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
         <li>Violation logs &amp; AI flags</li>
         <li>Image-based questions</li>
       </ul>
-      <a href="#signup" class="s5-btn s5-btn-std">Get Standard</a>
+      <a href="Pricing.html?plan=standard" class="s5-btn s5-btn-std">Get Standard</a>
     </div>
     <div class="s5-card featured">
       <div class="s5-badge">Most popular</div>
       <div class="s5-tier" style="color:var(--purple)">Premium</div>
-      <div class="s5-price">₦1,200<span>/student/mo</span></div>
-      <div class="s5-price-note">Billed monthly · Paystack · First 10 students free</div>
+      <div class="s5-price" id="hp-prm-price">₦750<span>/student/mo</span></div>
+      <div class="s5-price-note">Billed monthly · Paystack</div>
       <ul class="s5-features">
         <li>Everything in Standard</li>
         <li>AI wrong-answer explanations</li>
         <li>Priority support</li>
       </ul>
-      <a href="#signup" class="s5-btn s5-btn-prem">Get Premium</a>
+      <a href="Pricing.html?plan=premium" class="s5-btn s5-btn-prem">Get Premium</a>
     </div>
   </div>
   <div class="s5-calc reveal">
@@ -401,22 +401,20 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 <section id="signup" class="s6-section">
   <div class="s6-inner">
     <h2 class="s6-hl">Your school could run its first quiz this week.</h2>
-    <p class="s6-sub">No setup fee. No contract. Cancel any time.</p>
+    <p class="s6-sub">Choose a plan, pay via Paystack, and your account is ready the same day.</p>
     <div id="s6formWrap">
       <form class="s6-form" id="s6form" onsubmit="return s6Submit(event)">
-        <input class="s6-input" type="text"  placeholder="School name"    required>
+        <input class="s6-input" type="text"  id="s6-school" placeholder="School name"    required>
         <input class="s6-input" type="text"  placeholder="Your name"      required>
-        <input class="s6-input" type="email" placeholder="Email address"  required>
-        <select class="s6-select">
-          <option value="" disabled selected>Expected number of students</option>
-          <option>Less than 50</option>
-          <option>50 – 200</option>
-          <option>200 – 500</option>
-          <option>500+</option>
+        <input class="s6-input" type="email" id="s6-email"  placeholder="Email address"  required>
+        <select class="s6-select" id="s6-plan">
+          <option value="" disabled selected>Choose your plan</option>
+          <option value="standard">Standard</option>
+          <option value="premium">Premium (+ AI explanations)</option>
         </select>
-        <button type="submit" class="s6-submit">Get started — free for the first 10 students</button>
+        <button type="submit" class="s6-submit">View pricing &amp; get started →</button>
       </form>
-      <p class="s6-signin">Already have an account? <a href="#">Sign in →</a></p>
+      <p class="s6-signin">Already have an account? <a href="TeacherLogin.html">Sign in →</a></p>
     </div>
     <div class="s6-thankyou" id="s6thanks">
       <div class="checkmark">✓</div>
@@ -447,9 +445,10 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
       <div class="footer-links">
         <a href="#hero">Home</a>
         <a href="#howitworks">How it works</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#signup">Sign up</a>
-        <a href="#">Sign in</a>
+        <a href="Pricing.html">Pricing</a>
+        <a href="Pricing.html">Sign up</a>
+        <a href="TeacherLogin.html">Sign in</a>
+        <a href="Webapp.html">Student App</a>
       </div>
     </div>
     <div>
@@ -637,20 +636,46 @@ buildSlots(INIT_ROT);setCLbl('FEATURES');s3Panel(FEATURES[0],false);
 document.getElementById('s3Prev').disabled=true;
 
 /* ── PRICING CALCULATOR ── */
+var _hpStdPrice=500, _hpPrmPrice=750;
 const slider=document.getElementById('s5slider');
 function updateCalc(){
   const n=parseInt(slider.value);
-  const std=n*500,prem=n*1200;
-  document.getElementById('s5result').textContent=`₦${std.toLocaleString()} / month`;
-  document.getElementById('s5breakdown').textContent=`${n} students × ₦500 (Standard) · or ₦${prem.toLocaleString()} on Premium`;
+  const std=n*_hpStdPrice, prem=n*_hpPrmPrice;
+  document.getElementById('s5result').textContent='₦'+std.toLocaleString()+' / month';
+  document.getElementById('s5breakdown').textContent=n+' students × ₦'+_hpStdPrice.toLocaleString()+' (Standard) · or ₦'+prem.toLocaleString()+' on Premium';
 }
 if(slider){slider.addEventListener('input',updateCalc);updateCalc();}
+
+/* ── LIVE PRICING FETCH ── */
+(function(){
+  var scriptUrl='https://script.google.com/macros/s/AKfycbzpche3AL4hntlg1-GtzEYh44yCP4pz5Ug21TXK8lqRWp5QmfQSpP4rM1in6yYSJPTu0g/exec';
+  var url=location.search.match(/[?&]script=([^&]+)/);
+  if(url) scriptUrl=decodeURIComponent(url[1]);
+  fetch(scriptUrl,{method:'POST',body:JSON.stringify({action:'getPricing'})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||res.status!=='success'||!res.data) return;
+      var d=res.data;
+      var std=d.pricePerStudentNgn||500;
+      var mult=(d.planConfig&&d.planConfig.premiumMultiplier)||1.5;
+      var prm=Math.round(std*mult);
+      _hpStdPrice=std; _hpPrmPrice=prm;
+      var stdEl=document.getElementById('hp-std-price');
+      var prmEl=document.getElementById('hp-prm-price');
+      if(stdEl) stdEl.innerHTML='₦'+std.toLocaleString()+'<span>/student/mo</span>';
+      if(prmEl) prmEl.innerHTML='₦'+prm.toLocaleString()+'<span>/student/mo</span>';
+      updateCalc();
+    })
+    .catch(function(){});
+})();
 
 /* ── SIGNUP FORM ── */
 window.s6Submit=function(e){
   e.preventDefault();
-  document.getElementById('s6formWrap').style.display='none';
-  document.getElementById('s6thanks').style.display='block';
+  var school=encodeURIComponent((document.getElementById('s6-school')||{}).value||'');
+  var plan=(document.getElementById('s6-plan')||{}).value||'standard';
+  var url='Pricing.html?plan='+encodeURIComponent(plan)+(school?'&schoolName='+school:'');
+  window.location.href=url;
   return false;
 };
 
