@@ -35,19 +35,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
 :root {
-  --bg: #f8f7f4;
-  --surface: #ffffff;
-  --surface2: #f3f2ef;
-  --surface3: #eeede9;
-  --border: rgba(0,0,0,0.08);
-  --border2: rgba(0,0,0,0.14);
-  --text: #111110;
-  --text2: #6b6b68;
-  --text3: #9b9b97;
+  --bg: #f5edd8;
+  --surface: #fdfaf2;
+  --surface2: #f0e4ca;
+  --surface3: #e5d4b0;
+  --border: rgba(160,100,20,0.13);
+  --border2: rgba(160,100,20,0.26);
+  --text: #1e0d00;
+  --text2: #7a4820;
+  --text3: #b08848;
   --accent: #c97d00;
-  --accent-bg: rgba(245,166,35,0.10);
-  --accent-border: rgba(245,166,35,0.38);
-  --accent-text: #7a4400;
+  --accent-bg: rgba(245,166,35,0.13);
+  --accent-border: rgba(245,166,35,0.44);
+  --accent-text: #6b3200;
   --success: #166534;
   --success-bg: #f0fdf4;
   --success-border: #86efac;
@@ -181,6 +181,35 @@ body.is-superadmin .superadmin-only { display: flex !important; }
 .btn-sys:hover { border-color: var(--border2); color: var(--text); }
 .btn-out { width: 100%; padding: 6px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); border-radius: var(--r-sm); cursor: pointer; font-size: 11px; font-family: var(--font); transition: all .15s; }
 .btn-out:hover { background: #fee2e2; }
+
+/* ── LIGHT MODE: dark chocolate-brown sidebar (brand identity match) ── */
+body:not(.dark) .sb { background: linear-gradient(180deg,#3a1f08 0%,#2c1608 100%); border-right-color: #1e0e04; }
+body:not(.dark) .sb-logo { border-bottom-color: rgba(255,255,255,0.08); }
+body:not(.dark) .logo-txt h1 { color: #ffc144; }
+body:not(.dark) .logo-txt p { color: rgba(255,255,255,0.38); }
+body:not(.dark) .sb-profile { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.1); }
+body:not(.dark) .sb-profile:hover { border-color: rgba(255,255,255,0.2); }
+body:not(.dark) .sp-name { color: #fff; }
+body:not(.dark) .sp-role { color: rgba(255,255,255,0.42); }
+body:not(.dark) .sp-av { color: #ffc144; background: rgba(245,166,35,0.18); border-color: rgba(245,166,35,0.4); }
+body:not(.dark) .nsec { color: rgba(255,255,255,0.28); }
+body:not(.dark) .ni { color: rgba(255,255,255,0.55); }
+body:not(.dark) .ni:hover { background: rgba(255,255,255,0.08); color: #fff; }
+body:not(.dark) .ni.on { background: rgba(245,166,35,0.18); color: #f5a623; font-weight: 500; }
+body:not(.dark) .ni .ico { opacity: 0.58; }
+body:not(.dark) .ni.on .ico { opacity: 1; }
+body:not(.dark) .sb-stat { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.09); }
+body:not(.dark) .sb-stat:hover { border-color: rgba(245,166,35,0.45); }
+body:not(.dark) .sb-stat-lbl { color: rgba(255,255,255,0.42); }
+body:not(.dark) .sb-stat-val { color: #fff; }
+body:not(.dark) .sb-foot { border-top-color: rgba(255,255,255,0.08); }
+body:not(.dark) .btn-sys { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.6); }
+body:not(.dark) .btn-sys:hover { background: rgba(255,255,255,0.13); color: #fff; border-color: rgba(255,255,255,0.22); }
+body:not(.dark) .btn-out { background: rgba(255,80,80,0.15); border-color: rgba(255,80,80,0.28); color: #fca5a5; }
+body:not(.dark) .btn-out:hover { background: rgba(255,80,80,0.22); }
+body:not(.dark) .mob-nav { background: #2c1608; border-top-color: #1e0e04; }
+body:not(.dark) .mob-ni { color: rgba(255,255,255,0.45); }
+body:not(.dark) .mob-ni.on { color: #f5a623; background: rgba(245,166,35,0.18); }
 
 /* ── MOBILE NAV BAR (bottom) ── */
 .mob-nav {
@@ -381,7 +410,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 @keyframes si { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* SPINNER */
-.sp-ov { display: none; position: fixed; inset: 0; background: rgba(248,247,244,.72); z-index: 500; align-items: center; justify-content: center; }
+.sp-ov { display: none; position: fixed; inset: 0; background: rgba(245,237,216,.76); z-index: 500; align-items: center; justify-content: center; }
 .sp-ov.on { display: flex; }
 body.dark .sp-ov { background: rgba(7,9,15,.72); }
 .sp-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 22px 30px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.12); }
