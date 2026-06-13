@@ -17,9 +17,9 @@
       --text: #111110;
       --text2: #6b6b68;
       --text3: #9b9b97;
-      --accent: #1a56db;
-      --accent-bg: #eff4ff;
-      --accent-border: #c3d5ff;
+      --accent: #c97d00;
+      --accent-bg: rgba(245,166,35,0.10);
+      --accent-border: rgba(245,166,35,0.38);
       --success: #166534;
       --success-bg: #f0fdf4;
       --success-border: #bbf7d0;
@@ -51,9 +51,9 @@
       margin-bottom: 28px;
     }
     .brand-icon {
-      width: 44px; height: 44px;
-      background: var(--text);
-      border-radius: 11px;
+      width: 64px; height: 64px;
+      background: transparent;
+      border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -274,7 +274,7 @@
 <body>
 <div class="wrap">
   <div class="brand">
-    <div class="brand-icon">⚡</div>
+    <div class="brand-icon"><img src="assets/nlogo.gif" alt="Edurena" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #f5a623;box-shadow:0 0 20px rgba(245,166,35,.3)"></div>
     <h1>Edurena</h1>
     <p>AI-Proctored Examination Platform</p>
   </div>
