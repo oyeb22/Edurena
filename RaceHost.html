@@ -303,74 +303,115 @@ function setupLights(){
 /* ═══════════════════════════════════════════════════════════════
    ENVIRONMENT
 ═══════════════════════════════════════════════════════════════ */
-function buildEnvironment(){
-  /* ─ Track curve (oval, ~90-unit radius, 16 waypoints) ─ */
-  var pts = [
-    new THREE.Vector3(  0, 0,  90),
-    new THREE.Vector3( 38, 0,  83),
-    new THREE.Vector3( 68, 0,  63),
-    new THREE.Vector3( 87, 0,  33),
-    new THREE.Vector3( 92, 0,   0),
-    new THREE.Vector3( 87, 0, -33),
-    new THREE.Vector3( 68, 0, -63),
-    new THREE.Vector3( 38, 0, -83),
-    new THREE.Vector3(  0, 0, -92),
-    new THREE.Vector3(-38, 0, -83),
-    new THREE.Vector3(-68, 0, -63),
-    new THREE.Vector3(-87, 0, -33),
-    new THREE.Vector3(-92, 0,   0),
-    new THREE.Vector3(-87, 0,  33),
-    new THREE.Vector3(-68, 0,  63),
-    new THREE.Vector3(-38, 0,  83),
-  ];
-  trackCurve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.5);
-  trackCurve.arcLengthDivisions = 2000;
+var trackRadius = 90; /* updated once track GLB loads */
 
+function initTrackCurve(r){
+  var f = r / 90;
+  trackCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(  0,0, 90*f), new THREE.Vector3( 38*f,0, 83*f),
+    new THREE.Vector3( 68*f,0, 63*f), new THREE.Vector3( 87*f,0, 33*f),
+    new THREE.Vector3( 92*f,0,  0), new THREE.Vector3( 87*f,0,-33*f),
+    new THREE.Vector3( 68*f,0,-63*f), new THREE.Vector3( 38*f,0,-83*f),
+    new THREE.Vector3(  0,0,-92*f), new THREE.Vector3(-38*f,0,-83*f),
+    new THREE.Vector3(-68*f,0,-63*f), new THREE.Vector3(-87*f,0,-33*f),
+    new THREE.Vector3(-92*f,0,  0), new THREE.Vector3(-87*f,0, 33*f),
+    new THREE.Vector3(-68*f,0, 63*f), new THREE.Vector3(-38*f,0, 83*f),
+  ], true, 'catmullrom', 0.5);
+  trackCurve.arcLengthDivisions = 2000;
+}
+
+function buildEnvironment(){
+  initTrackCurve(90); /* placeholder until track GLB loads */
   setLoad(15);
 
-  /* Sky sphere */
   buildSky();
 
-  /* Grass ground plane */
-  var gGeo = new THREE.PlaneGeometry(800, 800, 1, 1);
-  var gMat = new THREE.MeshLambertMaterial({ color: 0x3aaa1a });
-  var grass = new THREE.Mesh(gGeo, gMat);
+  /* Green ground plane — always visible behind the track GLB */
+  var grass = new THREE.Mesh(
+    new THREE.PlaneGeometry(1200, 1200),
+    new THREE.MeshLambertMaterial({ color: 0x3aaa1a })
+  );
   grass.rotation.x = -Math.PI / 2;
   grass.receiveShadow = true;
   scene.add(grass);
 
-  /* Darker infield oval */
-  var infGeo = new THREE.PlaneGeometry(170, 170, 1, 1);
-  var infMat = new THREE.MeshLambertMaterial({ color: 0x2d8812 });
-  var infield = new THREE.Mesh(infGeo, infMat);
-  infield.rotation.x = -Math.PI / 2;
-  infield.position.y = 0.01;
-  scene.add(infield);
-
   setLoad(25);
+  loadTrackGLB();
+}
 
-  /* Road surface */
+/* Load the Mario Circuit track from the open-source repo */
+function loadTrackGLB(){
+  var loader = new GLTFLoader();
+  var draco  = new DRACOLoader();
+  draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+  loader.setDRACOLoader(draco);
+
+  loader.load(
+    'https://raw.githubusercontent.com/mustache-dev/Mario-Kart-3.js/main/public/models/mario-circuit-test-transformed.glb',
+    function(gltf){
+      var group = gltf.scene;
+
+      /* Measure raw extent at current scale (scale=1 from loader) */
+      var rawBox  = new THREE.Box3().setFromObject(group);
+      var rawSize = new THREE.Vector3(); rawBox.getSize(rawSize);
+      var rawExtent = Math.max(rawSize.x, rawSize.z) * 0.5;
+
+      /* Scale so the track fills a 105-unit radius in our world */
+      var TARGET_R  = 105;
+      var s         = rawExtent > 0.001 ? TARGET_R / rawExtent : 0.08;
+      group.scale.setScalar(s);
+
+      /* Centre the track at origin, bottom of bounding box → y=0 */
+      var sBox   = new THREE.Box3().setFromObject(group);
+      var center = sBox.getCenter(new THREE.Vector3());
+      group.position.set(-center.x, -sBox.min.y, -center.z);
+
+      group.traverse(function(child){
+        if(!child.isMesh) return;
+        child.receiveShadow = true;
+        child.castShadow    = false;
+        var mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(function(m){
+          if(!m) return;
+          if(m.roughness !== undefined) m.roughness = Math.min(m.roughness, 0.9);
+          if(m.metalness !== undefined) m.metalness = Math.max(m.metalness, 0);
+        });
+      });
+      scene.add(group);
+      setLoad(65);
+
+      /* Rebuild kart path to sit on the inner lane of the actual track */
+      trackRadius = TARGET_R;
+      initTrackCurve(TARGET_R * 0.58);
+
+      finishEnvironment(TARGET_R);
+    },
+    function(xhr){ if(xhr.total) setLoad(25 + 38*(xhr.loaded/xhr.total)); },
+    function(err){
+      console.warn('Mario Circuit GLB failed – using procedural track:', err);
+      buildProceduralTrack();
+      finishEnvironment(90);
+    }
+  );
+}
+
+/* Called only when track GLB fails to load */
+function buildProceduralTrack(){
+  var infGeo = new THREE.PlaneGeometry(200, 200);
+  var infMesh = new THREE.Mesh(infGeo, new THREE.MeshLambertMaterial({ color: 0x2d8812 }));
+  infMesh.rotation.x = -Math.PI / 2; infMesh.position.y = 0.01;
+  scene.add(infMesh);
   scene.add(buildRoadMesh());
-
-  setLoad(40);
-
-  /* Curbs */
   buildCurbs();
+}
 
-  /* Start/finish banner */
+/* Build scene decoration once track size is known */
+function finishEnvironment(r){
   buildStartBanner();
-
-  setLoad(55);
-
-  /* Trees (instanced for performance) */
-  buildTrees();
-
-  /* Colored pennant flags */
-  buildFlags();
-
-  /* Crowd silhouettes */
-  buildCrowd();
-
+  buildTrees(r * 1.28);
+  buildFlags(r * 1.06);
+  buildCrowd(r * 1.14);
+  camRadius = Math.max(165, r * 1.75);
   setLoad(70);
 }
 
@@ -609,8 +650,9 @@ function buildStartBanner(){
 }
 
 /* ── Trees (instanced) ── */
-function buildTrees(){
-  var N     = 64;
+function buildTrees(baseRadius){
+  baseRadius = baseRadius || 116;
+  var N     = 72;
   var tGeo  = new THREE.CylinderGeometry(0.45, 0.7, 4.5, 8);
   var tMat  = new THREE.MeshLambertMaterial({ color:0x5c3310 });
   var lGeo  = new THREE.SphereGeometry(3.8, 8, 6);
@@ -623,10 +665,9 @@ function buildTrees(){
   var lCount = [0,0,0,0];
 
   var dummy = new THREE.Object3D();
-
   for(var i=0;i<N;i++){
     var ang  = (i/N)*Math.PI*2;
-    var dist = 116 + (i*41)%50;
+    var dist = baseRadius + (i*41)%55;
     var x    = Math.cos(ang)*dist;
     var z    = Math.sin(ang)*dist;
     var sc   = 0.65 + (i*0.19)%0.55;
@@ -649,18 +690,21 @@ function buildTrees(){
 }
 
 /* ── Colored flags ── */
-function buildFlags(){
+function buildFlags(baseRadius){
+  baseRadius = baseRadius || (ROAD_HW + 5.5 + 90);
   var colors=[0xff2211,0xffcc00,0x00aaff,0x00ff88,0xff6600,0xcc22ff,0xff00aa,0x00ffcc];
   var poleGeo = new THREE.CylinderGeometry(0.18, 0.18, 10, 6);
   var poleMat = new THREE.MeshLambertMaterial({ color:0xaaaaaa });
 
-  for(var i=0;i<20;i++){
-    var u   = i/20;
-    var pt  = trackCurve.getPointAt(u);
-    var tan = trackCurve.getTangentAt(u).normalize();
-    var rx  = tan.z, rz = -tan.x;
+  for(var i=0;i<24;i++){
+    var u   = i/24;
+    var ang = u * Math.PI * 2;
     var side = i%2===0?1:-1;
-    var off  = ROAD_HW + 5.5;
+    var dist = baseRadius * (0.92 + (i*0.07)%0.16);
+    var pt  = new THREE.Vector3(Math.cos(ang)*dist, 0, Math.sin(ang)*dist);
+    var tan = new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang));
+    var rx  = tan.z, rz = -tan.x;
+    var off  = 0;
 
     var pole = new THREE.Mesh(poleGeo, poleMat);
     pole.position.set(pt.x+rx*off*side, 5, pt.z+rz*off*side);
@@ -678,16 +722,16 @@ function buildFlags(){
 }
 
 /* ── Crowd silhouettes ── */
-function buildCrowd(){
+function buildCrowd(baseRadius){
+  baseRadius = baseRadius || 105;
   var headGeo  = new THREE.SphereGeometry(0.55, 6, 6);
   var bodyGeo  = new THREE.CylinderGeometry(0.4, 0.55, 1.4, 6);
-  var crowd    = [];
   var crowdColors=[0xff6644,0x44aaff,0xffcc22,0x88ff44,0xff44cc,0x44ffcc,0xffaa44,0xcc44ff];
-  var N = 120;
+  var N = 140;
 
   for(var i=0;i<N;i++){
     var ang  = (i/N)*Math.PI*2;
-    var dist = 105 + (i*31)%16;
+    var dist = baseRadius + (i*31)%20;
     var x    = Math.cos(ang)*dist;
     var z    = Math.sin(ang)*dist;
     var col  = new THREE.Color(crowdColors[i%crowdColors.length]);
@@ -778,22 +822,40 @@ function createKartForPlayer(player){
       if(!child.isMesh) return;
       child.castShadow    = true;
       child.receiveShadow = false;
+      if(/wheel/i.test(child.name)) wheels.push(child);
 
       var mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach(function(mat){
         if(!mat) return;
-        /* Body / booster get player colour */
-        if(mat.name === 'm_Body'){
+        /* Primary: match known body material names from the repo's GLB */
+        var isBody = (mat.name === 'm_Body' || mat.name === 'Body' ||
+                      mat.name === 'm_Kart' || mat.name === 'Kart');
+        if(isBody){
           mat.color.set(player.color || '#3498db');
-          mat.emissive    = new THREE.Color(player.color || '#3498db');
-          mat.emissiveIntensity = 0.07;
+          mat.emissive = new THREE.Color(player.color || '#3498db');
+          mat.emissiveIntensity = 0.08;
           bodyMeshes.push(child);
         }
       });
-
-      /* Wheel detection by node name (wheel_0..3 or d_wheel) */
-      if(/wheel/i.test(child.name)) wheels.push(child);
     });
+
+    /* Fallback: if no body found by name, tint all non-wheel, non-dark meshes */
+    if(bodyMeshes.length === 0){
+      kartScene.traverse(function(child){
+        if(!child.isMesh || /wheel/i.test(child.name)) return;
+        var mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(function(mat){
+          if(!mat || !mat.color) return;
+          var lum = (mat.color.r + mat.color.g + mat.color.b) / 3;
+          if(lum > 0.09){ /* skip black/dark tyre-like materials */
+            mat.color.set(player.color || '#3498db');
+            mat.emissive = new THREE.Color(player.color || '#3498db');
+            mat.emissiveIntensity = 0.08;
+            bodyMeshes.push(child);
+          }
+        });
+      });
+    }
 
     group.add(kartScene);
 
