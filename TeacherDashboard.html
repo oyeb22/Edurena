@@ -1628,43 +1628,22 @@ function loadOverview() {
   else { call('getQuestionBank',{classId:allClasses.length?allClasses[0].id:''}, function(qq){ allQuestions=qq||[]; setText('s-qs',allQuestions.length); check(); }, function(){ check(); }); }
 }
 
-// v5.5: refresh sidebar mini-stats from data already in memory.
-// Called whenever allQuizzes refreshes — keeps the sidebar always-fresh
-// without a separate API call.
+// Refresh sidebar mini-stats: active quiz count from memory, today's attempts
+// and avg score from the dedicated getTeacherStats GAS endpoint.
 function refreshSidebarStats() {
   var now = new Date();
-  var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
   var active = (allQuizzes || []).filter(function(q) {
     return new Date(q.endTime) > now && q.status === 'active';
   }).length;
-
-  // Today's attempts: count submissions across all quizzes where createdAt is today.
-  // Each quiz has q.submissions or q.attempts array depending on backend.
-  var todayAttempts = 0;
-  var allScores = [];
-  (allQuizzes || []).forEach(function(q) {
-    var subs = q.submissions || q.attempts || [];
-    if (!Array.isArray(subs)) return;
-    subs.forEach(function(s) {
-      if (s.submittedAt) {
-        var sd = new Date(s.submittedAt);
-        if (sd >= todayStart) todayAttempts++;
-      }
-      if (typeof s.percentage === 'number') allScores.push(s.percentage);
-      else if (typeof s.score === 'number' && typeof s.totalPoints === 'number' && s.totalPoints > 0) {
-        allScores.push((s.score / s.totalPoints) * 100);
-      }
-    });
-  });
-
-  var avgScore = allScores.length
-    ? Math.round(allScores.reduce(function(a,b){return a+b;}, 0) / allScores.length)
-    : null;
-
   setText('sb-stat-active-val', String(active));
-  setText('sb-stat-today-val', String(todayAttempts));
-  setText('sb-stat-avg-val', avgScore === null ? '—' : (avgScore + '%'));
+
+  call('getTeacherStats', {}, function(d) {
+    setText('sb-stat-today-val', String(d.todayAttempts || 0));
+    setText('sb-stat-avg-val', d.avgScore !== null && d.avgScore !== undefined
+      ? d.avgScore + '%' : '—');
+  }, function() {
+    /* silently leave values as — on error */
+  });
 }
 function renderCharts() {
   var now=new Date();
