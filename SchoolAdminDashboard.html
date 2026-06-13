@@ -35,9 +35,9 @@
       --surf3:#182030;
       --bdr:#1e2a3a;
       --bdr2:#243348;
-      --acc:#4d7cfe;
-      --acc2:#7ea3ff;
-      --acc-g:rgba(77,124,254,.15);
+      --acc:#f5a623;
+      --acc2:#ffc144;
+      --acc-g:rgba(245,166,35,.15);
       --grn:#23d18b;
       --grn-g:rgba(35,209,139,.12);
       --red:#ff5c5c;
@@ -60,7 +60,7 @@
     /* GATE */
     #gate{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:14px;}
     #gate.on{display:flex;}
-    .gate-spin{width:36px;height:36px;border:2px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;}
+    .gate-logo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #f5a623;box-shadow:0 0 28px rgba(245,166,35,.35);display:block;}
     #gate-msg{color:var(--txt2);font-size:12px;}
     .gate-btn{padding:9px 20px;background:var(--acc);border:none;border-radius:var(--rs);color:#fff;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;display:none;}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -269,7 +269,7 @@
 
 <!-- AUTH GATE -->
 <div id="gate" class="on">
-  <div class="gate-spin"></div>
+  <img src="assets/nlogo.gif" class="gate-logo" alt="Edurena">
   <div id="gate-msg">Verifying session…</div>
   <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
 </div>
@@ -280,11 +280,7 @@
   <aside class="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
-          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
-          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
-          <circle cx="35" cy="20" r="7" fill="#03060f"/>
-        </svg>
+        <img src="assets/nlogo.gif" alt="Edurena" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">
         <div class="logo-txt"><h1>edurena</h1><p>School Admin</p></div>
       </div>
     </div>
