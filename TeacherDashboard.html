@@ -44,10 +44,10 @@
   --text: #111110;
   --text2: #6b6b68;
   --text3: #9b9b97;
-  --accent: #1a56db;
-  --accent-bg: #eff4ff;
-  --accent-border: #c3d5ff;
-  --accent-text: #1e3a8a;
+  --accent: #c97d00;
+  --accent-bg: rgba(245,166,35,0.10);
+  --accent-border: rgba(245,166,35,0.38);
+  --accent-text: #7a4400;
   --success: #166534;
   --success-bg: #f0fdf4;
   --success-border: #86efac;
@@ -76,10 +76,10 @@ body.dark {
   --text: #e8ecf4;
   --text2: #7a8599;
   --text3: #3d4d63;
-  --accent: #4d7cfe;
-  --accent-bg: rgba(77,124,254,0.12);
-  --accent-border: rgba(77,124,254,0.3);
-  --accent-text: #7ea3ff;
+  --accent: #f5a623;
+  --accent-bg: rgba(245,166,35,0.12);
+  --accent-border: rgba(245,166,35,0.28);
+  --accent-text: #ffc144;
   --success: #23d18b;
   --success-bg: rgba(35,209,139,0.1);
   --success-border: rgba(35,209,139,0.25);
@@ -100,7 +100,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 /* GATE */
 #gate { display: none; position: fixed; inset: 0; z-index: 10000; background: var(--bg); align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
 #gate.on { display: flex; }
-.gate-spin { width: 32px; height: 32px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+.gate-logo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 3px solid #f5a623; box-shadow: 0 0 28px rgba(245,166,35,.35); display: block; }
 #gate-msg { color: var(--text2); font-size: 13px; }
 .gate-btn { padding: 8px 18px; background: var(--accent); border: none; border-radius: var(--r-sm); color: #fff; font-size: 13px; font-weight: 500; font-family: var(--font); cursor: pointer; display: none; margin-top: 4px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -381,16 +381,18 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 @keyframes si { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* SPINNER */
-.sp-ov { display: none; position: fixed; inset: 0; background: rgba(255,255,255,.6); z-index: 500; align-items: center; justify-content: center; }
+.sp-ov { display: none; position: fixed; inset: 0; background: rgba(248,247,244,.72); z-index: 500; align-items: center; justify-content: center; }
 .sp-ov.on { display: flex; }
-.sp-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 20px 28px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
-.sp { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 8px; }
+body.dark .sp-ov { background: rgba(7,9,15,.72); }
+.sp-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 22px 30px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.12); }
+.sp-gif { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #f5a623; display: block; margin: 0 auto 10px; }
 #sp-txt { font-size: 12px; color: var(--text2); }
 
 /* INLINE TABLE */
 .inline-cell { width: 100%; min-height: 28px; padding: 5px 6px; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 12px; resize: none; }
 .inline-cell:focus { background: var(--accent-bg); }
-.inline-select { width: 100%; padding: 5px 6px; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 12px; cursor: pointer; }
+.inline-select { width: 100%; padding: 5px 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; outline: none; color: var(--text); font-family: var(--font); font-size: 12px; cursor: pointer; }
+body.dark .inline-select { background: var(--surface2); border-color: var(--border2); color: var(--text); }
 
 /* PHOTO */
 .photo-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
@@ -504,7 +506,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 <body>
 
 <div id="gate" class="on">
-  <div class="gate-spin"></div>
+  <img src="assets/nlogo.gif" class="gate-logo" alt="Edurena">
   <div id="gate-msg">Verifying session…</div>
   <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
 </div>
@@ -518,11 +520,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
   <aside class="sb" id="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
-          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
-          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
-          <circle cx="35" cy="20" r="7" fill="#03060f"/>
-        </svg>
+        <img src="assets/nlogo.gif" alt="Edurena" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">
         <div class="logo-txt"><h1>edurena</h1><p>Teacher</p></div>
       </div>
     </div>
@@ -1331,7 +1329,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
   <div id="photo-lb-cap"></div>
 </div>
 
-<div class="sp-ov" id="sp-ov"><div class="sp-box"><div class="sp"></div><div id="sp-txt">Working…</div></div></div>
+<div class="sp-ov" id="sp-ov"><div class="sp-box"><img src="assets/nlogo.gif" class="sp-gif" alt=""><div id="sp-txt">Working…</div></div></div>
 <div class="ts-stack" id="toasts"></div>
 
 <script>
@@ -1460,7 +1458,7 @@ function toast(type, msg) {
 }
 function spin(on, t) {
   document.getElementById('sp-ov').classList.toggle('on', on);
-  if (t) document.getElementById('sp-txt').textContent = t;
+  document.getElementById('sp-txt').textContent = t || (on ? 'Loading…' : '');
 }
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
 function setAv(id, url) {
@@ -1683,6 +1681,7 @@ function sbadge(q) {
 }
 function doDelQuiz(code) {
   if(!confirm('Delete quiz "'+code+'"?\n\nThis permanently removes all questions and student results.')) return;
+  spin(true, 'Deleting quiz…');
   call('deleteQuiz',{examCode:code},function(){ toast('success','Quiz deleted'); loadQuizzes(); });
 }
 
