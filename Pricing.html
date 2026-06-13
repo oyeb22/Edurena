@@ -304,19 +304,22 @@ Object.defineProperty(window, 'GS_URL',     { get: function() { return DASH.scri
   var prePlan   = urlParams.get('plan')       || '';
   var preRenew  = urlParams.get('renew')      === 'true';
 
+  // Pre-select plan in calculator whenever ?plan= is present
+  if (prePlan && (prePlan === 'standard' || prePlan === 'premium')) {
+    var calcPlan = document.getElementById('calc-plan');
+    if (calcPlan) calcPlan.value = prePlan;
+    // Scroll to plans grid after page renders
+    setTimeout(function() {
+      var grid = document.getElementById('plans-grid');
+      if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  }
+
   if (preSchool) {
-    // Pre-fill the calculator school field as soon as DOM is ready
     var calcSchool = document.getElementById('calc-school');
     if (calcSchool) calcSchool.value = decodeURIComponent(preSchool);
 
-    // If this is a renewal link, also switch the plan selector to match and show a banner
-    if (prePlan && (prePlan === 'standard' || prePlan === 'premium')) {
-      var calcPlan = document.getElementById('calc-plan');
-      if (calcPlan) calcPlan.value = prePlan;
-    }
-
     if (preRenew) {
-      // Show a subtle renewal notice in the hero
       var heroP = document.querySelector('.hero p');
       if (heroP) {
         heroP.innerHTML = '🔄 <strong style="color:var(--acc2)">'
