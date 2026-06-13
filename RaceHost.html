@@ -240,7 +240,7 @@ function initScene(){
   var aspect = window.innerWidth / window.innerHeight;
   camera = new THREE.PerspectiveCamera(54, aspect, 0.5, 800);
   camera.position.set(0, camHeight, camRadius);
-  camera.lookAt(0, 4, 0);
+  camera.lookAt(0, 15, 0);
 
   window.addEventListener('resize', onResize);
 
@@ -380,9 +380,9 @@ function loadTrackGLB(){
       scene.add(group);
       setLoad(65);
 
-      /* Rebuild kart path to sit on the inner lane of the actual track */
+      /* Kart path at 88% of radius — Mario Circuit road runs the outer perimeter */
       trackRadius = TARGET_R;
-      initTrackCurve(TARGET_R * 0.58);
+      initTrackCurve(TARGET_R * 0.88);
 
       finishEnvironment(TARGET_R);
     },
@@ -408,10 +408,11 @@ function buildProceduralTrack(){
 /* Build scene decoration once track size is known */
 function finishEnvironment(r){
   buildStartBanner();
-  buildTrees(r * 1.28);
-  buildFlags(r * 1.06);
-  buildCrowd(r * 1.14);
-  camRadius = Math.max(165, r * 1.75);
+  buildTrees(r * 1.32);
+  buildFlags(r * 1.10);
+  buildCrowd(r * 1.18);
+  camRadius = Math.max(175, r * 1.90);
+  camHeight = Math.max(80, r * 0.92);
   setLoad(70);
 }
 
@@ -1099,7 +1100,7 @@ function animate(ts){
     camH,
     Math.sin(camAngle)*camRadius
   );
-  camera.lookAt(0, 5, 0);
+  camera.lookAt(0, 15, 0);
 
   /* FX timers */
   Object.keys(kartFx).forEach(function(pid){
