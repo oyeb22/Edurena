@@ -111,6 +111,8 @@
     .race-row .rr-bar{height:100%;background:var(--acc);border-radius:4px;transition:width .4s ease}
     .race-row .rr-pct{font-size:11px;color:var(--txt2);font-family:var(--mono);min-width:32px;text-align:right}
     .race-row.finished .rr-name{color:var(--grn)}.race-row.finished .rr-bar{background:var(--grn)}
+    .race-proj-btn{padding:13px 30px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.35);border-radius:12px;color:#00d4ff;font-size:14px;font-weight:700;font-family:var(--f);cursor:pointer;margin-bottom:10px}
+    .race-proj-btn:hover{background:rgba(0,212,255,.2)}
     .race-end-btn{padding:13px 30px;background:rgba(255,95,95,.12);border:1px solid rgba(255,95,95,.3);border-radius:12px;color:var(--red);font-size:14px;font-weight:700;font-family:var(--f);cursor:pointer}
     .race-end-btn:hover{background:rgba(255,95,95,.2)}
 
@@ -281,6 +283,7 @@
         <div style="text-align:center;color:var(--txt2);padding:20px;font-size:13px">Waiting for players to answer&hellip;</div>
       </div>
     </div>
+    <button class="race-proj-btn" id="raceProjBtn">&#x1F5A5; Open Projector View</button>
     <button class="race-end-btn" id="raceEndBtn">&#x23F9; End Race</button>
   </div>
 
@@ -362,14 +365,16 @@
 
 var SCRIPT_URL = DASH.scriptUrl;
 DASH.ready.then(function(cfg){ SCRIPT_URL = cfg.scriptUrl || DASH.scriptUrl; });
-var RACE_URL   = (window.DASH && DASH.racePageUrl)   || 'https://oyeb22.github.io/Edurena/race.html';
-var KAHOOT_URL = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/livequiz.html';
+var RACE_URL      = (window.DASH && DASH.racePageUrl)   || 'https://oyeb22.github.io/Edurena/Race.html';
+var KAHOOT_URL    = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/LiveQuiz.html';
+var RACE_HOST_URL = (window.DASH && DASH.raceHostUrl)   || 'https://oyeb22.github.io/Edurena/RaceHost.html';
 
 // If DASH resolves after this script, pick up the real URLs
 if (window.DASH && DASH.ready) {
   DASH.ready.then(function(){
-    if (DASH.racePageUrl)   RACE_URL   = DASH.racePageUrl;
-    if (DASH.kahootPageUrl) KAHOOT_URL = DASH.kahootPageUrl;
+    if (DASH.racePageUrl)   RACE_URL      = DASH.racePageUrl;
+    if (DASH.kahootPageUrl) KAHOOT_URL    = DASH.kahootPageUrl;
+    if (DASH.raceHostUrl)   RACE_HOST_URL = DASH.raceHostUrl;
   });
 }
 
@@ -470,6 +475,10 @@ function wireButtons(){
   el('openUrlBtn').addEventListener('click',function(){if(_joinUrl)openExternal(_joinUrl);});
   el('kh-action-btn').addEventListener('click',doKahootAction);
   el('khEndBtn').addEventListener('click',doLiveQuizEnd);
+  el('raceProjBtn').addEventListener('click',function(){
+    var url=RACE_HOST_URL+'?raceId='+encodeURIComponent(sessionCode);
+    window.open(url,'_blank');
+  });
   el('raceEndBtn').addEventListener('click',doRaceEnd);
 }
 
@@ -584,7 +593,10 @@ function doStart(){
   detachPlayersListener();
 
   if(mode==='race'){
-    db.ref('race/'+sessionCode+'/state/phase').set('started')
+    db.ref('race/'+sessionCode+'/state').set({
+      phase:'started',
+      startedAt:firebase.database.ServerValue.TIMESTAMP
+    })
       .then(function(){
         btn.disabled=false;btn.textContent='▶ Start Game';
         el('race-code-pill').textContent=sessionCode;
