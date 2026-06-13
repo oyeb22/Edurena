@@ -448,6 +448,67 @@
             <tbody id="pr-examples"></tbody>
           </table>
         </div>
+
+        <!-- Plan Configuration -->
+        <div class="card">
+          <div class="ct">Plan Configuration</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 14px;line-height:1.6">
+            Define what each plan includes and how premium pricing is calculated. Changes reflect on <strong>Pricing.html</strong> immediately.
+          </p>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+            <div style="flex:1;min-width:180px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Premium Multiplier</label>
+              <input type="number" id="plan-prm-mult" min="1" max="10" step="0.1" value="1.5" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:14px;outline:none">
+              <div style="font-size:11px;color:var(--txt2);margin-top:4px">e.g. 1.5 → Premium costs 50% more than Standard</div>
+            </div>
+            <div style="flex:1;min-width:180px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Annual Billing Discount (%)</label>
+              <input type="number" id="plan-annual-disc" min="0" max="80" step="1" value="20" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:14px;outline:none">
+              <div style="font-size:11px;color:var(--txt2);margin-top:4px">Discount applied when customer pays for 12+ months</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="flex:1;min-width:260px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:13px;font-weight:600;color:var(--txt)">Standard Plan Features</div>
+                <button type="button" class="btn btn-g btn-sm" onclick="addFeatureRow('plan-std-features')">+ Add</button>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--bdr);border-radius:6px;overflow:hidden">
+                <table style="width:100%;border-collapse:collapse">
+                  <thead><tr>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px;width:32px">✓</th>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px">Feature Text</th>
+                    <th style="width:28px"></th>
+                  </tr></thead>
+                  <tbody id="plan-std-features"></tbody>
+                </table>
+              </div>
+            </div>
+            <div style="flex:1;min-width:260px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:13px;font-weight:600;color:var(--txt)">Premium Plan Features</div>
+                <button type="button" class="btn btn-g btn-sm" onclick="addFeatureRow('plan-prm-features')">+ Add</button>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--bdr);border-radius:6px;overflow:hidden">
+                <table style="width:100%;border-collapse:collapse">
+                  <thead><tr>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px;width:32px">✓</th>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px">Feature Text</th>
+                    <th style="width:28px"></th>
+                  </tr></thead>
+                  <tbody id="plan-prm-features"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:14px">
+            <div id="plan-config-status" style="font-size:12px;display:none"></div>
+            <button class="btn btn-p" onclick="savePlanConfig()">Save Plan Config</button>
+          </div>
+        </div>
       </div>
 
       <!-- v5.5: SECURITY — change password -->
@@ -783,6 +844,7 @@ function loadPricing() {
     renderPricingExamples(pr.pricePerStudentNgn || 0);
     var inp = document.getElementById('pr-new');
     if (inp) inp.value = pr.pricePerStudentNgn || '';
+    if (pr.planConfig) loadPlanConfig(pr.planConfig);
   });
 }
 
@@ -811,6 +873,95 @@ function saveNewPricing() {
     statusEl.style.display = 'block';
     statusEl.style.color = 'var(--red)';
     statusEl.textContent = '✗ ' + (errMsg || 'Update failed');
+  });
+}
+
+// ── Plan Configuration ────────────────────────────────────────────
+function loadPlanConfig(pc) {
+  var mEl = document.getElementById('plan-prm-mult');
+  var dEl = document.getElementById('plan-annual-disc');
+  if (mEl) mEl.value = typeof pc.premiumMultiplier === 'number' ? pc.premiumMultiplier : 1.5;
+  if (dEl) dEl.value = typeof pc.annualDiscountPct === 'number' ? pc.annualDiscountPct : 20;
+  renderFeatureEditor('plan-std-features', pc.standardFeatures || []);
+  renderFeatureEditor('plan-prm-features', pc.premiumFeatures  || []);
+}
+
+function renderFeatureEditor(containerId, features) {
+  var tbody = document.getElementById(containerId);
+  if (!tbody) return;
+  tbody.innerHTML = features.map(function(f) {
+    return '<tr>'
+      + '<td style="padding:4px 6px;width:32px;text-align:center">'
+        + '<input type="checkbox" class="feat-ok"' + (f.ok ? ' checked' : '') + ' title="Included in plan">'
+      + '</td>'
+      + '<td style="padding:4px 6px">'
+        + '<input type="text" class="feat-text" value="' + escH(f.text||'') + '" '
+        + 'style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;color:var(--txt);font-size:13px">'
+      + '</td>'
+      + '<td style="padding:4px 6px;width:28px">'
+        + '<button type="button" onclick="removeFeatureRow(this)" title="Remove" '
+        + 'style="background:none;border:none;cursor:pointer;color:#e55;font-size:15px;padding:0;line-height:1">✕</button>'
+      + '</td>'
+    + '</tr>';
+  }).join('');
+}
+
+function addFeatureRow(containerId) {
+  var tbody = document.getElementById(containerId);
+  if (!tbody) return;
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td style="padding:4px 6px;width:32px;text-align:center"><input type="checkbox" class="feat-ok" checked title="Included in plan"></td>'
+    + '<td style="padding:4px 6px"><input type="text" class="feat-text" placeholder="Feature description…" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;color:var(--txt);font-size:13px"></td>'
+    + '<td style="padding:4px 6px;width:28px"><button type="button" onclick="removeFeatureRow(this)" title="Remove" style="background:none;border:none;cursor:pointer;color:#e55;font-size:15px;padding:0;line-height:1">✕</button></td>';
+  tbody.appendChild(tr);
+  tr.querySelector('.feat-text').focus();
+}
+
+function removeFeatureRow(btn) {
+  var tr = btn.closest ? btn.closest('tr') : btn.parentElement.parentElement;
+  if (tr) tr.remove();
+}
+
+function collectFeatures(containerId) {
+  var tbody = document.getElementById(containerId);
+  if (!tbody) return [];
+  var features = [];
+  tbody.querySelectorAll('tr').forEach(function(tr) {
+    var textEl = tr.querySelector('.feat-text');
+    var okEl   = tr.querySelector('.feat-ok');
+    var text = textEl ? textEl.value.trim() : '';
+    if (text) features.push({ text: text, ok: !!(okEl && okEl.checked) });
+  });
+  return features;
+}
+
+function savePlanConfig() {
+  var mult = parseFloat((document.getElementById('plan-prm-mult')   || {}).value);
+  var disc = parseFloat((document.getElementById('plan-annual-disc') || {}).value);
+  var statusEl = document.getElementById('plan-config-status');
+  if (isNaN(mult) || mult < 1) { toast('error', 'Premium multiplier must be ≥ 1'); return; }
+  if (isNaN(disc) || disc < 0 || disc > 80) { toast('error', 'Annual discount must be 0–80%'); return; }
+  var stdFeats = collectFeatures('plan-std-features');
+  var prmFeats = collectFeatures('plan-prm-features');
+  if (!stdFeats.length) { toast('error', 'Standard plan needs at least one feature'); return; }
+  if (!prmFeats.length) { toast('error', 'Premium plan needs at least one feature'); return; }
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--txt2)';
+  statusEl.textContent = 'Saving…';
+  call('updatePricing', {
+    planConfig: {
+      premiumMultiplier: mult,
+      annualDiscountPct: disc,
+      standardFeatures:  stdFeats,
+      premiumFeatures:   prmFeats
+    }
+  }, function() {
+    statusEl.style.color = 'var(--grn)';
+    statusEl.textContent = '✓ Plan configuration saved';
+    setTimeout(function() { statusEl.style.display = 'none'; }, 3500);
+  }, function(e) {
+    statusEl.style.color = '#e55';
+    statusEl.textContent = '✗ ' + (e || 'Failed to save');
   });
 }
 
