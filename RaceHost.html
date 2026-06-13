@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kart Race Projector — Edurena</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050810;--panel:#0a0d1a;--bdr:#1a2035;
+  --txt:#e8edf5;--muted:#5a6a8a;
+  --acc:#00d4ff;--grn:#00ff88;--red:#ff3355;--yel:#ffcc00;
+  --f:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'Orbitron',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;color:var(--txt);font-family:var(--f)}
+#c{position:fixed;top:0;left:0;display:block;z-index:1}
+
+/* ── RIGHT HUD SIDEBAR ── */
+#hud{
+  position:fixed;top:0;right:0;bottom:0;width:240px;
+  background:rgba(5,8,16,.93);border-left:1px solid rgba(255,255,255,.07);
+  backdrop-filter:blur(12px);z-index:10;
+  display:flex;flex-direction:column;padding:16px;overflow:hidden;
+}
+.hud-sec{margin-bottom:14px}
+.hud-lbl{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.stand-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);margin-bottom:4px;transition:all .3s}
+.stand-row.leader{border-color:rgba(255,204,0,.4);background:rgba(255,204,0,.06)}
+.stand-pos{font-family:var(--mono);font-size:11px;font-weight:900;color:var(--muted);width:20px;text-align:center;flex-shrink:0}
+.stand-row.rk1 .stand-pos{color:#ffd700}
+.stand-row.rk2 .stand-pos{color:#c0c0c0}
+.stand-row.rk3 .stand-pos{color:#cd7f32}
+.stand-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.stand-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stand-pct{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.stand-done{color:var(--grn)}
+
+/* ── BOTTOM Q BAR ── */
+#q-bar{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.q-badge{display:inline-flex;padding:3px 9px;background:rgba(0,212,255,.12);
+  border:1px solid rgba(0,212,255,.3);border-radius:5px;font-family:var(--mono);
+  font-size:10px;color:var(--acc);font-weight:700;margin-bottom:6px}
+
+/* ── HUD CONTROLS ── */
+#hud-ctrl{margin-top:10px}
+.hud-btn{display:block;width:100%;padding:9px;border-radius:8px;font-family:var(--mono);
+  font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;
+  transition:all .2s;text-align:center}
+.hud-btn.end{background:rgba(255,51,85,.15);color:var(--red);border:1px solid rgba(255,51,85,.3)}
+.hud-btn.end:hover{background:rgba(255,51,85,.25)}
+
+/* ── TOP-LEFT TITLE OVERLAY ── */
+#tl-overlay{position:fixed;top:16px;left:20px;z-index:11;pointer-events:none}
+.race-ttl{font-family:var(--mono);font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;
+  text-shadow:0 0 20px rgba(0,212,255,.5)}
+.race-ttl span{background:linear-gradient(90deg,var(--acc),#7b68ee);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.code-chip{display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:4px 12px;
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:6px}
+.code-chip label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.code-chip span{font-family:var(--mono);font-size:17px;font-weight:900;color:var(--acc);letter-spacing:5px}
+
+/* ── OVERLAY SCREENS ── */
+.oscreen{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;
+  align-items:center;justify-content:center;background:rgba(5,8,16,.92);backdrop-filter:blur(10px)}
+.oscreen.on{display:flex}
+
+/* ── WAITING SCREEN ── */
+.wait-card{text-align:center;padding:28px;max-width:580px;width:100%}
+.w-brand{font-family:var(--mono);font-size:14px;font-weight:900;color:var(--acc);letter-spacing:4px;
+  text-transform:uppercase;margin-bottom:24px}
+.w-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.w-code{font-family:var(--mono);font-size:clamp(52px,12vw,88px);font-weight:900;
+  color:var(--acc);letter-spacing:14px;text-shadow:0 0 40px rgba(0,212,255,.5);margin-bottom:4px}
+.w-count-big{font-family:var(--mono);font-size:52px;font-weight:900;color:var(--grn);
+  text-shadow:0 0 20px rgba(0,255,136,.4);margin-top:18px}
+.w-count-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+.w-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 20px;min-height:32px}
+.w-chip{padding:4px 12px;background:#0d1525;border:1px solid #1e2d4a;
+  border-radius:20px;font-size:12px;font-weight:600;animation:chipPop .3s ease;color:var(--acc)}
+@keyframes chipPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.w-status{font-size:13px;color:var(--muted);letter-spacing:1px}
+.pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);
+  margin-right:7px;animation:pdot 1.4s ease-in-out infinite;vertical-align:middle;box-shadow:0 0 8px var(--acc)}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+.w-err{color:var(--red);font-size:13px;margin-top:12px;min-height:18px}
+
+/* ── COUNTDOWN ── */
+#countdown-overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;
+  justify-content:center;background:rgba(5,8,16,.6);backdrop-filter:blur(4px);
+  pointer-events:none;opacity:0;transition:opacity .3s}
+#countdown-overlay.show{opacity:1}
+.cd-big{font-family:var(--mono);font-size:clamp(100px,22vw,200px);font-weight:900;
+  color:#fff;text-shadow:0 0 60px var(--acc),0 0 120px rgba(0,212,255,.4);
+  animation:cdPop .75s cubic-bezier(.22,1,.36,1) both}
+@keyframes cdPop{from{transform:scale(3.2);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ── LIVE DOT ── */
+.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);
+  margin-right:6px;animation:ldp 1.2s ease-in-out infinite;vertical-align:middle;
+  box-shadow:0 0 8px var(--red)}
+@keyframes ldp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.5)}}
+
+/* ── PODIUM ── */
+#s-end{gap:20px}
+.pod-title{font-family:var(--mono);font-size:clamp(24px,5vw,40px);font-weight:900;
+  background:linear-gradient(135deg,var(--yel),var(--acc));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;letter-spacing:4px}
+.pod-wrap{display:flex;align-items:flex-end;gap:12px;margin:16px 0}
+.pod-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.pod-blk{border-radius:8px 8px 0 0;
+  background:linear-gradient(to top,rgba(255,255,255,.08),rgba(255,255,255,.14));
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+  font-size:22px;font-weight:900;color:#fff;width:100px}
+.pod-blk.b1{height:120px;border:1px solid rgba(255,204,0,.4);box-shadow:0 0 20px rgba(255,204,0,.2)}
+.pod-blk.b2{height:80px;border:1px solid rgba(192,192,192,.4)}
+.pod-blk.b3{height:60px;border:1px solid rgba(205,127,50,.4)}
+.pod-name{font-size:12px;font-weight:700;max-width:100px;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.end-close-btn{padding:14px 40px;background:linear-gradient(135deg,#0055aa,#5500cc);
+  color:#fff;border:none;border-radius:10px;font-family:var(--mono);font-size:13px;
+  font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-top:8px}
+.end-close-btn:hover{transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="tl-overlay">
+  <div class="race-ttl">KART <span>RACE</span></div>
+  <div class="code-chip" id="rc-chip" style="display:none">
+    <label>CODE</label>
+    <span id="rc-val">----</span>
+  </div>
+</div>
+
+<div id="hud" style="display:none">
+  <div class="hud-sec">
+    <div class="hud-lbl"><span class="live-dot"></span>Standings</div>
+    <div id="standings"></div>
+  </div>
+  <div id="q-bar">
+    <div class="q-badge" id="q-badge">RACE LIVE</div>
+  </div>
+  <div id="hud-ctrl">
+    <button class="hud-btn end" id="end-btn" onclick="endRaceBtn()">End Race</button>
+  </div>
+</div>
+
+<!-- Waiting / pre-race -->
+<div class="oscreen on" id="s-wait">
+  <div class="wait-card">
+    <div class="w-brand">&#x1F3C1; Kart Race — Projector View</div>
+    <div class="w-lbl">Race Code</div>
+    <div class="w-code" id="w-code">----</div>
+    <div class="w-count-big" id="w-count">0</div>
+    <div class="w-count-lbl">drivers on grid</div>
+    <div class="w-chips" id="w-chips"></div>
+    <div class="w-status"><span class="pulse-dot"></span><span id="w-status-txt">Connecting…</span></div>
+    <div class="w-err" id="w-err"></div>
+  </div>
+</div>
+
+<!-- Countdown -->
+<div id="countdown-overlay">
+  <div class="cd-big" id="cd-num">3</div>
+</div>
+
+<!-- Podium -->
+<div class="oscreen" id="s-end">
+  <div class="pod-title">RACE OVER!</div>
+  <div class="pod-wrap" id="pod-wrap"></div>
+  <button class="end-close-btn" onclick="window.close()">Close Projector</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ═══════════════ URL PARAMS ═══════════════ */
+var P = new URLSearchParams(location.search);
+var raceId = (P.get('raceId') || '').trim().toUpperCase();
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ═══════════════ FIREBASE ═══════════════ */
+var db;
+try {
+  var fbCfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var existApp=null;
+  if(firebase.apps) firebase.apps.forEach(function(a){if(a.name==='racehost')existApp=a;});
+  db=firebase.database(existApp||firebase.initializeApp(fbCfg,'racehost'));
+} catch(e){
+  el('w-err').textContent='Firebase error: '+e.message;
+}
+
+/* ═══════════════ GAME STATE ═══════════════ */
+var gameRunning=false, raceStarted=false;
+var allPlayers={};
+var rafId=null, lastTime=0;
+var playersRef=null, stateRef=null;
+
+/* ═══════════════════════════════════════════════════════
+   TRACK GEOMETRY — Catmull-Rom spline, stadium oval
+═══════════════════════════════════════════════════════ */
+var RAW_WP = [
+  [0.44,0.08],[0.60,0.08],[0.72,0.09],[0.80,0.18],[0.82,0.30],
+  [0.82,0.50],[0.82,0.70],[0.80,0.82],[0.72,0.91],[0.56,0.92],
+  [0.44,0.92],[0.30,0.92],[0.16,0.91],[0.08,0.82],[0.06,0.70],
+  [0.06,0.50],[0.06,0.30],[0.08,0.18],[0.16,0.09],[0.30,0.08]
+];
+var N_SAMP = 480;
+var trackSamples=[], outerEdge=[], innerEdge=[];
+var TRACK_W=0, KW=0, KH=0;
+var AREA_W=0, AREA_H=0, CW=0, CH=0;
+var HUD_W = 240;
+var trackBuilt=false, builtW=0, builtH=0;
+
+function cr1d(p0,p1,p2,p3,t){
+  var t2=t*t,t3=t2*t;
+  return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);
+}
+function splinePt(t){
+  t=((t%1)+1)%1;
+  var n=RAW_WP.length, seg=Math.floor(t*n), lt=t*n-seg;
+  var i0=(seg-1+n)%n, i1=seg, i2=(seg+1)%n, i3=(seg+2)%n;
+  return {
+    x:cr1d(RAW_WP[i0][0],RAW_WP[i1][0],RAW_WP[i2][0],RAW_WP[i3][0],lt)*AREA_W,
+    y:cr1d(RAW_WP[i0][1],RAW_WP[i1][1],RAW_WP[i2][1],RAW_WP[i3][1],lt)*AREA_H
+  };
+}
+function buildTrack(){
+  TRACK_W=Math.max(40,Math.min(AREA_W,AREA_H)*0.090);
+  KW=Math.max(14,TRACK_W*0.38); KH=KW*1.55;
+  trackSamples=[]; outerEdge=[]; innerEdge=[];
+  for(var i=0;i<N_SAMP;i++){
+    var t=i/N_SAMP, p=splinePt(t), p2=splinePt(t+0.001);
+    var dx=p2.x-p.x, dy=p2.y-p.y, len=Math.sqrt(dx*dx+dy*dy)||1;
+    var tx=dx/len, ty=dy/len;
+    var nx=ty, ny=-tx;
+    trackSamples.push({x:p.x,y:p.y,angle:Math.atan2(ty,tx),nx:nx,ny:ny});
+    outerEdge.push({x:p.x+nx*TRACK_W*.5,y:p.y+ny*TRACK_W*.5});
+    innerEdge.push({x:p.x-nx*TRACK_W*.5,y:p.y-ny*TRACK_W*.5});
+  }
+  builtW=AREA_W; builtH=AREA_H; trackBuilt=true;
+}
+function ensureTrack(){if(!trackBuilt||AREA_W!==builtW||AREA_H!==builtH) buildTrack();}
+function trackPos(t){
+  t=((t%1)+1)%1;
+  return trackSamples[Math.floor(t*N_SAMP)%N_SAMP];
+}
+
+/* ═══════════════ CANVAS ═══════════════ */
+var c=document.getElementById('c'), ctx=c.getContext('2d');
+function resize(){
+  CW=c.width=window.innerWidth; CH=c.height=window.innerHeight;
+  AREA_W=CW-HUD_W; AREA_H=CH; trackBuilt=false;
+}
+window.addEventListener('resize',resize); resize();
+
+/* ═══════════════ UTILITIES ═══════════════ */
+function rrFill(x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.arcTo(x+w,y,x+w,y+r,r); ctx.lineTo(x+w,y+h-r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r);
+  ctx.arcTo(x,y,x+r,y,r); ctx.closePath(); ctx.fill();
+}
+function hexAdjust(hex,amt){
+  var r=parseInt(hex.slice(1,3),16)||0;
+  var g=parseInt(hex.slice(3,5),16)||0;
+  var b=parseInt(hex.slice(5,7),16)||0;
+  function clamp(v){return Math.max(0,Math.min(255,v+amt));}
+  return '#'+[clamp(r),clamp(g),clamp(b)].map(function(v){return('0'+v.toString(16)).slice(-2)}).join('');
+}
+function localCurv(i){
+  var prev=trackSamples[(i-3+N_SAMP)%N_SAMP].angle, curr=trackSamples[i].angle;
+  var d=curr-prev; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+  return Math.abs(d);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TRACK RENDERER
+═══════════════════════════════════════════════════════ */
+function drawScene(){
+  var gGrad=ctx.createLinearGradient(0,0,AREA_W,AREA_H);
+  gGrad.addColorStop(0,'#3a7c41'); gGrad.addColorStop(.5,'#4a8e50'); gGrad.addColorStop(1,'#3a7c41');
+  ctx.fillStyle=gGrad; ctx.fillRect(0,0,AREA_W,AREA_H);
+  for(var s=0;s<14;s++){
+    ctx.fillStyle=s%2===0?'rgba(255,255,255,.024)':'rgba(0,0,0,.024)';
+    ctx.fillRect(s*(AREA_W/7),0,AREA_W/7,AREA_H);
+  }
+  ctx.beginPath();
+  ctx.moveTo(innerEdge[0].x,innerEdge[0].y);
+  for(var i=1;i<N_SAMP;i++) ctx.lineTo(innerEdge[i].x,innerEdge[i].y);
+  ctx.closePath(); ctx.fillStyle='#2e6136'; ctx.fill();
+  var cx2=0,cy2=0;
+  for(var i=0;i<N_SAMP;i++){cx2+=trackSamples[i].x;cy2+=trackSamples[i].y;}
+  cx2/=N_SAMP; cy2/=N_SAMP;
+  ctx.strokeStyle='rgba(60,120,70,.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx2,cy2,TRACK_W*1.4,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx2,cy2,TRACK_W*.5,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(outerEdge[0].x,outerEdge[0].y);
+  for(var i=1;i<N_SAMP;i++) ctx.lineTo(outerEdge[i].x,outerEdge[i].y);
+  ctx.closePath();
+  ctx.moveTo(innerEdge[N_SAMP-1].x,innerEdge[N_SAMP-1].y);
+  for(var j=N_SAMP-2;j>=0;j--) ctx.lineTo(innerEdge[j].x,innerEdge[j].y);
+  ctx.closePath();
+  var ag=ctx.createRadialGradient(AREA_W/2,AREA_H/2,0,AREA_W/2,AREA_H/2,Math.max(AREA_W,AREA_H)*.65);
+  ag.addColorStop(0,'#252538'); ag.addColorStop(1,'#191926');
+  ctx.fillStyle=ag; ctx.fill('evenodd');
+  ctx.lineWidth=2.2; ctx.strokeStyle='rgba(255,255,255,.58)';
+  ctx.beginPath();
+  for(var i=0;i<N_SAMP;i++){if(!i)ctx.moveTo(outerEdge[i].x,outerEdge[i].y);else ctx.lineTo(outerEdge[i].x,outerEdge[i].y);}
+  ctx.closePath(); ctx.stroke();
+  ctx.beginPath();
+  for(var i=0;i<N_SAMP;i++){if(!i)ctx.moveTo(innerEdge[i].x,innerEdge[i].y);else ctx.lineTo(innerEdge[i].x,innerEdge[i].y);}
+  ctx.closePath(); ctx.stroke();
+  ctx.setLineDash([TRACK_W*.34,TRACK_W*.52]); ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(var i=0;i<N_SAMP;i++){var s=trackSamples[i];if(!i)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y);}
+  ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  drawKerbs(); drawFinish();
+}
+
+function drawKerbs(){
+  var kw=TRACK_W*.09; ctx.lineWidth=kw; ctx.lineCap='butt';
+  var sl=Math.max(3,Math.round(N_SAMP*.009));
+  for(var i=0;i<N_SAMP;i++){
+    if(localCurv(i)<0.007) continue;
+    var seg=Math.floor(i/sl)%2;
+    ctx.strokeStyle=seg===0?'#e74c3c':'#f0f0f0';
+    var ni=(i+1)%N_SAMP;
+    ctx.beginPath(); ctx.moveTo(outerEdge[i].x,outerEdge[i].y); ctx.lineTo(outerEdge[ni].x,outerEdge[ni].y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(innerEdge[i].x,innerEdge[i].y); ctx.lineTo(innerEdge[ni].x,innerEdge[ni].y); ctx.stroke();
+  }
+  ctx.lineCap='round';
+}
+
+function drawFinish(){
+  var s0=trackSamples[0];
+  var TILE=Math.max(5,Math.round(TRACK_W/8));
+  var nAcross=Math.ceil(TRACK_W/TILE)+2, nAlong=3;
+  ctx.save();
+  ctx.translate(s0.x,s0.y);
+  ctx.rotate(s0.angle);
+  for(var r=0;r<nAlong;r++){
+    for(var cc=0;cc<nAcross;cc++){
+      ctx.fillStyle=(r+cc)%2===0?'#fff':'#111';
+      ctx.fillRect((r-nAlong/2)*TILE,(cc-nAcross/2)*TILE,TILE,TILE);
+    }
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.translate(s0.x,s0.y);
+  ctx.rotate(s0.angle);
+  ctx.strokeStyle='rgba(255,215,0,.6)'; ctx.lineWidth=2.5;
+  ctx.shadowColor='rgba(255,215,0,.8)'; ctx.shadowBlur=8;
+  ctx.beginPath(); ctx.moveTo(0,-TRACK_W*.5); ctx.lineTo(0,TRACK_W*.5); ctx.stroke();
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════
+   KART RENDERER
+═══════════════════════════════════════════════════════ */
+function drawKart(cx,cy,angle,col,label,rank){
+  var dark=hexAdjust(col,-50);
+  var w=KW, h=KH;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(angle+Math.PI/2);
+
+  ctx.globalAlpha=.28; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(w*.12,h*.1,w*.5,h*.36,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+
+  ctx.fillStyle='#141414';
+  rrFill(-w*.53,h*.22,w*.21,h*.30,3); rrFill(w*.32,h*.22,w*.21,h*.30,3);
+
+  var bg=ctx.createLinearGradient(-w*.35,-h*.44,w*.35,h*.44);
+  bg.addColorStop(0,hexAdjust(col,40)); bg.addColorStop(.45,col); bg.addColorStop(1,hexAdjust(col,-20));
+  ctx.fillStyle=bg; rrFill(-w*.37,-h*.44,w*.74,h*.88,w*.21);
+
+  ctx.fillStyle=hexAdjust(col,-16);
+  rrFill(-w*.55,-h*.10,w*.20,h*.36,4); rrFill(w*.35,-h*.10,w*.20,h*.36,4);
+
+  ctx.fillStyle=hexAdjust(col,-34); rrFill(-w*.22,h*.07,w*.44,h*.24,4);
+  ctx.fillStyle=hexAdjust(col,-40); rrFill(-w*.21,-h*.37,w*.42,h*.30,w*.12);
+  ctx.fillStyle='rgba(120,200,255,.38)'; rrFill(-w*.16,-h*.34,w*.32,h*.17,w*.08);
+
+  ctx.fillStyle='#F0C898';
+  ctx.beginPath(); ctx.arc(0,-h*.15,w*.16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=dark;
+  ctx.beginPath(); ctx.arc(0,-h*.18,w*.16,-Math.PI*.93,.07); ctx.fill();
+
+  ctx.fillStyle='#141414';
+  rrFill(-w*.53,-h*.32,w*.19,h*.24,3); rrFill(w*.34,-h*.32,w*.19,h*.24,3);
+
+  ctx.fillStyle=dark; rrFill(-w*.47,-h*.46,w*.94,h*.08,2);
+
+  ctx.fillStyle='#fff';
+  ctx.font='bold '+Math.round(w*.40)+'px Orbitron,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(rank||'?'),0,h*.22);
+
+  ctx.restore();
+
+  var lblY=cy-h*.82;
+  ctx.save();
+  ctx.font='600 '+Math.max(9,Math.round(KW*.52))+'px "Plus Jakarta Sans",sans-serif';
+  var tw=ctx.measureText(label).width;
+  ctx.fillStyle='rgba(5,8,16,.88)'; rrFill(cx-tw/2-5,lblY-9,tw+10,17,4);
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label,cx,lblY);
+  ctx.restore();
+}
+
+/* ═══════════════ PARTICLES ═══════════════ */
+var particles=[];
+function spawnBoost(pos,laneOff,strong){
+  var bx=pos.x+pos.nx*laneOff-Math.cos(pos.angle)*KH*.55;
+  var by=pos.y+pos.ny*laneOff-Math.sin(pos.angle)*KH*.55;
+  var n=strong?6:3;
+  for(var i=0;i<n;i++){
+    var spd=.9+Math.random()*2.4, spr=(Math.random()-.5)*1.5;
+    particles.push({
+      x:bx, y:by,
+      vx:-Math.cos(pos.angle)*spd+Math.sin(pos.angle)*spr,
+      vy:-Math.sin(pos.angle)*spd-Math.cos(pos.angle)*spr,
+      life:1, size:3+Math.random()*4.5,
+      col:['#ff9500','#ffe100','#ff5500','#ffdd44'][Math.floor(Math.random()*4)]
+    });
+  }
+}
+function updateParticles(dt){
+  particles=particles.filter(function(p){
+    p.x+=p.vx; p.y+=p.vy; p.life-=dt*1.9; p.size*=.96;
+    return p.life>0&&p.size>.5;
+  });
+}
+function drawParticles(){
+  particles.forEach(function(p){
+    ctx.save(); ctx.globalAlpha=p.life*.88; ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   GAME LOOP
+═══════════════════════════════════════════════════════ */
+function loop(ts){
+  if(!gameRunning) return;
+  rafId=requestAnimationFrame(loop);
+  var dt=Math.min(.05,(ts-(lastTime||ts))/1000); lastTime=ts;
+
+  ensureTrack();
+  ctx.clearRect(0,0,CW,CH);
+  drawScene();
+
+  var sorted=Object.values(allPlayers).sort(function(a,b){
+    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
+    return (b.progress||0)-(a.progress||0);
+  });
+
+  sorted.forEach(function(p,rank){
+    var t=p.progress||0;
+    var laneOff=(p.laneX||0)/14*TRACK_W;
+    var pos=trackPos(t);
+    var kx=pos.x+pos.nx*laneOff;
+    var ky=pos.y+pos.ny*laneOff;
+    var col=p.color||'#3498db';
+    if(rank===0&&(p.progress||0)>0.01) spawnBoost(pos,laneOff,true);
+    drawKart(kx,ky,pos.angle,col,(p.name||'?').slice(0,10),rank+1);
+  });
+
+  drawParticles();
+  updateParticles(dt);
+  updateStandings();
+
+  // Auto-end when all players finished
+  var vals=Object.values(allPlayers);
+  if(vals.length>0&&vals.every(function(p){return p.finished;})){
+    setTimeout(showPodium,2000);
+  }
+}
+
+/* ═══════════════ HUD STANDINGS ═══════════════ */
+function updateStandings(){
+  var sorted=Object.values(allPlayers).sort(function(a,b){
+    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
+    return (b.progress||0)-(a.progress||0);
+  });
+  var html='';
+  sorted.forEach(function(p,i){
+    var rkCls=i===0?' rk1':i===1?' rk2':i===2?' rk3':'';
+    var pct=p.finished?'<span class="stand-done">DONE</span>':Math.round((p.progress||0)*100)+'%';
+    html+='<div class="stand-row'+(i===0?' leader':'')+rkCls+'">'
+      +'<div class="stand-pos">'+(i+1)+'</div>'
+      +'<div class="stand-dot" style="background:'+esc(p.color||'#888')+'"></div>'
+      +'<div class="stand-name">'+esc((p.name||'?').slice(0,12))+'</div>'
+      +'<div class="stand-pct">'+pct+'</div>'
+      +'</div>';
+  });
+  el('standings').innerHTML=html||'<div style="font-size:11px;color:var(--muted);padding:8px">Waiting for players…</div>';
+}
+
+/* ═══════════════ FIREBASE WATCHING ═══════════════ */
+function watchPlayers(){
+  playersRef=db.ref('race/'+raceId+'/players');
+  playersRef.on('value',function(snap){
+    var players=(snap&&snap.val())||{};
+    allPlayers={};
+    Object.entries(players).forEach(function(e){
+      allPlayers[e[0]]=Object.assign({pid:e[0]},e[1]);
+    });
+    // Update waiting screen player list
+    if(!raceStarted){
+      var names=Object.values(allPlayers).map(function(p){return p.name||'?';});
+      el('w-count').textContent=names.length;
+      el('w-chips').innerHTML=names.map(function(n){
+        return '<div class="w-chip">'+esc(n)+'</div>';
+      }).join('');
+    }
+    if(gameRunning) updateStandings();
+  });
+}
+
+function watchState(){
+  stateRef=db.ref('race/'+raceId+'/state');
+  stateRef.on('value',function(snap){
+    if(!snap||!snap.val()) return;
+    var st=snap.val();
+    if(st.phase==='started'&&!raceStarted){
+      raceStarted=true;
+      var startedAt=st.startedAt||Date.now();
+      showOverlay(null); // hide waiting overlay
+      runSyncedCountdown(startedAt,function(){
+        el('hud').style.display='flex';
+        gameRunning=true;
+        lastTime=performance.now();
+        rafId=requestAnimationFrame(loop);
+      });
+    } else if(st.phase==='ended'&&gameRunning){
+      showPodium();
+    }
+  });
+}
+
+/* ═══════════════ COUNTDOWN ═══════════════ */
+function runSyncedCountdown(startedAt,done){
+  var overlay=el('countdown-overlay'), numEl=el('cd-num');
+  overlay.classList.add('show');
+  function tick(){
+    var elapsed=(Date.now()-startedAt)/1000;
+    var cnt=Math.max(0,Math.ceil(3-elapsed));
+    numEl.className='cd-big'; void numEl.offsetWidth; numEl.className='cd-big';
+    if(cnt===0){
+      numEl.textContent='GO!';
+      setTimeout(function(){overlay.classList.remove('show'); done&&done();},750);
+    } else {
+      numEl.textContent=String(cnt);
+      setTimeout(tick,1000);
+    }
+  }
+  tick();
+}
+
+/* ═══════════════ CONTROLS ═══════════════ */
+function endRaceBtn(){
+  if(!confirm('End the race for all players?')) return;
+  if(raceId&&db) db.ref('race/'+raceId+'/state/phase').set('ended');
+  gameRunning=false;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  showPodium();
+}
+
+function showPodium(){
+  gameRunning=false;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  var sorted=Object.values(allPlayers).sort(function(a,b){
+    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
+    return (b.progress||0)-(a.progress||0);
+  });
+  var medals=['🥇','🥈','🥉'], blkCls=['b1','b2','b3'];
+  var order=[sorted[1],sorted[0],sorted[2]].filter(Boolean);
+  var origRanks=[2,1,3];
+  var html='';
+  for(var pi=0;pi<order.length;pi++){
+    var p=order[pi], rank=origRanks[pi], bk=blkCls[rank-1];
+    var col=p.color||'#3498db';
+    html+='<div class="pod-col">'
+      +'<div class="pod-name">'+esc((p.name||'?').slice(0,12))+'</div>'
+      +'<div class="pod-blk '+bk+'" style="border-color:'+esc(col)+'40;box-shadow:0 0 18px '+esc(col)+'33">'+medals[rank-1]+'</div>'
+      +'</div>';
+  }
+  el('pod-wrap').innerHTML=html||'<div style="color:var(--muted)">No finishers yet</div>';
+  showOverlay('s-end');
+}
+
+function showOverlay(id){
+  document.querySelectorAll('.oscreen').forEach(function(s){s.classList.remove('on');});
+  if(id) el(id).classList.add('on');
+}
+
+/* ═══════════════ INIT ═══════════════ */
+(function init(){
+  if(!raceId){
+    el('w-err').textContent='No race ID — open this from LiveHost';
+    el('w-status-txt').textContent='Waiting for connection…';
+    return;
+  }
+  el('w-code').textContent=raceId;
+  el('rc-val').textContent=raceId;
+  el('rc-chip').style.display='';
+  el('w-status-txt').textContent='Waiting for race director to start…';
+  watchPlayers();
+  watchState();
+
+  // Draw idle track in background while waiting
+  (function idleLoop(ts){
+    if(gameRunning) return; // game loop takes over
+    ensureTrack();
+    ctx.clearRect(0,0,CW,CH);
+    drawScene();
+    // Draw karts at their current positions (lobby state)
+    var players=Object.values(allPlayers);
+    players.forEach(function(p,i){
+      var laneOff=(p.laneX||0)/14*TRACK_W;
+      var pos=trackPos(p.progress||0);
+      var kx=pos.x+pos.nx*laneOff, ky=pos.y+pos.ny*laneOff;
+      drawKart(kx,ky,pos.angle,p.color||'#3498db',(p.name||'?').slice(0,10),i+1);
+    });
+    requestAnimationFrame(idleLoop);
+  })();
+})();
+
+window.addEventListener('beforeunload',function(){
+  if(rafId){cancelAnimationFrame(rafId);}
+  if(playersRef){try{playersRef.off('value');}catch(_){}}
+  if(stateRef){try{stateRef.off('value');}catch(_){}}
+});
+
+})();
+</script>
+</body>
+</html>
