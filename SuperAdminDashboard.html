@@ -32,7 +32,7 @@
     :root {
       --bg:#080c14; --surf:#0e1321; --surf2:#161c2d; --surf3:#1c2338;
       --bdr:#242b3d; --bdr2:#2c3550;
-      --acc:#3b6ef5; --acc2:#7c9ef8; --acc-glow:rgba(59,110,245,0.18);
+      --acc:#f5a623; --acc2:#ffc144; --acc-glow:rgba(245,166,35,0.18);
       --grn:#29c98a; --grn-glow:rgba(41,201,138,0.14);
       --red:#f0645a; --red-glow:rgba(240,100,90,0.14);
       --yel:#f5c026; --yel-glow:rgba(245,192,38,0.14);
@@ -46,7 +46,7 @@
 
     #gate{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;}
     #gate.on{display:flex;}
-    .gate-spin{width:42px;height:42px;border:3px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:spin 0.9s linear infinite;}
+    .gate-logo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #f5a623;box-shadow:0 0 28px rgba(245,166,35,.35);display:block;}
     #gate-msg{color:var(--txt2);font-size:13px;}
     .gate-btn{padding:10px 22px;background:var(--acc);border:none;border-radius:var(--rs);color:#fff;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:none;}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -192,7 +192,7 @@
 <body>
 
 <div id="gate" class="on">
-  <div class="gate-spin"></div>
+  <img src="assets/nlogo.gif" class="gate-logo" alt="Edurena">
   <div id="gate-msg">Verifying super-admin session…</div>
   <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
 </div>
@@ -201,11 +201,7 @@
   <aside class="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
-          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
-          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
-          <circle cx="35" cy="20" r="7" fill="#03060f"/>
-        </svg>
+        <img src="assets/nlogo.gif" alt="Edurena" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">
         <div class="logo-txt"><h1>edurena</h1><p>Super Admin</p></div>
       </div>
     </div>
