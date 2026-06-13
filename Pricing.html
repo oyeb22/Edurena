@@ -648,9 +648,52 @@ window.addEventListener('click', function(e) {
 });
 
 /* ── INIT ── */
-renderPlans();
-calcUpdate();
 renderFAQ();
+
+// Fetch live pricing config from backend, then render plans
+(function() {
+  function applyConfig(pr) {
+    if (!pr) return;
+    var pc = pr.planConfig;
+    // Standard price from backend
+    if (pr.pricePerStudentNgn) {
+      PRICES.standard_per_student = pr.pricePerStudentNgn;
+    }
+    if (pc) {
+      // Derive premium price from multiplier
+      if (typeof pc.premiumMultiplier === 'number') {
+        PRICES.premium_per_student = Math.round(PRICES.standard_per_student * pc.premiumMultiplier);
+      }
+      // Annual discount from backend
+      if (typeof pc.annualDiscountPct === 'number') {
+        DISCOUNTS.annual = pc.annualDiscountPct / 100;
+      }
+      // Feature lists
+      if (Array.isArray(pc.standardFeatures) && pc.standardFeatures.length) {
+        PLANS[0].features = pc.standardFeatures;
+      }
+      if (Array.isArray(pc.premiumFeatures) && pc.premiumFeatures.length) {
+        PLANS[1].features = pc.premiumFeatures;
+      }
+    }
+  }
+
+  DASH.ready.then(function() {
+    return fetch(DASH.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getPricing' })
+    });
+  }).then(function(r) {
+    return r.json();
+  }).then(function(res) {
+    if (res && res.status === 'success' && res.data) applyConfig(res.data);
+  }).catch(function() {
+    /* network error — keep hardcoded defaults */
+  }).then(function() {
+    renderPlans();
+    calcUpdate();
+  });
+})();
 </script>
 
 <!-- FOOTER -->
