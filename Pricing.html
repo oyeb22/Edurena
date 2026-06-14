@@ -290,6 +290,26 @@ Object.defineProperty(window, 'GS_URL',     { get: function() { return DASH.scri
 /* ── PAYSTACK ── replace with your live key when going live ── */
 var PAYSTACK_PK = 'pk_test_37f67c7fdb2a7ffdb08e191c1affd658a95c39e5';
 
+/* ── Handle Paystack redirect-back (new checkout UI redirects to callback URL) ──
+   Paystack appends ?reference=XXX&trxref=XXX after payment.
+   We saved the pending intent in sessionStorage before opening the popup.       */
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var ref = params.get('reference') || params.get('trxref');
+  if (!ref) return;
+  var pending = null;
+  try { pending = JSON.parse(sessionStorage.getItem('ps_pending') || 'null'); } catch(_) {}
+  if (!pending || pending.reference !== ref) return;
+  sessionStorage.removeItem('ps_pending');
+  history.replaceState({}, '', window.location.pathname); // clean URL
+  // Re-open modal straight to verification state
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('checkout-mo').classList.add('on');
+    verifyAndActivate(ref, pending.amountKobo, pending.school, pending.email,
+                      pending.name, pending.plan, pending.students, pending.months);
+  });
+})();
+
 /* ── Update nav login link → static GitHub Pages route ── */
 (function(){
   // Use DASH.pageUrl so ?script= follows along to the login page
@@ -586,6 +606,15 @@ function doCheckout() {
     btn.disabled = false;
     btn.innerHTML = '🔒 Pay with Paystack';
 
+    // Save intent so redirect handler can pick it up if Paystack redirects back
+    try {
+      sessionStorage.setItem('ps_pending', JSON.stringify({
+        reference: reference, amountKobo: amountKobo,
+        school: school, email: email, name: name,
+        plan: plan, students: students, months: months
+      }));
+    } catch(_) {}
+
     // 2. Open Paystack inline popup — charges the server-calculated amount
     var handler = PaystackPop.setup({
       key:      PAYSTACK_PK,
@@ -609,6 +638,7 @@ function doCheckout() {
       },
       onClose: function() {
         // User closed popup without paying — re-enable button
+        try { sessionStorage.removeItem('ps_pending'); } catch(_) {}
         btn.disabled = false;
         btn.innerHTML = '🔒 Pay with Paystack';
       }
