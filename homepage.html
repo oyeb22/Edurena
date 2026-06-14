@@ -89,7 +89,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 
 /* SECTION 3 WHEEL */
 .s3-section{position:relative;width:100%;background:radial-gradient(circle at 8% 50%,#4a2810 0%,#3a1f08 38%,#1a0e02 100%);}
-.s3-track{height:600vh;}
+.s3-track{height:650vh;}
 .s3-inner{position:sticky;top:0;height:100vh;display:flex;align-items:stretch;overflow:hidden;}
 .s3-wheel-col{width:40%;position:relative;flex-shrink:0;overflow:hidden;}
 .s3-wheel-col svg{position:absolute;left:0;top:0;width:100%;height:100%;}
@@ -108,9 +108,6 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 .s3-nav{display:none;gap:10px;margin-top:16px;}
 .s3-btn{background:transparent;color:#f5a623;border:1px solid rgba(245,166,35,.4);padding:9px 22px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;font-family:'Sora',system-ui,sans-serif;transition:background .2s;}
 .s3-btn:hover{background:rgba(245,166,35,.1);}.s3-btn:disabled{opacity:.28;cursor:default;}
-.s3-phase1{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;transition:opacity .6s ease,transform .6s ease;}
-.s3-phase1.hidden{opacity:0;transform:scale(.95);pointer-events:none;}
-.s3-phase1 svg{width:min(80vh,80vw);height:min(80vh,80vw);}
 
 /* SECTION 4 HOW IT WORKS */
 .s4-section{width:100%;padding:120px 60px;background:var(--bg);border-top:1px solid var(--border);}
@@ -219,13 +216,18 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 <nav id="topnav">
   <a class="nav-brand" href="#hero">
     <div class="nav-logo-box">
-      <img src="./assets/edurena_logo_64.png" alt="Edurena" style="width:100%;height:100%;object-fit:contain;">
+      <svg width="20" height="20" viewBox="-130 -100 260 210">
+        <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#03060f"/>
+        <circle cx="-35" cy="20" r="9" fill="#f5a623"/>
+        <circle cx="35"  cy="20" r="9" fill="#f5a623"/>
+      </svg>
     </div>
     <span class="nav-wordmark">edu<span>rena</span></span>
   </a>
   <div class="nav-links">
     <a href="#howitworks">How it works</a>
-    <a href="Webapp.html">Student App</a>
+    <a href="Pricing.html">Pricing</a>
+    <a href="Pricing.html">Sign up</a>
     <a href="TeacherLogin.html" style="color:var(--white)">Sign in</a>
     <a class="nav-cta" href="Pricing.html">Get started</a>
   </div>
@@ -287,27 +289,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 <section id="features" class="s3-section">
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
-      <div class="s3-phase1" id="s3Phase1">
-        <svg viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="p1gold" cx="38%" cy="32%" r="60%">
-              <stop offset="0%" stop-color="#ffe07a"/>
-              <stop offset="55%" stop-color="#ffc144"/>
-              <stop offset="100%" stop-color="#b8761a"/>
-            </radialGradient>
-          </defs>
-          <g transform="translate(340,340)">
-            <g id="p1DashG"></g>
-            <g id="p1SegsG"></g>
-            <g id="p1ContG"></g>
-            <circle cx="0" cy="0" r="138" fill="#1a0e02" stroke="rgba(245,166,35,0.2)" stroke-width="1.5"/>
-            <text x="0" y="4" text-anchor="middle" dominant-baseline="middle"
-              font-family="Sora,system-ui,sans-serif" font-size="22" font-weight="800"
-              fill="#ffe07a" letter-spacing="3">FEATURES</text>
-          </g>
-        </svg>
-      </div>
-      <div class="s3-wheel-col" id="s3WheelCol">
+      <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
         <svg id="s3svg" viewBox="0 0 360 600" preserveAspectRatio="xMinYMid meet">
           <defs>
             <radialGradient id="s3gold" cx="38%" cy="32%" r="60%">
@@ -320,21 +302,21 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
             </clipPath>
           </defs>
           <g clip-path="url(#s3clip)">
-            <g id="s3wG" transform="translate(-30,300)">
+            <g id="s3wG" transform="translate(180,300)">
               <g id="s3dashG"></g>
               <g id="s3segsG"></g>
               <g id="s3contG"></g>
               <circle cx="0" cy="0" r="138" fill="#1a0e02" stroke="rgba(245,166,35,0.2)" stroke-width="1.5"/>
-              <text id="s3clbl" x="0" y="4" text-anchor="middle" dominant-baseline="middle"
+              <text id="s3clbl" x="0" y="-7" text-anchor="middle" dominant-baseline="middle"
                 font-family="Sora,system-ui,sans-serif" font-size="15" font-weight="800"
-                fill="#ffe07a" letter-spacing="2">FEATURES</text>
+                fill="#ffe07a" letter-spacing="2">OUR<tspan x="0" dy="20">FEATURES</tspan></text>
             </g>
           </g>
           <!-- Arrow: wheel center x=-30, R_OUT=330, right edge=300. Arrow just past it -->
-          <polygon id="s3arrow" points="304,288 320,300 304,312" fill="#f5a623" opacity="0.9"/>
+          <polygon id="s3arrow" points="304,288 320,300 304,312" fill="#f5a623" opacity="0"/>
         </svg>
       </div>
-      <div class="s3-detail-col" id="s3Detail">
+      <div class="s3-detail-col" id="s3Detail" style="width:0;opacity:0;">
         <div class="s3-fnum"  id="s3FNum">01 / 04</div>
         <div class="s3-ftitle" id="s3FTitle">Proctored Exam</div>
         <div class="s3-fdesc"  id="s3FDesc">Face capture, violation logs, and AI-flagged answers. The student answers — only the student. No outsourcing, no cheating.</div>
@@ -448,7 +430,11 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
     <div>
       <div class="footer-brand">
         <div class="footer-logo-box">
-          <img src="./assets/edurena_logo_64.png" alt="Edurena" style="width:100%;height:100%;object-fit:contain;">
+          <svg width="22" height="22" viewBox="-130 -100 260 210">
+            <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#03060f"/>
+            <circle cx="-35" cy="20" r="9" fill="#f5a623"/>
+            <circle cx="35"  cy="20" r="9" fill="#f5a623"/>
+          </svg>
         </div>
         <span class="footer-wordmark">edu<span>rena</span></span>
       </div>
@@ -576,11 +562,13 @@ function buildSlots(rot){
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
       const c=document.createElementNS(SNS,'circle');c.setAttribute('cx',mp.x);c.setAttribute('cy',mp.y);c.setAttribute('r','30');c.setAttribute('fill','url(#s3gold)');contG.appendChild(c);
-      const g=document.createElementNS(SNS,'g');g.setAttribute('transform',`translate(${mp.x},${mp.y}) scale(0.22)`);
-      const lp=document.createElementNS(SNS,'path');lp.setAttribute('d',LOGO_P);lp.setAttribute('fill','#3a1f08');
-      const c1=document.createElementNS(SNS,'circle');c1.setAttribute('cx','-35');c1.setAttribute('cy','20');c1.setAttribute('r','9');c1.setAttribute('fill','#ffe07a');
-      const c2=document.createElementNS(SNS,'circle');c2.setAttribute('cx','35');c2.setAttribute('cy','20');c2.setAttribute('r','9');c2.setAttribute('fill','#ffe07a');
-      g.appendChild(lp);g.appendChild(c1);g.appendChild(c2);contG.appendChild(g);
+      const img=document.createElementNS(SNS,'image');
+      img.setAttribute('href','./assets/nlogo.gif');
+      img.setAttribute('x',String(mp.x-22));img.setAttribute('y',String(mp.y-22));
+      img.setAttribute('width','44');img.setAttribute('height','44');
+      img.setAttribute('preserveAspectRatio','xMidYMid meet');
+      img.setAttribute('clip-path','circle()');
+      contG.appendChild(img);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
       sl.name.forEach((line,li)=>{
@@ -591,7 +579,9 @@ function buildSlots(rot){
 }
 
 function setCLbl(text){
-  cLbl.textContent='';
+  cLbl.textContent='';const w=text.split(' ');
+  if(w.length<=2){cLbl.setAttribute('y','4');cLbl.textContent=text;}
+  else{cLbl.setAttribute('y','-7');cLbl.textContent=w.slice(0,2).join(' ');const sp=document.createElementNS(SNS,'tspan');sp.setAttribute('x','0');sp.setAttribute('dy','16');sp.textContent=w.slice(2).join(' ');cLbl.appendChild(sp);}
 }
 
 let curF=0,curRot=INIT_ROT,s3Busy=false,lastScrollF=-1;
@@ -634,89 +624,69 @@ document.getElementById('s3Prev').addEventListener('click',()=>{if(curF>0)s3GoTo
 document.getElementById('s3Next').addEventListener('click',()=>{if(curF<FEATURES.length-1)s3GoTo(curF+1);});
 
 const s3Track=document.getElementById('s3Track');
-const s3Phase1El=document.getElementById('s3Phase1');
-const s3DetailEl=document.getElementById('s3Detail');
-const PHASE1_FRAC=1/6;
+const s3WheelColEl=document.getElementById('s3WheelCol');
+const s3DetailColEl=document.getElementById('s3Detail');
+const s3wGEl=document.getElementById('s3wG');
+const s3ArrowEl=document.getElementById('s3arrow');
+const PHASE1_FRAC=0.18,MORPH_FRAC=0.10;
+let s3Phase=-1;
+
+function s3SetPhase1(){
+  s3Phase=0;
+  s3WheelColEl.style.width='100%';
+  s3DetailColEl.style.width='0';s3DetailColEl.style.opacity='0';s3DetailColEl.classList.remove('show');
+  s3wGEl.setAttribute('transform','translate(180,300)');
+  if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','0');
+  const lbl=document.getElementById('s3clbl');
+  if(lbl){
+    lbl.textContent='';lbl.setAttribute('y','-7');lbl.textContent='OUR';
+    const sp=document.createElementNS(SNS,'tspan');sp.setAttribute('x','0');sp.setAttribute('dy','20');sp.textContent='FEATURES';
+    lbl.appendChild(sp);lbl.style.opacity='1';
+  }
+}
+
 window.addEventListener('scroll',()=>{
-  if(!s3Track)return;
+  if(!s3Track||window.innerWidth<=900)return;
   const rect=s3Track.getBoundingClientRect();
   const scrollable=s3Track.offsetHeight-window.innerHeight;
   if(scrollable<=0)return;
-  const progress=Math.min(1,Math.max(0,-rect.top)/scrollable);
-  if(progress<PHASE1_FRAC){
-    if(s3Phase1El)s3Phase1El.classList.remove('hidden');
-    if(s3DetailEl)s3DetailEl.classList.remove('show');
-    return;
+  const prog=Math.min(1,Math.max(0,-rect.top)/scrollable);
+  if(prog<PHASE1_FRAC){
+    if(s3Phase!==0)s3SetPhase1();
+  }else if(prog<PHASE1_FRAC+MORPH_FRAC){
+    s3Phase=1;
+    const t=(prog-PHASE1_FRAC)/MORPH_FRAC;
+    const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    s3WheelColEl.style.width=(100-60*e)+'%';
+    s3DetailColEl.style.width=(60*e)+'%';
+    s3DetailColEl.style.opacity=String(e);
+    s3wGEl.setAttribute('transform',`translate(${180-210*e},300)`);
+    if(s3ArrowEl)s3ArrowEl.setAttribute('opacity',String(e));
+    const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity=String(1-e);
+  }else{
+    if(s3Phase!==2){
+      s3Phase=2;
+      s3WheelColEl.style.width='40%';
+      s3DetailColEl.style.width='60%';s3DetailColEl.style.opacity='';s3DetailColEl.classList.add('show');
+      s3wGEl.setAttribute('transform','translate(-30,300)');
+      if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','1');
+      const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity='0';
+      setCLbl('');
+    }
+    const p2p=(prog-PHASE1_FRAC-MORPH_FRAC)/(1-PHASE1_FRAC-MORPH_FRAC);
+    const targetF=Math.min(FEATURES.length-1,Math.floor(p2p*FEATURES.length));
+    if(targetF!==lastScrollF){lastScrollF=targetF;s3GoTo(targetF);}
   }
-  if(s3Phase1El)s3Phase1El.classList.add('hidden');
-  if(s3DetailEl)s3DetailEl.classList.add('show');
-  const p2progress=(progress-PHASE1_FRAC)/(1-PHASE1_FRAC);
-  const targetF=Math.min(FEATURES.length-1,Math.floor(p2progress*FEATURES.length));
-  if(targetF!==lastScrollF){lastScrollF=targetF;s3GoTo(targetF);}
 },{passive:true});
 
-buildSlots(INIT_ROT);setCLbl('FEATURES');s3Panel(FEATURES[0],false);
-
-(function buildP1Wheel(){
-  const R_OUT_P1=290,R_IN_P1=148,R_DASH_P1=338;
-  const p1segsG=document.getElementById('p1SegsG');
-  const p1contG=document.getElementById('p1ContG');
-  const p1dashG=document.getElementById('p1DashG');
-  if(!p1segsG||!p1contG||!p1dashG)return;
-  let dd='';
-  for(let i=0;i<44;i++){
-    const a1=(360/44)*i-90,a2=a1+3;
-    const pp1=polar(R_DASH_P1,a1),pp2=polar(R_DASH_P1,a2);
-    dd+=`M${pp1.x} ${pp1.y}A${R_DASH_P1} ${R_DASH_P1} 0 0 1 ${pp2.x} ${pp2.y}`;
-  }
-  const dp=document.createElementNS(SNS,'path');
-  dp.setAttribute('d',dd);dp.setAttribute('fill','none');
-  dp.setAttribute('stroke','rgba(245,166,35,0.6)');dp.setAttribute('stroke-width','3');
-  dp.setAttribute('stroke-linecap','round');p1dashG.appendChild(dp);
-  const an=document.createElementNS(SNS,'animateTransform');
-  an.setAttribute('attributeName','transform');an.setAttribute('type','rotate');
-  an.setAttribute('from','0');an.setAttribute('to','360');
-  an.setAttribute('dur','60s');an.setAttribute('repeatCount','indefinite');
-  p1dashG.appendChild(an);
-  for(let i=0;i<N;i++){
-    const s=i*SLOT+INIT_ROT+GAP/2,e=(i+1)*SLOT+INIT_ROT-GAP/2,sl=SLOTS[i];
-    const seg=document.createElementNS(SNS,'path');
-    seg.setAttribute('d',arcD(R_OUT_P1,R_IN_P1,s,e));
-    seg.setAttribute('fill',sl.type==='feat'?'#060d1e':'#2a1604');
-    seg.setAttribute('stroke',sl.type==='feat'?'#f5a623':'rgba(245,166,35,0.28)');
-    seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1');
-    p1segsG.appendChild(seg);
-    const mid=i*SLOT+INIT_ROT+SLOT/2,mR=(R_OUT_P1+R_IN_P1)/2,mp=polar(mR,mid);
-    if(sl.type==='logo'){
-      const c=document.createElementNS(SNS,'circle');
-      c.setAttribute('cx',mp.x);c.setAttribute('cy',mp.y);c.setAttribute('r','28');
-      c.setAttribute('fill','url(#p1gold)');p1contG.appendChild(c);
-      const g=document.createElementNS(SNS,'g');
-      g.setAttribute('transform',`translate(${mp.x},${mp.y}) scale(0.2)`);
-      const lp=document.createElementNS(SNS,'path');
-      lp.setAttribute('d',LOGO_P);lp.setAttribute('fill','#3a1f08');
-      const c1=document.createElementNS(SNS,'circle');
-      c1.setAttribute('cx','-35');c1.setAttribute('cy','20');c1.setAttribute('r','9');c1.setAttribute('fill','#ffe07a');
-      const c2=document.createElementNS(SNS,'circle');
-      c2.setAttribute('cx','35');c2.setAttribute('cy','20');c2.setAttribute('r','9');c2.setAttribute('fill','#ffe07a');
-      g.appendChild(lp);g.appendChild(c1);g.appendChild(c2);p1contG.appendChild(g);
-    } else {
-      const ic=document.createElementNS(SNS,'text');
-      ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-12);
-      ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','20');
-      ic.textContent=sl.icon;p1contG.appendChild(ic);
-      sl.name.forEach(function(line,li){
-        const t=document.createElementNS(SNS,'text');
-        t.setAttribute('x',mp.x);t.setAttribute('y',mp.y+6+li*12);
-        t.setAttribute('text-anchor','middle');
-        t.setAttribute('font-family','Sora,system-ui,sans-serif');
-        t.setAttribute('font-size','9');t.setAttribute('font-weight','800');
-        t.setAttribute('fill','#ffc144');t.setAttribute('letter-spacing','0.5');
-        t.textContent=line;p1contG.appendChild(t);
-      });
-    }
-  }
-})();
+buildSlots(INIT_ROT);
+if(window.innerWidth>900){
+  s3SetPhase1();
+}else{
+  setCLbl('');
+  s3DetailColEl.style.opacity='';s3DetailColEl.classList.add('show');
+}
+s3Panel(FEATURES[0],false);
 
 document.getElementById('s3Prev').disabled=true;
 
