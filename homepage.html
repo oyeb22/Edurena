@@ -547,8 +547,10 @@ const segsG=document.getElementById('s3segsG'),contG=document.getElementById('s3
   const an=document.createElementNS(SNS,'animateTransform');an.setAttribute('attributeName','transform');an.setAttribute('type','rotate');an.setAttribute('from','0');an.setAttribute('to','360');an.setAttribute('dur','60s');an.setAttribute('repeatCount','indefinite');dashG.appendChild(an);
 })();
 
+const s3svgDefs=document.querySelector('#s3svg defs');
 function buildSlots(rot){
   segsG.innerHTML='';contG.innerHTML='';
+  s3svgDefs.querySelectorAll('[id^="s3lc_"]').forEach(el=>el.remove());
   for(let i=0;i<N;i++){
     const s=i*SLOT+rot+GAP/2,e=(i+1)*SLOT+rot-GAP/2,sl=SLOTS[i];
     const seg=document.createElementNS(SNS,'path');seg.setAttribute('d',arcD(R_OUT,R_IN,s,e));
@@ -557,15 +559,18 @@ function buildSlots(rot){
     seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1.5');segsG.appendChild(seg);
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
-      const lg=document.createElementNS(SNS,'g');
-      lg.setAttribute('transform',`translate(${mp.x},${mp.y})`);
+      const cp=document.createElementNS(SNS,'clipPath');
+      cp.setAttribute('id',`s3lc_${i}`);
+      const cpC=document.createElementNS(SNS,'circle');
+      cpC.setAttribute('cx',String(mp.x));cpC.setAttribute('cy',String(mp.y));cpC.setAttribute('r','55');
+      cp.appendChild(cpC);s3svgDefs.appendChild(cp);
       const img=document.createElementNS(SNS,'image');
       img.setAttribute('href','./assets/edurena_logo_128.png');
-      img.setAttribute('x','-55');img.setAttribute('y','-55');
+      img.setAttribute('x',String(mp.x-55));img.setAttribute('y',String(mp.y-55));
       img.setAttribute('width','110');img.setAttribute('height','110');
       img.setAttribute('preserveAspectRatio','xMidYMid slice');
-      img.setAttribute('clip-path','url(#s3logoClip)');
-      lg.appendChild(img);contG.appendChild(lg);
+      img.setAttribute('clip-path',`url(#s3lc_${i})`);
+      contG.appendChild(img);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
       sl.name.forEach((line,li)=>{
