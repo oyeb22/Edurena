@@ -181,6 +181,7 @@
     .footer a{color:var(--txt2);text-decoration:none;}
     .footer a:hover{color:var(--acc2);}
   </style>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body>
 
@@ -285,6 +286,9 @@
 // Some helpers below still reference GS_URL — keep it as a getter alias.
 Object.defineProperty(window, 'SCRIPT_URL', { get: function() { return DASH.scriptUrl; } });
 Object.defineProperty(window, 'GS_URL',     { get: function() { return DASH.scriptUrl; } });
+
+/* ── PAYSTACK ── replace with your live key when going live ── */
+var PAYSTACK_PK = 'pk_test_REPLACE_WITH_YOUR_TEST_PUBLIC_KEY';
 
 /* ── Update nav login link → static GitHub Pages route ── */
 (function(){
@@ -533,7 +537,7 @@ function coRecalc() {
     + '<div class="mo-sum-total"><span class="mo-sum-total-label">Total</span><span class="mo-sum-total-val">' + fmt(r.final) + '</span></div>';
 }
 
-/* ── CHECKOUT — uses createPaymentIntentPublic (no auth required) ── */
+/* ── CHECKOUT — Paystack inline popup ── */
 function doCheckout() {
   var school   = ((document.getElementById('co-school')   || {}).value || '').trim();
   var email    = ((document.getElementById('co-email')    || {}).value || '').trim();
@@ -550,15 +554,9 @@ function doCheckout() {
 
   var btn = document.getElementById('co-pay-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>Creating payment…';
+  btn.innerHTML = '<span class="spin"></span>Setting up payment…';
 
-  /*
-   * FIX: Use 'createPaymentIntentPublic' — no auth token needed.
-   * The old 'createPaymentIntent' required admin login, blocking all public orders.
-   * createPaymentIntentPublic validates the school name + plan server-side
-   * and stores the intent, then returns a Paystack checkout URL.
-   */
-  // Wait for DASH config before POSTing.
+  // 1. Get server-side authoritative amount + unique reference
   DASH.ready.then(function() {
     return fetch(DASH.scriptUrl, {
       method: 'POST',
@@ -575,25 +573,101 @@ function doCheckout() {
   })
   .then(function(r){ return r.json(); })
   .then(function(res) {
-    btn.disabled = false;
-    btn.innerHTML = '🔒 Pay with Paystack';
     if (!res || res.status !== 'success') {
-      errEl.textContent = (res && res.message) || 'Could not create payment. Try again.';
+      btn.disabled = false;
+      btn.innerHTML = '🔒 Pay with Paystack';
+      errEl.textContent = (res && res.message) || 'Could not initialise payment. Try again.';
       return;
     }
-    var d = res.data;
-    if (d.paymentUrl) {
-      window.open(d.paymentUrl, '_blank');
-      showPostPaymentMessage(d.reference, d.amount, email);
-    } else {
-      /* Paystack not yet configured — show manual payment instructions */
-      showManualPayment(d.reference, d.amount, school, plan, students, months);
-    }
+    var d          = res.data;
+    var reference  = d.reference;
+    var amountKobo = d.amountKobo;
+
+    btn.disabled = false;
+    btn.innerHTML = '🔒 Pay with Paystack';
+
+    // 2. Open Paystack inline popup — charges the server-calculated amount
+    var handler = PaystackPop.setup({
+      key:      PAYSTACK_PK,
+      email:    email,
+      amount:   amountKobo,
+      ref:      reference,
+      currency: 'NGN',
+      label:    name,
+      metadata: {
+        custom_fields: [
+          { display_name: 'School Name',     variable_name: 'schoolName',     value: school   },
+          { display_name: 'Contact Name',    variable_name: 'contactName',    value: name     },
+          { display_name: 'Plan',            variable_name: 'plan',           value: plan     },
+          { display_name: 'Students',        variable_name: 'studentCount',   value: students },
+          { display_name: 'Duration Months', variable_name: 'durationMonths', value: months   }
+        ]
+      },
+      onSuccess: function(transaction) {
+        // 3. Payment confirmed by Paystack — verify server-side and activate subscription
+        verifyAndActivate(transaction.reference, amountKobo, school, email, name, plan, students, months);
+      },
+      onClose: function() {
+        // User closed popup without paying — re-enable button
+        btn.disabled = false;
+        btn.innerHTML = '🔒 Pay with Paystack';
+      }
+    });
+    handler.openIframe();
   })
   .catch(function() {
     btn.disabled = false;
     btn.innerHTML = '🔒 Pay with Paystack';
     errEl.textContent = 'Network error. Please try again.';
+  });
+}
+
+// Called after Paystack popup reports success.
+// GAS verifies the transaction via Paystack API (HMAC-equivalent: secret-key-signed verify).
+function verifyAndActivate(reference, amountKobo, school, email, name, plan, students, months) {
+  var body = document.getElementById('checkout-body');
+  body.innerHTML = '<div style="text-align:center;padding:40px 0">'
+    + '<span class="spin" style="width:22px;height:22px;border-width:3px"></span>'
+    + '<div style="margin-top:12px;color:var(--txt2);font-size:13px">Verifying your payment…</div>'
+    + '</div>';
+
+  DASH.ready.then(function() {
+    return fetch(DASH.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'paystackWebhook',
+        event:  'charge.success',
+        data: {
+          reference: reference,
+          amount:    amountKobo,
+          customer:  { email: email },
+          metadata: {
+            schoolName:     school,
+            contactEmail:   email,
+            contactName:    name,
+            plan:           plan,
+            studentCount:   students,
+            durationMonths: months
+          }
+        }
+      })
+    });
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res) {
+    if (res && (res.status === 'success' || (res.data && res.data.duplicate))) {
+      showPostPaymentMessage(reference, amountKobo / 100, email);
+    } else {
+      body.innerHTML = '<div style="padding:20px;color:var(--red);font-size:13px">'
+        + '⚠️ ' + esc((res && res.message) || 'Verification failed.')
+        + '<br><br>Your payment may still have gone through. '
+        + 'Email <strong>adisa7oyebola@gmail.com</strong> with reference: <code>' + esc(reference) + '</code></div>';
+    }
+  })
+  .catch(function() {
+    body.innerHTML = '<div style="padding:20px;color:var(--red);font-size:13px">'
+      + '⚠️ Network error during verification.'
+      + '<br><br>Email <strong>adisa7oyebola@gmail.com</strong> with reference: <code>' + esc(reference) + '</code></div>';
   });
 }
 
@@ -608,18 +682,6 @@ function showPostPaymentMessage(ref, amount, email) {
     + '<div class="success-ref">Ref: ' + esc(ref) + '</div>'
     + '<div style="margin-top:16px;font-size:12px;color:var(--txt2)">Already paid? '
     + '<a href="' + esc(DASH.pageUrl('TeacherLogin.html')) + '" style="color:var(--acc2)">Log in to your dashboard</a></div>'
-    + '</div>';
-}
-
-function showManualPayment(ref, amount, school, plan, students, months) {
-  var errEl = document.getElementById('co-err');
-  errEl.innerHTML = '<div style="background:var(--yel-g);border:1px solid rgba(255,181,71,.25);border-radius:var(--rs);padding:12px;margin-top:10px;text-align:left;line-height:1.7">'
-    + '⚠️ <strong>Manual Payment Instructions</strong><br>'
-    + 'Paystack is not yet active. Please pay via bank transfer:<br>'
-    + 'Amount: <strong>' + fmt(amount) + '</strong><br>'
-    + 'Reference: <strong>' + esc(ref) + '</strong><br>'
-    + 'Contact: <strong>adisa7oyebola@gmail.com</strong> with proof of payment.<br>'
-    + '<div style="margin-top:6px;font-size:11px;color:var(--muted)">Your account will be activated within 24 hours after payment confirmation.</div>'
     + '</div>';
 }
 
