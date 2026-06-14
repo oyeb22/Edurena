@@ -559,12 +559,12 @@ function buildSlots(rot){
     if(sl.type==='logo'){
       const lg=document.createElementNS(SNS,'g');
       lg.setAttribute('transform',`translate(${mp.x},${mp.y})`);
-      lg.setAttribute('clip-path','url(#s3logoClip)');
       const img=document.createElementNS(SNS,'image');
       img.setAttribute('href','./assets/edurena_logo_128.png');
       img.setAttribute('x','-55');img.setAttribute('y','-55');
       img.setAttribute('width','110');img.setAttribute('height','110');
       img.setAttribute('preserveAspectRatio','xMidYMid slice');
+      img.setAttribute('clip-path','url(#s3logoClip)');
       lg.appendChild(img);contG.appendChild(lg);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
