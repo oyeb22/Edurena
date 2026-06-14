@@ -269,7 +269,7 @@
 
 <!-- AUTH GATE -->
 <div id="gate" class="on">
-  <img src="assets/nlogo.gif" class="gate-logo" alt="Edurena">
+  <img src="assets/edurena_logo_64.png" class="gate-logo" alt="Edurena">
   <div id="gate-msg">Verifying session…</div>
   <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
 </div>
@@ -280,7 +280,7 @@
   <aside class="sb">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <img src="assets/nlogo.gif" alt="Edurena" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <img src="assets/edurena_logo_64.png" alt="Edurena" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">
         <div class="logo-txt"><h1>edurena</h1><p>School Admin</p></div>
       </div>
     </div>
@@ -1004,6 +1004,15 @@ function refreshSidebarStats(d) {
   setText('sb-stat-quizzes', d.activeQuizCount != null ? d.activeQuizCount : '—');
 }
 
+function refreshActiveQuizCount() {
+  call('getSchoolDashboard', {}, function(d) {
+    setText('sb-stat-quizzes', d.activeQuizCount != null ? d.activeQuizCount : '—');
+    setText('s-quizzes', d.activeQuizCount != null ? d.activeQuizCount : '—');
+  }, function() {});
+}
+// Poll active quiz count every 30 seconds
+setInterval(refreshActiveQuizCount, 30000);
+
 // v5.5: fetch slot usage and render both the overview card + sidebar mini-stat
 function loadSlotUsage() {
   call('getSchoolUsage', { school: S.school }, function(u) {
@@ -1526,6 +1535,7 @@ function saveStudent() {
     toast('success', _editingStudentEmail ? 'Student updated' : 'Student added');
     closeMo('student-mo');
     loadStudents();
+    loadSlotUsage();
   });
 }
 
@@ -1535,6 +1545,7 @@ function doDeleteStudent(email) {
   call('deleteStudent', { email: email }, function() {
     toast('success', 'Student removed');
     loadStudents();
+    loadSlotUsage();
   });
 }
 
@@ -1589,6 +1600,7 @@ function doBulkRegister() {
     document.getElementById('bulk-preview').style.display = 'none';
     setText('bulk-count', '');
     loadStudents();
+    loadSlotUsage();
   });
 }
 
