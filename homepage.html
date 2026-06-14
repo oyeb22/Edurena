@@ -215,8 +215,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 <!-- NAV -->
 <nav id="topnav">
   <a class="nav-brand" href="#hero">
-    <div class="nav-logo-box" style="background:transparent;border-radius:0;width:36px;height:36px;">
-      <img src="./assets/edurena_logo_64.png" width="36" height="36" style="display:block;border-radius:50%;" alt="">
+    <div class="nav-logo-box" style="background:transparent;border-radius:50%;overflow:hidden;width:36px;height:36px;">
+      <img src="./assets/edurena_logo_64.png" width="36" height="36" style="display:block;" alt="">
     </div>
     <span class="nav-wordmark">edu<span>rena</span></span>
   </a>
@@ -286,7 +286,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
       <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
-        <svg id="s3svg" viewBox="-200 -80 760 760" preserveAspectRatio="xMidYMid slice">
+        <svg id="s3svg" viewBox="-200 -80 760 760" preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="s3gold" cx="38%" cy="32%" r="60%">
               <stop offset="0%" stop-color="#ffe07a"/>
@@ -295,6 +295,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
             </radialGradient>
             <clipPath id="s3clip">
               <rect x="-200" y="-80" width="760" height="760"/>
+            </clipPath>
+            <clipPath id="s3logoClip">
+              <circle cx="0" cy="0" r="55"/>
             </clipPath>
           </defs>
           <g clip-path="url(#s3clip)">
@@ -425,8 +428,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="footer-grid">
     <div>
       <div class="footer-brand">
-        <div class="footer-logo-box" style="background:transparent;border-radius:0;width:40px;height:40px;">
-          <img src="./assets/edurena_logo_64.png" width="40" height="40" style="display:block;border-radius:50%;" alt="">
+        <div class="footer-logo-box" style="background:transparent;border-radius:50%;overflow:hidden;width:40px;height:40px;">
+          <img src="./assets/edurena_logo_64.png" width="40" height="40" style="display:block;" alt="">
         </div>
         <span class="footer-wordmark">edu<span>rena</span></span>
       </div>
@@ -554,13 +557,14 @@ function buildSlots(rot){
     seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1.5');segsG.appendChild(seg);
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
+      const lg=document.createElementNS(SNS,'g');
+      lg.setAttribute('transform',`translate(${mp.x},${mp.y})`);
+      lg.setAttribute('clip-path','url(#s3logoClip)');
       const img=document.createElementNS(SNS,'image');
       img.setAttribute('href','./assets/edurena_logo_128.png');
-      img.setAttribute('x',String(mp.x-55));
-      img.setAttribute('y',String(mp.y-55));
-      img.setAttribute('width','110');
-      img.setAttribute('height','110');
-      contG.appendChild(img);
+      img.setAttribute('x','-55');img.setAttribute('y','-55');
+      img.setAttribute('width','110');img.setAttribute('height','110');
+      lg.appendChild(img);contG.appendChild(lg);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
       sl.name.forEach((line,li)=>{
@@ -631,7 +635,7 @@ function s3SetPhase1(){
   s3wGEl.setAttribute('transform','translate(180,300)');
   const s3svgEl=document.getElementById('s3svg');
   s3svgEl.setAttribute('viewBox','-200 -80 760 760');
-  s3svgEl.setAttribute('preserveAspectRatio','xMidYMid slice');
+  s3svgEl.setAttribute('preserveAspectRatio','xMidYMid meet');
   if(s3ClipRect){s3ClipRect.setAttribute('x','-200');s3ClipRect.setAttribute('y','-80');s3ClipRect.setAttribute('width','760');s3ClipRect.setAttribute('height','760');}
   if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','0');
   const lbl=document.getElementById('s3clbl');
