@@ -244,7 +244,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="hero-brown"  id="hBrown"></div>
   <div class="hero-circle" id="hCircle"></div>
   <div class="hero-logo"   id="hLogo">
-    <img id="hGif" src="./assets/edurena_logo_animated.gif" alt="Edurena logo animation">
+    <img id="hGif" src="./assets/logo_tasteful_3.7s.gif" alt="Edurena logo animation">
   </div>
   <div class="hero-wm" id="hWm">
     <div class="hero-wm-word">edu<span>rena</span></div>
@@ -290,7 +290,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
       <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
-        <svg id="s3svg" viewBox="0 0 360 600" preserveAspectRatio="xMinYMid meet">
+        <svg id="s3svg" viewBox="0 0 360 600" preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="s3gold" cx="38%" cy="32%" r="60%">
               <stop offset="0%" stop-color="#ffe07a"/>
@@ -478,7 +478,7 @@ const hBgG=document.getElementById('hBgG'),hBgS=document.getElementById('hBgS'),
       hGif=document.getElementById('hGif');
 
 const GIF_SRC=hGif.src;
-const PNG_SRC="./assets/edurena_logo_512.png";
+const PNG_SRC="./assets/logo_tasteful_3.7s.gif";
 
 function heroReset(){
   hBgG.classList.remove('fade');hBgS.classList.remove('on');
@@ -562,13 +562,11 @@ function buildSlots(rot){
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
       const c=document.createElementNS(SNS,'circle');c.setAttribute('cx',mp.x);c.setAttribute('cy',mp.y);c.setAttribute('r','30');c.setAttribute('fill','url(#s3gold)');contG.appendChild(c);
-      const img=document.createElementNS(SNS,'image');
-      img.setAttribute('href','./assets/nlogo.gif');
-      img.setAttribute('x',String(mp.x-22));img.setAttribute('y',String(mp.y-22));
-      img.setAttribute('width','44');img.setAttribute('height','44');
-      img.setAttribute('preserveAspectRatio','xMidYMid meet');
-      img.setAttribute('clip-path','circle()');
-      contG.appendChild(img);
+      const g=document.createElementNS(SNS,'g');g.setAttribute('transform',`translate(${mp.x},${mp.y}) scale(0.22)`);
+      const lp=document.createElementNS(SNS,'path');lp.setAttribute('d',LOGO_P);lp.setAttribute('fill','#3a1f08');
+      const c1=document.createElementNS(SNS,'circle');c1.setAttribute('cx','-35');c1.setAttribute('cy','20');c1.setAttribute('r','9');c1.setAttribute('fill','#ffe07a');
+      const c2=document.createElementNS(SNS,'circle');c2.setAttribute('cx','35');c2.setAttribute('cy','20');c2.setAttribute('r','9');c2.setAttribute('fill','#ffe07a');
+      g.appendChild(lp);g.appendChild(c1);g.appendChild(c2);contG.appendChild(g);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
       sl.name.forEach((line,li)=>{
@@ -636,6 +634,7 @@ function s3SetPhase1(){
   s3WheelColEl.style.width='100%';
   s3DetailColEl.style.width='0';s3DetailColEl.style.opacity='0';s3DetailColEl.classList.remove('show');
   s3wGEl.setAttribute('transform','translate(180,300)');
+  document.getElementById('s3svg').setAttribute('preserveAspectRatio','xMidYMid meet');
   if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','0');
   const lbl=document.getElementById('s3clbl');
   if(lbl){
@@ -669,6 +668,7 @@ window.addEventListener('scroll',()=>{
       s3WheelColEl.style.width='40%';
       s3DetailColEl.style.width='60%';s3DetailColEl.style.opacity='';s3DetailColEl.classList.add('show');
       s3wGEl.setAttribute('transform','translate(-30,300)');
+      document.getElementById('s3svg').setAttribute('preserveAspectRatio','xMinYMid meet');
       if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','1');
       const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity='0';
       setCLbl('');
