@@ -215,18 +215,14 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 <!-- NAV -->
 <nav id="topnav">
   <a class="nav-brand" href="#hero">
-    <div class="nav-logo-box">
-      <svg width="20" height="20" viewBox="-130 -100 260 210">
-        <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#03060f"/>
-        <circle cx="-35" cy="20" r="9" fill="#f5a623"/>
-        <circle cx="35"  cy="20" r="9" fill="#f5a623"/>
-      </svg>
+    <div class="nav-logo-box" style="background:transparent;border-radius:0;width:36px;height:36px;">
+      <img src="./assets/edurena_logo_64.png" width="36" height="36" style="display:block;border-radius:50%;" alt="">
     </div>
     <span class="nav-wordmark">edu<span>rena</span></span>
   </a>
   <div class="nav-links">
     <a href="#howitworks">How it works</a>
-    <a href="Pricing.html">Pricing</a>
+    <a href="Webapp.html">Student Portal</a>
     <a href="Pricing.html">Sign up</a>
     <a href="TeacherLogin.html" style="color:var(--white)">Sign in</a>
     <a class="nav-cta" href="Pricing.html">Get started</a>
@@ -290,7 +286,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
       <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
-        <svg id="s3svg" viewBox="-200 -80 760 760" preserveAspectRatio="xMidYMid meet">
+        <svg id="s3svg" viewBox="-200 -80 760 760" preserveAspectRatio="xMidYMid slice">
           <defs>
             <radialGradient id="s3gold" cx="38%" cy="32%" r="60%">
               <stop offset="0%" stop-color="#ffe07a"/>
@@ -429,12 +425,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="footer-grid">
     <div>
       <div class="footer-brand">
-        <div class="footer-logo-box">
-          <svg width="22" height="22" viewBox="-130 -100 260 210">
-            <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#03060f"/>
-            <circle cx="-35" cy="20" r="9" fill="#f5a623"/>
-            <circle cx="35"  cy="20" r="9" fill="#f5a623"/>
-          </svg>
+        <div class="footer-logo-box" style="background:transparent;border-radius:0;width:40px;height:40px;">
+          <img src="./assets/edurena_logo_64.png" width="40" height="40" style="display:block;border-radius:50%;" alt="">
         </div>
         <span class="footer-wordmark">edu<span>rena</span></span>
       </div>
@@ -557,9 +549,9 @@ function buildSlots(rot){
   for(let i=0;i<N;i++){
     const s=i*SLOT+rot+GAP/2,e=(i+1)*SLOT+rot-GAP/2,sl=SLOTS[i];
     const seg=document.createElementNS(SNS,'path');seg.setAttribute('d',arcD(R_OUT,R_IN,s,e));
-    seg.setAttribute('fill',sl.type==='feat'?'#060d1e':'#2a1604');
-    seg.setAttribute('stroke',sl.type==='feat'?'#f5a623':'rgba(245,166,35,0.28)');
-    seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1');segsG.appendChild(seg);
+    seg.setAttribute('fill',sl.type==='feat'?'#060d1e':'#c87d0e');
+    seg.setAttribute('stroke',sl.type==='feat'?'#f5a623':'#a86800');
+    seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1.5');segsG.appendChild(seg);
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
       const img=document.createElementNS(SNS,'image');
@@ -639,7 +631,7 @@ function s3SetPhase1(){
   s3wGEl.setAttribute('transform','translate(180,300)');
   const s3svgEl=document.getElementById('s3svg');
   s3svgEl.setAttribute('viewBox','-200 -80 760 760');
-  s3svgEl.setAttribute('preserveAspectRatio','xMidYMid meet');
+  s3svgEl.setAttribute('preserveAspectRatio','xMidYMid slice');
   if(s3ClipRect){s3ClipRect.setAttribute('x','-200');s3ClipRect.setAttribute('y','-80');s3ClipRect.setAttribute('width','760');s3ClipRect.setAttribute('height','760');}
   if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','0');
   const lbl=document.getElementById('s3clbl');
@@ -668,6 +660,7 @@ window.addEventListener('scroll',()=>{
     s3wGEl.setAttribute('transform',`translate(${180-210*e},300)`);
     if(s3ArrowEl)s3ArrowEl.setAttribute('opacity',String(e));
     const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity=String(1-e);
+    document.getElementById('s3svg').setAttribute('preserveAspectRatio','xMidYMid meet');
     const vx=-200+200*e,vy=-80+80*e,vw=760-400*e,vh=760-160*e;
     document.getElementById('s3svg').setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
     if(s3ClipRect){s3ClipRect.setAttribute('x',String(vx));s3ClipRect.setAttribute('y',String(vy));s3ClipRect.setAttribute('width',String(vw));s3ClipRect.setAttribute('height',String(vh));}
