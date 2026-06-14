@@ -603,9 +603,9 @@ function doCheckout() {
           { display_name: 'Duration Months', variable_name: 'durationMonths', value: months   }
         ]
       },
-      onSuccess: function(transaction) {
+      callback: function(response) {
         // 3. Payment confirmed by Paystack — verify server-side and activate subscription
-        verifyAndActivate(transaction.reference, amountKobo, school, email, name, plan, students, months);
+        verifyAndActivate(response.reference, amountKobo, school, email, name, plan, students, months);
       },
       onClose: function() {
         // User closed popup without paying — re-enable button
