@@ -290,7 +290,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
       <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
-        <svg id="s3svg" viewBox="-150 -30 660 660" preserveAspectRatio="xMidYMid meet">
+        <svg id="s3svg" viewBox="-200 -80 760 760" preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="s3gold" cx="38%" cy="32%" r="60%">
               <stop offset="0%" stop-color="#ffe07a"/>
@@ -298,7 +298,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
               <stop offset="100%" stop-color="#b8761a"/>
             </radialGradient>
             <clipPath id="s3clip">
-              <rect x="-150" y="-30" width="660" height="660"/>
+              <rect x="-200" y="-80" width="760" height="760"/>
             </clipPath>
           </defs>
           <g clip-path="url(#s3clip)">
@@ -496,15 +496,8 @@ function heroPlay(){
   setTimeout(()=>hGif.src=GIF_SRC,50);
   setTimeout(()=>{hCircle.classList.add('show');hLogo.classList.add('show');},200);
   const GIF_DUR=3900;
-  /* Freeze GIF on last frame using canvas capture */
-  setTimeout(()=>{
-    try{
-      const cv=document.createElement('canvas');
-      cv.width=hGif.naturalWidth||853;cv.height=hGif.naturalHeight||480;
-      cv.getContext('2d').drawImage(hGif,0,0);
-      hGif.src=cv.toDataURL();
-    }catch(e){hGif.style.opacity='0';}
-  },GIF_DUR+100);
+  /* Freeze on last frame by swapping to static logo PNG */
+  setTimeout(()=>{hGif.src='./assets/edurena_logo_full_crop.png';},GIF_DUR+100);
   /* Phase 2 shift */
   setTimeout(()=>{
     hBgG.classList.add('fade');hBgS.classList.add('on');
@@ -570,11 +563,11 @@ function buildSlots(rot){
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
       const img=document.createElementNS(SNS,'image');
-      img.setAttribute('href','./assets/edurena_logo_64.png');
-      img.setAttribute('x',String(mp.x-30));
-      img.setAttribute('y',String(mp.y-30));
-      img.setAttribute('width','60');
-      img.setAttribute('height','60');
+      img.setAttribute('href','./assets/edurena_logo_128.png');
+      img.setAttribute('x',String(mp.x-55));
+      img.setAttribute('y',String(mp.y-55));
+      img.setAttribute('width','110');
+      img.setAttribute('height','110');
       contG.appendChild(img);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
@@ -645,9 +638,9 @@ function s3SetPhase1(){
   s3DetailColEl.style.width='0';s3DetailColEl.style.opacity='0';s3DetailColEl.classList.remove('show');
   s3wGEl.setAttribute('transform','translate(180,300)');
   const s3svgEl=document.getElementById('s3svg');
-  s3svgEl.setAttribute('viewBox','-150 -30 660 660');
+  s3svgEl.setAttribute('viewBox','-200 -80 760 760');
   s3svgEl.setAttribute('preserveAspectRatio','xMidYMid meet');
-  if(s3ClipRect){s3ClipRect.setAttribute('x','-150');s3ClipRect.setAttribute('y','-30');s3ClipRect.setAttribute('width','660');s3ClipRect.setAttribute('height','660');}
+  if(s3ClipRect){s3ClipRect.setAttribute('x','-200');s3ClipRect.setAttribute('y','-80');s3ClipRect.setAttribute('width','760');s3ClipRect.setAttribute('height','760');}
   if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','0');
   const lbl=document.getElementById('s3clbl');
   if(lbl){
@@ -675,7 +668,7 @@ window.addEventListener('scroll',()=>{
     s3wGEl.setAttribute('transform',`translate(${180-210*e},300)`);
     if(s3ArrowEl)s3ArrowEl.setAttribute('opacity',String(e));
     const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity=String(1-e);
-    const vx=-150+150*e,vy=-30+30*e,vw=660-300*e,vh=660-60*e;
+    const vx=-200+200*e,vy=-80+80*e,vw=760-400*e,vh=760-160*e;
     document.getElementById('s3svg').setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
     if(s3ClipRect){s3ClipRect.setAttribute('x',String(vx));s3ClipRect.setAttribute('y',String(vy));s3ClipRect.setAttribute('width',String(vw));s3ClipRect.setAttribute('height',String(vh));}
   }else{
