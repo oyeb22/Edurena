@@ -290,7 +290,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
       <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
-        <svg id="s3svg" viewBox="0 0 360 600" preserveAspectRatio="xMidYMid meet">
+        <svg id="s3svg" viewBox="-150 -30 660 660" preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="s3gold" cx="38%" cy="32%" r="60%">
               <stop offset="0%" stop-color="#ffe07a"/>
@@ -298,7 +298,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
               <stop offset="100%" stop-color="#b8761a"/>
             </radialGradient>
             <clipPath id="s3clip">
-              <rect x="0" y="0" width="360" height="600"/>
+              <rect x="-150" y="-30" width="660" height="660"/>
             </clipPath>
           </defs>
           <g clip-path="url(#s3clip)">
@@ -490,13 +490,21 @@ function heroReset(){
 
 function heroPlay(){
   heroReset();
+  hGif.style.opacity='';
   /* Force GIF restart by swapping src */
   hGif.src='';
   setTimeout(()=>hGif.src=GIF_SRC,50);
   setTimeout(()=>{hCircle.classList.add('show');hLogo.classList.add('show');},200);
   const GIF_DUR=3900;
-  /* Freeze GIF on last frame after it finishes */
-  setTimeout(()=>{hGif.src=PNG_SRC;}, GIF_DUR+100);
+  /* Freeze GIF on last frame using canvas capture */
+  setTimeout(()=>{
+    try{
+      const cv=document.createElement('canvas');
+      cv.width=hGif.naturalWidth||853;cv.height=hGif.naturalHeight||480;
+      cv.getContext('2d').drawImage(hGif,0,0);
+      hGif.src=cv.toDataURL();
+    }catch(e){hGif.style.opacity='0';}
+  },GIF_DUR+100);
   /* Phase 2 shift */
   setTimeout(()=>{
     hBgG.classList.add('fade');hBgS.classList.add('on');
@@ -561,12 +569,13 @@ function buildSlots(rot){
     seg.setAttribute('stroke-width',sl.type==='feat'?'2':'1');segsG.appendChild(seg);
     const mid=i*SLOT+rot+SLOT/2,mR=(R_OUT+R_IN)/2,mp=polar(mR,mid);
     if(sl.type==='logo'){
-      const c=document.createElementNS(SNS,'circle');c.setAttribute('cx',mp.x);c.setAttribute('cy',mp.y);c.setAttribute('r','30');c.setAttribute('fill','url(#s3gold)');contG.appendChild(c);
-      const g=document.createElementNS(SNS,'g');g.setAttribute('transform',`translate(${mp.x},${mp.y}) scale(0.22)`);
-      const lp=document.createElementNS(SNS,'path');lp.setAttribute('d',LOGO_P);lp.setAttribute('fill','#3a1f08');
-      const c1=document.createElementNS(SNS,'circle');c1.setAttribute('cx','-35');c1.setAttribute('cy','20');c1.setAttribute('r','9');c1.setAttribute('fill','#ffe07a');
-      const c2=document.createElementNS(SNS,'circle');c2.setAttribute('cx','35');c2.setAttribute('cy','20');c2.setAttribute('r','9');c2.setAttribute('fill','#ffe07a');
-      g.appendChild(lp);g.appendChild(c1);g.appendChild(c2);contG.appendChild(g);
+      const img=document.createElementNS(SNS,'image');
+      img.setAttribute('href','./assets/edurena_logo_64.png');
+      img.setAttribute('x',String(mp.x-30));
+      img.setAttribute('y',String(mp.y-30));
+      img.setAttribute('width','60');
+      img.setAttribute('height','60');
+      contG.appendChild(img);
     } else {
       const ic=document.createElementNS(SNS,'text');ic.setAttribute('x',mp.x);ic.setAttribute('y',mp.y-14);ic.setAttribute('text-anchor','middle');ic.setAttribute('font-size','22');ic.textContent=sl.icon;contG.appendChild(ic);
       sl.name.forEach((line,li)=>{
@@ -626,6 +635,7 @@ const s3WheelColEl=document.getElementById('s3WheelCol');
 const s3DetailColEl=document.getElementById('s3Detail');
 const s3wGEl=document.getElementById('s3wG');
 const s3ArrowEl=document.getElementById('s3arrow');
+const s3ClipRect=document.querySelector('#s3clip rect');
 const PHASE1_FRAC=0.18,MORPH_FRAC=0.10;
 let s3Phase=-1;
 
@@ -634,7 +644,10 @@ function s3SetPhase1(){
   s3WheelColEl.style.width='100%';
   s3DetailColEl.style.width='0';s3DetailColEl.style.opacity='0';s3DetailColEl.classList.remove('show');
   s3wGEl.setAttribute('transform','translate(180,300)');
-  document.getElementById('s3svg').setAttribute('preserveAspectRatio','xMidYMid meet');
+  const s3svgEl=document.getElementById('s3svg');
+  s3svgEl.setAttribute('viewBox','-150 -30 660 660');
+  s3svgEl.setAttribute('preserveAspectRatio','xMidYMid meet');
+  if(s3ClipRect){s3ClipRect.setAttribute('x','-150');s3ClipRect.setAttribute('y','-30');s3ClipRect.setAttribute('width','660');s3ClipRect.setAttribute('height','660');}
   if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','0');
   const lbl=document.getElementById('s3clbl');
   if(lbl){
@@ -662,13 +675,19 @@ window.addEventListener('scroll',()=>{
     s3wGEl.setAttribute('transform',`translate(${180-210*e},300)`);
     if(s3ArrowEl)s3ArrowEl.setAttribute('opacity',String(e));
     const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity=String(1-e);
+    const vx=-150+150*e,vy=-30+30*e,vw=660-300*e,vh=660-60*e;
+    document.getElementById('s3svg').setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
+    if(s3ClipRect){s3ClipRect.setAttribute('x',String(vx));s3ClipRect.setAttribute('y',String(vy));s3ClipRect.setAttribute('width',String(vw));s3ClipRect.setAttribute('height',String(vh));}
   }else{
     if(s3Phase!==2){
       s3Phase=2;
       s3WheelColEl.style.width='40%';
       s3DetailColEl.style.width='60%';s3DetailColEl.style.opacity='';s3DetailColEl.classList.add('show');
       s3wGEl.setAttribute('transform','translate(-30,300)');
-      document.getElementById('s3svg').setAttribute('preserveAspectRatio','xMinYMid meet');
+      const s3svg2=document.getElementById('s3svg');
+      s3svg2.setAttribute('viewBox','0 0 360 600');
+      s3svg2.setAttribute('preserveAspectRatio','xMinYMid meet');
+      if(s3ClipRect){s3ClipRect.setAttribute('x','0');s3ClipRect.setAttribute('y','0');s3ClipRect.setAttribute('width','360');s3ClipRect.setAttribute('height','600');}
       if(s3ArrowEl)s3ArrowEl.setAttribute('opacity','1');
       const lbl=document.getElementById('s3clbl');if(lbl)lbl.style.opacity='0';
       setCLbl('');
