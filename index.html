@@ -22,7 +22,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edurena — Where Learning Becomes Competition</title>
+<title>Edurena — Where Classrooms Come Alive</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -82,6 +82,38 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 .hero-scroll-hint.show{opacity:1;}
 .hero-scroll-hint span{font-size:11px;letter-spacing:.2em;color:rgba(58,31,8,.6);text-transform:uppercase;}
 .hero-scroll-hint .arr{width:20px;height:20px;border-right:2px solid rgba(58,31,8,.5);border-bottom:2px solid rgba(58,31,8,.5);transform:rotate(45deg);animation:bounceDown 1.4s ease-in-out infinite;}
+
+/* HERO DESCRIPTION & BUTTONS */
+.hero-wm-desc{font-size:15px;color:var(--brown);line-height:1.75;margin-top:14px;max-width:360px;opacity:.85;}
+.hero-wm-btns{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
+.hero-btn-p{display:inline-block;background:var(--brown);color:var(--amber);padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;}
+.hero-btn-p:hover{background:#2a1505;}
+.hero-btn-s{display:inline-block;border:2px solid rgba(58,31,8,.5);color:var(--brown);padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;}
+.hero-btn-s:hover{background:rgba(58,31,8,.1);}
+
+/* SECTION — FOUNDING BELIEF */
+.sfb-section{width:100%;padding:120px 60px;background:var(--bg);border-top:1px solid var(--border);}
+.sfb-inner{max-width:720px;}
+.sfb-kicker{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.3em;text-transform:uppercase;margin-bottom:24px;}
+.sfb-hl{font-size:clamp(26px,3vw,38px);font-weight:800;color:var(--white);line-height:1.15;margin-bottom:36px;}
+.sfb-body{display:flex;flex-direction:column;gap:20px;}
+.sfb-p{font-size:16px;color:rgba(240,244,255,.72);line-height:1.8;}
+.sfb-p strong{color:var(--white);font-weight:600;}
+
+/* SECTION — PROBLEM STATEMENT */
+.sps-section{width:100%;padding:120px 60px;background:var(--brown);border-top:1px solid rgba(255,255,255,.08);}
+.sps-kicker{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.3em;text-transform:uppercase;margin-bottom:20px;}
+.sps-hl{font-size:clamp(26px,3vw,38px);font-weight:800;color:var(--white);line-height:1.15;margin-bottom:56px;max-width:640px;}
+.sps-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;max-width:960px;}
+.sps-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:32px;}
+.sps-num{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;}
+.sps-title{font-size:17px;font-weight:800;color:var(--white);margin-bottom:12px;line-height:1.3;}
+.sps-body{font-size:14px;color:rgba(240,244,255,.65);line-height:1.75;}
+
+/* FEATURES SECTION HEADING */
+.s3-head{padding:72px 60px 40px;}
+.s3-head-kicker{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.3em;text-transform:uppercase;margin-bottom:16px;}
+.s3-head-hl{font-size:clamp(26px,3vw,38px);font-weight:800;color:#ffe07a;line-height:1.15;max-width:600px;}
 
 /* SECTION 2 ABOUT */
 .s2-section{position:relative;width:100%;min-height:100vh;display:flex;align-items:stretch;overflow:hidden;background:var(--bg);}
@@ -210,9 +242,14 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 @media(max-width:900px){
   #topnav{padding:0 20px;}
   .nav-links a:not(.nav-cta){display:none;}
+  /* Hide hero desc/buttons on tablet/mobile — content is in sections below */
+  .hero-wm-desc,.hero-wm-btns{display:none;}
   .s2-section{flex-direction:column;}
   .s2-laptop-side{width:100%;padding:48px 24px 32px;}
   .s2-brown{width:100%;border-radius:24px 24px 0 0;padding:48px 28px;}
+  .sfb-section,.sps-section{padding:80px 28px;}
+  .sps-grid{grid-template-columns:1fr;}
+  .s3-head{padding:48px 28px 32px;}
   .s3-inner{flex-direction:column;height:auto;position:relative;}
   .s3-track{height:auto;}
   .s3-wheel-col{width:100%;height:60vw;}
@@ -235,9 +272,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   .hero-wm-word{font-size:clamp(22px,6.5vw,36px);}
   /* Tagline: very tight letter-spacing so it doesn't overflow on 360px phones */
   .hero-wm-tag{font-size:9px;letter-spacing:.06em;margin-top:6px;}
-  /* Section 2 */
-  .s2-laptop-side{padding:36px 16px 20px;}
-  .s2-brown{padding:36px 20px;}
+  /* New sections */
+  .sfb-section,.sps-section{padding:64px 16px;}
+  .s3-head{padding:40px 16px 24px;}
   /* Section 3 wheel: taller so the visual isn't too cramped */
   .s3-wheel-col{height:75vw;}
   .s3-detail-col{padding:24px 16px;}
@@ -265,6 +302,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   <div class="nav-links">
     <a href="#howitworks">How it works</a>
     <a href="Webapp.html">Student Portal</a>
+    <a href="Pricing.html">Pricing</a>
     <a href="Pricing.html">Sign up</a>
     <a href="TeacherLogin.html" style="color:var(--white)">Sign in</a>
     <a class="nav-cta" href="Pricing.html">Get started</a>
@@ -286,7 +324,13 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   </div>
   <div class="hero-wm" id="hWm">
     <div class="hero-wm-word">edu<span>rena</span></div>
-    <div class="hero-wm-tag">Convergence of learners</div>
+    <div class="hero-wm-tag">Convergence of learners.</div>
+    <p class="hero-wm-desc">Most assessments tell you a student got something wrong. Edurena helps you understand why, and what to do about it.</p>
+    <p class="hero-wm-desc" style="margin-top:10px;">Run exams, quizzes, and live competitions from a single question bank. Spend less time marking. Spend more time teaching.</p>
+    <div class="hero-wm-btns">
+      <a href="Pricing.html" class="hero-btn-p">Get Started</a>
+      <a href="#howitworks" class="hero-btn-s">See How It Works</a>
+    </div>
   </div>
   <div class="hero-scroll-hint" id="hScroll">
     <span>Scroll</span>
@@ -294,37 +338,76 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   </div>
 </section>
 
-<!-- SECTION 2 ABOUT -->
-<section id="about" class="s2-section reveal">
-  <div class="s2-laptop-side">
-    <div class="s2-laptop">
-      <div class="s2-lid">
-        <div class="s2-screen">
-          <div class="s2-ph">
-            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-            <p>Dashboard screenshot<br>drops here</p>
-          </div>
-        </div>
-      </div>
-      <div class="s2-base"></div>
+<!-- SECTION — FOUNDING BELIEF -->
+<section id="about" class="sfb-section reveal">
+  <div class="sfb-inner">
+    <div class="sfb-kicker">Founding Belief</div>
+    <h2 class="sfb-hl">We built this because teaching deserves better tools.</h2>
+    <div class="sfb-body">
+      <p class="sfb-p">A student who misses a question isn't always missing the concept in front of them. Sometimes it's something from three months ago. <strong>A gap that was never caught, quietly growing.</strong></p>
+      <p class="sfb-p">Teachers already carry enough. They're managing 40 students, running lessons, and trying to figure out who's lost and who's not, often with nothing but a marked paper and intuition.</p>
+      <p class="sfb-p"><strong>Assessment should do more than keep score.</strong> It should show you exactly where to look.</p>
     </div>
   </div>
-  <div class="s2-brown">
-    <div class="s2-copy">
-      <div class="s2-kicker">Made in Lagos</div>
-      <h2 class="s2-hl">Stop choosing between exam integrity and the joy of learning.</h2>
-      <p class="s2-body">Edurena turns one set of questions into a proctored exam, a live race your students cheer through, or a classroom showdown — whichever fits the lesson. Write the test once. Students show up because they want to.</p>
-      <div class="s2-outcomes">
-        <div class="s2-outcome"><div class="s2-onum">1</div><div><div class="s2-otitle">Stop printing exam papers.</div><div class="s2-odesc">Face capture, violation logs, AI flags. The student answers — only the student.</div></div></div>
-        <div class="s2-outcome"><div class="s2-onum">2</div><div><div class="s2-otitle">Stop fighting student boredom.</div><div class="s2-odesc">Same questions, served as a multiplayer race or live game — the lesson they text their friends about after school.</div></div></div>
-        <div class="s2-outcome"><div class="s2-onum">3</div><div><div class="s2-otitle">Stop paying for ghost users.</div><div class="s2-odesc">Per-slot Naira pricing via Paystack. Set the cap, see the count, never get surprised by a bill.</div></div></div>
-      </div>
+</section>
+
+<!-- SECTION — PROBLEM STATEMENT -->
+<section id="problem" class="sps-section reveal">
+  <div class="sps-kicker">The Problem</div>
+  <h2 class="sps-hl">The way we assess students isn't working.</h2>
+  <div class="sps-grid">
+    <div class="sps-card reveal">
+      <div class="sps-num">01</div>
+      <div class="sps-title">We mark answers. We don't diagnose understanding.</div>
+      <p class="sps-body">A wrong answer tells you a student struggled. It doesn't tell you why. Edurena connects mistakes to the concepts behind them, so you know what to reteach, not just what to re-mark.</p>
+    </div>
+    <div class="sps-card reveal">
+      <div class="sps-num">02</div>
+      <div class="sps-title">There's too big a gap between teaching and testing.</div>
+      <p class="sps-body">Students forget. That's not a character flaw, it's how memory works. Short, regular check-ins reinforce what you've taught before it fades. Edurena makes those check-ins effortless.</p>
+    </div>
+    <div class="sps-card reveal">
+      <div class="sps-num">03</div>
+      <div class="sps-title">Large classes make it easy to miss who's falling behind.</div>
+      <p class="sps-body">When you have thirty or forty students, the quiet ones who are struggling rarely raise their hands. Edurena surfaces those students before it becomes a crisis.</p>
+    </div>
+    <div class="sps-card reveal">
+      <div class="sps-num">04</div>
+      <div class="sps-title">Exam integrity is hard to maintain.</div>
+      <p class="sps-body">Once a question leaves the classroom, you can't control it. Edurena gives you monitoring and proctoring tools that ensure the results you see actually reflect what your students know.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION — HOW IT WORKS -->
+<section id="howitworks" class="s4-section">
+  <div class="s4-label">How it works</div>
+  <h2 class="s4-hl">One question bank. Every kind of assessment.</h2>
+  <div class="s4-steps">
+    <div class="s4-step">
+      <div class="s4-snum">01</div>
+      <div class="s4-stitle">Build your question bank once.</div>
+      <div class="s4-sdesc">Type, upload, or import your questions. They live in one place and work across every mode, <em>no rebuilding from scratch</em> each term.</div>
+    </div>
+    <div class="s4-step">
+      <div class="s4-snum">02</div>
+      <div class="s4-stitle">Choose how you want to use them.</div>
+      <div class="s4-sdesc">The same questions can become a <em>proctored exam</em>, a <em>live classroom game</em>, or a <em>quiet revision quiz</em>. You decide what fits the moment.</div>
+    </div>
+    <div class="s4-step">
+      <div class="s4-snum">03</div>
+      <div class="s4-stitle">See what your class actually understood.</div>
+      <div class="s4-sdesc">After any assessment, you get a clear picture: <em>which topics landed</em>, which didn't, and <em>which students need a conversation</em>.</div>
     </div>
   </div>
 </section>
 
 <!-- SECTION 3 FEATURES WHEEL -->
 <section id="features" class="s3-section">
+  <div class="s3-head">
+    <div class="s3-head-kicker">Features</div>
+    <h2 class="s3-head-hl">Built for how teachers actually work.</h2>
+  </div>
   <div class="s3-track" id="s3Track">
     <div class="s3-inner" id="s3Inner">
       <div class="s3-wheel-col" id="s3WheelCol" style="width:100%;">
@@ -358,9 +441,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
         </svg>
       </div>
       <div class="s3-detail-col" id="s3Detail" style="width:0;opacity:0;">
-        <div class="s3-fnum"  id="s3FNum">01 / 04</div>
-        <div class="s3-ftitle" id="s3FTitle">Proctored Exam</div>
-        <div class="s3-fdesc"  id="s3FDesc">Face capture, violation logs, and AI-flagged answers. The student answers — only the student. No outsourcing, no cheating.</div>
+        <div class="s3-fnum"  id="s3FNum">01 / 06</div>
+        <div class="s3-ftitle" id="s3FTitle">Proctored Exams</div>
+        <div class="s3-fdesc"  id="s3FDesc">Face verification, session monitoring, and violation tracking so you can run a fair exam without sitting over every student's shoulder.</div>
         <div class="s3-tags"  id="s3FTags"></div>
         <div class="s3-dots"  id="s3FDots"></div>
         <div class="s3-nav" id="s3Nav">
@@ -373,44 +456,21 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   </div>
 </section>
 
-<!-- SECTION 4 HOW IT WORKS -->
-<section id="howitworks" class="s4-section">
-  <div class="s4-label">How it works</div>
-  <h2 class="s4-hl">Most of what you taught last month is already gone.</h2>
-  <div class="s4-steps">
-    <div class="s4-step">
-      <div class="s4-snum">01</div>
-      <div class="s4-stitle">Upload your questions once.</div>
-      <div class="s4-sdesc">Paste from a document, type directly, or upload image-based questions. They go into your <em>Question Bank</em> and stay there — reusable across every mode, every term, forever.</div>
-    </div>
-    <div class="s4-step">
-      <div class="s4-snum">02</div>
-      <div class="s4-stitle">Choose what today's lesson needs.</div>
-      <div class="s4-sdesc">The same questions become a <em>locked proctored exam</em>, a <em>multiplayer race</em> your students cheer through, or a <em>live classroom showdown</em>. One quiz. Three experiences.</div>
-    </div>
-    <div class="s4-step">
-      <div class="s4-snum">03</div>
-      <div class="s4-stitle">See what they actually understood.</div>
-      <div class="s4-sdesc">Not just who passed. A <em>heatmap of every question</em> — which concept 60% of the class missed, which student is quietly falling behind, which topic from week one is already gone.</div>
-    </div>
-  </div>
-</section>
 
 <!-- SECTION 5 PRICING -->
 <section id="pricing" class="s5-section reveal">
   <div class="s5-label">Pricing</div>
-  <h2 class="s5-hl">Simple pricing. No surprises.</h2>
-  <p class="s5-sub">Pay per student slot. Upgrade or cancel any time.</p>
+  <h2 class="s5-hl">Straightforward pricing. No surprises.</h2>
+  <p class="s5-sub">Pay per active student slot.</p>
   <div class="s5-cards" style="grid-template-columns:repeat(2,1fr);max-width:760px;">
     <div class="s5-card">
       <div class="s5-tier">Standard</div>
       <div class="s5-price" id="hp-std-price">₦500<span>/student/mo</span></div>
       <div class="s5-price-note">Billed monthly · Paystack</div>
       <ul class="s5-features">
-        <li>All quiz modes (Exam, Race, Live)</li>
-        <li>Full analytics &amp; heatmaps</li>
-        <li>Proctoring &amp; face capture</li>
-        <li>Violation logs &amp; AI flags</li>
+        <li>All assessment modes</li>
+        <li>Proctoring tools</li>
+        <li>Analytics and learning heatmaps</li>
         <li>Image-based questions</li>
       </ul>
       <a href="Pricing.html?plan=standard" class="s5-btn s5-btn-std">Get Standard</a>
@@ -421,8 +481,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
       <div class="s5-price" id="hp-prm-price">₦750<span>/student/mo</span></div>
       <div class="s5-price-note">Billed monthly · Paystack</div>
       <ul class="s5-features">
-        <li>Everything in Standard</li>
-        <li>AI wrong-answer explanations</li>
+        <li>Everything in Standard, plus</li>
+        <li>AI-powered answer explanations</li>
+        <li>Deeper insights</li>
         <li>Priority support</li>
       </ul>
       <a href="Pricing.html?plan=premium" class="s5-btn s5-btn-prem">Get Premium</a>
@@ -435,33 +496,16 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
     <div class="s5-calc-result" id="s5result">₦25,000 / month</div>
     <div class="s5-calc-breakdown" id="s5breakdown">50 students × ₦500 (Standard)</div>
   </div>
-  <p class="s5-note">You set the cap. You only pay for active slots.<br>Naira pricing. Paystack at checkout. Cancel any time.</p>
+  <p class="s5-note">Pay via Paystack. Set your own student cap. Only pay for what you use.</p>
 </section>
 
 <!-- SECTION 6 SIGNUP CTA -->
 <section id="signup" class="s6-section">
   <div class="s6-inner">
-    <h2 class="s6-hl">Your school could run its first quiz this week.</h2>
-    <p class="s6-sub">Choose a plan, pay via Paystack, and your account is ready the same day.</p>
-    <div id="s6formWrap">
-      <form class="s6-form" id="s6form" onsubmit="return s6Submit(event)">
-        <input class="s6-input" type="text"  id="s6-school" placeholder="School name"    required>
-        <input class="s6-input" type="text"  placeholder="Your name"      required>
-        <input class="s6-input" type="email" id="s6-email"  placeholder="Email address"  required>
-        <select class="s6-select" id="s6-plan">
-          <option value="" disabled selected>Choose your plan</option>
-          <option value="standard">Standard</option>
-          <option value="premium">Premium (+ AI explanations)</option>
-        </select>
-        <button type="submit" class="s6-submit">View pricing &amp; get started →</button>
-      </form>
-      <p class="s6-signin">Already have an account? <a href="TeacherLogin.html">Sign in →</a></p>
-    </div>
-    <div class="s6-thankyou" id="s6thanks">
-      <div class="checkmark">✓</div>
-      <h3>You're on the list.</h3>
-      <p>We'll be in touch within 24 hours to get your school set up.</p>
-    </div>
+    <h2 class="s6-hl">You could have your first assessment running this week.</h2>
+    <p class="s6-sub" style="margin-bottom:32px;">Set up your account, add your questions, and go. Most teachers are up and running in under an hour.</p>
+    <a href="Pricing.html" class="s6-submit" style="display:inline-block;width:auto;padding:16px 48px;text-decoration:none;">Get Started</a>
+    <p class="s6-signin" style="margin-top:24px;">Already have an account? <a href="TeacherLogin.html">Sign in →</a></p>
   </div>
 </section>
 
@@ -483,9 +527,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
         <a href="#hero">Home</a>
         <a href="#howitworks">How it works</a>
         <a href="Pricing.html">Pricing</a>
-        <a href="Pricing.html">Sign up</a>
+        <a href="Webapp.html">Student Portal</a>
         <a href="TeacherLogin.html">Sign in</a>
-        <a href="Webapp.html">Student App</a>
       </div>
     </div>
     <div>
@@ -556,21 +599,25 @@ new IntersectionObserver(([e])=>{
 },{threshold:.3}).observe(heroSection);
 
 /* ── WHEEL ── */
-const R_OUT=330,R_IN=188,R_DASH=372,N=8,SLOT=45,GAP=3.5,INIT_ROT=67.5;
+const R_OUT=330,R_IN=188,R_DASH=372,N=12,SLOT=30,GAP=2.5,INIT_ROT=45;
 const LOGO_P='M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z';
 const SNS='http://www.w3.org/2000/svg';
 
 const FEATURES=[
-  {idx:0,slot:0,num:'01 / 04',title:'Proctored Exam',desc:'Face capture, violation logs, and AI-flagged answers. The student answers — only the student. No outsourcing, no cheating.',tags:['Face capture','AI flags','Violation log','Anti-cheat']},
-  {idx:1,slot:2,num:'02 / 04',title:'Live Games',desc:'Classroom-wide competitive quiz. Live leaderboard, fast rounds — sharpens speed and accuracy under pressure.',tags:['Live leaderboard','Real-time','Classroom mode','Competitive']},
-  {idx:2,slot:4,num:'03 / 04',title:'Difficulty Analytics',desc:'See which question 60% of the class missed. A heatmap of what the class actually understood — not just who passed.',tags:['Heatmap','Per-question','Class-wide','Cumulative']},
-  {idx:3,slot:6,num:'04 / 04',title:'Image Questions',desc:'Upload an image as the question or answer. Diagrams, maps, biology labels, maths figures — the full curriculum.',tags:['Image Q','Image A','Any subject','Mobile-ready']},
+  {idx:0,slot:0, num:'01 / 06',title:'Proctored Exams',       desc:'Face verification, session monitoring, and violation tracking so you can run a fair exam without sitting over every student\'s shoulder.',tags:['Face capture','AI flags','Violation log','Anti-cheat']},
+  {idx:1,slot:2, num:'02 / 06',title:'Live Game Mode',         desc:'Real-time quizzes with leaderboards that make review sessions something students actually want to join.',tags:['Live leaderboard','Real-time','Classroom mode','Competitive']},
+  {idx:2,slot:4, num:'03 / 06',title:'Learning Gap Analytics', desc:'Per-question and class-wide insights that show you exactly where understanding broke down and who needs support.',tags:['Heatmap','Per-question','Class-wide','Cumulative']},
+  {idx:3,slot:6, num:'04 / 06',title:'Image-Based Questions',  desc:'Diagrams, maps, charts, and visuals built directly into your questions, because some things can\'t be explained in text alone.',tags:['Image Q','Image A','Any subject','Mobile-ready']},
+  {idx:4,slot:8, num:'05 / 06',title:'Flexible Question Formats',desc:'Multiple choice, short answer, true/false. Whatever the concept needs.',tags:['Multiple choice','Short answer','True/false','Flexible']},
+  {idx:5,slot:10,num:'06 / 06',title:'Voice Support',           desc:'Questions can be read aloud for students who need it. Learning should be available to everyone in the room.',tags:['Read aloud','Accessible','Inclusive','All learners']},
 ];
 const SLOTS=[
   {type:'feat',name:['PROCTORED','EXAM'],icon:'🛡️'},{type:'logo'},
   {type:'feat',name:['LIVE','GAMES'],icon:'⚡'},{type:'logo'},
-  {type:'feat',name:['DIFFICULTY','ANALYTICS'],icon:'📊'},{type:'logo'},
+  {type:'feat',name:['GAP','ANALYTICS'],icon:'📊'},{type:'logo'},
   {type:'feat',name:['IMAGE','QUESTIONS'],icon:'🖼️'},{type:'logo'},
+  {type:'feat',name:['QUESTION','FORMATS'],icon:'📝'},{type:'logo'},
+  {type:'feat',name:['VOICE','SUPPORT'],icon:'🔊'},{type:'logo'},
 ];
 
 function polar(r,deg){const rad=(deg-90)*Math.PI/180;return{x:r*Math.cos(rad),y:r*Math.sin(rad)};}
