@@ -254,8 +254,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   .s3-track{height:auto;}
   .s3-wheel-col{width:100%;height:60vw;}
   .s3-detail-col{width:100%;padding:32px 24px;opacity:1;}
-  .s3-nav{display:flex!important;}
   .s3-hint{display:none;}
+  .s3-dot{width:12px;height:12px;}
+  .s3-dots{gap:14px;}
   .s4-steps{grid-template-columns:1fr;gap:48px;}
   .s4-section{padding:80px 28px;}
   .s5-cards{grid-template-columns:1fr!important;max-width:100%!important;}
@@ -794,7 +795,15 @@ if(window.innerWidth>900){
   s3SetPhase1();
 }else{
   setCLbl('');
+  s3DetailColEl.style.width='';  /* clear inline width:0 so CSS width:100% takes effect */
   s3DetailColEl.style.opacity='';s3DetailColEl.classList.add('show');
+  /* Swipe left/right to navigate features on mobile */
+  var s3TouchX=0;
+  document.getElementById('s3Inner').addEventListener('touchstart',function(e){s3TouchX=e.touches[0].clientX;},{passive:true});
+  document.getElementById('s3Inner').addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-s3TouchX;
+    if(Math.abs(dx)>50){if(dx<0&&curF<FEATURES.length-1)s3GoTo(curF+1);else if(dx>0&&curF>0)s3GoTo(curF-1);}
+  },{passive:true});
 }
 s3Panel(FEATURES[0],false);
 
