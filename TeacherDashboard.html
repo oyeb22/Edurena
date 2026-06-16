@@ -137,7 +137,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 
 nav { padding: 6px 7px; flex: 1; overflow-y: auto; }
 .nsec { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; padding: 9px 8px 3px; }
-.ni { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: var(--r-sm); cursor: pointer; color: var(--text2); font-size: 12.5px; font-weight: 400; transition: all .12s; margin-bottom: 1px; border: none; background: none; width: 100%; text-align: left; }
+.ni { display: flex; align-items: center; gap: 7px; padding: 8px 9px; border-radius: var(--r-sm); cursor: pointer; color: var(--text2); font-size: 12.5px; font-weight: 400; transition: all .12s; margin-bottom: 1px; border: none; background: none; width: 100%; text-align: left; touch-action: manipulation; }
 .ni:hover { background: var(--surface2); color: var(--text); }
 .ni.on { background: var(--surface2); color: var(--text); font-weight: 500; }
 .ni .ico { font-size: 13px; width: 15px; text-align: center; flex-shrink: 0; opacity: .7; }
@@ -211,6 +211,12 @@ body:not(.dark) .btn-out:hover { background: rgba(255,80,80,0.22); }
 body:not(.dark) .mob-nav { background: #2c1608; border-top-color: #1e0e04; }
 body:not(.dark) .mob-ni { color: rgba(255,255,255,0.45); }
 body:not(.dark) .mob-ni.on { color: #f5a623; background: rgba(245,166,35,0.18); }
+/* Mobile header: dark chocolate to match sidebar + bottom nav */
+body:not(.dark) .mob-header { background: #3a1f08; border-bottom-color: #1e0e04; }
+body:not(.dark) .mob-title { color: #ffc144; }
+body:not(.dark) .mob-sub { color: rgba(255,255,255,0.4); }
+body:not(.dark) .mob-hamburger { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); }
+body:not(.dark) .mob-av { color: #ffc144; background: rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.4); }
 
 /* ── MOBILE NAV BAR (bottom) ── */
 .mob-nav {
@@ -225,7 +231,7 @@ body:not(.dark) .mob-ni.on { color: #f5a623; background: rgba(245,166,35,0.18); 
 }
 .mob-nav-inner { display: flex; overflow-x: auto; scrollbar-width: none; gap: 2px; }
 .mob-nav-inner::-webkit-scrollbar { display: none; }
-.mob-ni { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 10px 5px; border: none; background: none; cursor: pointer; border-radius: var(--r-sm); color: var(--text3); font-size: 10px; font-family: var(--font); font-weight: 400; transition: all .12s; min-width: 56px; position: relative; }
+.mob-ni { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 10px 6px; border: none; background: none; cursor: pointer; border-radius: var(--r-sm); color: var(--text3); font-size: 10px; font-family: var(--font); font-weight: 400; transition: all .12s; min-width: 56px; position: relative; touch-action: manipulation; }
 .mob-ni.on { color: var(--accent); background: var(--accent-bg); }
 .mob-ni .mico { font-size: 18px; line-height: 1; }
 .mob-ni .mlbl { font-size: 9.5px; white-space: nowrap; }
@@ -244,11 +250,11 @@ body:not(.dark) .mob-ni.on { color: #f5a623; background: rgba(245,166,35,0.18); 
   top: 0;
   z-index: 50;
 }
-.mob-hamburger { width: 34px; height: 34px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; flex-shrink: 0; }
+.mob-hamburger { width: 40px; height: 40px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex-shrink: 0; touch-action: manipulation; }
 .mob-title-wrap { flex: 1; min-width: 0; }
 .mob-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mob-sub { font-size: 10.5px; color: var(--text3); }
-.mob-av { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--accent-text); flex-shrink: 0; cursor: pointer; overflow: hidden; }
+.mob-av { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--accent-text); flex-shrink: 0; cursor: pointer; overflow: hidden; touch-action: manipulation; }
 .mob-av img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ── SLIDE-OUT DRAWER (mobile) ── */
@@ -297,7 +303,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .bb  { background: var(--accent-bg);  color: var(--accent-text); }
 
 /* BUTTONS */
-.btn { padding: 5px 11px; border: 1px solid var(--border2); border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 500; font-family: var(--font); transition: all .12s; white-space: nowrap; background: var(--surface); color: var(--text); }
+.btn { padding: 5px 11px; border: 1px solid var(--border2); border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 500; font-family: var(--font); transition: all .12s; white-space: nowrap; background: var(--surface); color: var(--text); touch-action: manipulation; }
 .btn:hover { background: var(--surface2); }
 .btn-p { background: var(--text); color: var(--bg); border-color: var(--text); }
 .btn-p:hover { opacity: .85; background: var(--text); }
@@ -358,7 +364,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .mh-title { font-size: 13px; font-weight: 600; }
 .mc { cursor: pointer; color: var(--text2); font-size: 15px; padding: 3px; border: none; background: none; line-height: 1; }
 .mc:hover { color: var(--text); }
-.mb { padding: 18px; overflow-y: auto; flex: 1; }
+.mb { padding: 18px; overflow-y: auto; flex: 1; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .mtabs { display: flex; gap: 2px; margin-bottom: 14px; background: var(--surface2); border-radius: 8px; padding: 3px; overflow-x: auto; scrollbar-width: none; }
 .mtabs::-webkit-scrollbar { display: none; }
 .mtab { flex-shrink: 0; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; font-family: var(--font); background: transparent; color: var(--text2); transition: all .12s; text-align: center; }
@@ -498,14 +504,20 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
   .sb.drawer-open { transform: translateX(0); }
   .mob-header { display: flex; }
   .topbar { display: none; }
-  .main { padding-bottom: 62px; }
+  .main { padding-bottom: 66px; }
   .mob-nav { display: block; }
   .content { padding: 14px; }
   .sgrid { grid-template-columns: repeat(2, 1fr); }
   .cgrid { grid-template-columns: 1fr; }
   .fgrid { grid-template-columns: 1fr; }
   .fgrid.c3 { grid-template-columns: 1fr 1fr; }
-  .ts-stack { top: 56px; right: 10px; }
+  .ts-stack { top: 62px; right: 10px; }
+  /* Mobile form a11y: 16px prevents iOS auto-zoom; 44px = minimum tap target */
+  .fg input, .fg select, .fg textarea { font-size: 16px; min-height: 44px; padding: 10px 10px; }
+  .fg textarea { min-height: 88px; }
+  /* Button tap targets */
+  .btn:not(.btn-sm) { min-height: 40px; padding: 8px 14px; font-size: 12.5px; }
+  select.btn:not(.btn-sm) { min-height: 40px; }
 }
 
 /* ── Mobile (≤520px): tighter layout ── */
@@ -518,12 +530,16 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
   .mbox { width: 96vw !important; max-height: 92vh; border-radius: 12px; }
   .mb { padding: 14px; }
   .sh h2 { font-size: 14px; }
-  .btn { padding: 5px 9px; font-size: 11.5px; }
+  .btn:not(.btn-sm) { min-height: 42px; padding: 9px 12px; font-size: 12px; }
   table { font-size: 12px; }
   thead th { padding: 7px 8px; }
   tbody td { padding: 7px 8px; }
-  .tc { flex-wrap: wrap; }
+  .tc { flex-wrap: wrap; gap: 6px; }
   .mob-header { padding: 9px 12px; }
+  /* Prevent long labels from overlapping on small screens */
+  .mob-ni .mlbl { font-size: 9px; }
+  /* Fullscreen modal on small mobile */
+  .mbox { border-radius: 0 !important; max-height: 100vh !important; }
 }
 
 /* ── Very small (≤360px) ── */
@@ -531,6 +547,104 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
   .sgrid { grid-template-columns: 1fr; }
   .mob-ni { min-width: 50px; padding: 7px 8px 5px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD ENHANCEMENTS v5.6
+═══════════════════════════════════════════════════════════ */
+
+/* ── Enhanced stat cards ── */
+.sc {
+  position: relative; overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s;
+  cursor: default;
+}
+.sc::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--accent);
+  border-radius: 2px 0 0 2px;
+}
+.sc:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.07); border-color: var(--border2); }
+body.dark .sc:hover { box-shadow: 0 6px 20px rgba(0,0,0,.22); }
+.sc.sc-g::before { background: var(--success); }
+.sc.sc-p::before { background: var(--purple); }
+.sc.sc-b::before { background: #3b82f6; }
+.sc-ico { position: absolute; top: 10px; right: 11px; font-size: 17px; opacity: .18; user-select: none; }
+.sc-delta { font-size: 9.5px; font-family: var(--mono); color: var(--text3); margin-top: 3px; }
+
+/* ── Welcome banner ── */
+.ovw-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  background: linear-gradient(120deg, var(--surface) 50%, var(--accent-bg) 100%);
+  border: 1px solid var(--accent-border); border-radius: var(--r);
+  padding: 14px 18px; margin-bottom: 10px;
+}
+.ovw-greeting { font-size: 14.5px; font-weight: 600; letter-spacing: -0.2px; }
+.ovw-sub { font-size: 11.5px; color: var(--text2); margin-top: 2px; }
+.ovw-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+body:not(.dark) .ovw-banner { background: linear-gradient(120deg, #fff9ef 40%, rgba(245,166,35,.07) 100%); }
+body.dark .ovw-badge { background: rgba(35,209,139,.12); border-color: rgba(35,209,139,.25); color: #23d18b; }
+
+/* ── Quick actions ── */
+.qact-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 10px; }
+.qact-btn {
+  display: flex; align-items: center; gap: 9px; padding: 10px 13px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  cursor: pointer; font-family: var(--font); text-align: left;
+  transition: all .15s ease; color: var(--text2);
+}
+.qact-btn:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); transform: translateY(-1px); }
+.qact-ico { font-size: 19px; line-height: 1; flex-shrink: 0; }
+.qact-lbl { font-size: 11.5px; font-weight: 500; }
+@media (max-width: 900px) { .qact-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 520px) { .qact-grid { grid-template-columns: repeat(2,1fr); gap: 6px; } .qact-btn { padding: 9px 11px; } }
+
+/* ── Form focus ring ── */
+.fg input:focus, .fg select:focus, .fg textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  outline: none;
+}
+
+/* ── Nav active left indicator ── */
+.ni.on { position: relative; }
+.ni.on::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 2px; height: 60%; background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+body:not(.dark) .ni.on::before { background: #f5a623; }
+
+/* ── Better empty state ── */
+.empty-st { text-align: center; padding: 36px 20px; color: var(--text2); }
+.empty-st-ico { font-size: 30px; margin-bottom: 10px; opacity: .3; display: block; }
+.empty-st-msg { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+.empty-st-sub { font-size: 11.5px; color: var(--text3); margin-bottom: 12px; }
+
+/* ── Topbar active badge ── */
+.tb-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209,139,.22); color: #23d18b; }
+.tb-right-wrap { display: flex; align-items: center; gap: 8px; }
+
+/* ── Countup animation support ── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.sv-anim { animation: fadeUp .3s ease forwards; }
+
+/* ── Card section label enhancement ── */
+.ct { display: flex; align-items: center; gap: 6px; }
+.ct::before { content: ''; display: inline-block; width: 3px; height: 10px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+
+/* ── Overview chart card headers ── */
+.chart-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+/* ── Recent table Actions column ── */
+.t-act-group { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
+
+/* ── Button quick create (topbar) ── */
+.btn-qc { display: flex; align-items: center; gap: 5px; padding: 5px 11px; background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: var(--r-sm); cursor: pointer; font-size: 11.5px; font-weight: 500; font-family: var(--font); transition: opacity .12s; white-space: nowrap; }
+.btn-qc:hover { opacity: .82; }
   </style>
 </head>
 <body>
@@ -621,8 +735,13 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
         <div class="tb-title" id="tb-title">Overview</div>
         <div class="tb-sub"   id="tb-sub"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="tb-right-wrap">
+        <span class="tb-badge" id="tb-active-badge" style="display:none">
+          <span class="live-dot" style="width:5px;height:5px;margin:0 1px 0 0"></span>
+          <span id="tb-active-count">0</span> live
+        </span>
         <span style="font-size:11px;color:var(--text3)" id="tb-right"></span>
+        <button class="btn-qc" onclick="nav('create',null)" id="tb-create-btn">+ New Quiz</button>
         <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light mode"
           style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);cursor:pointer;font-size:13px;line-height:1;font-family:var(--font);color:var(--text2);transition:all .15s">
           🌙
@@ -635,25 +754,62 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
 
       <!-- OVERVIEW -->
       <div class="tp on" id="tp-overview">
+
+        <!-- Welcome banner -->
+        <div class="ovw-banner">
+          <div>
+            <div class="ovw-greeting" id="ovw-greeting">Welcome back 👋</div>
+            <div class="ovw-sub" id="ovw-sub">Here's what's happening today</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            <span class="ovw-badge" id="ovw-active-badge" style="display:none">
+              <span class="live-dot" style="width:5px;height:5px;margin-right:2px"></span>
+              <span id="ovw-active-count">0</span> active
+            </span>
+            <button class="btn-qc" onclick="nav('create',null)">+ New Quiz</button>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
         <div class="sgrid">
-          <div class="sc"><div class="sv" id="s-tot">—</div><div class="sl">Total Quizzes</div></div>
-          <div class="sc"><div class="sv" id="s-act">—</div><div class="sl">Active Now</div></div>
-          <div class="sc"><div class="sv" id="s-cls">—</div><div class="sl">My Classes</div></div>
-          <div class="sc"><div class="sv" id="s-qs">—</div><div class="sl">Questions</div></div>
+          <div class="sc sc-b"><span class="sc-ico">📋</span><div class="sv" id="s-tot">—</div><div class="sl">Total Quizzes</div></div>
+          <div class="sc sc-g"><span class="sc-ico">⚡</span><div class="sv" id="s-act">—</div><div class="sl">Active Now</div></div>
+          <div class="sc sc-p"><span class="sc-ico">🏫</span><div class="sv" id="s-cls">—</div><div class="sl">My Classes</div></div>
+          <div class="sc">    <span class="sc-ico">❓</span><div class="sv" id="s-qs">—</div><div class="sl">Questions</div></div>
         </div>
+
+        <!-- Quick actions -->
+        <div class="qact-grid">
+          <button class="qact-btn" onclick="nav('create',null)"><span class="qact-ico">➕</span><span class="qact-lbl">Create Quiz</span></button>
+          <button class="qact-btn" onclick="nav('questions',null)"><span class="qact-ico">📚</span><span class="qact-lbl">Question Bank</span></button>
+          <button class="qact-btn" onclick="nav('students',null)"><span class="qact-ico">👥</span><span class="qact-lbl">Students</span></button>
+          <button class="qact-btn" onclick="nav('passages',null)"><span class="qact-ico">📖</span><span class="qact-lbl">Passages</span></button>
+        </div>
+
+        <!-- Charts -->
         <div class="cgrid">
-          <div class="card"><div class="ct">Quiz Status</div><div class="cw"><canvas id="ch-status"></canvas></div></div>
-          <div class="card"><div class="ct">Questions per Class</div><div class="cw"><canvas id="ch-cls"></canvas></div></div>
+          <div class="card">
+            <div class="chart-card-head"><span class="ct">Quiz Status</span></div>
+            <div class="cw"><canvas id="ch-status"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="chart-card-head"><span class="ct">Questions per Class</span></div>
+            <div class="cw"><canvas id="ch-cls"></canvas></div>
+          </div>
         </div>
+
+        <!-- Recent quizzes table -->
         <div class="card" style="padding:0">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px">
             <span class="ct" style="margin-bottom:0">Recent Quizzes</span>
+            <button class="btn btn-sm" onclick="nav('manage',null)">View All →</button>
           </div>
           <div class="tw"><table id="t-recent">
             <thead><tr><th>Title</th><th>Code</th><th>Class</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
           </table></div>
         </div>
+
       </div>
 
       <!-- CREATE QUIZ -->
@@ -1586,6 +1742,8 @@ function applyTheme(dark) {
   var icons = dark ? '☀️' : '🌙';
   ['theme-btn','mob-theme-btn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.textContent=icons; });
   try { localStorage.setItem('qf_theme', dark ? 'dark' : 'light'); } catch(_) {}
+  // Re-render charts with theme-matched colours
+  if (allQuizzes.length || allQuestions.length) renderCharts();
 }
 function toggleTheme() {
   applyTheme(!document.body.classList.contains('dark'));
@@ -1699,18 +1857,53 @@ function doDelClass(id) {
   call('deleteClass',{classId:id},function(){ toast('success','Class deleted'); loadClasses(renderClassesTable); });
 }
 
+/* ── Count-up animation ── */
+function countUp(id, target, duration) {
+  var el = document.getElementById(id); if (!el) return;
+  var start = 0, startTime = null;
+  var num = parseInt(String(target).replace(/[^0-9]/g,'')) || 0;
+  var suffix = String(target).replace(/[0-9]/g,'');
+  if (num === 0) { el.textContent = target; el.classList.add('sv-anim'); return; }
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / (duration || 500), 1);
+    var ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(ease * num) + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = target;
+  }
+  el.classList.add('sv-anim');
+  setTimeout(function(){ el.classList.remove('sv-anim'); }, 400);
+  requestAnimationFrame(step);
+}
+
 /* ── Overview ── */
 function loadOverview() {
+  // Greeting
+  var hour = new Date().getHours();
+  var greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  var name = (S.name || '').split(' ')[0] || 'Teacher';
+  setText('ovw-greeting', greet + ', ' + name + ' 👋');
+  var today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  setText('ovw-sub', today);
+
   var done=0; function check(){ done++; if(done===2) { renderCharts(); refreshSidebarStats(); } }
   call('getAllQuizzes',{},function(qs){
     allQuizzes=qs||[];
     var now=new Date();
-    setText('s-tot',allQuizzes.length); setText('s-cls',allClasses.length);
-    setText('s-act',allQuizzes.filter(function(q){ return new Date(q.endTime)>now&&q.status==='active'; }).length);
+    var activeCount = allQuizzes.filter(function(q){ return new Date(q.endTime)>now&&q.status==='active'; }).length;
+    countUp('s-tot', allQuizzes.length);
+    countUp('s-cls', allClasses.length);
+    countUp('s-act', activeCount);
+    // Update active badge in banner + topbar
+    ['ovw-active-badge','tb-active-badge'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display = activeCount>0?'inline-flex':'none';
+    });
+    ['ovw-active-count','tb-active-count'].forEach(function(id){ setText(id,activeCount); });
     renderRecentTable(); check();
   },function(){ check(); });
-  if(allQuestions.length){ setText('s-qs',allQuestions.length); check(); }
-  else { call('getQuestionBank',{classId:allClasses.length?allClasses[0].id:''}, function(qq){ allQuestions=qq||[]; setText('s-qs',allQuestions.length); check(); }, function(){ check(); }); }
+  if(allQuestions.length){ countUp('s-qs', allQuestions.length); check(); }
+  else { call('getQuestionBank',{classId:allClasses.length?allClasses[0].id:''}, function(qq){ allQuestions=qq||[]; countUp('s-qs',allQuestions.length); check(); }, function(){ check(); }); }
 }
 
 // Refresh sidebar mini-stats: active quiz count from memory, today's attempts
@@ -1731,24 +1924,82 @@ function refreshSidebarStats() {
   });
 }
 function renderCharts() {
+  var dark = document.body.classList.contains('dark');
+  var tickClr = dark ? '#7a8599' : '#9a8060';
+  var gridClr = dark ? 'rgba(255,255,255,.05)' : 'rgba(160,100,20,.06)';
+  var legendClr = dark ? '#a0aec0' : '#7a6040';
   var now=new Date();
   var act=allQuizzes.filter(function(q){ return new Date(q.endTime)>now&&q.status==='active'; }).length;
   var exp=allQuizzes.filter(function(q){ return new Date(q.endTime)<=now; }).length;
+  var draftCount=allQuizzes.length-act-exp;
   var sc=document.getElementById('ch-status'); if(!sc) return;
   if(chStatus) chStatus.destroy();
-  chStatus=new Chart(sc,{type:'doughnut',data:{labels:['Active','Expired'],datasets:[{data:[act,exp],backgroundColor:['rgba(22,101,52,.8)','rgba(0,0,0,.08)'],borderColor:['#166534','rgba(0,0,0,.12)'],borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b6b68',font:{size:11,family:'Geist'}}}}}});
+  chStatus=new Chart(sc,{
+    type:'doughnut',
+    data:{
+      labels:['Active','Expired','Draft'],
+      datasets:[{
+        data:[act,exp,Math.max(draftCount,0)],
+        backgroundColor: dark
+          ? ['rgba(35,209,139,.75)','rgba(255,255,255,.1)','rgba(167,139,250,.6)']
+          : ['rgba(22,101,52,.8)','rgba(160,100,20,.12)','rgba(76,29,149,.6)'],
+        borderColor: dark
+          ? ['#23d18b','rgba(255,255,255,.15)','#a78bfa']
+          : ['#166534','rgba(160,100,20,.2)','#4c1d95'],
+        borderWidth:1.5,
+        hoverOffset:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      cutout:'65%',
+      plugins:{
+        legend:{labels:{color:legendClr,font:{size:11,family:'Geist'},boxWidth:10,padding:12}},
+        tooltip:{callbacks:{label:function(c){ return ' '+c.label+': '+c.parsed; }}}
+      }
+    }
+  });
   var counts={};
   allQuestions.forEach(function(q){ counts[q.classId]=(counts[q.classId]||0)+1; });
   var cc=document.getElementById('ch-cls'); if(!cc) return;
   if(chCls) chCls.destroy();
-  chCls=new Chart(cc,{type:'bar',data:{labels:Object.keys(counts),datasets:[{label:'Questions',data:Object.values(counts),backgroundColor:'rgba(26,86,219,.65)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b68'},grid:{color:'rgba(0,0,0,.06)'}},y:{ticks:{color:'#6b6b68'},grid:{color:'rgba(0,0,0,.06)'},beginAtZero:true}}}});
+  var barColors = Object.keys(counts).map(function(_,i){
+    var palette = dark
+      ? ['rgba(245,166,35,.7)','rgba(35,209,139,.65)','rgba(167,139,250,.65)','rgba(59,130,246,.65)','rgba(251,113,133,.65)']
+      : ['rgba(201,125,0,.75)','rgba(22,101,52,.7)','rgba(76,29,149,.65)','rgba(26,86,219,.65)','rgba(157,23,77,.65)'];
+    return palette[i % palette.length];
+  });
+  chCls=new Chart(cc,{
+    type:'bar',
+    data:{
+      labels:Object.keys(counts),
+      datasets:[{
+        label:'Questions',
+        data:Object.values(counts),
+        backgroundColor:barColors,
+        borderRadius:5,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:tickClr,font:{size:11}},grid:{color:gridClr}},
+        y:{ticks:{color:tickClr,font:{size:11}},grid:{color:gridClr},beginAtZero:true}
+      }
+    }
+  });
 }
 function renderRecentTable() {
   var tb=document.querySelector('#t-recent tbody'); if(!tb) return;
   var recent=allQuizzes.slice(0,8);
-  if(!recent.length){ tb.innerHTML='<tr class="er"><td colspan="5">No quizzes yet.</td></tr>'; return; }
+  if(!recent.length){
+    tb.innerHTML='<tr><td colspan="5"><div class="empty-st"><span class="empty-st-ico">📋</span><div class="empty-st-msg">No quizzes yet</div><div class="empty-st-sub">Create your first quiz to get started</div><button class="btn btn-p" onclick="nav(\'create\',null)" style="margin-top:4px">+ Create Quiz</button></div></td></tr>';
+    return;
+  }
   tb.innerHTML=recent.map(function(q){
-    return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>'+sbadge(q)+'</td><td><button class="btn btn-sm" onclick="viewDetails(\''+esc(q.examCode)+'\')">Results</button></td></tr>';
+    return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>'+sbadge(q)+'</td><td><div class="t-act-group"><button class="btn btn-sm" onclick="viewDetails(\''+esc(q.examCode)+'\')">Results</button><button class="btn btn-live btn-sm" onclick="openLiveMo(\''+esc(q.examCode)+'\')">⚡</button></div></td></tr>';
   }).join('');
 }
 
@@ -1756,7 +2007,7 @@ function renderRecentTable() {
 function loadQuizzes() { call('getAllQuizzes',{},function(qs){ allQuizzes=qs||[]; renderManageTable(); refreshSidebarStats(); }); }
 function renderManageTable() {
   var tb=document.querySelector('#t-manage tbody'); if(!tb) return;
-  if(!allQuizzes.length){ tb.innerHTML='<tr class="er"><td colspan="7">No quizzes.</td></tr>'; return; }
+  if(!allQuizzes.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty-st"><span class="empty-st-ico">📋</span><div class="empty-st-msg">No quizzes yet</div><div class="empty-st-sub">Head to Create Quiz to add your first one</div><button class="btn btn-p" onclick="nav(\'create\',null)" style="margin-top:4px">+ Create Quiz</button></div></td></tr>'; return; }
   tb.innerHTML=allQuizzes.map(function(q){
     var ec=q.examCode;
     return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(ec)+'</code></td><td>'+esc(q.classId)+'</td><td>Wk '+esc(q.week)+'</td><td>'+esc(q.duration)+'m</td><td>'+sbadge(q)+'</td>' +
