@@ -570,6 +570,7 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
       <button class="ni"            onclick="nav('manage',this);closeSidebar()"><span class="ico">≡</span>Manage Quizzes</button>
       <button class="ni"            onclick="nav('archive',this);closeSidebar()"><span class="ico">◷</span>Archived</button>
       <button class="ni"            onclick="nav('questions',this);closeSidebar()"><span class="ico">?</span>Question Bank</button>
+      <button class="ni"            onclick="nav('passages',this);closeSidebar()"><span class="ico">📖</span>Passages</button>
       <button class="ni"            onclick="nav('students',this);closeSidebar()"><span class="ico">◉</span>Students<span class="nbadge" id="pend-badge">0</span></button>
       <div class="nsec admin-only">Admin</div>
       <button class="ni admin-only" onclick="nav('teachers',this);closeSidebar()"><span class="ico">♟</span>Teachers</button>
@@ -973,6 +974,61 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
     </div>
   </div>
 </div>
+      </div>
+
+      <!-- PASSAGES -->
+      <div class="tp" id="tp-passages">
+        <div class="card" style="margin-bottom:10px">
+          <div class="ct">Add Comprehension Passage</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Paste a passage here, then tag your questions in the Question Bank with this passage ID so they bundle together in quizzes.</p>
+          <div class="fgrid c3" style="margin-bottom:10px">
+            <div class="fg">
+              <label>Class *</label>
+              <select id="ps-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">
+                <option value="">— Select class —</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Session *</label>
+              <select id="ps-session" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">
+                <option value="">— Select session —</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Term *</label>
+              <select id="ps-term" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%">
+                <option value="">— Select term —</option>
+                <option>First Term</option>
+                <option>Second Term</option>
+                <option>Third Term</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px">
+            <label>Passage Title *</label>
+            <input type="text" id="ps-title" placeholder="e.g. The Tortoise and the Birds">
+          </div>
+          <div class="fg" style="margin-bottom:12px">
+            <label>Passage Text *</label>
+            <textarea id="ps-body" rows="8" placeholder="Paste the full comprehension passage here…"
+              style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.7;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--border2)'"
+              onblur="this.style.borderColor='var(--border)'"></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="btn btn-p" onclick="doCreatePassage()">Save Passage →</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0">
+          <div class="sh" style="padding:12px 14px;border-bottom:1px solid var(--border)">
+            <h2 style="font-size:14px;margin:0">Saved Passages</h2>
+            <button class="btn btn-sm" onclick="loadPassagesList()">↻ Refresh</button>
+          </div>
+          <div id="passages-list" style="padding:14px">
+            <p style="color:var(--text2);font-size:13px;text-align:center;padding:18px">Select a class and session above, then refresh to see passages.</p>
+          </div>
+        </div>
       </div>
 
       <!-- STUDENTS -->
@@ -1520,7 +1576,7 @@ function p2(n) { return String(n).padStart(2,'0'); }
 
 var TAB_NAMES = {
   overview:'Overview', create:'Create Quiz', manage:'Manage Quizzes', archive:'Archived Quizzes',
-  questions:'Question Bank', students:'Student Register', teachers:'Teachers', classes:'Classes',
+  questions:'Question Bank', passages:'Comprehension Passages', students:'Student Register', teachers:'Teachers', classes:'Classes',
   profile:'My Profile', settings:'Platform Settings'
 };
 
@@ -1572,6 +1628,7 @@ function nav(name, el) {
   if (name==='archive')   loadArchived();
   if (name==='classes')   loadClassesTab();
   if (name==='questions') loadQBTab();
+  if (name==='passages')  loadPassagesTab();
   if (name==='create')    loadCreateTab();
   if (name==='teachers')  loadTeachersTab();
   if (name==='students')  loadStudentsTab();
@@ -2240,6 +2297,81 @@ function loadActiveTeachers(){ call('getTeachers',{},function(teachers){ var el=
 function openAssign(email,name){ pendingAssignTarget=email; setText('asgn-name',name); call('getTeachers',{},function(list){ var teacher=list.find(function(t){ return t.email===email; }); var assigned=(teacher&&teacher.classes)||[]; var grid=document.getElementById('asgn-cls-grid'); grid.innerHTML=allClasses.length?allClasses.map(function(c){ var chk=assigned.includes(c.id)?'checked':''; return '<div class="cls-item"><input type="checkbox" id="as_'+esc(c.id)+'" value="'+esc(c.id)+'" '+chk+'><label for="as_'+esc(c.id)+'">'+esc(c.id)+(c.description?' — '+esc(c.description):'')+'</label></div>'; }).join(''):'<p style="font-size:12px;color:var(--text2)">No classes exist yet.</p>'; document.getElementById('assign-mo').classList.add('on'); }); }
 function confirmAssign(){ if(!pendingAssignTarget) return; var classes=[]; document.querySelectorAll('#asgn-cls-grid input:checked').forEach(function(cb){ classes.push(cb.value); }); call('assignClassToTeacher',{targetEmail:pendingAssignTarget,classes:classes},function(){ toast('success','Classes updated'); closeMo('assign-mo'); pendingAssignTarget=null; loadActiveTeachers(); }); }
 function doDelTeacher(email){ if(!confirm('Remove teacher "'+email+'"?')) return; call('deleteTeacher',{targetEmail:email},function(){ toast('success','Teacher removed'); loadTeachersTab(); }); }
+
+/* ── Passages ── */
+function loadPassagesTab() {
+  loadClasses(function() {
+    var sel = document.getElementById('ps-class');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Select class —</option>';
+    allClasses.forEach(function(c) {
+      sel.innerHTML += '<option value="'+esc(c.id)+'">'+esc(c.id+(c.description?' — '+c.description:''))+'</option>';
+    });
+    // Populate session dropdown from quiz sessions if available, or use static defaults
+    var ssSel = document.getElementById('ps-session');
+    if (ssSel && ssSel.options.length <= 1) {
+      var yr = new Date().getFullYear();
+      [yr-1+'/'+yr, yr+'/'+(yr+1), (yr+1)+'/'+(yr+2)].forEach(function(s){
+        ssSel.innerHTML += '<option value="'+s+'">'+s+'</option>';
+      });
+    }
+    loadPassagesList();
+  });
+}
+
+function loadPassagesList() {
+  var listEl = document.getElementById('passages-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<p style="text-align:center;color:var(--text2);font-size:13px;padding:18px">Loading…</p>';
+  call('getAvailablePassages', {}, function(e, passages) {
+    if (e || !passages || !passages.length) {
+      listEl.innerHTML = '<p style="text-align:center;color:var(--text2);font-size:13px;padding:18px">No passages yet. Create one above.</p>';
+      return;
+    }
+    listEl.innerHTML = passages.map(function(p) {
+      return '<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+esc(p.title)+'</div>'
+          + '<div style="font-size:12px;color:var(--text2);margin-bottom:4px;line-height:1.5">'+esc(p.preview)+'</div>'
+          + '<div style="font-size:11.5px;color:var(--accent-text);font-weight:500">'+p.question_count+' linked question'+(p.question_count===1?'':'s')
+            + ' &nbsp;·&nbsp; <span style="color:var(--text3);font-family:var(--mono)">ID: '+esc(p.passage_id)+'</span></div>'
+        + '</div>'
+        + '<button class="btn btn-d btn-sm" onclick="doDeletePassage(\''+esc(p.passage_id)+'\',\''+esc(p.title)+'\')">Delete</button>'
+      + '</div>';
+    }).join('');
+  });
+}
+
+function doCreatePassage() {
+  var title   = (document.getElementById('ps-title').value  || '').trim();
+  var body    = (document.getElementById('ps-body').value   || '').trim();
+  var classId = document.getElementById('ps-class').value;
+  var session = document.getElementById('ps-session').value;
+  var term    = document.getElementById('ps-term').value;
+  if (!title)   { toast('error','Passage title is required'); return; }
+  if (!body)    { toast('error','Passage text is required');  return; }
+  if (!classId) { toast('error','Select a class');            return; }
+  if (!session) { toast('error','Select a session');          return; }
+  if (!term)    { toast('error','Select a term');             return; }
+  spin(true, 'Saving passage…');
+  call('createPassage', { title:title, body:body, classId:classId, session:session, term:term }, function(e, r) {
+    spin(false);
+    if (e) { toast('error', e); return; }
+    toast('success', 'Passage saved — ID: ' + r.passage_id);
+    document.getElementById('ps-title').value = '';
+    document.getElementById('ps-body').value  = '';
+    loadPassagesList();
+  });
+}
+
+function doDeletePassage(passageId, title) {
+  if (!confirm('Delete passage "'+title+'"? This will not delete the linked questions, but they will no longer be bundled.')) return;
+  call('deletePassage', { passage_id: passageId }, function(e) {
+    if (e) { toast('error', e); return; }
+    toast('success', 'Passage deleted');
+    loadPassagesList();
+  });
+}
 
 /* ── Students ── */
 function loadStudentsTab(){
