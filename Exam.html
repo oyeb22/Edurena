@@ -640,7 +640,7 @@
     <div class="flagged-notice" id="flaggedNotice">🚩 You had flagged questions — they are marked below for your reference.</div>
     <div class="divider"></div>
     <div id="reviewSection">
-      <div class="review-section"><h3>📋 Question Review</h3></div>
+      <div class="review-section"><h3>📋 Question Review</h3><div id="aiCreditBar" style="display:none;margin-top:8px;font-size:12px;color:rgba(255,255,255,.45);"></div></div>
       <div id="reviewList"></div>
     </div>
    <div id="retakeNotice" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(45,212,160,.07);border:1px solid rgba(45,212,160,.25);border-radius:var(--radius-sm);font-size:12.5px;color:var(--green);text-align:center;line-height:1.6">
@@ -2319,6 +2319,15 @@ function fetchAiExplanation(idx){
       box.innerHTML = html;
       btn.style.display = 'none';
       if (TTS.enabled) ttsSpeak(r.data.explanation);
+      // Update credit bar if usage stats returned
+      if (r.data.used != null && r.data.limit) {
+        var bar = document.getElementById('aiCreditBar');
+        if (bar) {
+          var remaining = Math.max(0, r.data.limit - r.data.used);
+          bar.textContent = '⚡ AI explanations: ' + remaining + ' of ' + r.data.limit + ' remaining today';
+          bar.style.display = 'block';
+        }
+      }
     });
 }
 </script>
