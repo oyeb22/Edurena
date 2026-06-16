@@ -91,6 +91,15 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 .hero-btn-p:hover{background:#2a1505;}
 .hero-btn-s{display:inline-block;border:2px solid rgba(58,31,8,.5);color:var(--brown);padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;}
 .hero-btn-s:hover{background:rgba(58,31,8,.1);}
+/* MOBILE-ONLY hero desc strip — shown below the hero on small screens */
+.hero-mob-strip{display:none;}
+@media(max-width:900px){
+  .hero-mob-strip{display:block;background:var(--amber);padding:36px 28px 40px;}
+  .hero-mob-strip p{font-size:15px;color:var(--brown);line-height:1.75;opacity:.9;margin-bottom:14px;}
+  .hero-mob-strip .hmb-btns{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
+  .hero-mob-strip .hero-btn-p{background:var(--brown);color:var(--amber);}
+  .hero-mob-strip .hero-btn-s{border-color:rgba(58,31,8,.5);color:var(--brown);}
+}
 
 /* SECTION — FOUNDING BELIEF */
 .sfb-section{width:100%;padding:120px 60px;background:var(--bg);border-top:1px solid var(--border);}
@@ -253,7 +262,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   .s3-head{padding:48px 28px 32px;}
   .s3-inner{flex-direction:column;height:auto;position:relative;}
   .s3-track{height:auto;}
-  .s3-wheel-col{width:100%;height:60vw;}
+  .s3-wheel-col{display:none;}
   .s3-detail-col{width:100%;padding:32px 24px;opacity:1;}
   .s3-hint{display:none;}
   .s3-dot{width:12px;height:12px;}
@@ -277,8 +286,6 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   /* New sections */
   .sfb-section,.sps-section{padding:64px 16px;}
   .s3-head{padding:40px 16px 24px;}
-  /* Section 3 wheel: taller so the visual isn't too cramped */
-  .s3-wheel-col{height:75vw;}
   .s3-detail-col{padding:24px 16px;}
   /* Sections 4–6: tighter horizontal padding on small phones */
   .s4-section{padding:64px 16px;}
@@ -339,6 +346,16 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
     <div class="arr"></div>
   </div>
 </section>
+
+<!-- MOBILE HERO DESC — hidden on desktop, visible below hero on mobile -->
+<div class="hero-mob-strip">
+  <p>Most assessments tell you a student got something wrong. Edurena helps you understand why, and what to do about it.</p>
+  <p>Run exams, quizzes, and live competitions from a single question bank. Spend less time marking. Spend more time teaching.</p>
+  <div class="hmb-btns">
+    <a href="Pricing.html" class="hero-btn-p">Get Started</a>
+    <a href="#howitworks" class="hero-btn-s">See How It Works</a>
+  </div>
+</div>
 
 <!-- SECTION — FOUNDING BELIEF -->
 <section id="about" class="sfb-section reveal">
@@ -861,8 +878,8 @@ const s4Obs=new IntersectionObserver(entries=>{
 document.querySelectorAll('.s4-step').forEach(s=>s4Obs.observe(s));
 
 /* ── GLOBAL REVEAL ── */
-const revObs=new IntersectionObserver(([e])=>{
-  if(e.isIntersecting){e.target.classList.add('in');revObs.unobserve(e.target);}
+const revObs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');revObs.unobserve(e.target);}});
 },{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
