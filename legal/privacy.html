@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="../assets/edurena_logo_64.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Edurena</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sora',system-ui,sans-serif;background:#03060f;color:#f0f4ff;line-height:1.7;}
+a{color:#f5a623;text-decoration:none;}
+a:hover{text-decoration:underline;}
+.top-bar{background:#060d1e;border-bottom:1px solid rgba(17,32,64,1);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.top-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#f0f4ff;}
+.top-logo{width:32px;height:32px;border-radius:50%;overflow:hidden;}
+.top-logo img{width:100%;height:100%;object-fit:cover;display:block;}
+.top-word{font-size:16px;font-weight:800;}
+.top-word span{color:#f5a623;}
+.top-back{font-size:13px;color:#7a8db0;}
+.top-back:hover{color:#f0f4ff;text-decoration:none;}
+.wrap{max-width:760px;margin:0 auto;padding:72px 40px 100px;}
+.page-kicker{font-size:11px;font-weight:700;color:#f5a623;letter-spacing:.3em;text-transform:uppercase;margin-bottom:16px;}
+.page-title{font-size:clamp(28px,4vw,40px);font-weight:800;color:#f0f4ff;line-height:1.15;margin-bottom:12px;}
+.page-date{font-size:13px;color:#7a8db0;margin-bottom:56px;}
+.section{margin-bottom:48px;}
+.section h2{font-size:18px;font-weight:700;color:#f5a623;margin-bottom:16px;}
+.section p{font-size:15px;color:rgba(240,244,255,.75);margin-bottom:14px;}
+.section ul{padding-left:20px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.section ul li{font-size:15px;color:rgba(240,244,255,.75);}
+.highlight-box{background:#060d1e;border:1px solid rgba(245,166,35,.25);border-radius:12px;padding:24px;margin-bottom:14px;}
+.highlight-box p{margin-bottom:0;}
+footer{background:#060d1e;border-top:1px solid rgba(17,32,64,1);padding:32px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+footer span{font-size:12px;color:#7a8db0;}
+footer div{display:flex;gap:20px;}
+footer a{font-size:12px;color:#7a8db0;}
+footer a:hover{color:#f0f4ff;text-decoration:none;}
+@media(max-width:600px){.wrap{padding:48px 20px 80px;}.top-bar{padding:0 20px;}footer{padding:24px 20px;flex-direction:column;text-align:center;}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="top-brand" href="../index.html">
+    <div class="top-logo"><img src="../assets/edurena_logo_64.png" alt="Edurena"></div>
+    <span class="top-word">edu<span>rena</span></span>
+  </a>
+  <a class="top-back" href="../index.html">← Back to home</a>
+</div>
+
+<div class="wrap">
+  <div class="page-kicker">Legal</div>
+  <h1 class="page-title">Privacy Policy</h1>
+  <div class="page-date">Last updated: June 2026</div>
+
+  <div class="section">
+    <h2>Overview</h2>
+    <div class="highlight-box">
+      <p>Edurena is a tool for schools. Schools subscribe and manage their own students and teachers. We process data on behalf of schools, not directly from students or parents. This policy explains what we collect, why, and how we protect it.</p>
+    </div>
+    <p>This policy applies to all users of the Edurena platform, including school administrators, teachers, and students accessing the platform through a school account. It is governed by the Nigeria Data Protection Regulation (NDPR) 2019.</p>
+  </div>
+
+  <div class="section">
+    <h2>1. Information We Collect</h2>
+    <p><strong style="color:#f0f4ff;">School administrators:</strong> Name, email address, school name, and payment details (processed by Paystack — we do not store card numbers).</p>
+    <p><strong style="color:#f0f4ff;">Teachers:</strong> Name and email address, provided by the school administrator.</p>
+    <p><strong style="color:#f0f4ff;">Students:</strong> Name and any identifiers added by the school (such as a student ID). Students do not create accounts directly.</p>
+    <p><strong style="color:#f0f4ff;">Exam data:</strong> Answers submitted during assessments, scores, timing, and assessment results.</p>
+    <p><strong style="color:#f0f4ff;">Proctoring data:</strong> When a school enables proctored exams, the platform captures images from the student's device camera during the exam session. These images are used solely to detect integrity violations and are stored securely.</p>
+    <p><strong style="color:#f0f4ff;">Usage data:</strong> Standard server logs including IP addresses, browser type, and pages visited. This is used for security and platform improvement only.</p>
+  </div>
+
+  <div class="section">
+    <h2>2. How We Use Your Data</h2>
+    <ul>
+      <li>To create and manage your school account and deliver the service</li>
+      <li>To send login credentials, subscription confirmations, and account notifications via email</li>
+      <li>To process payments through Paystack</li>
+      <li>To generate assessment results, analytics, and learning gap reports for teachers</li>
+      <li>To monitor for violations during proctored exams</li>
+      <li>To maintain platform security and investigate abuse</li>
+    </ul>
+    <p>We do not sell your data to third parties. We do not use student data for advertising.</p>
+  </div>
+
+  <div class="section">
+    <h2>3. Where Data Is Stored</h2>
+    <p>All platform data is stored in <strong style="color:#f0f4ff;">Supabase</strong>, a cloud database provider. Data is encrypted at rest and in transit. Supabase infrastructure operates in data centres with industry-standard physical and logical security controls.</p>
+    <p>Transactional emails (such as account creation and login details) are sent via <strong style="color:#f0f4ff;">Brevo</strong> (formerly Sendinblue), a compliant email service provider.</p>
+    <p>Payment processing is handled by <strong style="color:#f0f4ff;">Paystack</strong>, a PCI-DSS compliant payment processor. Card data never passes through or is stored on Edurena's servers.</p>
+  </div>
+
+  <div class="section">
+    <h2>4. Proctoring and Biometric Data</h2>
+    <div class="highlight-box">
+      <p>The proctoring feature captures images from a student's camera during an exam. This constitutes biometric data under Nigerian law. Schools are responsible for obtaining appropriate consent from students (and parents or guardians for students under 18) before enabling proctored exams.</p>
+    </div>
+    <p>Proctoring images are stored securely and are accessible only to authorised school administrators and teachers for the purpose of reviewing exam integrity. They are not shared with third parties.</p>
+  </div>
+
+  <div class="section">
+    <h2>5. Data Retention</h2>
+    <p>Active subscription data is retained for the duration of the subscription plus 90 days after expiry, during which the school can request an export. After 90 days post-expiry, account and student data may be permanently deleted.</p>
+    <p>Payment records are retained as required by applicable financial regulations.</p>
+    <p>You may request deletion of your data at any time by contacting us at <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a>.</p>
+  </div>
+
+  <div class="section">
+    <h2>6. Your Rights Under the NDPR</h2>
+    <p>Under the Nigeria Data Protection Regulation, you have the right to:</p>
+    <ul>
+      <li>Know what personal data we hold about you</li>
+      <li>Request correction of inaccurate data</li>
+      <li>Request deletion of your data</li>
+      <li>Object to how your data is being processed</li>
+      <li>Receive a copy of your data in a portable format</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a>. We will respond within 30 days.</p>
+  </div>
+
+  <div class="section">
+    <h2>7. Children's Data</h2>
+    <p>Edurena is designed for schools and does not collect data directly from children. Student data is added to the platform by school administrators, who are responsible for ensuring appropriate consent and legal basis for processing student data, particularly for students under 18.</p>
+  </div>
+
+  <div class="section">
+    <h2>8. Third-Party Services</h2>
+    <ul>
+      <li><strong style="color:#f0f4ff;">Paystack</strong> — payment processing. <a href="https://paystack.com/privacy" target="_blank" rel="noopener">Paystack Privacy Policy</a></li>
+      <li><strong style="color:#f0f4ff;">Supabase</strong> — database and storage. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase Privacy Policy</a></li>
+      <li><strong style="color:#f0f4ff;">Brevo</strong> — transactional email. <a href="https://www.brevo.com/legal/privacypolicy/" target="_blank" rel="noopener">Brevo Privacy Policy</a></li>
+      <li><strong style="color:#f0f4ff;">Google Fonts</strong> — font delivery. Fonts are loaded from Google's CDN; this involves a connection to Google's servers.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>9. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy. When we do, we update the date at the top of this page. Significant changes will be communicated via email to active account holders.</p>
+  </div>
+
+  <div class="section">
+    <h2>10. Contact</h2>
+    <p>For any privacy-related questions, requests, or concerns, contact us at <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a>.</p>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 Edurena. All rights reserved.</span>
+  <div>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="cookies.html">Cookies</a>
+  </div>
+</footer>
+
+</body>
+</html>

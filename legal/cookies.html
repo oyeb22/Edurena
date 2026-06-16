@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="../assets/edurena_logo_64.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie Policy — Edurena</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sora',system-ui,sans-serif;background:#03060f;color:#f0f4ff;line-height:1.7;}
+a{color:#f5a623;text-decoration:none;}
+a:hover{text-decoration:underline;}
+.top-bar{background:#060d1e;border-bottom:1px solid rgba(17,32,64,1);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.top-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#f0f4ff;}
+.top-logo{width:32px;height:32px;border-radius:50%;overflow:hidden;}
+.top-logo img{width:100%;height:100%;object-fit:cover;display:block;}
+.top-word{font-size:16px;font-weight:800;}
+.top-word span{color:#f5a623;}
+.top-back{font-size:13px;color:#7a8db0;}
+.top-back:hover{color:#f0f4ff;text-decoration:none;}
+.wrap{max-width:760px;margin:0 auto;padding:72px 40px 100px;}
+.page-kicker{font-size:11px;font-weight:700;color:#f5a623;letter-spacing:.3em;text-transform:uppercase;margin-bottom:16px;}
+.page-title{font-size:clamp(28px,4vw,40px);font-weight:800;color:#f0f4ff;line-height:1.15;margin-bottom:12px;}
+.page-date{font-size:13px;color:#7a8db0;margin-bottom:56px;}
+.section{margin-bottom:48px;}
+.section h2{font-size:18px;font-weight:700;color:#f5a623;margin-bottom:16px;}
+.section p{font-size:15px;color:rgba(240,244,255,.75);margin-bottom:14px;}
+.section ul{padding-left:20px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.section ul li{font-size:15px;color:rgba(240,244,255,.75);}
+.highlight-box{background:#060d1e;border:1px solid rgba(245,166,35,.25);border-radius:12px;padding:24px;margin-bottom:14px;}
+.highlight-box p{margin-bottom:0;}
+.cookie-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:14px;}
+.cookie-table th{text-align:left;padding:10px 14px;background:#060d1e;color:#f5a623;font-weight:600;border-bottom:1px solid rgba(17,32,64,1);}
+.cookie-table td{padding:10px 14px;color:rgba(240,244,255,.75);border-bottom:1px solid rgba(17,32,64,.6);vertical-align:top;}
+.cookie-table tr:last-child td{border-bottom:none;}
+footer{background:#060d1e;border-top:1px solid rgba(17,32,64,1);padding:32px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+footer span{font-size:12px;color:#7a8db0;}
+footer div{display:flex;gap:20px;}
+footer a{font-size:12px;color:#7a8db0;}
+footer a:hover{color:#f0f4ff;text-decoration:none;}
+@media(max-width:600px){.wrap{padding:48px 20px 80px;}.top-bar{padding:0 20px;}footer{padding:24px 20px;flex-direction:column;text-align:center;}.cookie-table th,.cookie-table td{padding:8px 10px;}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="top-brand" href="../index.html">
+    <div class="top-logo"><img src="../assets/edurena_logo_64.png" alt="Edurena"></div>
+    <span class="top-word">edu<span>rena</span></span>
+  </a>
+  <a class="top-back" href="../index.html">← Back to home</a>
+</div>
+
+<div class="wrap">
+  <div class="page-kicker">Legal</div>
+  <h1 class="page-title">Cookie Policy</h1>
+  <div class="page-date">Last updated: June 2026</div>
+
+  <div class="section">
+    <h2>Overview</h2>
+    <div class="highlight-box">
+      <p>Edurena uses very few cookies. We do not track you for advertising. We do not build profiles. Cookies on this platform exist only to keep you logged in and to allow third-party services like Paystack to process payments securely.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>1. What Are Cookies</h2>
+    <p>Cookies are small text files stored in your browser when you visit a website. They can store session identifiers, preferences, and other small amounts of data. Some cookies are set by the website itself; others are set by third-party services embedded in the page.</p>
+  </div>
+
+  <div class="section">
+    <h2>2. Cookies We Use</h2>
+    <table class="cookie-table">
+      <thead>
+        <tr>
+          <th>Cookie</th>
+          <th>Type</th>
+          <th>Purpose</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>sb-auth-token</td>
+          <td>Essential</td>
+          <td>Keeps you logged in to your school or teacher account via Supabase authentication</td>
+          <td>Session / 7 days</td>
+        </tr>
+        <tr>
+          <td>sb-refresh-token</td>
+          <td>Essential</td>
+          <td>Refreshes your login session without requiring you to sign in again</td>
+          <td>7 days</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>These cookies are strictly necessary for the platform to work. Without them, you cannot stay logged in. We do not use any analytics, advertising, or tracking cookies.</p>
+  </div>
+
+  <div class="section">
+    <h2>3. Third-Party Cookies</h2>
+    <p>Certain features load content from external services, which may set their own cookies:</p>
+    <ul>
+      <li><strong style="color:#f0f4ff;">Paystack</strong> — When you visit the Pricing or checkout page, Paystack's script may set cookies to support secure payment processing and fraud prevention. These are governed by <a href="https://paystack.com/privacy" target="_blank" rel="noopener">Paystack's privacy policy</a>.</li>
+      <li><strong style="color:#f0f4ff;">Google Fonts</strong> — Fonts are loaded from Google's CDN. Google may set a short-lived cookie or log your IP as part of the font request. This is a standard web practice and does not result in persistent tracking.</li>
+    </ul>
+    <p>We have no control over the cookies set by these third parties. If you are concerned, you can block third-party cookies in your browser settings — the core Edurena platform will still function.</p>
+  </div>
+
+  <div class="section">
+    <h2>4. Local Storage</h2>
+    <p>In addition to cookies, the platform uses your browser's local storage to hold temporary session data (such as your current exam state or dashboard preferences). This data stays on your device and is not transmitted to us outside of normal API calls.</p>
+  </div>
+
+  <div class="section">
+    <h2>5. How to Control Cookies</h2>
+    <p>You can manage or delete cookies through your browser settings. Most modern browsers let you:</p>
+    <ul>
+      <li>View all cookies stored by a website</li>
+      <li>Block cookies from specific sites or all third-party sites</li>
+      <li>Delete all cookies when you close the browser</li>
+    </ul>
+    <p>Blocking the essential session cookies (listed in Section 2) will prevent you from staying logged in to the platform.</p>
+    <p>Browser-specific instructions: <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Chrome</a> · <a href="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop" target="_blank" rel="noopener">Firefox</a> · <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471" target="_blank" rel="noopener">Safari</a> · <a href="https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" rel="noopener">Edge</a></p>
+  </div>
+
+  <div class="section">
+    <h2>6. Changes to This Policy</h2>
+    <p>If we add new cookies or change how we use existing ones, we will update this page and the date at the top. We will not add advertising or tracking cookies without clearly notifying active users first.</p>
+  </div>
+
+  <div class="section">
+    <h2>7. Contact</h2>
+    <p>For any questions about cookies or your privacy, contact us at <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a>.</p>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 Edurena. All rights reserved.</span>
+  <div>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="cookies.html">Cookies</a>
+  </div>
+</footer>
+
+</body>
+</html>
