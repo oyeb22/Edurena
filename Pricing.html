@@ -416,10 +416,10 @@ var PLANS = [
 var FAQ_ITEMS = [
   { q: 'How is pricing calculated?', a: 'You pay per student per month. Bulk discounts apply automatically: 10% off for 50+ students, 15% off for 100+, and 25% off for 500+. Annual billing gives an additional 20% discount on top of any bulk discount.' },
   { q: 'What payment methods do you accept?', a: 'We use Paystack which accepts Visa, Mastercard, and Verve cards issued anywhere in the world, plus Nigerian bank transfers, USSD, and mobile money. Prices are displayed in Naira (₦) — international customers are charged the equivalent in their local currency by their bank.' },
-  { q: 'How do I get started?', a: 'Pick a plan and complete payment. Your school admin account is created automatically and login details are emailed to you. From there you invite your teachers (each receives a temporary password), and your teachers can add students. If you want to see the product before committing, email us at adisa7oyebola@gmail.com to schedule a live walkthrough.' },
+  { q: 'How do I get started?', a: 'Pick a plan and complete payment. Your school admin account is created automatically and login details are emailed to you. From there you invite your teachers (each receives a temporary password), and your teachers can add students. If you want to see the product before committing, email us at hello@edurena.online to schedule a live walkthrough.' },
   { q: 'What happens when my subscription expires?', a: 'Students can no longer start new exams, but all historical results are preserved. You can renew at any time to restore access. Teacher accounts remain active.' },
   { q: 'Can I switch plans mid-subscription?', a: 'Yes. Upgrading takes effect immediately and the remaining days from your current plan are carried over. Contact us to downgrade.' },
-  { q: 'Do you offer discounts for government schools or NGOs?', a: 'Yes — contact us directly at adisa7oyebola@gmail.com with your school details and we can offer a custom arrangement.' },
+  { q: 'Do you offer discounts for government schools or NGOs?', a: 'Yes — contact us directly at hello@edurena.online with your school details and we can offer a custom arrangement.' },
   { q: 'How does AI face detection work for exams?', a: "We use MediaPipe, a browser-based AI model that runs entirely on the student's device. No video is streamed to our servers — only still photos are saved on violation events." },
   { q: 'Is student data stored securely?', a: "All data is stored in your school's private Supabase database. We use industry-standard encryption and role-based access controls so only your school's staff can see your data." }
 ];
@@ -700,13 +700,13 @@ function verifyAndActivate(reference, amountKobo, school, email, name, plan, stu
       body.innerHTML = '<div style="padding:20px;color:var(--red);font-size:13px">'
         + '⚠️ ' + esc((res && res.message) || 'Verification failed.')
         + '<br><br>Your payment may still have gone through. '
-        + 'Email <strong>adisa7oyebola@gmail.com</strong> with reference: <code>' + esc(reference) + '</code></div>';
+        + 'Email <strong>hello@edurena.online</strong> with reference: <code>' + esc(reference) + '</code></div>';
     }
   })
   .catch(function() {
     body.innerHTML = '<div style="padding:20px;color:var(--red);font-size:13px">'
       + '⚠️ Network error during verification.'
-      + '<br><br>Email <strong>adisa7oyebola@gmail.com</strong> with reference: <code>' + esc(reference) + '</code></div>';
+      + '<br><br>Email <strong>hello@edurena.online</strong> with reference: <code>' + esc(reference) + '</code></div>';
   });
 }
 
@@ -803,7 +803,7 @@ renderFAQ();
 <!-- FOOTER -->
 <footer class="footer">
   <p>© 2025 Edurena · Built for Nigerian schools · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
-  <p style="margin-top:8px">Questions? <a href="mailto:adisa7oyebola@gmail.com">adisa7oyebola@gmail.com</a></p>
+  <p style="margin-top:8px">Questions? <a href="mailto:hello@edurena.online">hello@edurena.online</a></p>
 </footer>
 
 </body>
