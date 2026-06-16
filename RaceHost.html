@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kart Race Projector — Edurena</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
@@ -49,6 +50,23 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
   font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;text-align:center;transition:all .2s}
 .hud-btn.end{background:rgba(255,51,85,.15);color:var(--red);border:1px solid rgba(255,51,85,.3)}
 .hud-btn.end:hover{background:rgba(255,51,85,.25)}
+
+/* ── CAMERA SWITCH BUTTONS ── */
+.cam-section{margin-bottom:10px}
+.cam-lbl{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.cam-btn{display:block;width:100%;padding:6px 8px;border-radius:6px;
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;
+  cursor:pointer;border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);color:var(--muted);
+  text-align:left;margin-bottom:3px;transition:all .15s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cam-btn:hover{background:rgba(255,255,255,.1);color:var(--txt)}
+.cam-btn.active{background:rgba(0,212,255,.12);border-color:rgba(0,212,255,.38);color:var(--acc)}
+.cam-btn.player-btn.active{border-color:var(--player-col,#888);background:rgba(0,0,0,.2);
+  color:var(--player-col,#888);box-shadow:0 0 8px var(--player-col,transparent)}
+.cam-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-right:5px;vertical-align:middle;flex-shrink:0}
 
 /* ── OVERLAYS ── */
 .oscreen{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;
@@ -119,6 +137,10 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
   <div class="hud-code" id="hud-code">----</div>
   <div class="hud-lbl"><span class="live-dot"></span>Live Standings</div>
   <div id="standings"></div>
+  <div class="cam-section" id="cam-section" style="display:none">
+    <div class="cam-lbl">&#x1F3A5; Camera</div>
+    <div id="cam-btns"></div>
+  </div>
   <div id="hud-ctrl">
     <button class="hud-btn end" onclick="window.__endRace&&window.__endRace()">End Race</button>
   </div>
@@ -205,6 +227,13 @@ var lastTime    = 0;
 var playersRef  = null, stateRef = null;
 var lastCorrect = {}, kartFx = {};
 /*  kartFx[pid] = { boost: 0-2, nitro: 0-2 }  — countdown timers in seconds  */
+
+/* ── CAMERA FOLLOW STATE ── */
+var camTarget  = null;                           /* pid string, or null = orbit */
+var camFollow  = new THREE.Vector3(0, 68, 165);  /* lerped camera position      */
+var camLookAt  = new THREE.Vector3(0, 15, 0);    /* lerped look-at point        */
+var _camPt     = new THREE.Vector3();
+var _camTan    = new THREE.Vector3();
 
 /* ── THREE.JS GLOBALS ── */
 var renderer, scene, camera, composer;
@@ -1092,15 +1121,57 @@ function animate(ts){
   var dt = Math.min(0.05, (ts-(lastTime||ts))/1000);
   lastTime = ts;
 
-  /* Slow broadcast camera orbit around track centre */
-  camAngle += dt * 0.10; /* ~63-second full orbit */
-  var camH = camHeight + Math.sin(camAngle*0.55)*10; /* gentle height sway */
-  camera.position.set(
-    Math.cos(camAngle)*camRadius,
-    camH,
-    Math.sin(camAngle)*camRadius
-  );
-  camera.lookAt(0, 15, 0);
+  /* Camera: follow a chosen player or orbit the track */
+  if(camTarget && kartObjects[camTarget]){
+    var _ko = kartObjects[camTarget];
+    var _t  = ((_ko.smoothProg||0)%1+1)%1;
+    trackCurve.getPointAt(_t,   _camPt);
+    trackCurve.getTangentAt(_t, _camTan); _camTan.normalize();
+
+    /* Ideal behind-kart position: 10 back, 5.5 up */
+    var idealPos = {
+      x: _camPt.x - _camTan.x * 10,
+      y: _camPt.y + 5.5,
+      z: _camPt.z - _camTan.z * 10
+    };
+    /* Look slightly ahead of the kart */
+    var idealLook = {
+      x: _camPt.x + _camTan.x * 8,
+      y: _camPt.y + 1.5,
+      z: _camPt.z + _camTan.z * 8
+    };
+
+    var lerpK = Math.min(1, dt * 4.5);
+    camFollow.x += (idealPos.x  - camFollow.x)  * lerpK;
+    camFollow.y += (idealPos.y  - camFollow.y)  * lerpK;
+    camFollow.z += (idealPos.z  - camFollow.z)  * lerpK;
+    camLookAt.x += (idealLook.x - camLookAt.x) * lerpK;
+    camLookAt.y += (idealLook.y - camLookAt.y) * lerpK;
+    camLookAt.z += (idealLook.z - camLookAt.z) * lerpK;
+
+    camera.position.copy(camFollow);
+    camera.lookAt(camLookAt);
+
+  } else {
+    /* Slow broadcast orbit */
+    camAngle += dt * 0.10;
+    var camH = camHeight + Math.sin(camAngle * 0.55) * 10;
+    var idealOrbitPos = {
+      x: Math.cos(camAngle) * camRadius,
+      y: camH,
+      z: Math.sin(camAngle) * camRadius
+    };
+    var lerpO = Math.min(1, dt * 3.5);
+    camFollow.x += (idealOrbitPos.x - camFollow.x) * lerpO;
+    camFollow.y += (camH            - camFollow.y) * lerpO;
+    camFollow.z += (idealOrbitPos.z - camFollow.z) * lerpO;
+    camLookAt.x += (0  - camLookAt.x) * lerpO;
+    camLookAt.y += (15 - camLookAt.y) * lerpO;
+    camLookAt.z += (0  - camLookAt.z) * lerpO;
+
+    camera.position.copy(camFollow);
+    camera.lookAt(camLookAt);
+  }
 
   /* FX timers */
   Object.keys(kartFx).forEach(function(pid){
@@ -1146,6 +1217,7 @@ function updateStandings(){
   });
   el('standings').innerHTML = html ||
     '<div style="font-size:11px;color:var(--muted);padding:8px">Waiting…</div>';
+  updateCamButtons();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1279,6 +1351,44 @@ function showPodium(){
 function showOverlay(id){
   document.querySelectorAll('.oscreen').forEach(function(s){ s.classList.remove('on'); });
   if(id) el(id).classList.add('on');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA SWITCHING
+═══════════════════════════════════════════════════════════════ */
+window.setCamTarget = function(pid){
+  camTarget = pid || null;
+  /* Initialise lerp from current position for smooth transition */
+  camFollow.copy(camera.position);
+  updateCamButtons();
+};
+
+function updateCamButtons(){
+  var sec = el('cam-section');
+  if(!sec) return;
+
+  var players = Object.values(allPlayers).sort(function(a,b){
+    return (b.progress||0) - (a.progress||0);
+  });
+
+  if(!players.length){ sec.style.display='none'; return; }
+  sec.style.display = 'block';
+
+  var html = '<button class="cam-btn'+(camTarget===null?' active':'')+'"'
+    +' onclick="setCamTarget(null)">&#x1F310; Overview</button>';
+
+  players.forEach(function(p){
+    var active = camTarget === p.pid;
+    var col    = p.color || '#888888';
+    html += '<button class="cam-btn player-btn'+(active?' active':'')+'"'
+      +' style="--player-col:'+esc(col)+'"'
+      +' onclick="setCamTarget(\''+esc(p.pid)+'\')">'
+      +'<span class="cam-dot" style="background:'+esc(col)+'"></span>'
+      +esc((p.name||'?').slice(0,11))
+      +'</button>';
+  });
+
+  el('cam-btns').innerHTML = html;
 }
 
 /* ═══════════════════════════════════════════════════════════════
