@@ -134,29 +134,36 @@
     }
     .fg input, .fg select {
       width: 100%;
-      padding: 9px 12px;
+      padding: 10px 12px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--r-sm);
       font-family: var(--font);
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
       outline: none;
-      transition: border-color .15s;
+      transition: border-color .15s, box-shadow .15s;
       -webkit-appearance: none;
+      min-height: 44px;
     }
-    .fg input:focus, .fg select:focus { border-color: var(--border-focus); }
+    .fg input:focus, .fg select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-bg);
+    }
     .fg input.pw { font-family: var(--mono); letter-spacing: 1.5px; }
     .pw-wrap { position: relative; }
     .pw-wrap input { padding-right: 36px; }
     .pw-toggle {
       position: absolute;
-      right: 10px; top: 50%;
+      right: 8px; top: 50%;
       transform: translateY(-50%);
       border: none; background: none;
-      font-size: 14px; cursor: pointer;
-      color: var(--text3); padding: 2px;
+      font-size: 15px; cursor: pointer;
+      color: var(--text3); padding: 6px;
       transition: color .15s;
+      min-width: 32px; min-height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
     }
     .pw-toggle:hover { color: var(--text); }
     .forgot {
@@ -172,19 +179,22 @@
     .forgot:hover { text-decoration: underline; }
     .btn {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: var(--text);
       color: #fff;
       border: none;
       border-radius: var(--r-sm);
       font-family: var(--font);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity .15s;
+      transition: opacity .15s, transform .1s;
       letter-spacing: -0.1px;
+      min-height: 46px;
+      touch-action: manipulation;
     }
     .btn:hover:not(:disabled) { opacity: 0.88; }
+    .btn:active:not(:disabled) { transform: scale(.99); }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .msg {
       display: none;
@@ -357,7 +367,11 @@
     <div class="foot">For authorised teaching staff only · Edurena v5.1</div>
   </div>
 
-  <div class="sa-link hidden" id="sa-link">
+  <div class="sa-link" style="margin-top:14px">
+    <a href="Webapp.html" style="color:var(--accent);text-decoration:none;font-size:12.5px;font-weight:500">Are you a student? → Take an Exam</a>
+  </div>
+
+  <div class="sa-link hidden" id="sa-link" style="margin-top:8px">
     <a onclick="goSuperadmin()">👑 Founder Dashboard</a>
   </div>
 </div>
