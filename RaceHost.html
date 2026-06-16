@@ -42,9 +42,17 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
 .stand-row.rk2 .stand-pos{color:#c0c0c0}
 .stand-row.rk3 .stand-pos{color:#cd7f32}
 .stand-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.stand-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stand-pct{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.stand-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stand-pct{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
 .stand-done{color:var(--grn)}
+.stand-meta{display:flex;flex:1;flex-direction:column;min-width:0;gap:2px}
+.stand-name-row{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.stand-correct{font-family:var(--mono);font-size:9px;color:var(--grn);white-space:nowrap;opacity:.85}
+.stand-bar-wrap{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.stand-bar{height:100%;border-radius:2px;transition:width .9s cubic-bezier(.4,0,.2,1);min-width:2px}
+#standings{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,.15) transparent}
+#standings::-webkit-scrollbar{width:3px}
+#standings::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2);border-radius:2px}
 #hud-ctrl{margin-top:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
 .hud-btn{display:block;width:100%;padding:9px;border-radius:8px;font-family:var(--mono);
   font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;text-align:center;transition:all .2s}
@@ -1205,13 +1213,21 @@ function updateStandings(){
   var html='';
   sorted.forEach(function(p,i){
     var rk = i===0?' rk1':i===1?' rk2':i===2?' rk3':'';
+    var barW = p.finished ? 100 : Math.round((p.progress||0)*100);
+    var corr = p.correct || 0;
     var pct = p.finished
       ? '<span class="stand-done">DONE</span>'
-      : Math.round((p.progress||0)*100)+'%';
+      : barW+'%';
     html += '<div class="stand-row'+(i===0?' leader':'')+rk+'">'
       +'<div class="stand-pos">'+(i+1)+'</div>'
       +'<div class="stand-dot" style="background:'+esc(p.color||'#888')+'"></div>'
-      +'<div class="stand-name">'+esc((p.name||'?').slice(0,13))+'</div>'
+      +'<div class="stand-meta">'
+        +'<div class="stand-name-row">'
+          +'<div class="stand-name">'+esc((p.name||'?').slice(0,12))+'</div>'
+          +(corr>0?'<div class="stand-correct">'+corr+'&#x2714;</div>':'')
+        +'</div>'
+        +'<div class="stand-bar-wrap"><div class="stand-bar" style="width:'+barW+'%;background:'+esc(p.color||'#00d4ff')+'"></div></div>'
+      +'</div>'
       +'<div class="stand-pct">'+pct+'</div>'
       +'</div>';
   });
