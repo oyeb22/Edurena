@@ -2866,7 +2866,7 @@ function qfhwOpen() {
   var s = _qfhwS();
   document.getElementById('qfhw-email').textContent = s.email || '—';
   document.getElementById('qfhw-role').textContent  = s.role  || '—';
-  var supportEmail = (window.DASH && DASH.superadminEmail) || 'adisa7oyebola@gmail.com';
+  var supportEmail = (window.DASH && DASH.superadminEmail) || 'hello@edurena.online';
   document.getElementById('qfhw-email-link').href =
     'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
     + '&body=' + encodeURIComponent('My account: ' + (s.email || '-') + '\nRole: ' + (s.role || '-') + '\n\nWhat I need help with:\n');
