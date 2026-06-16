@@ -7,21 +7,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Start Exam</title>
   <script src="edurena-dash.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      font-family:'Plus Jakarta Sans',sans-serif;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
       background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
                   radial-gradient(ellipse at 70% 20%, rgba(167,139,250,0.1)  0%, transparent 50%),
                   #080C16;
-      min-height:100vh; display:flex; align-items:center; justify-content:center;
+      min-height:100dvh; display:flex; align-items:center; justify-content:center;
       color:#e2e8f0; padding:20px;
     }
     .box {
       background:#0F1523; border:1px solid #2e3248; border-radius:20px;
-      padding:44px 48px; width:460px; max-width:95vw;
+      padding:36px 40px; width:460px; max-width:96vw;
       box-shadow:0 24px 80px rgba(0,0,0,0.5);
+    }
+    @media(max-width:520px){
+      .box { padding:28px 20px; border-radius:16px; }
     }
     .logo { text-align:center; margin-bottom:28px; }
     .logo .icon { font-size:40px; display:block; margin-bottom:10px; }
@@ -42,48 +45,45 @@
     .form-group { margin-bottom:16px; }
     label { display:block; font-size:12px; font-weight:500; color:#7c85a2; margin-bottom:6px; }
     input, select {
-      width:100%; padding:11px 14px;
+      width:100%; padding:12px 14px;
       background:#080C16; border:1px solid #2e3248; border-radius:10px;
-      color:#e2e8f0; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif;
-      outline:none; transition:border-color 0.15s;
+      color:#e2e8f0; font-size:16px; font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      outline:none; transition:border-color 0.15s, box-shadow 0.15s;
+      min-height:48px; touch-action:manipulation;
     }
-    input:focus, select:focus { border-color:#F97316; }
+    input:focus, select:focus {
+      border-color:#F97316;
+      box-shadow:0 0 0 3px rgba(249,115,22,0.15);
+    }
     select option { background:#0F1523; }
 
     .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
     .btn {
-      width:100%; padding:13px; background:#F97316; color:white;
+      width:100%; padding:14px; background:#F97316; color:white;
       border:none; border-radius:10px; font-size:15px; font-weight:700;
-      font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.15s; margin-top:6px;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:background 0.15s, transform 0.1s; margin-top:6px;
+      min-height:50px; touch-action:manipulation; display:flex; align-items:center; justify-content:center;
     }
-    .btn:hover:not(:disabled) { background:#EA6B10; transform:translateY(-1px); }
-    .btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+    .btn:hover:not(:disabled) { background:#EA6B10; }
+    .btn:active:not(:disabled) { transform:scale(.99); }
+    .btn:disabled { opacity:0.4; cursor:not-allowed; }
     .btn-ghost {
-      width:100%; padding:11px; background:transparent; color:#7c85a2;
+      width:100%; padding:12px; background:transparent; color:#7c85a2;
       border:1px solid #2e3248; border-radius:10px; font-size:14px; font-weight:500;
-      font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.15s; margin-top:8px;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer; transition:all 0.15s; margin-top:8px;
+      min-height:46px; touch-action:manipulation;
     }
     .btn-ghost:hover { border-color:#F97316; color:#FB923C; }
 
     /* Live game button — distinct teal colour so it stands out */
     .btn-live {
-      width:100%;
-      padding:13px;
-      background:transparent;
-      border:1px solid #2dd4a0;
-      border-radius:10px;
-      color:#2dd4a0;
-      font-size:14px;
-      font-weight:600;
-      font-family:'Plus Jakarta Sans',sans-serif;
-      cursor:pointer;
-      transition:all 0.15s;
-      margin-top:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
+      width:100%; padding:13px; background:transparent; border:1px solid #2dd4a0;
+      border-radius:10px; color:#2dd4a0; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
     }
     .btn-live:hover { background:rgba(45,212,160,0.1); }
 
