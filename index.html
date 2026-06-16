@@ -259,10 +259,10 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 @media(max-width:900px){
   #topnav{padding:0 14px;gap:8px;}
   .nav-links{gap:6px;}
-  .nav-links a:not(.nav-cta):not(.nav-mob){display:none;}
+  .nav-links a:not(.nav-cta):not(.nav-mob):not(.nav-signin-pill):not(.nav-portal-pill){display:none;}
   /* Show Login + Student Portal pills on mobile */
-  .nav-signin-pill{display:inline-flex;}
-  .nav-portal-pill{display:inline-flex;}
+  .nav-signin-pill{display:inline-flex !important;}
+  .nav-portal-pill{display:inline-flex !important;}
   /* Shrink CTA on very small screens */
   .nav-cta{padding:7px 13px;font-size:13px;}
   /* Hide hero desc/buttons on tablet/mobile — content is in sections below */
@@ -289,10 +289,15 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   #footer{padding:48px 28px 0;}
 }
 @media(max-width:480px){
-  /* On very small phones, hide portal pill — too crowded. Keep Sign In + Get Started */
-  .nav-portal-pill{display:none;}
-  .nav-signin-pill{padding:7px 10px;font-size:12px;}
-  .nav-cta{padding:7px 10px;font-size:12px;}
+  /* Compact all three nav items to fit on narrow phones */
+  .nav-signin-pill{padding:6px 9px;font-size:11.5px;}
+  .nav-portal-pill{padding:6px 9px;font-size:11.5px;}
+  .nav-cta{padding:6px 9px;font-size:11.5px;}
+  .nav-wordmark{display:none;}
+}
+@media(max-width:360px){
+  /* Ultra-narrow: hide portal label, keep icon hint only as "Portal" */
+  .nav-portal-pill{display:none !important;}
 }
 @media(max-width:600px){
   /* Hero: shrink circle/logo so they stay within the brown panel on narrow screens */
