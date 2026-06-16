@@ -43,11 +43,18 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 .nav-logo-box{width:36px;height:36px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 .nav-wordmark{font-size:17px;font-weight:800;color:var(--white);}
 .nav-wordmark span{color:var(--amber);}
-.nav-links{display:flex;align-items:center;gap:24px;}
-.nav-links a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s;}
+.nav-links{display:flex;align-items:center;gap:8px;}
+.nav-links a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s;padding:6px 10px;border-radius:6px;touch-action:manipulation;}
 .nav-links a:hover{color:var(--white);}
-.nav-cta{background:var(--amber);color:var(--bg);padding:8px 20px;border-radius:7px;font-size:14px;font-weight:700;text-decoration:none;transition:background .2s;}
+.nav-cta{background:var(--amber);color:var(--bg) !important;padding:8px 20px;border-radius:7px;font-size:14px;font-weight:700;text-decoration:none;transition:background .2s;touch-action:manipulation;}
 .nav-cta:hover{background:var(--amber2);}
+/* Mobile-visible nav links */
+.nav-mob{display:none;}
+/* Sign In pill for mobile */
+.nav-signin-pill{display:none;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--white) !important;text-decoration:none;transition:background .2s;touch-action:manipulation;white-space:nowrap;}
+.nav-signin-pill:hover{background:rgba(255,255,255,.14);}
+.nav-portal-pill{display:none;align-items:center;gap:6px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.28);border-radius:7px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--amber) !important;text-decoration:none;transition:background .2s;touch-action:manipulation;white-space:nowrap;}
+.nav-portal-pill:hover{background:rgba(245,166,35,.2);}
 
 /* REVEAL */
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease;}
@@ -87,9 +94,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 /* HERO DESCRIPTION & BUTTONS */
 .hero-wm-desc{font-size:15px;color:var(--brown);line-height:1.75;margin-top:14px;max-width:360px;opacity:.85;}
 .hero-wm-btns{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
-.hero-btn-p{display:inline-block;background:var(--brown);color:var(--amber);padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;}
+.hero-btn-p{display:inline-flex;align-items:center;background:var(--brown);color:var(--amber);padding:13px 28px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;min-height:48px;touch-action:manipulation;}
 .hero-btn-p:hover{background:#2a1505;}
-.hero-btn-s{display:inline-block;border:2px solid rgba(58,31,8,.5);color:var(--brown);padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;}
+.hero-btn-s{display:inline-flex;align-items:center;border:2px solid rgba(58,31,8,.5);color:var(--brown);padding:13px 28px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Sora',system-ui,sans-serif;text-decoration:none;transition:background .2s;min-height:48px;touch-action:manipulation;}
 .hero-btn-s:hover{background:rgba(58,31,8,.1);}
 /* MOBILE-ONLY hero desc strip — shown below the hero on small screens */
 .hero-mob-strip{display:none;}
@@ -250,8 +257,14 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 
 /* RESPONSIVE */
 @media(max-width:900px){
-  #topnav{padding:0 20px;}
-  .nav-links a:not(.nav-cta){display:none;}
+  #topnav{padding:0 14px;gap:8px;}
+  .nav-links{gap:6px;}
+  .nav-links a:not(.nav-cta):not(.nav-mob){display:none;}
+  /* Show Login + Student Portal pills on mobile */
+  .nav-signin-pill{display:inline-flex;}
+  .nav-portal-pill{display:inline-flex;}
+  /* Shrink CTA on very small screens */
+  .nav-cta{padding:7px 13px;font-size:13px;}
   /* Hide hero desc/buttons on tablet/mobile — content is in sections below */
   .hero-wm-desc,.hero-wm-btns{display:none;}
   .s2-section{flex-direction:column;}
@@ -274,6 +287,12 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
   .s6-section{padding:72px 28px;}
   .footer-grid{grid-template-columns:1fr;gap:36px;}
   #footer{padding:48px 28px 0;}
+}
+@media(max-width:480px){
+  /* On very small phones, hide portal pill — too crowded. Keep Sign In + Get Started */
+  .nav-portal-pill{display:none;}
+  .nav-signin-pill{padding:7px 10px;font-size:12px;}
+  .nav-cta{padding:7px 10px;font-size:12px;}
 }
 @media(max-width:600px){
   /* Hero: shrink circle/logo so they stay within the brown panel on narrow screens */
@@ -314,6 +333,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
     <a href="Pricing.html">Pricing</a>
     <a href="Pricing.html">Sign up</a>
     <a href="TeacherLogin.html" style="color:var(--white)">Sign in</a>
+    <!-- Mobile-only pills: Login + Student Portal -->
+    <a href="TeacherLogin.html" class="nav-signin-pill" aria-label="Sign in">Sign In</a>
+    <a href="Webapp.html" class="nav-portal-pill" aria-label="Student Portal">Student Portal</a>
     <a class="nav-cta" href="Pricing.html">Get started</a>
   </div>
 </nav>
