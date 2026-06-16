@@ -259,10 +259,30 @@
     .div{height:1px;background:var(--bdr);margin:10px 0;}
     .hidden{display:none!important;}
 
+    /* Mobile hamburger + slide-in sidebar */
+    .mob-topbar{display:none;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--surf);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:50;}
+    .mob-topbar-left{display:flex;align-items:center;gap:10px;}
+    .mob-logo-box{width:26px;height:26px;background:var(--acc);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+    .mob-wordmark{font-size:13px;font-weight:600;color:var(--acc2);}
+    .mob-ham{background:none;border:1px solid var(--bdr);border-radius:7px;padding:7px 9px;cursor:pointer;color:var(--txt2);font-size:16px;line-height:1;touch-action:manipulation;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;transition:border-color .15s;}
+    .mob-ham:hover{border-color:var(--acc);color:var(--acc);}
+    .sb-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);}
+    .sb-overlay.on{display:block;}
     @media(max-width:860px){
-      .sb{display:none;}
+      .app{display:block;height:auto;overflow:visible;}
+      .sb{position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:230px;}
+      .sb.open{transform:translateX(0);}
+      .main{height:auto;overflow-y:visible;}
+      .topbar{display:none;}
+      .mob-topbar{display:flex;}
+      body{min-height:100dvh;}
       .sgrid{grid-template-columns:1fr 1fr;}
-      .fgrid{grid-template-columns:1fr;}
+      .fgrid,.fgrid.c3{grid-template-columns:1fr;}
+      .content{padding:14px 14px;}
+    }
+    @media(max-width:480px){
+      .sgrid{grid-template-columns:1fr;}
+      .sb{width:85vw;max-width:280px;}
     }
   </style>
 </head>
@@ -275,10 +295,13 @@
   <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
 </div>
 
+<!-- Sidebar overlay for mobile -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
 <div class="app" id="shell" style="display:none">
 
   <!-- SIDEBAR -->
-  <aside class="sb">
+  <aside class="sb" id="sb-aside">
     <div class="sb-logo">
       <div class="sb-logo-row">
         <img src="assets/edurena_logo_64.png" alt="Edurena" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">
@@ -336,6 +359,15 @@
 
   <!-- MAIN CONTENT -->
   <div class="main">
+    <!-- Mobile top bar -->
+    <div class="mob-topbar">
+      <div class="mob-topbar-left">
+        <button class="mob-ham" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+        <img src="assets/edurena_logo_64.png" alt="Edurena" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+        <span class="mob-wordmark">School Admin</span>
+      </div>
+      <span style="font-size:11px;color:var(--txt2)" id="tb-email-mob"></span>
+    </div>
     <div class="topbar">
       <div class="tb-left">
         <span class="tb-title" id="tb-title">Overview</span>
@@ -2041,6 +2073,22 @@ window.onclick = function(e) {
 <!-- ════════════════════════════════════════════════════════════════
      END HELP WIDGET
      ════════════════════════════════════════════════════════════════ -->
-
+<script>
+function openSidebar(){
+  document.getElementById('sb-aside').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
+  document.getElementById('sb-aside').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.ni').forEach(function(el){
+  el.addEventListener('click',function(){
+    if(window.innerWidth<=860) closeSidebar();
+  });
+});
+</script>
 </body>
 </html>
