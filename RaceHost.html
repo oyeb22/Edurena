@@ -695,27 +695,49 @@ function _rrf(ctx,x,y,w,h,r){
 /* ═══════════════════════════════
    KART ANIMATION
 ═══════════════════════════════ */
-var _vP=new THREE.Vector3(), _vT=new THREE.Vector3(), _vTx=new THREE.Vector3(), _vR=new THREE.Vector3();
+var _vP=new THREE.Vector3(), _vT=new THREE.Vector3(), _vR=new THREE.Vector3();
+
+/* Deterministic lane offset from player ID so cars don't all stack center */
+function _pidLane(pid){
+  var h=0; for(var i=0;i<pid.length;i++) h=(h*31+pid.charCodeAt(i))&0xffff;
+  return ((h%3)-1)*2.6; /* -2.6, 0, or +2.6 */
+}
 
 function updateKartObject(pid,player,dt){
   var ko=kartObjects[pid]; if(!ko) return;
-  var diff=(player.progress||0)-ko.smoothProg;
-  ko.smoothProg+=diff*Math.min(1.0,dt*3.5);
+
+  /* ── lap-safe progress diff ──
+     player.progress is 0-1 (Race.html sends myProgress%1).
+     smoothProg accumulates >1 across laps, so compare against its fractional part. */
+  var raw = player.progress||0;
+  var cur_t = ((ko.smoothProg%1)+1)%1;
+  var diff = raw - cur_t;
+  if(diff<-0.5) diff+=1;   /* player crossed lap boundary forward */
+  if(diff>0.5)  diff-=1;   /* safety: shouldn't happen in normal race */
+  ko.smoothProg += diff * Math.min(1.0, dt*6.0); /* faster lerp = more responsive */
+
   var t=((ko.smoothProg%1)+1)%1;
-  trackCurve.getPointAt(t,_vP); trackCurve.getTangentAt(t,_vT); _vT.normalize();
+  trackCurve.getPointAt(t,_vP);
+  trackCurve.getTangentAt(t,_vT); _vT.normalize();
   _vR.set(_vT.z,0,-_vT.x);
-  var lx=(player.laneX||0)*1.65;
-  _vP.x+=_vR.x*lx; _vP.z+=_vR.z*lx; _vP.y=0.5;
+
+  var lx=_pidLane(pid);
+  _vP.x+=_vR.x*lx; _vP.z+=_vR.z*lx;
+  /* gentle suspension bob — scales with speed so parked cars don't bounce */
+  var bobSpd=Math.min(Math.abs(diff)*6,1);
+  _vP.y=0.5+Math.sin(ko.smoothProg*220)*0.055*bobSpd;
   ko.group.position.copy(_vP);
   ko.group.rotation.y=Math.atan2(_vT.x,_vT.z);
   ko.group.rotation.z=0;
-  trackCurve.getPointAt(t,_vP);
+
+  /* wheel roll — spin around local Y since cylinder lies along X after rotation.z=PI/2 */
   var spd=diff/Math.max(dt,0.001);
-  if(ko.wheels.length&&Math.abs(spd)>0.0001) ko.wheels.forEach(function(w){w.rotation.x+=spd*85;});
+  if(ko.wheels.length&&Math.abs(spd)>0.0001) ko.wheels.forEach(function(w){w.rotation.y+=spd*90;});
+
   var fx=kartFx[pid]||{}, nitro=Math.max(0,fx.nitro||0), boost=Math.max(0,fx.boost||0);
   if(nitro>0){ ko.boostLight.intensity=700*nitro; ko.boostLight.color.set(0x0099ff); ko.boostLight.distance=20; _setEm(ko,0.45); }
   else if(boost>0){ ko.boostLight.intensity=320*boost; ko.boostLight.color.set(ko.color); ko.boostLight.distance=14; _setEm(ko,0.22); }
-  else { ko.boostLight.intensity=0; _setEm(ko,0.07); }
+  else { ko.boostLight.intensity=0; _setEm(ko,0.35); }
 }
 function _setEm(ko,v){ ko.bodyMeshes.forEach(function(m){(Array.isArray(m.material)?m.material:[m.material]).forEach(function(mat){if(mat&&mat.emissiveIntensity!==undefined)mat.emissiveIntensity=v;});}); }
 
@@ -745,9 +767,10 @@ function animate(ts){
   if(camTarget&&kartObjects[camTarget]){
     var _ko=kartObjects[camTarget], _t=((_ko.smoothProg||0)%1+1)%1;
     trackCurve.getPointAt(_t,_camPt); trackCurve.getTangentAt(_t,_camTan); _camTan.normalize();
-    var iP={x:_camPt.x-_camTan.x*10,y:_camPt.y+5.5,z:_camPt.z-_camTan.z*10};
-    var iL={x:_camPt.x+_camTan.x*8,y:_camPt.y+1.5,z:_camPt.z+_camTan.z*8};
-    var lk=Math.min(1,dt*4.5);
+    /* chase cam: 16 behind, 7 above — lookahead 12 ahead at 1.8 height */
+    var iP={x:_camPt.x-_camTan.x*16,y:_camPt.y+7,z:_camPt.z-_camTan.z*16};
+    var iL={x:_camPt.x+_camTan.x*12,y:_camPt.y+1.8,z:_camPt.z+_camTan.z*12};
+    var lk=Math.min(1,dt*5.5);
     camFollow.x+=(iP.x-camFollow.x)*lk; camFollow.y+=(iP.y-camFollow.y)*lk; camFollow.z+=(iP.z-camFollow.z)*lk;
     camLookAt.x+=(iL.x-camLookAt.x)*lk; camLookAt.y+=(iL.y-camLookAt.y)*lk; camLookAt.z+=(iL.z-camLookAt.z)*lk;
   } else {
