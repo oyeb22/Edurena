@@ -670,8 +670,8 @@ function makeCityKart(colorHex){
     var hub=new THREE.Mesh(hGeo,hMt); hub.rotation.z=Math.PI/2; hub.position.set(p[0]>0?p[0]+0.02:p[0]-0.02,p[1],p[2]); g.add(hub);
   });
 
-  body.material.emissive=new THREE.Color(colorHex); body.material.emissiveIntensity=0.06;
-  cab.material.emissive=new THREE.Color(colorHex);  cab.material.emissiveIntensity=0.04;
+  body.material.emissive=new THREE.Color(colorHex); body.material.emissiveIntensity=0.35;
+  cab.material.emissive=new THREE.Color(colorHex);  cab.material.emissiveIntensity=0.25;
   return g;
 }
 
@@ -708,10 +708,7 @@ function updateKartObject(pid,player,dt){
   _vP.x+=_vR.x*lx; _vP.z+=_vR.z*lx; _vP.y=0.5;
   ko.group.position.copy(_vP);
   ko.group.rotation.y=Math.atan2(_vT.x,_vT.z);
-  var tA=(t+0.01)%1, tB=(t-0.01+1)%1;
-  trackCurve.getTangentAt(tA,_vTx); _vTx.normalize();
-  trackCurve.getTangentAt(tB,_vP); _vP.normalize();
-  ko.group.rotation.z=(_vTx.x*_vP.z-_vTx.z*_vP.x)*14;
+  ko.group.rotation.z=0;
   trackCurve.getPointAt(t,_vP);
   var spd=diff/Math.max(dt,0.001);
   if(ko.wheels.length&&Math.abs(spd)>0.0001) ko.wheels.forEach(function(w){w.rotation.x+=spd*85;});
@@ -818,17 +815,27 @@ function watchPlayers(){
   });
 }
 
+var _pendingState=null;
+var _sceneReady=false;
+
 function watchState(){
   stateRef=db.ref('race/'+raceId+'/state');
   stateRef.on('value',function(snap){
     if(!snap||!snap.val()) return;
     var st=snap.val();
     if(st.phase==='started'&&!raceStarted){
-      raceStarted=true; gameRunning=true;
-      showOverlay(null); el('hud').style.display='flex'; el('hud-code').textContent=raceId;
-      runCountdown(st.startedAt||Date.now(),function(){});
+      if(!_sceneReady){ _pendingState=st; return; }
+      _applyRaceStart(st);
     } else if(st.phase==='ended'&&gameRunning){ showPodium(); }
   });
+}
+
+function _applyRaceStart(st){
+  raceStarted=true; gameRunning=true;
+  showOverlay(null); el('hud').style.display='flex'; el('hud-code').textContent=raceId;
+  var elapsed=(Date.now()-(st.startedAt||Date.now()))/1000;
+  if(elapsed>5) return; /* race already well underway — skip countdown */
+  runCountdown(st.startedAt||Date.now(),function(){});
 }
 
 function runCountdown(startedAt,done){
@@ -875,9 +882,7 @@ function updateCamButtons(){
   el('cam-btns').innerHTML=html;
 }
 
-/* ── BOOT ── */
-initScene();
-
+/* ── BOOT — Firebase first so it connects while scene builds ── */
 if(!raceId){
   el('w-err').textContent='No race ID — open via the Projector button in LiveHost';
   el('w-status-txt').textContent='Waiting for connection…';
@@ -887,6 +892,12 @@ if(!raceId){
   watchPlayers();
   watchState();
 }
+
+initScene();
+_sceneReady=true;
+
+/* Process any state that arrived while scene was building */
+if(_pendingState){ _applyRaceStart(_pendingState); _pendingState=null; }
 
 window.addEventListener('beforeunload',function(){
   if(playersRef){try{playersRef.off('value');}catch(_){}}
