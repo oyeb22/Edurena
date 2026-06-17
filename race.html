@@ -750,30 +750,53 @@ function projectKart(p, pIdx, pSeg, cosA, sinA){
   return {x:AREA_W*0.5+lat*sc, y:sy, fwd:fwd};
 }
 
-/* Roadside trees, drawn far-to-near */
-function drawRoadsideTrees(ctx, pIdx, pSeg, cosA, sinA){
-  var STEP=28;
-  for(var look=160; look>=8; look-=STEP){
-    for(var side=-1; side<=1; side+=2){
+/* City buildings, drawn far-to-near */
+function drawCityscape(ctx, pIdx, pSeg, cosA, sinA){
+  var COLS=['#d4a97a','#8ba7c7','#c9b89a','#6b8fa8','#e2d5b0','#7a9abf','#d0c0a0','#95afc4','#b89a80','#889ab5'];
+  for(var look=200;look>=6;look-=18){
+    for(var side=-1;side<=1;side+=2){
       var idx=(pIdx+look)%N_SAMP;
       var seg=trackSamples[idx];
-      var off=side*(TRACK_W*0.5+TRACK_W*1.1);
+      var off=side*(TRACK_W*0.5+TRACK_W*1.05);
       var wx=seg.x+seg.nx*off, wy=seg.y+seg.ny*off;
       var dx=wx-pSeg.x, dy=wy-pSeg.y;
-      var fwd=dx*cosA+dy*sinA;
-      var lat=-dx*sinA+dy*cosA;
+      var fwd=dx*cosA+dy*sinA, lat=-dx*sinA+dy*cosA;
       if(fwd<PERSP_CAM) continue;
       var sy=PERSP_H+PERSP_F*PERSP_CAM/fwd;
       if(sy<PERSP_H||sy>AREA_H) continue;
       var sc=PERSP_F/fwd;
       var sx=AREA_W*0.5+lat*sc;
-      var th=Math.max(4,64*sc), tw=Math.max(2,28*sc);
-      ctx.fillStyle='#5c3310';
-      ctx.fillRect(sx-tw*0.13, sy-th*0.36, tw*0.26, th*0.36);
-      ctx.fillStyle='#124a04';
-      ctx.beginPath(); ctx.ellipse(sx+tw*0.08,sy-th*0.72,tw*0.54,th*0.4,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#1c7a08';
-      ctx.beginPath(); ctx.ellipse(sx,sy-th*0.74,tw*0.54,th*0.4,0,0,Math.PI*2); ctx.fill();
+      var seed=(look*73+(side>0?0:37));
+      var bh=Math.max(16,(44+(seed%52))*sc);
+      var bw=Math.max(8,(21+(seed%26))*sc);
+      var col=COLS[(Math.floor(look/18)*2+(side>0?0:3))%COLS.length];
+      /* Building body */
+      ctx.fillStyle=col;
+      ctx.fillRect(sx-bw/2,sy-bh,bw,bh);
+      /* Roof strip */
+      ctx.fillStyle='rgba(0,0,0,0.2)';
+      ctx.fillRect(sx-bw/2,sy-bh,bw,Math.max(2,bh*0.055));
+      /* Side face 3D effect */
+      if(side>0){ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(sx+bw/2,sy-bh+bh*0.055,bw*0.22,bh*0.945);}
+      else{ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(sx-bw/2-bw*0.22,sy-bh+bh*0.055,bw*0.22,bh*0.945);}
+      /* Windows */
+      if(sc>0.028&&bh>16){
+        var nr=Math.max(2,bh/11|0), nc=Math.max(1,bw/7|0);
+        var ww=bw/nc*0.42, wh=bh/nr*0.38;
+        for(var r=0;r<nr;r++){
+          for(var c=0;c<nc;c++){
+            var wx2=sx-bw*0.48+(c+0.5)*bw/nc-ww*0.5;
+            var wy2=sy-bh*0.92+(r+0.5)*bh/nr*0.88-wh*0.5;
+            ctx.fillStyle=((seed+r*7+c*11)&3)?'rgba(200,230,255,0.85)':'rgba(15,25,40,0.7)';
+            ctx.fillRect(wx2,wy2,ww,wh);
+          }
+        }
+      }
+      /* Antenna on tall buildings */
+      if(bh>50&&sc>0.05){
+        ctx.fillStyle='rgba(100,100,120,0.9)';
+        ctx.fillRect(sx-0.5*sc,sy-bh-7*sc,sc,7*sc);
+      }
     }
   }
 }
@@ -953,7 +976,7 @@ function drawPerspView(ctx, dt){
   }
 
   /* ROADSIDE TREES */
-  drawRoadsideTrees(ctx, pIdx, pSeg, cosA, sinA);
+  drawCityscape(ctx, pIdx, pSeg, cosA, sinA);
 
   /* OTHER PLAYER KARTS — far to near */
   var allSorted=Object.values(allPlayers).sort(function(a,b){
