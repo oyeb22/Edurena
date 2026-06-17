@@ -116,9 +116,24 @@
     }
     .bottom-panel.hidden{display:none}
     @media(max-width:768px){
-      .bottom-panel{max-height:45vh!important;max-height:45dvh!important;min-height:120px!important;z-index:9999!important}
-      #q-txt{font-size:14px!important;line-height:1.35!important}
-      .opt-btn{min-height:44px!important;font-size:13px!important}
+      .bottom-panel{
+        max-height:48dvh!important;min-height:130px!important;
+        z-index:9999!important;padding:5px 8px calc(6px + env(safe-area-inset-bottom,0px))!important
+      }
+      #q-txt{font-size:15px!important;line-height:1.4!important}
+      .opt-btn{min-height:52px!important;font-size:14px!important;padding:11px 10px!important}
+      .opts-grid{gap:7px!important}
+      .q-card{padding:6px 8px!important}
+      .opt-key{width:20px;height:20px;font-size:9px}
+      .timing-strip{margin-bottom:4px!important}
+      .ts-item{min-width:40px!important;padding:2px 5px!important}
+    }
+    @media(max-width:420px){
+      .bottom-panel{max-height:52dvh!important}
+      .opt-btn{min-height:56px!important;font-size:15px!important;border-radius:10px!important}
+      .opts-grid{gap:8px!important}
+      .hud-speed{font-size:28px!important}
+      .hud-speed-wrap{padding:5px 10px!important}
     }
     .timing-strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;flex-shrink:0;margin-bottom:3px}
     .timing-strip::-webkit-scrollbar{display:none}
@@ -137,7 +152,7 @@
     @keyframes nitroPulse{0%,100%{box-shadow:0 0 10px rgba(255,100,0,0.3)}50%{box-shadow:0 0 20px rgba(255,100,0,0.6)}}
     .q-txt{font-size:clamp(12px,2vw,15px);font-weight:600;color:var(--txt);line-height:1.35;margin-bottom:6px}
     .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    @media(max-width:400px){.opts-grid{grid-template-columns:1fr}}
+    @media(max-width:380px){.opts-grid{grid-template-columns:1fr}}
     .opt-btn{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:8px;background:#0a0e1a;border:1.5px solid #1a2035;color:var(--txt);font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;transition:all .12s;width:100%;-webkit-tap-highlight-color:transparent;min-height:44px;position:relative;overflow:hidden;touch-action:manipulation}
     .opt-btn:not(:disabled):active{transform:scale(.97)}
     .opt-btn:disabled{cursor:not-allowed;opacity:.6}
@@ -750,13 +765,56 @@ function projectKart(p, pIdx, pSeg, cosA, sinA){
   return {x:AREA_W*0.5+lat*sc, y:sy, fwd:fwd};
 }
 
-/* City buildings, drawn far-to-near */
+/* City buildings + sidewalks + street lamps — far-to-near */
 function drawCityscape(ctx, pIdx, pSeg, cosA, sinA){
-  var COLS=['#d4a97a','#8ba7c7','#c9b89a','#6b8fa8','#e2d5b0','#7a9abf','#d0c0a0','#95afc4','#b89a80','#889ab5'];
-  for(var look=200;look>=6;look-=18){
+  var BLDG=[
+    '#c9b89a','#8ba7c7','#d4a97a','#6b8fa8','#e2d5b0',
+    '#7a9abf','#d0c0a0','#95afc4','#b89a80','#889ab5',
+    '#c8d8a8','#a8b8d0','#d8c098','#88a0bc','#e8d8b0'
+  ];
+  var STEP=14;
+  for(var look=200;look>=4;look-=STEP){
     for(var side=-1;side<=1;side+=2){
       var idx=(pIdx+look)%N_SAMP;
       var seg=trackSamples[idx];
+
+      /* ── Sidewalk band ── */
+      var swOff=side*(TRACK_W*0.5+TRACK_W*0.3);
+      var swx=seg.x+seg.nx*swOff, swy2=seg.y+seg.ny*swOff;
+      var sdx=swx-pSeg.x, sdy=swy2-pSeg.y;
+      var sfwd=sdx*cosA+sdy*sinA, slat=-sdx*sinA+sdy*cosA;
+      if(sfwd>PERSP_CAM){
+        var ssy=PERSP_H+PERSP_F*PERSP_CAM/sfwd;
+        if(ssy>=PERSP_H&&ssy<=AREA_H+4){
+          var ssc2=PERSP_F/sfwd, ssx=AREA_W*0.5+slat*ssc2;
+          ctx.fillStyle='#bfb8a5';
+          ctx.fillRect(ssx-TRACK_W*0.45*ssc2, ssy-1, TRACK_W*0.9*ssc2, Math.max(2,6*ssc2));
+        }
+      }
+
+      /* ── Street lamp ── */
+      if(look%28===0){
+        var lOff=side*(TRACK_W*0.5+TRACK_W*0.48);
+        var lx2=seg.x+seg.nx*lOff, ly2=seg.y+seg.ny*lOff;
+        var ldx=lx2-pSeg.x, ldy2=ly2-pSeg.y;
+        var lfwd=ldx*cosA+ldy2*sinA, llat=-ldx*sinA+ldy2*cosA;
+        if(lfwd>PERSP_CAM){
+          var lsy=PERSP_H+PERSP_F*PERSP_CAM/lfwd;
+          if(lsy>=PERSP_H&&lsy<=AREA_H){
+            var lsc=PERSP_F/lfwd, lsx=AREA_W*0.5+llat*lsc;
+            var lh=Math.max(5,11*lsc);
+            ctx.fillStyle='#999'; ctx.fillRect(lsx-0.9*lsc,lsy-lh,1.8*lsc,lh);
+            var armX=lsx+(-side)*3.5*lsc;
+            ctx.fillStyle='#999'; ctx.fillRect(Math.min(lsx,armX),lsy-lh+0.4*lsc,Math.abs(armX-lsx),1.2*lsc);
+            ctx.fillStyle='rgba(255,248,190,0.95)';
+            ctx.beginPath(); ctx.arc(armX,lsy-lh+1*lsc,1.8*lsc,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='rgba(255,240,140,0.22)';
+            ctx.beginPath(); ctx.arc(armX,lsy-lh+1*lsc,5*lsc,0,Math.PI*2); ctx.fill();
+          }
+        }
+      }
+
+      /* ── Building ── */
       var off=side*(TRACK_W*0.5+TRACK_W*1.05);
       var wx=seg.x+seg.nx*off, wy=seg.y+seg.ny*off;
       var dx=wx-pSeg.x, dy=wy-pSeg.y;
@@ -767,35 +825,54 @@ function drawCityscape(ctx, pIdx, pSeg, cosA, sinA){
       var sc=PERSP_F/fwd;
       var sx=AREA_W*0.5+lat*sc;
       var seed=(look*73+(side>0?0:37));
-      var bh=Math.max(16,(44+(seed%52))*sc);
-      var bw=Math.max(8,(21+(seed%26))*sc);
-      var col=COLS[(Math.floor(look/18)*2+(side>0?0:3))%COLS.length];
-      /* Building body */
-      ctx.fillStyle=col;
-      ctx.fillRect(sx-bw/2,sy-bh,bw,bh);
-      /* Roof strip */
-      ctx.fillStyle='rgba(0,0,0,0.2)';
-      ctx.fillRect(sx-bw/2,sy-bh,bw,Math.max(2,bh*0.055));
-      /* Side face 3D effect */
-      if(side>0){ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(sx+bw/2,sy-bh+bh*0.055,bw*0.22,bh*0.945);}
-      else{ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(sx-bw/2-bw*0.22,sy-bh+bh*0.055,bw*0.22,bh*0.945);}
-      /* Windows */
-      if(sc>0.028&&bh>16){
-        var nr=Math.max(2,bh/11|0), nc=Math.max(1,bw/7|0);
-        var ww=bw/nc*0.42, wh=bh/nr*0.38;
+      var bh=Math.max(18,(50+(seed%58))*sc);
+      var bw=Math.max(9,(26+(seed%28))*sc);
+      var col=BLDG[(Math.floor(look/STEP)*3+(side>0?0:5))%BLDG.length];
+
+      /* Body */
+      ctx.fillStyle=col; ctx.fillRect(sx-bw/2,sy-bh,bw,bh);
+
+      /* Ground floor (shop) */
+      var gfh=Math.max(3,bh*0.13);
+      ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fillRect(sx-bw/2,sy-gfh,bw,gfh);
+      if(sc>0.038&&bw>12){
+        ctx.fillStyle='rgba(180,225,255,0.42)';
+        ctx.fillRect(sx-bw*0.38,sy-gfh*0.88,bw*0.3,gfh*0.72);
+        ctx.fillRect(sx+bw*0.08,sy-gfh*0.88,bw*0.3,gfh*0.72);
+      }
+
+      /* Roof */
+      ctx.fillStyle='rgba(0,0,0,0.22)'; ctx.fillRect(sx-bw/2,sy-bh,bw,Math.max(2,bh*0.05));
+
+      /* 3D side */
+      var sdW=bw*0.19;
+      if(side>0){ ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(sx+bw/2,sy-bh+bh*0.05,sdW,bh*0.95); }
+      else{ ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(sx-bw/2-sdW,sy-bh+bh*0.05,sdW,bh*0.95); }
+
+      /* Windows (upper floors) */
+      if(sc>0.02&&bh>20){
+        var wZone=bh-gfh*1.05;
+        var nr=Math.max(2,wZone/10|0), nc=Math.max(1,bw/8|0);
+        var ww=bw/nc*0.4, wh=wZone/nr*0.36;
         for(var r=0;r<nr;r++){
           for(var c=0;c<nc;c++){
-            var wx2=sx-bw*0.48+(c+0.5)*bw/nc-ww*0.5;
-            var wy2=sy-bh*0.92+(r+0.5)*bh/nr*0.88-wh*0.5;
-            ctx.fillStyle=((seed+r*7+c*11)&3)?'rgba(200,230,255,0.85)':'rgba(15,25,40,0.7)';
-            ctx.fillRect(wx2,wy2,ww,wh);
+            var lit=((seed+r*7+c*11)&3)!==0;
+            ctx.fillStyle=lit?'rgba(210,238,255,0.88)':'rgba(10,16,34,0.75)';
+            ctx.fillRect(
+              sx-bw*0.45+(c+0.5)*bw/nc-ww/2,
+              (sy-gfh)-(r+1)*wZone/nr+(wZone/nr-wh)/2,
+              ww, wh
+            );
           }
         }
       }
-      /* Antenna on tall buildings */
-      if(bh>50&&sc>0.05){
-        ctx.fillStyle='rgba(100,100,120,0.9)';
-        ctx.fillRect(sx-0.5*sc,sy-bh-7*sc,sc,7*sc);
+
+      /* Antenna + red beacon */
+      if(bh>55&&sc>0.038){
+        ctx.fillStyle='rgba(85,85,105,0.92)';
+        ctx.fillRect(sx-0.5*sc,sy-bh-9*sc,sc,9*sc);
+        ctx.fillStyle='rgba(255,70,70,0.9)';
+        ctx.beginPath(); ctx.arc(sx,sy-bh-9.5*sc,1.1*sc,0,Math.PI*2); ctx.fill();
       }
     }
   }
@@ -897,17 +974,21 @@ function drawPerspView(ctx, dt){
   var cosA   = Math.cos(pSeg.angle), sinA=Math.sin(pSeg.angle);
 
   /* SKY */
+  /* Sky */
   var sg=ctx.createLinearGradient(0,0,0,PERSP_H);
-  sg.addColorStop(0,'#1a4fc8'); sg.addColorStop(0.55,'#87ceeb'); sg.addColorStop(1,'#c8e8f5');
+  sg.addColorStop(0,'#1658c8'); sg.addColorStop(0.45,'#4a9ee8'); sg.addColorStop(0.85,'#a8d8f0'); sg.addColorStop(1,'#d4edf8');
   ctx.fillStyle=sg; ctx.fillRect(0,0,AREA_W,PERSP_H);
-  ctx.save(); ctx.fillStyle='rgba(255,255,255,0.72)';
-  [[0.14,0.32,0.09,0.055],[0.48,0.2,0.12,0.048],[0.73,0.28,0.08,0.044]].forEach(function(c){
+  /* Clouds */
+  ctx.save(); ctx.fillStyle='rgba(255,255,255,0.78)';
+  [[0.12,0.3,0.10,0.052],[0.46,0.18,0.13,0.05],[0.72,0.26,0.09,0.046],[0.88,0.38,0.07,0.038]].forEach(function(c){
     ctx.beginPath(); ctx.ellipse(c[0]*AREA_W,c[1]*PERSP_H,c[2]*AREA_W,c[3]*PERSP_H,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(c[0]*AREA_W-c[2]*AREA_W*0.35,(c[1]+0.04)*PERSP_H,c[2]*AREA_W*0.7,c[3]*PERSP_H*0.8,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c[0]*AREA_W-c[2]*AREA_W*0.3,(c[1]+0.05)*PERSP_H,c[2]*AREA_W*0.72,c[3]*PERSP_H*0.78,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c[0]*AREA_W+c[2]*AREA_W*0.22,(c[1]+0.03)*PERSP_H,c[2]*AREA_W*0.55,c[3]*PERSP_H*0.65,0,0,Math.PI*2); ctx.fill();
   }); ctx.restore();
-  var hg=ctx.createLinearGradient(0,PERSP_H-14,0,PERSP_H+8);
-  hg.addColorStop(0,'rgba(130,200,255,0)'); hg.addColorStop(0.5,'rgba(180,225,255,0.35)'); hg.addColorStop(1,'rgba(100,180,255,0)');
-  ctx.fillStyle=hg; ctx.fillRect(0,PERSP_H-14,AREA_W,22);
+  /* Horizon glow */
+  var hg=ctx.createLinearGradient(0,PERSP_H-18,0,PERSP_H+10);
+  hg.addColorStop(0,'rgba(130,200,255,0)'); hg.addColorStop(0.4,'rgba(200,235,255,0.45)'); hg.addColorStop(1,'rgba(100,180,255,0)');
+  ctx.fillStyle=hg; ctx.fillRect(0,PERSP_H-18,AREA_W,28);
 
   /* ROAD STRIPS — collect, sort far-to-near, draw */
   var strips=[];
