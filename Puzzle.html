@@ -67,21 +67,12 @@
     .top-rank{font-family:var(--display);font-size:13px;color:var(--yel);text-shadow:0 0 8px rgba(255,204,0,.4)}
 
     #board-area{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:8px;overflow:hidden}
-    #puzzle-grid{display:grid;gap:3px;background:#000;border:2px solid var(--bdr);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);width:min(86vw,340px);touch-action:none}
+    #puzzle-grid{display:grid;gap:3px;background:#000;border:2px solid var(--bdr);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);width:min(90vw,420px);touch-action:none}
     .slot{position:relative;background:#1a1428;background-size:cover;background-position:center;border-radius:2px;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .slot::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(168,85,247,.05) 0,rgba(168,85,247,.05) 4px,transparent 4px,transparent 8px)}
     .slot.filled::after{display:none}
     .slot.filled{animation:slotPop .35s ease}
     @keyframes slotPop{0%{transform:scale(.7);filter:brightness(2)}100%{transform:scale(1);filter:brightness(1)}}
-
-    #tray-wrap{flex-shrink:0;width:100%;max-width:420px}
-    #tray-lbl{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:4px}
-    #tray{display:flex;gap:8px;overflow-x:auto;padding:6px 4px;scrollbar-width:none;min-height:58px}
-    #tray::-webkit-scrollbar{display:none}
-    .tray-piece{flex-shrink:0;width:50px;height:50px;border-radius:6px;background-size:cover;background-position:center;border:2px solid var(--acc);box-shadow:0 0 14px rgba(168,85,247,.4);cursor:grab;touch-action:none;animation:trayPop .3s ease}
-    @keyframes trayPop{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
-    .tray-empty{font-size:11px;color:var(--muted);align-self:center;margin:0 auto}
-    .drag-ghost{position:fixed;z-index:9999;width:54px;height:54px;border-radius:7px;background-size:cover;background-position:center;border:2px solid var(--yel);box-shadow:0 8px 24px rgba(0,0,0,.6);pointer-events:none;transform:translate(-50%,-50%) scale(1.1)}
 
     /* ── QUESTION PANEL (mirrors Race.html) ── */
     .bottom-panel{
@@ -166,10 +157,6 @@
   </div>
   <div id="board-area">
     <div id="puzzle-grid"></div>
-    <div id="tray-wrap">
-      <div id="tray-lbl">Earned pieces — drag into the picture</div>
-      <div id="tray"></div>
-    </div>
   </div>
   <div class="bottom-panel" id="bottom-panel">
     <div class="q-card">
@@ -482,7 +469,7 @@ function buildPuzzleAssets(seedStr, totalQ){
 var raceId='', playerId='', playerName='';
 var questions=[], currentQ=0, totalQ=0;
 var streak=0, bestStreak=0, correctCount=0, answering=false;
-var remainingIdx=[], earnedUnplaced=[], placed=[], myFinished=false;
+var remainingIdx=[], placed=[], myFinished=false;
 var allPlayers={};
 var lobbyPRef=null, phaseRef=null;
 
@@ -654,61 +641,18 @@ function submitAns(answer,btnEl){
 function awardPiece(){
   if(!remainingIdx.length) return;
   var idx=remainingIdx.pop();
-  earnedUnplaced.push(idx);
   playPiece();
-  renderTray();
+  autoPlacePiece(idx);
 }
-function renderTray(){
-  var tray=el('tray');
-  tray.innerHTML='';
-  if(!earnedUnplaced.length && !placed.some(Boolean)){
-    var e=document.createElement('div'); e.className='tray-empty'; e.textContent='Answer correctly to earn your first piece!';
-    tray.appendChild(e); return;
-  }
-  earnedUnplaced.forEach(function(idx){
-    var p=document.createElement('div'); p.className='tray-piece'; p.dataset.index=idx;
-    p.style.backgroundImage='url('+pieceImgs[idx]+')';
-    wireDrag(p, idx);
-    tray.appendChild(p);
-  });
-}
-
-/* ════════════════ DRAG & DROP (pointer events) ════════════════ */
-function wireDrag(pieceEl, idx){
-  pieceEl.addEventListener('pointerdown', function(ev){
-    ev.preventDefault();
-    var ghost=document.createElement('div');
-    ghost.className='drag-ghost';
-    ghost.style.backgroundImage='url('+pieceImgs[idx]+')';
-    document.body.appendChild(ghost);
-    moveGhost(ev.clientX,ev.clientY);
-    pieceEl.style.opacity='0.25';
-
-    function moveGhost(x,y){ ghost.style.left=x+'px'; ghost.style.top=y+'px'; }
-    function onMove(e2){ moveGhost(e2.clientX,e2.clientY); }
-    function onUp(e2){
-      document.removeEventListener('pointermove',onMove);
-      document.removeEventListener('pointerup',onUp);
-      document.removeEventListener('pointercancel',onUp);
-      ghost.remove();
-      pieceEl.style.opacity='1';
-      var target=document.elementFromPoint(e2.clientX,e2.clientY);
-      var slot=target&&target.closest('.slot');
-      if(slot && parseInt(slot.dataset.index,10)===idx){
-        placePiece(idx, slot);
-      }
-    }
-    document.addEventListener('pointermove',onMove);
-    document.addEventListener('pointerup',onUp);
-    document.addEventListener('pointercancel',onUp);
-  });
-}
-function placePiece(idx, slotEl){
+/* Pieces snap straight into their correct slot the instant they're earned —
+   no drag-and-drop needed, so there's nothing to get stuck or misdropped. */
+function autoPlacePiece(idx){
   placed[idx]=true;
-  slotEl.classList.add('filled');
-  slotEl.style.backgroundImage='url('+pieceImgs[idx]+')';
-  earnedUnplaced=earnedUnplaced.filter(function(i){return i!==idx;});
-  renderTray();
+  var slotEl=el('puzzle-grid').querySelector('.slot[data-index="'+idx+'"]');
+  if(slotEl){
+    slotEl.classList.add('filled');
+    slotEl.style.backgroundImage='url('+pieceImgs[idx]+')';
+  }
   var placedCount=placed.filter(Boolean).length;
   db.ref('puzzle/'+raceId+'/players/'+playerId).update({piecesPlaced:placedCount});
   if(placedCount>=grid.total && !myFinished){
