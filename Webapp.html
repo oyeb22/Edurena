@@ -221,15 +221,17 @@
 // time a user clicks a button (extremely unlikely; <100ms typical).
 var SCRIPT_URL    = '';
 var EXAM_PAGE_URL = 'https://oyeb22.github.io/Edurena/Exam.html';
-var LIVEQUIZ_URL = 'https://oyeb22.github.io/Edurena/livequiz.html';
-var RACE_URL      = 'https://oyeb22.github.io/Edurena/race.html';
+var LIVEQUIZ_URL  = 'https://oyeb22.github.io/Edurena/livequiz.html';
+var PUZZLE_URL    = 'https://oyeb22.github.io/Edurena/Puzzle.html';
+var WHACK_URL     = 'https://oyeb22.github.io/Edurena/WhackAMole.html';
+var SHOOTOUT_URL  = 'https://oyeb22.github.io/Edurena/PenaltyShootout.html';
+var TOWER_URL     = 'https://oyeb22.github.io/Edurena/TowerDefense.html';
 
 function refreshFromDash() {
   if (!window.DASH) return;
   if (DASH.scriptUrl)     SCRIPT_URL    = DASH.scriptUrl;
   if (DASH.examPageUrl)   EXAM_PAGE_URL = DASH.examPageUrl;
-  if (DASH.kahootPageUrl) LIVEQUIZ_URL    = DASH.kahootPageUrl;
-  if (DASH.racePageUrl)   RACE_URL      = DASH.racePageUrl;
+  if (DASH.kahootPageUrl) LIVEQUIZ_URL  = DASH.kahootPageUrl;
 }
 // Apply immediately (in case DASH is already initialised) and again on .ready
 refreshFromDash();
@@ -320,36 +322,36 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
     'overflow:hidden'
   ].join(';');
 
-  picker.innerHTML = [
-    '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;',
-    'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Choose Game Mode</div>',
+  var GAME_ROWS = [
+    {mode:'kahoot',   icon:'🎮', glow:'108,99,255',  title:'Live Quiz',
+     desc:'Host-controlled · questions appear one at a time · live leaderboard'},
+    {mode:'puzzle',   icon:'🧩', glow:'168,85,247',  title:'Puzzle Race',
+     desc:'Self-paced · correct answers earn pieces · finish your picture first'},
+    {mode:'whack',    icon:'🔨', glow:'255,148,51',  title:'Whack-a-Mole',
+     desc:'Shared board · first correct answer whacks the mole'},
+    {mode:'shootout', icon:'⚽',       glow:'46,204,113',  title:'Penalty Shootout',
+     desc:'Random kicker/keeper pairs · fastest correct answer wins the duel'},
+    {mode:'tower',    icon:'🏰', glow:'0,212,255',   title:'Tower Defense',
+     desc:'4 teams · defend your side · everyone shares one tower'}
+  ];
 
-    '<button onclick="openGame(\'kahoot\')" style="',
-    'width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid #2e3248;',
-    'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;',
-    'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"',
-    'onmouseenter="this.style.background=\'rgba(108,99,255,0.08)\'"',
-    'onmouseleave="this.style.background=\'transparent\'">',
-    '<span style="font-size:20px">🎮</span>',
-    '<div>',
-    '<div style="font-weight:600">Live Quiz</div>',
-    '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">Host-controlled · questions appear one at a time · live leaderboard</div>',
-    '</div>',
-    '</button>',
-
-    '<button onclick="openGame(\'race\')" style="',
-    'width:100%;padding:14px 16px;background:transparent;border:none;',
-    'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;',
-    'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"',
-    'onmouseenter="this.style.background=\'rgba(45,212,160,0.08)\'"',
-    'onmouseleave="this.style.background=\'transparent\'">',
-    '<span style="font-size:20px">🏁</span>',
-    '<div>',
-    '<div style="font-weight:600">Race Mode</div>',
-    '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">Self-paced · answer at your own speed · first to finish wins</div>',
-    '</div>',
-    '</button>'
-  ].join('');
+  picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
+    + 'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Choose Game Mode</div>'
+    + GAME_ROWS.map(function(g, i){
+        var borderBottom = i < GAME_ROWS.length - 1 ? 'border-bottom:1px solid #2e3248;' : '';
+        return '<button onclick="openGame(\'' + g.mode + '\')" style="'
+          + 'width:100%;padding:14px 16px;background:transparent;border:none;' + borderBottom
+          + 'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;'
+          + 'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"'
+          + ' onmouseenter="this.style.background=\'rgba(' + g.glow + ',0.08)\'"'
+          + ' onmouseleave="this.style.background=\'transparent\'">'
+          + '<span style="font-size:20px">' + g.icon + '</span>'
+          + '<div>'
+          + '<div style="font-weight:600">' + g.title + '</div>'
+          + '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">' + g.desc + '</div>'
+          + '</div>'
+          + '</button>';
+      }).join('');
 
   var liveBtn = document.querySelector('.btn-live');
   if (liveBtn && liveBtn.parentNode) {
@@ -359,7 +361,14 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
 
 function openGame(mode) {
   whenReady(function(){
-    var base = mode === 'race' ? RACE_URL : LIVEQUIZ_URL;
+    var GAME_URLS = {
+      kahoot:   LIVEQUIZ_URL,
+      puzzle:   PUZZLE_URL,
+      whack:    WHACK_URL,
+      shootout: SHOOTOUT_URL,
+      tower:    TOWER_URL
+    };
+    var base = GAME_URLS[mode] || LIVEQUIZ_URL;
     var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
              + 'script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
