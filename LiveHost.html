@@ -66,8 +66,11 @@
     .mode-card .mc-icon{font-size:30px;display:block;margin-bottom:8px}
     .mode-card .mc-title{font-size:14px;font-weight:700;display:block;margin-bottom:3px}
     .mode-card .mc-desc{font-size:11px;color:var(--txt2);display:block;line-height:1.4}
-    .mode-card.race{border-color:#3b82f6}.mode-card.race.sel,.mode-card.race:hover{background:rgba(59,130,246,.12);border-color:#60a5fa}
     .mode-card.kahoot{border-color:#8b5cf6}.mode-card.kahoot.sel,.mode-card.kahoot:hover{background:rgba(139,92,246,.12);border-color:#a78bfa}
+    .mode-card.puzzle{border-color:#a855f7}.mode-card.puzzle.sel,.mode-card.puzzle:hover{background:rgba(168,85,247,.12);border-color:#c084fc}
+    .mode-card.whack{border-color:#ff9433}.mode-card.whack.sel,.mode-card.whack:hover{background:rgba(255,148,51,.12);border-color:#ffb066}
+    .mode-card.shootout{border-color:#2ecc71}.mode-card.shootout.sel,.mode-card.shootout:hover{background:rgba(46,204,113,.12);border-color:#4ade80}
+    .mode-card.tower{border-color:#00d4ff}.mode-card.tower.sel,.mode-card.tower:hover{background:rgba(0,212,255,.12);border-color:#60d8ff}
     .launch-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),#6b8ef5);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:800;font-family:var(--f);cursor:pointer;transition:all .2s;box-shadow:0 6px 28px rgba(79,120,255,.3);min-height:52px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center}
     .launch-btn:hover{transform:translateY(-2px)}
     .launch-btn:active:not(:disabled){transform:scale(.98)}
@@ -77,8 +80,11 @@
 
     #s-lobby{text-align:center;padding:16px 0}
     .lobby-mode-tag{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px}
-    .lobby-mode-tag.race{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
     .lobby-mode-tag.kahoot{background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3)}
+    .lobby-mode-tag.puzzle{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+    .lobby-mode-tag.whack{background:rgba(255,148,51,.15);color:#ffb066;border:1px solid rgba(255,148,51,.3)}
+    .lobby-mode-tag.shootout{background:rgba(46,204,113,.15);color:#4ade80;border:1px solid rgba(46,204,113,.3)}
+    .lobby-mode-tag.tower{background:rgba(0,212,255,.15);color:#60d8ff;border:1px solid rgba(0,212,255,.3)}
     .lobby-code-wrap{margin-bottom:20px}
     .lobby-code-lbl{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
     .lobby-code{font-family:var(--mono);font-size:clamp(52px,12vw,80px);font-weight:600;letter-spacing:12px;color:#fff;background:linear-gradient(135deg,var(--surf),var(--surf2));border:2px solid var(--bdr);border-radius:20px;padding:16px 32px;display:inline-block;box-shadow:0 0 60px rgba(79,120,255,.2)}
@@ -94,6 +100,10 @@
     .player-lbl{font-size:13px;color:var(--txt2);margin:6px 0 18px}
     .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:620px;margin:0 auto 24px;min-height:44px}
     .chip{padding:6px 16px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:13px;font-weight:600;animation:pop .25s ease}
+    .chip.side-N{background:rgba(0,212,255,.12);border-color:rgba(0,212,255,.4);color:#60d8ff}
+    .chip.side-E{background:rgba(0,255,136,.12);border-color:rgba(0,255,136,.4);color:#4ade80}
+    .chip.side-S{background:rgba(255,204,0,.12);border-color:rgba(255,204,0,.4);color:#ffcc00}
+    .chip.side-W{background:rgba(255,95,168,.12);border-color:rgba(255,95,168,.4);color:#ff5fa8}
     @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
     .lobby-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
     .start-btn{padding:16px 52px;background:linear-gradient(135deg,var(--grn),#17a876);border:none;border-radius:14px;color:#001a0e;font-size:16px;font-weight:800;font-family:var(--f);cursor:pointer;transition:all .2s;box-shadow:0 6px 28px rgba(31,201,142,.3);min-height:52px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -177,6 +187,38 @@
     .kh-lb-score{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--grn)}
     .kh-lb-streak{font-size:11px;color:var(--yel)}
 
+    /* ── WHACK-A-MOLE HOST PANEL ── */
+    #s-whack-host{padding:0}
+    .wm-code-pill{background:rgba(255,148,51,.15);border:1px solid rgba(255,148,51,.3);border-radius:20px;padding:5px 18px;font-family:var(--mono);font-size:13px;font-weight:600;color:#ff9433}
+    .wm-q-card{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:20px;margin-bottom:14px}
+    .wm-phase-tag{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+    .wm-phase-tag.waiting{background:rgba(255,204,0,.1);color:var(--yel);border:1px solid rgba(255,204,0,.3)}
+    .wm-phase-tag.round{background:rgba(255,148,51,.12);color:#ff9433;border:1px solid rgba(255,148,51,.35)}
+    .wm-phase-tag.reveal{background:rgba(79,120,255,.1);color:#7fa4ff;border:1px solid rgba(79,120,255,.3)}
+    .wm-phase-tag.board{background:rgba(167,139,250,.1);color:var(--pur);border:1px solid rgba(167,139,250,.3)}
+    .wm-hole-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto 14px}
+    .wm-hole{position:relative;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#2a1c0e,#0a0603 70%);display:flex;align-items:center;justify-content:center;font-size:0;box-shadow:inset 0 6px 14px rgba(0,0,0,.7)}
+    .wm-hole.active{font-size:0}
+    .wm-hole.active::before{content:'\1F439';font-size:30px;animation:wmPop .25s cubic-bezier(.34,1.56,.64,1)}
+    .wm-hole.whacked::before{content:'\1F4A5';font-size:30px}
+    @keyframes wmPop{from{transform:scale(0) translateY(60%)}to{transform:scale(1) translateY(0)}}
+    .wm-claim-banner{text-align:center;font-size:13px;font-weight:700;color:var(--yel);min-height:18px;margin-bottom:10px}
+    .wm-timer-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .wm-timer-big{font-family:var(--mono);font-size:40px;font-weight:700;min-width:52px;text-align:center;line-height:1}
+    .wm-timer-bar{flex:1;height:8px;background:var(--bdr);border-radius:4px;overflow:hidden}
+    .wm-timer-fill{height:100%;border-radius:4px;transition:width .2s linear,background .5s}
+    .wm-q-txt{font-size:18px;font-weight:700;color:var(--txt);line-height:1.4;margin-bottom:14px}
+    .wm-opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+    .wm-opt{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid transparent;background:var(--surf2)}
+    .wm-opt.correct{background:#1fc98e22;border-color:#1fc98e66!important;color:var(--grn)}
+    .wm-action-btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:800;font-family:var(--f);cursor:pointer;transition:all .2s}
+    .wm-action-btn.go{background:linear-gradient(135deg,#ff9433,#c0501c);color:#1a1006;box-shadow:0 6px 24px rgba(255,148,51,.3)}
+    .wm-action-btn.next{background:linear-gradient(135deg,var(--acc),#6b8ef5);color:#fff;box-shadow:0 6px 24px rgba(79,120,255,.3)}
+    .wm-action-btn.end{background:linear-gradient(135deg,var(--pur),#7c3aed);color:#fff;box-shadow:0 6px 24px rgba(139,92,246,.3)}
+    .wm-action-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none}
+    .wm-lb{background:var(--surf2);border:1px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:14px;max-height:260px;overflow-y:auto}
+    .wm-end-link{font-size:12px;color:var(--red);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:var(--f);min-height:36px;padding:6px 4px;touch-action:manipulation}
+
     /* auto-advance countdown pill */
     .kh-auto-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(31,201,142,.08);border:1px solid rgba(31,201,142,.25);border-radius:20px;font-size:12px;color:var(--grn);margin-bottom:10px}
     .kh-auto-pill-num{font-family:var(--mono);font-weight:700}
@@ -239,15 +281,30 @@
     <div class="card">
       <div class="card-ttl">Game Mode</div>
       <div class="mode-grid">
-        <button class="mode-card race sel" id="mc-race">
-          <span class="mc-icon">&#x1F3C1;</span>
-          <span class="mc-title">Stickman Race</span>
-          <span class="mc-desc">Self-paced &middot; answer to advance &middot; finish first</span>
-        </button>
-        <button class="mode-card kahoot" id="mc-kahoot">
+        <button class="mode-card kahoot sel" id="mc-kahoot">
           <span class="mc-icon">&#x1F3AF;</span>
           <span class="mc-title">Live Quiz</span>
           <span class="mc-desc">Timed questions &middot; instant feedback &middot; timer auto-advances</span>
+        </button>
+        <button class="mode-card puzzle" id="mc-puzzle">
+          <span class="mc-icon">&#x1F9E9;</span>
+          <span class="mc-title">Puzzle Race</span>
+          <span class="mc-desc">Self-paced &middot; correct answers earn pieces &middot; finish your picture first</span>
+        </button>
+        <button class="mode-card whack" id="mc-whack">
+          <span class="mc-icon">&#x1F528;</span>
+          <span class="mc-title">Whack-a-Mole</span>
+          <span class="mc-desc">Shared board &middot; first correct answer whacks the mole</span>
+        </button>
+        <button class="mode-card shootout" id="mc-shootout">
+          <span class="mc-icon">&#x26BD;</span>
+          <span class="mc-title">Penalty Shootout</span>
+          <span class="mc-desc">Random kicker/keeper pairs &middot; fastest correct answer wins the duel</span>
+        </button>
+        <button class="mode-card tower" id="mc-tower">
+          <span class="mc-icon">&#x1F3F0;</span>
+          <span class="mc-title">Tower Defense</span>
+          <span class="mc-desc">4 teams &middot; defend your side &middot; everyone shares one tower</span>
         </button>
       </div>
     </div>
@@ -292,7 +349,7 @@
 
   <!-- RACE LIVE -->
   <div class="screen" id="s-race-live">
-    <div class="race-hdr">&#x1F3C1; Race is Live!</div>
+    <div class="race-hdr" id="race-hdr">&#x1F3C1; Race is Live!</div>
     <div class="race-code-pill" id="race-code-pill">------</div>
     <div class="race-board">
       <div class="race-board-hdr">Live Progress</div>
@@ -301,7 +358,7 @@
       </div>
     </div>
     <button class="race-proj-btn" id="raceProjBtn">&#x1F5A5; Open Projector View</button>
-    <button class="race-end-btn" id="raceEndBtn">&#x23F9; End Race</button>
+    <button class="race-end-btn" id="raceEndBtn">&#x23F9; End Game</button>
   </div>
 
   <!-- KAHOOT HOST PANEL -->
@@ -361,6 +418,39 @@
     <button class="kh-action-btn go" id="kh-action-btn">&#x25B6; Show Question 1</button>
   </div>
 
+  <!-- WHACK-A-MOLE HOST -->
+  <div class="screen" id="s-whack-host">
+    <div class="kh-topbar">
+      <div class="wm-code-pill" id="wm-code-pill">------</div>
+      <div class="kh-progress" id="wm-progress">Round 0 / 0</div>
+      <button class="wm-end-link" id="wmEndBtn">End Game</button>
+    </div>
+
+    <div class="wm-q-card">
+      <div class="wm-phase-tag waiting" id="wm-phase-tag">Waiting</div>
+      <div class="kh-q-num" id="wm-q-num">Round 1</div>
+
+      <div class="wm-hole-grid" id="wm-hole-grid"></div>
+      <div class="wm-claim-banner" id="wm-claim-banner"></div>
+
+      <div class="kh-q-txt" id="wm-q-txt">Press the button below to pop the first mole</div>
+
+      <div class="wm-timer-row" id="wm-timer-row" style="display:none">
+        <div class="wm-timer-big" id="wm-timer-big">12</div>
+        <div class="wm-timer-bar"><div class="wm-timer-fill" id="wm-timer-fill" style="width:100%;background:var(--grn)"></div></div>
+      </div>
+
+      <div class="wm-opts-grid" id="wm-opts-grid"></div>
+    </div>
+
+    <div class="wm-lb" id="wm-lb" style="display:none">
+      <div class="kh-lb-ttl">&#x1F3C6; Leaderboard</div>
+      <div id="wm-lb-rows"></div>
+    </div>
+
+    <button class="wm-action-btn go" id="wm-action-btn">&#x1F528; Pop First Mole</button>
+  </div>
+
   <!-- DONE -->
   <div class="screen" id="s-done">
     <div class="done-icon">&#x1F3AE;</div>
@@ -382,9 +472,16 @@
 
 var SCRIPT_URL = DASH.scriptUrl;
 DASH.ready.then(function(cfg){ SCRIPT_URL = cfg.scriptUrl || DASH.scriptUrl; });
-var RACE_URL      = (window.DASH && DASH.racePageUrl)   || 'https://oyeb22.github.io/Edurena/Race.html';
-var KAHOOT_URL    = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/LiveQuiz.html';
-var RACE_HOST_URL = (window.DASH && DASH.raceHostUrl)   || 'https://oyeb22.github.io/Edurena/RaceHost.html';
+var RACE_URL          = (window.DASH && DASH.racePageUrl)   || 'https://oyeb22.github.io/Edurena/Race.html';
+var KAHOOT_URL        = (window.DASH && DASH.kahootPageUrl) || 'https://oyeb22.github.io/Edurena/LiveQuiz.html';
+var RACE_HOST_URL     = (window.DASH && DASH.raceHostUrl)   || 'https://oyeb22.github.io/Edurena/RaceHost.html';
+var PUZZLE_URL        = 'https://oyeb22.github.io/Edurena/Puzzle.html';
+var PUZZLE_HOST_URL   = 'https://oyeb22.github.io/Edurena/PuzzleHost.html';
+var WHACK_URL         = 'https://oyeb22.github.io/Edurena/WhackAMole.html';
+var SHOOTOUT_URL      = 'https://oyeb22.github.io/Edurena/PenaltyShootout.html';
+var SHOOTOUT_HOST_URL = 'https://oyeb22.github.io/Edurena/PenaltyShootoutHost.html';
+var TOWER_URL         = 'https://oyeb22.github.io/Edurena/TowerDefense.html';
+var TOWER_HOST_URL    = 'https://oyeb22.github.io/Edurena/TowerDefenseHost.html';
 
 // If DASH resolves after this script, pick up the real URLs
 if (window.DASH && DASH.ready) {
@@ -395,8 +492,14 @@ if (window.DASH && DASH.ready) {
   });
 }
 
+/* Race-engine modes reuse createRaceSession/getRaceQuestions/validateRaceAnswer
+   verbatim (async per-student question stream, no contention). Everything
+   else (kahoot, whack, shootout) uses the synced createLiveQuizSession engine. */
+var RACE_ENGINE_MODES   = {race:1, puzzle:1, tower:1};
+var SYNCED_ENGINE_PATH  = {kahoot:'livequiz', whack:'whack', shootout:'shootout'};
+
 var TOKEN       = '';
-var mode        = 'race';
+var mode        = 'kahoot';
 var sessionCode = '';
 var _joinUrl    = '';
 var raceDb      = null;
@@ -415,6 +518,10 @@ var khRawAnswersRef = null;
 
 var khAutoAdvanceTimeout = null;
 var khAutoAdvanceInterval = null;
+
+var wmQuestions=[], wmTotalQ=0, wmTimePerQ=12, wmHoleCount=9;
+var wmCurrentQ=-1, wmPhase='idle', wmActiveHole=-1;
+var wmTimerRaf=null, wmClaimRef=null, wmPlayersRef=null;
 
 // FIX 2: Propagation delay constants
 // After reveal is pushed to Firebase, we wait this long before
@@ -435,7 +542,7 @@ function post(action,data,cb){
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},data||{}))})
     .then(function(r){return r.json();}).then(function(r){if(cb)cb(null,r);}).catch(function(e){if(cb)cb(e,null);});
 }
-function getDb(){return mode==='race'?raceDb:khDb;}
+function getDb(){return RACE_ENGINE_MODES[mode]?raceDb:khDb;}
 
 try{
   // v5.4: race and kahoot now share the same Firebase project (kahoot-24063).
@@ -461,15 +568,16 @@ window.addEventListener('load',function(){
 
 el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
+var MODE_CARD_IDS=['kahoot','puzzle','whack','shootout','tower'];
 function wireModeCards(){
-  el('mc-race').addEventListener('click',function(){selectMode('race');});
-  el('mc-kahoot').addEventListener('click',function(){selectMode('kahoot');});
+  MODE_CARD_IDS.forEach(function(m){
+    el('mc-'+m).addEventListener('click',function(){selectMode(m);});
+  });
 }
 function selectMode(m){
   mode=m;
-  el('mc-race').classList.toggle('sel',m==='race');
-  el('mc-kahoot').classList.toggle('sel',m==='kahoot');
-  el('time-row').style.display=m==='kahoot'?'block':'none';
+  MODE_CARD_IDS.forEach(function(c){ el('mc-'+c).classList.toggle('sel',c===m); });
+  el('time-row').style.display=RACE_ENGINE_MODES[m]?'none':'block';
 }
 
 function loadQuizzes(){
@@ -487,13 +595,16 @@ function wireButtons(){
   el('launchBtn').addEventListener('click',doLaunch);
   el('startBtn').addEventListener('click',doStart);
   el('cancelBtn').addEventListener('click',doCancel);
-  el('newBtn').addEventListener('click',function(){clearErr();cleanupLiveQuiz();show('s-setup');});
+  el('newBtn').addEventListener('click',function(){clearErr();cleanupLiveQuiz();cleanupWhack();show('s-setup');});
   el('copyUrlBtn').addEventListener('click',doCopyUrl);
   el('openUrlBtn').addEventListener('click',function(){if(_joinUrl)openExternal(_joinUrl);});
   el('kh-action-btn').addEventListener('click',doKahootAction);
   el('khEndBtn').addEventListener('click',doLiveQuizEnd);
+  el('wm-action-btn').addEventListener('click',doWhackAction);
+  el('wmEndBtn').addEventListener('click',doWhackEnd);
   el('raceProjBtn').addEventListener('click',function(){
-    var url=RACE_HOST_URL+'?raceId='+encodeURIComponent(sessionCode);
+    var info=_modeInfo(mode);
+    var url=(info.hostUrl||RACE_HOST_URL)+'?raceId='+encodeURIComponent(sessionCode);
     window.open(url,'_blank');
   });
   el('raceEndBtn').addEventListener('click',doRaceEnd);
@@ -511,11 +622,16 @@ function attachPlayersListener(path){
   playersPath=path;
   var db=getDb();if(!db)return;
   db.ref(path).on('value',function(snap){
-    var players=(snap&&snap.val())||{};
-    var names=Object.values(players).map(function(p){return p.name||'?';});
-    el('lby-count').textContent=names.length;
-    el('startBtn').disabled=names.length<1;
-    el('lby-chips').innerHTML=names.map(function(n){return '<div class="chip">'+esc(n)+'</div>';}).join('');
+    var players=Object.values((snap&&snap.val())||{});
+    el('lby-count').textContent=players.length;
+    el('startBtn').disabled=players.length<1;
+    if(mode==='tower'){
+      el('lby-chips').innerHTML=players.map(function(p){
+        return '<div class="chip side-'+esc(p.side||'N')+'">'+esc(p.name||'?')+' ('+esc(p.side||'?')+')</div>';
+      }).join('');
+    } else {
+      el('lby-chips').innerHTML=players.map(function(p){return '<div class="chip">'+esc(p.name||'?')+'</div>';}).join('');
+    }
   },function(err){showErr('Firebase error: '+err.message);});
 }
 function detachPlayersListener(){
@@ -535,8 +651,9 @@ function doLaunch(){
   var btn=el('launchBtn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
 
-  var action  =mode==='race'?'createRaceSession':'createLiveQuizSession';
-  var payload =mode==='race'
+  var isRaceEngine=!!RACE_ENGINE_MODES[mode];
+  var action  =isRaceEngine?'createRaceSession':'createLiveQuizSession';
+  var payload =isRaceEngine
     ?{token:TOKEN,examCode:examCode}
     :{token:TOKEN,examCode:examCode,timePerQ:timePerQ};
 
@@ -544,8 +661,10 @@ function doLaunch(){
     btn.disabled=false;btn.textContent='Launch Session →';
     if(e||!r||r.status!=='success'){showErr((r&&r.message)||'Failed to create session');return;}
 
-    if(mode==='race'){
+    if(isRaceEngine){
       sessionCode=r.data.raceId;
+      if(!sessionCode){showErr('Server returned empty session code. Try again.');return;}
+      showLobby();
     }else{
       sessionCode  =r.data.sessionId;
       khQuestions  =r.data.questions||[];
@@ -568,8 +687,11 @@ function doLaunch(){
       if(!sessionCode){showErr('Server returned empty session code. Try again.');return;}
       btn.disabled=true;
       btn.innerHTML='<span class="spin"></span>Setting up room…';
-      khDb.ref('livequiz/'+sessionCode).update({
-        meta:      {totalQ:khTotalQ,timePerQ:khTimePerQ},
+      var fbPath=SYNCED_ENGINE_PATH[mode]||'livequiz';
+      var metaPayload={totalQ:khTotalQ,timePerQ:khTimePerQ};
+      if(mode==='whack') metaPayload.holeCount=9;
+      khDb.ref(fbPath+'/'+sessionCode).update({
+        meta:      metaPayload,
         questions: safeQs,
         state:     {phase:'lobby',qIndex:-1,qStartAt:0,correctAnswer:'',autoAdvanceAt:0}
       }).then(function(){
@@ -581,25 +703,32 @@ function doLaunch(){
         btn.textContent='Launch Session →';
         showErr('Firebase write failed: '+err.message);
       });
-      return;
     }
-    if(!sessionCode){showErr('Server returned empty session code. Try again.');return;}
-    showLobby();
   });
 }
 
+function _modeInfo(m){
+  switch(m){
+    case 'race':     return {url:RACE_URL,     fbPath:'race',     tag:'race',     label:'🏁 Race',              hostUrl:RACE_HOST_URL,     hostLabel:'Open Projector View'};
+    case 'puzzle':   return {url:PUZZLE_URL,   fbPath:'puzzle',   tag:'puzzle',   label:'🧩 Puzzle Race',        hostUrl:PUZZLE_HOST_URL,   hostLabel:'Open Projector View'};
+    case 'tower':    return {url:TOWER_URL,    fbPath:'tower',    tag:'tower',    label:'🏰 Tower Defense',      hostUrl:TOWER_HOST_URL,    hostLabel:'Open Projector (required to run the game)'};
+    case 'shootout': return {url:SHOOTOUT_URL, fbPath:'shootout', tag:'shootout', label:'⚽ Penalty Shootout',   hostUrl:SHOOTOUT_HOST_URL, hostLabel:'Open Projector (controls live there)'};
+    default:         return {url:KAHOOT_URL,   fbPath:'livequiz', tag:'kahoot',   label:'🎯 Live Quiz'};
+  }
+}
+
 function showLobby(){
-  var isRace=mode==='race';
-  _joinUrl=(isRace?RACE_URL:KAHOOT_URL)+'?script='+encodeURIComponent(SCRIPT_URL);
-  el('lby-tag').className  ='lobby-mode-tag '+(isRace?'race':'kahoot');
-  el('lby-tag').textContent=isRace?'🏁 Race':'🎯 Live Quiz';
+  var info=_modeInfo(mode);
+  _joinUrl=info.url+'?script='+encodeURIComponent(SCRIPT_URL);
+  el('lby-tag').className  ='lobby-mode-tag '+info.tag;
+  el('lby-tag').textContent=info.label;
   el('lby-code').textContent=sessionCode;
   el('lby-url').textContent=_joinUrl;
   el('lby-count').textContent='0';
   el('lby-chips').innerHTML='';
   el('startBtn').disabled=true;
   show('s-lobby');
-  attachPlayersListener((isRace?'race/':'livequiz/')+sessionCode+'/players');
+  attachPlayersListener(info.fbPath+'/'+sessionCode+'/players');
 }
 
 function doStart(){
@@ -609,22 +738,40 @@ function doStart(){
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Starting&hellip;';
   detachPlayersListener();
 
-  if(mode==='race'){
-    db.ref('race/'+sessionCode+'/state').set({
+  if(RACE_ENGINE_MODES[mode]||mode==='shootout'){
+    /* race/puzzle/tower: students self-pace immediately once phase='started'.
+       shootout: PenaltyShootoutHost.html owns all round logic from here —
+       this write just signals "lobby is over, go to the projector." */
+    var info=_modeInfo(mode);
+    db.ref(info.fbPath+'/'+sessionCode+'/state').set({
       phase:'started',
       startedAt:firebase.database.ServerValue.TIMESTAMP
     })
       .then(function(){
         btn.disabled=false;btn.textContent='▶ Start Game';
         el('race-code-pill').textContent=sessionCode;
+        setRaceLiveLabels(mode);
         show('s-race-live');
-        watchRacePlayers();
+        watchLiveBoard();
       })
       .catch(function(err){
         btn.disabled=false;btn.textContent='▶ Start Game';
         showErr('Could not start: '+(err&&err.message?err.message:String(err)));
       });
-  }else{
+  } else if(mode==='whack'){
+    db.ref('whack/'+sessionCode+'/state').set({
+      phase:'started',qIndex:-1,activeHole:-1,roundStartAt:0,correctAnswer:'',autoAdvanceAt:0
+    })
+      .then(function(){
+        btn.disabled=false;btn.textContent='▶ Start Game';
+        setupWhackHostPanel();
+        show('s-whack-host');
+      })
+      .catch(function(err){
+        btn.disabled=false;btn.textContent='▶ Start Game';
+        showErr('Could not start Whack-a-Mole: '+(err&&err.message?err.message:String(err)));
+      });
+  } else {
     db.ref('livequiz/'+sessionCode+'/state').set({
       phase:'lobby',qIndex:-1,qStartAt:0,correctAnswer:'',autoAdvanceAt:0
     })
@@ -641,38 +788,72 @@ function doStart(){
 }
 
 /* ═══════════════════════════════════
-   RACE
+   GENERIC LIVE BOARD — race, puzzle, tower, shootout
+   (each has its own dedicated projector; this board is the
+   lightweight in-launcher view + the gateway to that projector)
 ═══════════════════════════════════ */
-function watchRacePlayers(){
-  raceDb.ref('race/'+sessionCode+'/players').on('value',function(snap){
-    var players=(snap&&snap.val())||{};
-    var sorted=Object.values(players).sort(function(a,b){return (b.progress||0)-(a.progress||0);});
-    if(!sorted.length){
+function setRaceLiveLabels(m){
+  var info=_modeInfo(m);
+  var titles={race:'🏁 Race is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!'};
+  el('race-hdr').textContent=titles[m]||'Game is Live!';
+  el('raceProjBtn').textContent='\u{1F5A5} '+(info.hostLabel||'Open Projector View');
+}
+function watchLiveBoard(){
+  var info=_modeInfo(mode);
+  var db=getDb();
+  db.ref(info.fbPath+'/'+sessionCode+'/players').on('value',function(snap){
+    var players=Object.values((snap&&snap.val())||{});
+    if(!players.length){
       el('race-rows').innerHTML='<div style="text-align:center;color:var(--txt2);padding:20px;font-size:13px">Waiting for players&hellip;</div>';
       return;
     }
-    el('race-rows').innerHTML=sorted.map(function(p,i){
-      var pct=Math.round((p.progress||0)*100);
-      var done=!!p.finished;
-      return '<div class="race-row'+(done?' finished':'')+'">'+
-        '<div class="rr-rank">'+(i+1)+'</div>'+
-        '<div class="rr-name">'+esc(p.name)+(done?' &#x1F3C1;':'')+'</div>'+
-        '<div class="rr-bar-wrap"><div class="rr-bar" style="width:'+pct+'%"></div></div>'+
-        '<div class="rr-pct">'+pct+'%</div>'+
-        '</div>';
-    }).join('');
+    el('race-rows').innerHTML=renderLiveRows(mode,players);
   });
+}
+function renderLiveRows(m,players){
+  if(m==='puzzle'){
+    var sorted=players.slice().sort(function(a,b){ if(!!b.finished!==!!a.finished) return b.finished?1:-1; return (b.piecesPlaced||0)-(a.piecesPlaced||0); });
+    return sorted.map(function(p,i){
+      var pct=Math.round(((p.piecesPlaced||0)/(p.totalPieces||1))*100), done=!!p.finished;
+      return '<div class="race-row'+(done?' finished':'')+'"><div class="rr-rank">'+(i+1)+'</div>'
+        +'<div class="rr-name">'+esc(p.name)+(done?' \u{1F9E9}':'')+'</div>'
+        +'<div class="rr-bar-wrap"><div class="rr-bar" style="width:'+pct+'%"></div></div><div class="rr-pct">'+pct+'%</div></div>';
+    }).join('');
+  }
+  if(m==='tower'){
+    var sorted2=players.slice().sort(function(a,b){return (b.correct||0)-(a.correct||0);});
+    return sorted2.map(function(p,i){
+      return '<div class="race-row"><div class="rr-rank">'+(i+1)+'</div>'
+        +'<div class="rr-name">'+esc(p.name)+' ('+esc(p.side||'?')+')</div><div class="rr-pct">'+(p.correct||0)+' hits</div></div>';
+    }).join('');
+  }
+  if(m==='shootout'){
+    var sorted3=players.slice().sort(function(a,b){return ((b.goals||0)+(b.saves||0))-((a.goals||0)+(a.saves||0));});
+    return sorted3.map(function(p,i){
+      return '<div class="race-row"><div class="rr-rank">'+(i+1)+'</div>'
+        +'<div class="rr-name">'+esc(p.name)+'</div><div class="rr-pct">⚽'+(p.goals||0)+' \u{1F9E4}'+(p.saves||0)+'</div></div>';
+    }).join('');
+  }
+  var sorted4=players.slice().sort(function(a,b){return (b.progress||0)-(a.progress||0);});
+  return sorted4.map(function(p,i){
+    var pct=Math.round((p.progress||0)*100), done=!!p.finished;
+    return '<div class="race-row'+(done?' finished':'')+'"><div class="rr-rank">'+(i+1)+'</div>'
+      +'<div class="rr-name">'+esc(p.name)+(done?' &#x1F3C1;':'')+'</div>'
+      +'<div class="rr-bar-wrap"><div class="rr-bar" style="width:'+pct+'%"></div></div><div class="rr-pct">'+pct+'%</div></div>';
+  }).join('');
 }
 
 function doRaceEnd(){
-  if(!confirm('End the race for all students?'))return;
-  raceDb.ref('race/'+sessionCode+'/state').update({phase:'ended'})
+  if(!confirm('End this game for all students?'))return;
+  var info=_modeInfo(mode);
+  var db=getDb();
+  db.ref(info.fbPath+'/'+sessionCode+'/state').update({phase:'ended'})
     .then(function(){
-      try{raceDb.ref('race/'+sessionCode+'/players').off('value');}catch(_){}
-      el('done-msg').textContent='Race ended. Code was: '+sessionCode;
+      try{db.ref(info.fbPath+'/'+sessionCode+'/players').off('value');}catch(_){}
+      el('done-msg').textContent='Game ended. Code was: '+sessionCode;
       show('s-done');
     })
-    .catch(function(err){alert('Error ending race: '+err.message);});
+    .catch(function(err){alert('Error ending game: '+err.message);});
 }
 
 /* ═══════════════════════════════════════════════
@@ -708,6 +889,30 @@ function setupKahootHostPanel(){
 
 function setKhPhaseTag(cls,txt){
   var t=el('kh-phase-tag');t.className='kh-phase-tag '+cls;t.textContent=txt;
+}
+
+function setupWhackHostPanel(){
+  wmQuestions=khQuestions; wmTotalQ=khTotalQ; wmTimePerQ=khTimePerQ; wmHoleCount=9;
+  wmCurrentQ=-1; wmPhase='idle'; wmActiveHole=-1;
+
+  el('wm-code-pill').textContent=sessionCode;
+  el('wm-progress').textContent='Round 0 / '+wmTotalQ;
+  el('wm-q-num').textContent='Ready to begin';
+  el('wm-q-txt').textContent='Press the button below to pop the first mole';
+  el('wm-timer-row').style.display='none';
+  el('wm-opts-grid').innerHTML='';
+  el('wm-lb').style.display='none';
+  el('wm-claim-banner').textContent='';
+  renderWmHoles(-1);
+  setWmPhaseTag('waiting','Waiting — press button to start');
+  el('wm-action-btn').className='wm-action-btn go';
+  el('wm-action-btn').textContent='\u{1F528} Pop First Mole';
+
+  wmPlayersRef=khDb.ref('whack/'+sessionCode+'/players');
+  wmPlayersRef.on('value',function(snap){
+    var players=(snap&&snap.val())||{};
+    if(wmPhase==='leaderboard') renderKhLeaderboardInto('wm-lb-rows',players);
+  });
 }
 
 function renderKhOptions(qi,showCorrect,correctFromServer){
@@ -807,6 +1012,186 @@ function renderKhLeaderboard(players){
       '</div>';
   }).join('');
   el('kh-lb').style.display='block';
+}
+
+/* ════════════════════════════════════════════════════════════
+   WHACK-A-MOLE HOST PANEL
+   Mirrors the kahoot host's manual-advance phase machine
+   (round → reveal → leaderboard → next/final), plus a hole grid
+   and a live "claims" listener so the host sees the winner the
+   instant the claim-transaction resolves, before formally
+   advancing the phase.
+════════════════════════════════════════════════════════════ */
+function setWmPhaseTag(cls,txt){
+  var t=el('wm-phase-tag'); t.className='wm-phase-tag '+cls; t.textContent=txt;
+}
+
+function renderWmHoles(activeIdx){
+  var g=el('wm-hole-grid'); g.innerHTML='';
+  for(var i=0;i<wmHoleCount;i++){
+    var h=document.createElement('div'); h.className='wm-hole'+(i===activeIdx?' active':''); h.dataset.index=i;
+    g.appendChild(h);
+  }
+}
+
+function renderWmOptions(q,showCorrect,correctFromServer){
+  if(!q) return;
+  el('wm-q-num').textContent='Round '+(wmCurrentQ+1)+' of '+wmTotalQ;
+  el('wm-progress').textContent='Round '+(wmCurrentQ+1)+' / '+wmTotalQ;
+  el('wm-q-txt').textContent=q.question||'';
+  var grid=el('wm-opts-grid'); grid.innerHTML='';
+  if(q.type==='MCQ'||q.type==='TF'){
+    (q.options||[]).forEach(function(opt,i){
+      var serverAns=correctFromServer||'';
+      var isCorrect=showCorrect&&(opt.toLowerCase()===serverAns.toLowerCase()||String.fromCharCode(65+i)===serverAns.toUpperCase());
+      var div=document.createElement('div');
+      div.className='wm-opt'+(isCorrect?' correct':'');
+      div.textContent=opt;
+      grid.appendChild(div);
+    });
+  } else if(showCorrect){
+    grid.innerHTML='<div style="font-size:13px;color:var(--grn);padding:6px 0">&#x2713; Correct answer: '+esc(correctFromServer||'')+'</div>';
+  }
+}
+
+function watchWmClaim(qIdx){
+  if(wmClaimRef){ try{wmClaimRef.off('value');}catch(_){} }
+  wmClaimRef=khDb.ref('whack/'+sessionCode+'/claims/'+qIdx);
+  wmClaimRef.on('value',function(snap){
+    var c=snap&&snap.val();
+    if(c&&c.claimedBy){
+      khDb.ref('whack/'+sessionCode+'/players/'+c.claimedBy+'/name').once('value',function(nSnap){
+        el('wm-claim-banner').textContent=(nSnap.val()||'Someone')+' whacked it! \u{1F528}';
+      });
+      var holeEl=document.querySelector('#wm-hole-grid .wm-hole[data-index="'+wmActiveHole+'"]');
+      if(holeEl) holeEl.classList.add('whacked');
+    } else {
+      el('wm-claim-banner').textContent='';
+    }
+  });
+}
+
+function startWmTimer(startedAt){
+  stopWmTimer();
+  var deadline=startedAt+wmTimePerQ*1000;
+  el('wm-timer-row').style.display='flex';
+  function tick(){
+    var rem=Math.max(0,(deadline-Date.now())/1000);
+    var ratio=rem/wmTimePerQ;
+    el('wm-timer-big').textContent=Math.ceil(rem);
+    el('wm-timer-fill').style.width=(ratio*100)+'%';
+    el('wm-timer-fill').style.background=ratio>.5?'var(--grn)':ratio>.25?'var(--yel)':'var(--red)';
+    if(rem>0){ wmTimerRaf=requestAnimationFrame(tick); }
+    else { stopWmTimer(); if(wmPhase==='round') doWhackReveal(); }
+  }
+  wmTimerRaf=requestAnimationFrame(tick);
+}
+function stopWmTimer(){ if(wmTimerRaf){cancelAnimationFrame(wmTimerRaf);wmTimerRaf=null;} }
+
+function doWhackAction(){
+  if(wmPhase==='idle'||wmPhase==='leaderboard') doNextMole();
+  else if(wmPhase==='round')                    doWhackReveal();
+  else if(wmPhase==='reveal')                   doWhackLeaderboard();
+}
+
+function doNextMole(){
+  var nextIdx=wmCurrentQ+1;
+  if(nextIdx>=wmTotalQ){ doWhackFinal(); return; }
+  el('wm-action-btn').disabled=true;
+  el('wm-action-btn').innerHTML='<span class="spin"></span>Preparing…';
+  var hole=Math.floor(Math.random()*wmHoleCount);
+  var startedAt=Date.now();
+
+  khDb.ref('whack/'+sessionCode+'/state').set({
+    phase:'round', qIndex:nextIdx, activeHole:hole, roundStartAt:startedAt, autoAdvanceAt:0
+  }).then(function(){
+    khDb.ref('whack/'+sessionCode+'/claims/'+nextIdx).set(null);
+    wmCurrentQ=nextIdx; wmPhase='round'; wmActiveHole=hole;
+    renderWmHoles(hole);
+    renderWmOptions(wmQuestions[nextIdx],false,'');
+    setWmPhaseTag('round','Mole is up!');
+    el('wm-claim-banner').textContent='';
+    startWmTimer(startedAt);
+    watchWmClaim(nextIdx);
+    el('wm-action-btn').disabled=false;
+    el('wm-action-btn').className='wm-action-btn next';
+    el('wm-action-btn').textContent='⏩ Reveal Answer';
+  }).catch(function(err){
+    el('wm-action-btn').disabled=false;
+    el('wm-action-btn').className='wm-action-btn go';
+    el('wm-action-btn').textContent='\u{1F528} Pop Next Mole';
+    console.error('[host] whack round write failed:',err.message);
+  });
+}
+
+function doWhackReveal(){
+  if(wmPhase!=='round') return;
+  stopWmTimer();
+  if(wmClaimRef){ try{wmClaimRef.off('value');}catch(_){} wmClaimRef=null; }
+  wmPhase='reveal';
+  var q=wmQuestions[wmCurrentQ];
+  var correct=q?(q.correctAnswer||q.correct_answer||''):'';
+  renderWmOptions(q,true,correct);
+  setWmPhaseTag('reveal','Answer revealed');
+  el('wm-timer-row').style.display='none';
+  khDb.ref('whack/'+sessionCode+'/state').update({phase:'reveal', correctAnswer:correct});
+  el('wm-action-btn').className='wm-action-btn next';
+  el('wm-action-btn').textContent='\u{1F3C6} Show Leaderboard';
+}
+
+function doWhackLeaderboard(){
+  if(wmPhase!=='reveal') return;
+  wmPhase='leaderboard';
+  setWmPhaseTag('board','Leaderboard');
+  var isLast=wmCurrentQ>=wmTotalQ-1;
+  khDb.ref('whack/'+sessionCode+'/state').update({phase:'leaderboard'});
+  khDb.ref('whack/'+sessionCode+'/players').once('value',function(snap){
+    renderKhLeaderboardInto('wm-lb-rows',(snap&&snap.val())||{});
+    el('wm-lb').style.display='block';
+  });
+  if(isLast){
+    el('wm-action-btn').className='wm-action-btn end';
+    el('wm-action-btn').textContent='\u{1F3C6} End Game & Final Results';
+  } else {
+    el('wm-action-btn').className='wm-action-btn go';
+    el('wm-action-btn').textContent='\u{1F528} Pop Next Mole ('+(wmCurrentQ+2)+' of '+wmTotalQ+')';
+  }
+}
+
+function renderKhLeaderboardInto(targetId,players){
+  var sorted=Object.entries(players)
+    .filter(function(e){return e[1].name;})
+    .sort(function(a,b){return (b[1].score||0)-(a[1].score||0);});
+  var medals=['&#x1F947;','&#x1F948;','&#x1F949;'];
+  el(targetId).innerHTML=sorted.slice(0,8).map(function(entry,i){
+    var p=entry[1];
+    return '<div class="kh-lb-row">'+
+      '<div class="kh-lb-rank">'+(medals[i]||(i+1))+'</div>'+
+      '<div class="kh-lb-name">'+esc(p.name)+'</div>'+
+      '<div class="kh-lb-score">'+((p.score||0).toLocaleString())+'</div>'+
+      '</div>';
+  }).join('');
+}
+
+function doWhackFinal(){
+  wmPhase='final';
+  stopWmTimer();
+  if(wmClaimRef){ try{wmClaimRef.off('value');}catch(_){} wmClaimRef=null; }
+  khDb.ref('whack/'+sessionCode+'/state').update({phase:'final'});
+  el('done-msg').textContent='Whack-a-Mole complete! Students see the final results. Code: '+sessionCode;
+  cleanupWhack();
+  show('s-done');
+}
+
+function doWhackEnd(){
+  if(!confirm('End this Whack-a-Mole game for all students?')) return;
+  doWhackFinal();
+}
+
+function cleanupWhack(){
+  stopWmTimer();
+  if(wmClaimRef){ try{wmClaimRef.off('value');}catch(_){} wmClaimRef=null; }
+  if(wmPlayersRef){ try{wmPlayersRef.off('value');}catch(_){} wmPlayersRef=null; }
 }
 
 function startKhTimer(serverTs){
