@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Tower Defense — Edurena</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0a0e1a; --panel:#121a2e; --bdr:#243355;
+      --txt:#eef2ff; --muted:#7888b0;
+      --acc:#00d4ff; --grn:#00ff88; --red:#ff3355; --yel:#ffcc00;
+      --f:'Plus Jakarta Sans',system-ui,sans-serif;
+      --display:'Orbitron',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{
+      position:fixed;inset:0;width:100%;height:100vh;height:100dvh;
+      background:var(--bg);color:var(--txt);font-family:var(--f);
+      overflow:hidden;touch-action:none;overscroll-behavior:none;
+    }
+    .screen{display:none;position:fixed;inset:0;z-index:100}
+    .screen.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
+    #s-fatal{background:var(--bg);z-index:9999}
+    #s-fatal h2{color:var(--red);font-family:var(--display);font-size:22px;margin-bottom:12px}
+    #s-fatal p{color:var(--muted);font-size:14px;line-height:1.8;max-width:420px;text-align:center}
+
+    #s-join{background:var(--bg)}
+    .brand-title{font-family:var(--display);font-size:clamp(18px,5vw,32px);font-weight:900;letter-spacing:3px;color:var(--acc);margin-bottom:4px;text-shadow:0 0 20px rgba(0,212,255,.4)}
+    .brand-sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;text-align:center}
+    .join-card{max-width:340px;width:100%;background:rgba(18,26,46,.95);border:1px solid var(--bdr);border-radius:16px;padding:24px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .field-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .inp{display:block;width:100%;padding:12px 14px;min-height:48px;background:#0a0e1a;border:1.5px solid var(--bdr);border-radius:10px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none;margin-bottom:14px;-webkit-appearance:none;touch-action:manipulation}
+    .inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,0.15)}
+    .inp-code{text-transform:uppercase;letter-spacing:4px;font-family:var(--display);font-size:16px;text-align:center}
+    .join-btn{width:100%;padding:14px;min-height:52px;background:linear-gradient(135deg,#0055aa,#00d4ff);color:#0a0e1a;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--display);letter-spacing:1px;cursor:pointer;touch-action:manipulation;box-shadow:0 4px 24px rgba(0,212,255,0.3)}
+    .join-btn:disabled{opacity:.5;cursor:not-allowed}
+    .join-err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+
+    #s-lobby{background:var(--bg)}
+    .lobby-code{font-family:var(--display);font-size:clamp(32px,8vw,56px);font-weight:900;letter-spacing:8px;color:var(--acc);margin:8px 0;text-shadow:0 0 30px rgba(0,212,255,0.5)}
+    .side-badge{font-family:var(--display);font-size:16px;font-weight:900;padding:8px 22px;border-radius:24px;letter-spacing:2px;margin:14px 0;box-shadow:0 0 24px rgba(0,0,0,.3)}
+    .side-badge.N{background:linear-gradient(135deg,#00d4ff,#0088cc);color:#001a26}
+    .side-badge.E{background:linear-gradient(135deg,#00ff88,#00aa55);color:#001a0e}
+    .side-badge.S{background:linear-gradient(135deg,#ffcc00,#cc8800);color:#1a1006}
+    .side-badge.W{background:linear-gradient(135deg,#ff5fa8,#cc2266);color:#1a0610}
+    .lobby-count{font-family:var(--display);font-size:36px;font-weight:900;color:var(--grn);margin-top:8px}
+    .lobby-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 16px;min-height:32px}
+    .chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+    .chip.N{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.4);color:#00d4ff}
+    .chip.E{background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.4);color:#00ff88}
+    .chip.S{background:rgba(255,204,0,.12);border:1px solid rgba(255,204,0,.4);color:#ffcc00}
+    .chip.W{background:rgba(255,95,168,.12);border:1px solid rgba(255,95,168,.4);color:#ff5fa8}
+    .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:7px;animation:pdot 1.4s ease-in-out infinite;vertical-align:middle}
+    @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+    .lobby-wait{font-size:13px;color:var(--muted)}
+
+    /* ── GAME ── */
+    #game-wrap{position:fixed;inset:0;display:none;flex-direction:column;z-index:1}
+    #game-wrap.on{display:flex}
+    #tower-hp-wrap{flex-shrink:0;padding:8px 14px;background:rgba(18,26,46,.9);border-bottom:1px solid var(--bdr)}
+    .hp-lbl{display:flex;justify-content:space-between;font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px}
+    .hp-bar-wrap{height:10px;background:#1a2238;border-radius:5px;overflow:hidden;border:1px solid var(--bdr)}
+    .hp-bar{height:100%;background:linear-gradient(90deg,#ff3355,#ffcc00,#00ff88);transition:width .5s ease}
+
+    .game-top{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(18,26,46,.7)}
+    .top-side{font-family:var(--display);font-size:11px;padding:4px 12px;border-radius:14px;font-weight:700}
+    .top-wave{font-family:var(--display);font-size:11px;color:var(--muted)}
+    .top-correct{font-family:var(--display);font-size:11px;color:var(--grn)}
+
+    #lane-area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:10px;position:relative;overflow:hidden}
+    #lane-strip{position:relative;width:100%;max-width:480px;height:90px;background:linear-gradient(90deg,rgba(255,51,85,.08),transparent 70%);border-radius:10px;border:1px solid var(--bdr);overflow:hidden}
+    .tower-icon{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:40px;z-index:2}
+    .enemy{position:absolute;top:50%;transform:translateY(-50%);font-size:26px;transition:left .3s linear}
+    .shot-fx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:0;opacity:0;pointer-events:none}
+    .shot-fx.show{font-size:30px;opacity:1;animation:shotFly .35s ease forwards}
+    @keyframes shotFly{0%{left:80%;opacity:1}100%{left:8%;opacity:0}}
+
+    .bottom-panel{
+      flex-shrink:0;background:linear-gradient(to top,rgba(10,14,26,.98),rgba(10,14,26,.9));
+      border-top:2px solid rgba(0,212,255,0.55);padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      max-height:36vh;max-height:36dvh;overflow-y:auto;touch-action:pan-y;
+    }
+    .q-card{background:var(--panel);border:1px solid var(--bdr);border-left:3px solid rgba(0,212,255,0.6);border-radius:8px;padding:8px 10px}
+    .q-num{font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px}
+    .streak-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);border-radius:14px;padding:2px 8px;font-family:var(--display);font-size:9px;font-weight:700;color:var(--yel);float:right}
+    .q-txt{font-size:clamp(13px,2.2vw,16px);font-weight:600;color:var(--txt);line-height:1.4;margin-bottom:8px;clear:both}
+    .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    @media(max-width:380px){.opts-grid{grid-template-columns:1fr}}
+    .opt-btn{display:flex;align-items:center;gap:6px;padding:11px 12px;border-radius:9px;background:#0a0e1a;border:1.5px solid var(--bdr);color:var(--txt);font-size:14px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;width:100%;min-height:50px;touch-action:manipulation}
+    .opt-btn:disabled{cursor:not-allowed;opacity:.6}
+    .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn)}
+    .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red)}
+    .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#121a2e;color:var(--muted)}
+    .short-area{display:flex;gap:6px}
+    .short-inp{flex:1;padding:10px 12px;min-height:48px;background:#0a0e1a;border:1.5px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none}
+    .sub-btn{padding:8px 18px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#0a0e1a;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);min-height:48px}
+
+    .finish-overlay{position:fixed;inset:0;background:rgba(10,14,26,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .8s}
+    .finish-overlay.show{opacity:1;pointer-events:auto}
+    .finish-title{font-family:var(--display);font-size:clamp(26px,7vw,46px);font-weight:900;letter-spacing:4px}
+    .finish-title.won{color:var(--grn);text-shadow:0 0 30px rgba(0,255,136,.5)}
+    .finish-title.lost{color:var(--red);text-shadow:0 0 30px rgba(255,51,85,.5)}
+    .finish-stats{display:flex;gap:26px;margin-top:18px}
+    .finish-stat{text-align:center}
+    .finish-stat-val{font-family:var(--display);font-size:24px;font-weight:900;color:var(--acc)}
+    .finish-stat-lbl{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <base target="_blank">
+</head>
+<body>
+
+<div class="screen on" id="s-fatal"><h2>CANNOT LOAD</h2><p id="fatal-msg">Open this from the Edurena student portal.</p></div>
+
+<div class="screen" id="s-join">
+  <div class="brand-title">TOWER DEFENSE</div>
+  <div class="brand-sub">Edurena &nbsp;&#x25BA;&nbsp; Defend Your Side. Save The Tower.</div>
+  <div class="join-card">
+    <div class="field-lbl">Game Code</div>
+    <input class="inp inp-code" id="inp-code" type="text" placeholder="ABCDEF" maxlength="10" autocomplete="off" spellcheck="false">
+    <div class="field-lbl">Your Name</div>
+    <input class="inp" id="inp-name" type="text" placeholder="Your name" maxlength="20" autocomplete="given-name">
+    <button class="join-btn" id="joinBtn">&#x1F3F0;&nbsp; JOIN DEFENSE</button>
+    <div class="join-err" id="joinErr"></div>
+  </div>
+</div>
+
+<div class="screen" id="s-lobby">
+  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:14px">TOWER DEFENSE</div>
+  <div style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">GAME CODE</div>
+  <div class="lobby-code" id="lby-code">------</div>
+  <div class="side-badge" id="side-badge">SIDE</div>
+  <div class="lobby-count" id="lby-count">0</div>
+  <div class="lobby-lbl">defenders in lobby</div>
+  <div class="chips" id="lby-chips"></div>
+  <div class="lobby-wait"><span class="pulse-dot"></span>Waiting for the host to start&hellip;</div>
+</div>
+
+<div id="game-wrap">
+  <div id="tower-hp-wrap">
+    <div class="hp-lbl"><span>&#x1F3F0; TOWER HP</span><span id="hp-text">100 / 100</span></div>
+    <div class="hp-bar-wrap"><div class="hp-bar" id="hp-bar" style="width:100%"></div></div>
+  </div>
+  <div class="game-top">
+    <div class="top-side" id="top-side">N</div>
+    <div class="top-wave" id="top-wave">Wave 0</div>
+    <div class="top-correct" id="top-correct">0 hits</div>
+  </div>
+  <div id="lane-area">
+    <div id="lane-strip">
+      <div class="tower-icon">&#x1F3F0;</div>
+      <div class="shot-fx" id="shot-fx">&#x1F4A5;</div>
+    </div>
+  </div>
+  <div class="bottom-panel" id="bottom-panel">
+    <div class="q-card">
+      <div class="streak-badge" id="streak-badge">&#x1F525; 0</div>
+      <div class="q-num" id="q-num">Q 1 / 1</div>
+      <div class="q-txt" id="q-txt">Loading&hellip;</div>
+      <div id="q-area"></div>
+    </div>
+  </div>
+</div>
+
+<div class="finish-overlay" id="finish-overlay">
+  <div class="finish-title" id="finish-title">VICTORY!</div>
+  <div class="finish-stats">
+    <div class="finish-stat"><div class="finish-stat-val" id="finish-shots">0</div><div class="finish-stat-lbl">Shots Fired</div></div>
+    <div class="finish-stat"><div class="finish-stat-val" id="finish-streak">0</div><div class="finish-stat-lbl">Best Streak</div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ════════════════ MOBILE ZOOM LOCK ════════════════ */
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturechange', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', function(e){ if(e.touches&&e.touches.length>1) e.preventDefault(); }, {passive:false});
+var _lastTapTs=0;
+document.addEventListener('touchend', function(e){ var now=Date.now(); if(now-_lastTapTs<300) e.preventDefault(); _lastTapTs=now; }, {passive:false});
+function lockMobileZoom(){
+  var vp=document.querySelector('meta[name=viewport]');
+  if(vp){ var content=vp.getAttribute('content'); vp.setAttribute('content', content+', shrink-to-fit=no');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ vp.setAttribute('content', content); }); }); }
+  if(window.scrollTo) window.scrollTo(0,0);
+}
+window.addEventListener('load', lockMobileZoom);
+
+var P = new URLSearchParams(window.location.search);
+var GAS_URL = (P.get('script') || '').trim();
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');}); var t=el(id); if(t) t.classList.add('on'); }
+
+if (!GAS_URL) { el('fatal-msg').textContent = 'Missing backend URL.'; return; }
+showScreen('s-join');
+
+var db;
+try {
+  var cfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var existingApp = null;
+  if (firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='tower') existingApp=a; });
+  db = firebase.database(existingApp || firebase.initializeApp(cfg,'tower'));
+} catch(e) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Firebase error: ' + e.message; return; }
+
+var SIDES=['N','E','S','W'];
+
+/* ════════════════ STATE ════════════════ */
+var raceId='', playerId='', playerName='', mySide='N';
+var questions=[], currentQ=0, totalQ=0;
+var streak=0, bestStreak=0, correctCount=0, shotsFired=0, answering=false, myFinished=false;
+var lobbyPRef=null, phaseRef=null, enemiesRef=null, hpRef=null;
+
+el('joinBtn').addEventListener('click', doJoin);
+
+function doJoin(){
+  var btn=el('joinBtn'), errE=el('joinErr');
+  raceId=(el('inp-code').value||'').trim().toUpperCase();
+  playerName=(el('inp-name').value||'').trim();
+  errE.textContent='';
+  if(raceId.length<4){errE.textContent='Enter a valid game code';return;}
+  if(playerName.length<2){errE.textContent='Enter your name (min 2 chars)';return;}
+  btn.disabled=true; btn.textContent='JOINING…';
+  playerId='p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'getRaceQuestions',raceId:raceId})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||res.status!=='success') throw new Error((res&&res.message)||'Game not found. Check your code.');
+      questions=res.data||[]; totalQ=questions.length;
+      return db.ref('tower/'+raceId+'/players').once('value');
+    })
+    .then(function(snap){
+      var counts={N:0,E:0,S:0,W:0};
+      Object.values((snap&&snap.val())||{}).forEach(function(p){ if(p.side&&counts[p.side]!==undefined) counts[p.side]++; });
+      mySide=SIDES[0];
+      SIDES.forEach(function(s){ if(counts[s]<counts[mySide]) mySide=s; });
+      return db.ref('tower/'+raceId+'/players/'+playerId).set({
+        name:playerName, side:mySide, correct:0, streak:0, finished:false,
+        joinedAt:firebase.database.ServerValue.TIMESTAMP, online:true
+      });
+    })
+    .then(function(){
+      db.ref('tower/'+raceId+'/players/'+playerId+'/online').onDisconnect().set(false);
+      el('lby-code').textContent=raceId;
+      el('side-badge').className='side-badge '+mySide;
+      el('side-badge').textContent='DEFENDING '+sideName(mySide);
+      showScreen('s-lobby');
+      watchLobby();
+      btn.disabled=false; btn.textContent='\u{1F3F0}  JOIN DEFENSE';
+    })
+    .catch(function(e){
+      errE.textContent=e.message||'Could not join.';
+      btn.disabled=false; btn.textContent='\u{1F3F0}  JOIN DEFENSE';
+    });
+}
+function sideName(s){ return {N:'NORTH',E:'EAST',S:'SOUTH',W:'WEST'}[s]||s; }
+
+function watchLobby(){
+  lobbyPRef=db.ref('tower/'+raceId+'/players');
+  lobbyPRef.on('value',function(snap){
+    var players=Object.values((snap&&snap.val())||{});
+    el('lby-count').textContent=players.length;
+    el('lby-chips').innerHTML=players.map(function(p){return '<div class="chip '+(p.side||'N')+'">'+esc(p.name||'?')+'</div>';}).join('');
+  });
+  phaseRef=db.ref('tower/'+raceId+'/state');
+  phaseRef.on('value',function(snap){
+    var st=(snap&&snap.val())||{};
+    if(st.phase==='playing'){
+      if(!el('game-wrap').classList.contains('on')){ detachLobby(); startGameplay(); }
+      updateHp(st);
+    } else if((st.phase==='won'||st.phase==='lost')&&!myFinished){
+      myFinished=true;
+      showFinish(st.phase);
+    } else if(st.phase==='ended'&&!myFinished){
+      myFinished=true;
+      showFinish(st.towerHp>0?'won':'lost');
+    }
+  });
+}
+function detachLobby(){ if(lobbyPRef){try{lobbyPRef.off('value');}catch(_){}lobbyPRef=null;} }
+
+function startGameplay(){
+  showScreen('');
+  el('game-wrap').classList.add('on');
+  el('top-side').className='top-side '+mySide; el('top-side').textContent=sideName(mySide);
+  el('top-side').style.background='rgba(255,255,255,.08)';
+
+  enemiesRef=db.ref('tower/'+raceId+'/enemies');
+  enemiesRef.on('value',function(snap){ renderLane((snap&&snap.val())||{}); });
+  hpRef=db.ref('tower/'+raceId+'/state');
+  hpRef.on('value',function(snap){
+    var st=(snap&&snap.val())||{};
+    updateHp(st);
+    if(st.wave!==undefined) el('top-wave').textContent='Wave '+(st.wave+1);
+    if((st.phase==='won'||st.phase==='lost')&&!myFinished){ myFinished=true; showFinish(st.phase); }
+  });
+  loadQ();
+}
+function updateHp(st){
+  var hp=st.towerHp, max=st.maxHp||100;
+  if(hp===undefined) return;
+  var pct=Math.max(0,Math.min(100,Math.round((hp/max)*100)));
+  el('hp-bar').style.width=pct+'%';
+  el('hp-text').textContent=Math.max(0,Math.round(hp))+' / '+max;
+}
+function renderLane(enemies){
+  var strip=el('lane-strip');
+  Array.from(strip.querySelectorAll('.enemy')).forEach(function(e){e.remove();});
+  Object.values(enemies).forEach(function(en){
+    if(en.side!==mySide||!en.alive) return;
+    var div=document.createElement('div'); div.className='enemy';
+    div.textContent='\u{1F47A}';
+    var pct=Math.max(0,Math.min(1,en.pos||0));
+    div.style.left=(8+ (1-pct)*84)+'%';
+    strip.appendChild(div);
+  });
+}
+
+function loadQ(){
+  if(currentQ>=totalQ||myFinished) return;
+  var q=questions[currentQ];
+  el('q-num').textContent='Q '+(currentQ+1)+' / '+totalQ;
+  el('q-txt').textContent=q.question||'';
+  el('q-area').innerHTML='';
+  answering=false;
+  if(q.type==='MCQ'||q.type==='TF'){
+    var labels=['A','B','C','D'];
+    var grid=document.createElement('div'); grid.className='opts-grid';
+    (q.options||[]).forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><span>'+esc(opt)+'</span>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt||labels[i],btn));
+      grid.appendChild(btn);
+    });
+    el('q-area').appendChild(grid);
+  } else {
+    var area=document.createElement('div'); area.className='short-area';
+    var inp=document.createElement('input'); inp.className='short-inp'; inp.type='text'; inp.placeholder='Type answer…';
+    var sbtn=document.createElement('button'); sbtn.className='sub-btn'; sbtn.textContent='GO';
+    sbtn.addEventListener('click',function(){if(!inp.disabled&&inp.value.trim()) submitAns(inp.value.trim(),null);});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter') sbtn.click();});
+    area.appendChild(inp); area.appendChild(sbtn);
+    el('q-area').appendChild(area);
+  }
+}
+
+function submitAns(answer,btnEl){
+  if(answering||myFinished) return;
+  answering=true;
+  el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
+  var q=questions[currentQ];
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'validateRaceAnswer',raceId:raceId,playerId:playerId,questionId:q.id,answer:answer})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var correct=!!(res&&res.status==='success'&&res.data&&res.data.isCorrect===true);
+      if(correct){
+        streak++; if(streak>bestStreak) bestStreak=streak;
+        correctCount++; shotsFired++;
+        if(btnEl) btnEl.classList.add('correct');
+        el('streak-badge').textContent='\u{1F525} '+streak;
+        el('top-correct').textContent=correctCount+' hits';
+        fireShot();
+        db.ref('tower/'+raceId+'/shots/'+mySide).push({playerId:playerId,firedAt:firebase.database.ServerValue.TIMESTAMP});
+      } else {
+        streak=0;
+        if(btnEl) btnEl.classList.add('wrong');
+        el('streak-badge').textContent='\u{1F525} 0';
+      }
+      db.ref('tower/'+raceId+'/players/'+playerId).update({correct:correctCount,streak:streak});
+      currentQ++;
+      setTimeout(function(){ if(!myFinished) loadQ(); },600);
+    })
+    .catch(function(){
+      currentQ++; answering=false;
+      setTimeout(function(){ if(!myFinished) loadQ(); },400);
+    });
+}
+function fireShot(){
+  var fx=el('shot-fx');
+  fx.className='shot-fx';
+  void fx.offsetWidth;
+  fx.className='shot-fx show';
+}
+
+function showFinish(result){
+  el('finish-title').className='finish-title '+(result==='won'?'won':'lost');
+  el('finish-title').textContent=result==='won'?'VICTORY!':'TOWER FELL';
+  el('finish-shots').textContent=shotsFired;
+  el('finish-streak').textContent=bestStreak;
+  el('finish-overlay').classList.add('show');
+}
+
+window.addEventListener('beforeunload',function(){
+  [lobbyPRef,phaseRef,enemiesRef,hpRef].forEach(function(r){if(r){try{r.off('value');}catch(_){}}});
+});
+
+})();
+</script>
+</body>
+</html>

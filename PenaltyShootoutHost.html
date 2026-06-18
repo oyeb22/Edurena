@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Penalty Shootout — Edurena Projector</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06160a;--panel:#0a1f0f;--bdr:#1f4a2a;
+  --txt:#eafff0;--muted:#5a8868;
+  --acc:#2ecc71;--grn:#00ff88;--red:#ff3355;--yel:#ffcc00;
+  --f:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'Orbitron',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt);font-family:var(--f)}
+#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;z-index:1}
+
+#hud{
+  position:fixed;top:0;right:0;bottom:0;width:240px;
+  background:rgba(6,22,10,.92);border-left:1px solid rgba(46,204,113,.15);
+  backdrop-filter:blur(16px);z-index:10;
+  display:flex;flex-direction:column;padding:16px;overflow:hidden;
+}
+.hud-brand{font-family:var(--mono);font-size:11px;font-weight:900;letter-spacing:3px;color:var(--acc);margin-bottom:3px;text-transform:uppercase}
+.hud-code{font-family:var(--mono);font-size:20px;font-weight:900;letter-spacing:5px;color:#fff;text-shadow:0 0 14px rgba(46,204,113,.5);margin-bottom:14px}
+.hud-round{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:14px}
+
+.action-btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:var(--mono);letter-spacing:1px;cursor:pointer;margin-bottom:12px;transition:all .2s}
+.action-btn.go{background:linear-gradient(135deg,#1a8c45,#2ecc71);color:#06160a}
+.action-btn.next{background:linear-gradient(135deg,#0055aa,#4f78ff);color:#fff}
+.action-btn.end{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+.action-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.hud-lbl{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+#standings{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin}
+.stand-row{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:7px;background:rgba(255,255,255,.04);margin-bottom:4px}
+.stand-row.leader{border:1px solid rgba(255,204,0,.4);background:rgba(255,204,0,.07)}
+.stand-pos{font-family:var(--mono);font-size:11px;font-weight:900;color:var(--muted);width:18px;text-align:center}
+.stand-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stand-score{font-family:var(--mono);font-size:10px;color:var(--grn)}
+
+.oscreen{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,22,10,.94)}
+.oscreen.on{display:flex}
+.wait-card{text-align:center;padding:30px;max-width:600px;width:90%}
+.w-brand{font-family:var(--mono);font-size:13px;font-weight:900;color:var(--acc);letter-spacing:4px;text-transform:uppercase;margin-bottom:26px}
+.w-code{font-family:var(--mono);font-size:clamp(52px,11vw,80px);font-weight:900;color:var(--acc);letter-spacing:14px;text-shadow:0 0 40px rgba(46,204,113,.5);margin-bottom:4px}
+.w-count-big{font-family:var(--mono);font-size:52px;font-weight:900;color:var(--grn);margin-top:18px}
+.w-count-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+.w-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 20px}
+.w-chip{padding:4px 12px;background:#0a1f0f;border:1px solid #1f4a2a;border-radius:20px;font-size:12px;font-weight:600;color:var(--acc)}
+.w-status{font-size:13px;color:var(--muted);letter-spacing:1px}
+.pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:7px;animation:pdot 1.4s ease-in-out infinite;vertical-align:middle}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+.w-err{color:var(--red);font-size:13px;margin-top:12px}
+
+#countdown-overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .3s;background:rgba(6,22,10,.45)}
+#countdown-overlay.show{opacity:1}
+.cd-big{font-family:var(--mono);font-size:clamp(120px,25vw,220px);font-weight:900;color:#fff;text-shadow:0 0 80px var(--acc)}
+
+#load-bar{position:fixed;bottom:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--acc),var(--grn));z-index:80;transition:width .3s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="load-bar"></div>
+
+<div id="hud" style="display:none">
+  <div class="hud-brand">&#x26BD; Penalty Shootout</div>
+  <div class="hud-code" id="hud-code">----</div>
+  <div class="hud-round" id="hud-round">Round 0 / 0</div>
+  <button class="action-btn go" id="action-btn" disabled>&#x26BD; Loading questions&hellip;</button>
+  <div class="hud-lbl">&#x1F3C6; Leaderboard</div>
+  <div id="standings"></div>
+</div>
+
+<div class="oscreen on" id="s-wait">
+  <div class="wait-card">
+    <div class="w-brand">&#x26BD; Penalty Shootout — Projector View</div>
+    <div class="w-code" id="w-code">----</div>
+    <div class="w-count-big" id="w-count">0</div>
+    <div class="w-count-lbl">players in lobby</div>
+    <div class="w-chips" id="w-chips"></div>
+    <div class="w-status"><span class="pulse-dot"></span><span id="w-status-txt">Connecting…</span></div>
+    <div class="w-err" id="w-err"></div>
+  </div>
+</div>
+
+<div id="countdown-overlay"><div class="cd-big" id="cd-num">3</div></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js" } }
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+
+(function(){
+'use strict';
+
+var P      = new URLSearchParams(location.search);
+var raceId = (P.get('raceId') || '').trim().toUpperCase();
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setLoad(pct){ el('load-bar').style.width = pct + '%'; }
+
+var db;
+try {
+  var fbCfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var ea = null;
+  if(firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='shootouthost') ea=a; });
+  db = firebase.database(ea || firebase.initializeApp(fbCfg,'shootouthost'));
+} catch(e){ el('w-err').textContent = 'Firebase: ' + e.message; }
+
+/* ════════════════ STATE ════════════════ */
+var allPlayers={}, gameStarted=false, questions=[], totalQ=0, timePerQ=12;
+var phase='idle', currentQ=-1, currentPairs={}, sitOutCursor=0;
+var playersRef=null, stateRef=null, duelsRef=null, metaRef=null, questionsRef=null;
+
+/* ════════════════ THREE.JS ════════════════ */
+var renderer, scene, camera;
+var laneGroups={}; // pairId -> {kicker, keeper, ball, net, label, animState}
+var sceneReady=false;
+
+function initScene(){
+  var canvas=el('c');
+  renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.shadowMap.enabled=true;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+  scene=new THREE.Scene();
+  scene.fog=new THREE.Fog(0xb8e0c8,60,260);
+
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.5,500);
+  camera.position.set(0,14,28);
+  camera.lookAt(0,3,0);
+
+  window.addEventListener('resize',onResize);
+
+  setLoad(20);
+  buildStadium();
+  setLoad(70);
+  sceneReady=true;
+  setLoad(100);
+  setTimeout(function(){el('load-bar').style.opacity=0;},500);
+  requestAnimationFrame(animate);
+}
+function onResize(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+
+function buildStadium(){
+  scene.add(new THREE.HemisphereLight(0x9ecbe8,0x2a7a3a,1.1));
+  var sun=new THREE.DirectionalLight(0xfff8d0,2.4);
+  sun.position.set(40,60,30); sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024);
+  scene.add(sun);
+  scene.add(new THREE.AmbientLight(0xffffff,0.4));
+
+  var skyMat=new THREE.ShaderMaterial({
+    uniforms:{uTop:{value:new THREE.Color(0x2a7fd8)},uBot:{value:new THREE.Color(0xc8e8d8)}},
+    vertexShader:'varying float vY;void main(){vY=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'uniform vec3 uTop,uBot;varying float vY;void main(){gl_FragColor=vec4(mix(uBot,uTop,clamp(vY*1.4,0.0,1.0)),1.0);}',
+    side:THREE.BackSide, depthWrite:false
+  });
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(220,24,12),skyMat));
+
+  var pitchTex=makePitchTexture();
+  var pitch=new THREE.Mesh(new THREE.PlaneGeometry(220,80),new THREE.MeshLambertMaterial({map:pitchTex}));
+  pitch.rotation.x=-Math.PI/2; pitch.receiveShadow=true;
+  scene.add(pitch);
+
+  // simple grandstand silhouettes on both long sides
+  var standMat=new THREE.MeshLambertMaterial({color:0x3a4a5a});
+  [-1,1].forEach(function(side){
+    var stand=new THREE.Mesh(new THREE.BoxGeometry(200,6,4),standMat);
+    stand.position.set(0,3,side*38);
+    scene.add(stand);
+  });
+}
+function makePitchTexture(){
+  var c=document.createElement('canvas'); c.width=512; c.height=256;
+  var x=c.getContext('2d');
+  x.fillStyle='#2f9e4a'; x.fillRect(0,0,512,256);
+  for(var i=0;i<8;i++){ x.fillStyle=i%2===0?'rgba(0,0,0,0.05)':'rgba(255,255,255,0.03)'; x.fillRect(i*64,0,64,256); }
+  x.strokeStyle='rgba(255,255,255,0.85)'; x.lineWidth=2;
+  x.strokeRect(20,20,472,216);
+  x.beginPath(); x.moveTo(256,20); x.lineTo(256,236); x.stroke();
+  x.beginPath(); x.arc(256,128,30,0,Math.PI*2); x.stroke();
+  return new THREE.CanvasTexture(c);
+}
+
+/* ── Build/teardown lanes for the active round's pairs ── */
+function clearLanes(){
+  Object.values(laneGroups).forEach(function(l){ scene.remove(l.group); });
+  laneGroups={};
+}
+function buildLanes(pairs){
+  clearLanes();
+  var ids=Object.keys(pairs);
+  var n=ids.length||1;
+  var spacing=Math.min(14,Math.max(8,90/n));
+  var totalWidth=(n-1)*spacing;
+  ids.forEach(function(pairId,i){
+    var x=-totalWidth/2+i*spacing;
+    var group=new THREE.Group(); group.position.set(x,0,-6);
+    scene.add(group);
+
+    // goal posts + crossbar
+    var postMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.4});
+    var postGeo=new THREE.CylinderGeometry(0.12,0.12,3.2,8);
+    var pL=new THREE.Mesh(postGeo,postMat); pL.position.set(-2.4,1.6,0); group.add(pL);
+    var pR=new THREE.Mesh(postGeo,postMat); pR.position.set(2.4,1.6,0); group.add(pR);
+    var bar=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,4.9,8),postMat);
+    bar.rotation.z=Math.PI/2; bar.position.set(0,3.15,0); group.add(bar);
+    var netMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.18,side:THREE.DoubleSide});
+    var net=new THREE.Mesh(new THREE.PlaneGeometry(4.7,3.0),netMat);
+    net.position.set(0,1.6,-0.6); group.add(net);
+
+    // keeper figure (simple humanoid)
+    var keeper=makeFigure(0xffcc00,0x222222);
+    keeper.position.set(0,0,-0.3);
+    group.add(keeper);
+
+    // kicker figure
+    var kicker=makeFigure(0x2e6fd6,0xffffff);
+    kicker.position.set(0,0,7);
+    group.add(kicker);
+
+    // ball
+    var ball=new THREE.Mesh(new THREE.SphereGeometry(0.32,12,10),new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.5}));
+    ball.position.set(0,0.32,6.2);
+    group.add(ball);
+
+    // name labels
+    var kLabel=makeNameSprite('','#2e6fd6'); kLabel.position.set(0,3.0,7); group.add(kLabel);
+    var gLabel=makeNameSprite('','#ffcc00'); gLabel.position.set(0,3.0,-0.3); group.add(gLabel);
+    db.ref('shootout/'+raceId+'/players/'+pairs[pairId].kicker+'/name').once('value',function(s){ setSpriteText(kLabel,s.val()||'?','#2e6fd6'); });
+    db.ref('shootout/'+raceId+'/players/'+pairs[pairId].keeper+'/name').once('value',function(s){ setSpriteText(gLabel,s.val()||'?','#ffcc00'); });
+
+    laneGroups[pairId]={group:group,keeper:keeper,kicker:kicker,ball:ball,net:net,anim:null};
+  });
+}
+function makeFigure(shirtColor,shortsColor){
+  var g=new THREE.Group();
+  var body=new THREE.Mesh(new THREE.BoxGeometry(0.7,1.0,0.4),new THREE.MeshStandardMaterial({color:shirtColor}));
+  body.position.y=1.5; g.add(body);
+  var shorts=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.4,0.4),new THREE.MeshStandardMaterial({color:shortsColor}));
+  shorts.position.y=0.9; g.add(shorts);
+  var head=new THREE.Mesh(new THREE.SphereGeometry(0.28,10,8),new THREE.MeshStandardMaterial({color:0xe8b890}));
+  head.position.y=2.25; g.add(head);
+  [-0.18,0.18].forEach(function(lx){
+    var leg=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.7,0.22),new THREE.MeshStandardMaterial({color:0xe8d8c0}));
+    leg.position.set(lx,0.35,0); g.add(leg);
+  });
+  g.traverse(function(m){ if(m.isMesh) m.castShadow=true; });
+  return g;
+}
+function makeNameSprite(name,color){
+  var c=document.createElement('canvas'); c.width=256; c.height=64;
+  var tex=new THREE.CanvasTexture(c);
+  var spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+  spr.scale.set(3.2,0.8,1);
+  spr.userData.canvas=c; spr.userData.tex=tex;
+  setSpriteText(spr,name,color);
+  return spr;
+}
+function setSpriteText(spr,name,color){
+  var c=spr.userData.canvas, ctx=c.getContext('2d');
+  ctx.clearRect(0,0,256,64);
+  ctx.fillStyle='rgba(6,22,10,0.8)'; ctx.fillRect(0,16,256,32);
+  ctx.fillStyle='#fff'; ctx.font='bold 22px Orbitron,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor=color; ctx.shadowBlur=6;
+  ctx.fillText(String(name||'?').slice(0,12),128,32);
+  spr.userData.tex.needsUpdate=true;
+}
+
+/* ── Outcome animation ── */
+function playOutcome(pairId,outcome){
+  var lane=laneGroups[pairId]; if(!lane) return;
+  lane.anim={outcome:outcome,start:performance.now()};
+}
+function updateLaneAnim(lane,now){
+  if(!lane.anim) return;
+  var t=(now-lane.anim.start)/900; // 0..1 over ~0.9s
+  if(t>1.6){ lane.anim=null; lane.ball.position.set(0,0.32,6.2); lane.kicker.rotation.set(0,0,0); lane.keeper.rotation.set(0,0,0); lane.keeper.position.x=0; return; }
+  var tt=Math.min(1,t);
+  if(lane.anim.outcome==='goal'){
+    lane.ball.position.set(0, 0.32+tt*1.1, 6.2-tt*6.0);
+    lane.kicker.rotation.z=Math.sin(tt*Math.PI)*0.3;
+  } else if(lane.anim.outcome==='save'){
+    lane.ball.position.set(1.4*tt, 0.32+tt*1.0, 6.2-tt*5.0);
+    lane.keeper.position.x=1.6*Math.min(1,tt*1.4);
+    lane.keeper.rotation.z=-Math.min(1,tt*1.4)*0.9;
+  } else {
+    lane.ball.position.set(0.4, 0.32, 6.2-tt*2.0);
+  }
+}
+
+function animate(ts){
+  requestAnimationFrame(animate);
+  var now=performance.now();
+  Object.values(laneGroups).forEach(function(l){ updateLaneAnim(l,now); });
+  if(sceneReady) renderer.render(scene,camera);
+}
+
+/* ════════════════ HOST ROUND LOGIC ════════════════ */
+function shuffle(arr){ for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; } return arr; }
+
+function doAction(){
+  if(phase==='idle'||phase==='leaderboard') doNextRound();
+  else if(phase==='round')                  doReveal();
+  else if(phase==='reveal')                 doLeaderboard();
+}
+
+function doNextRound(){
+  var nextIdx=currentQ+1;
+  if(nextIdx>=totalQ){ doFinal(); return; }
+  el('action-btn').disabled=true;
+
+  var ids=Object.keys(allPlayers).filter(function(pid){ return allPlayers[pid].online!==false; });
+  if(ids.length<2){
+    el('hud-round').textContent='Need at least 2 players online';
+    el('action-btn').disabled=false;
+    return;
+  }
+  shuffle(ids);
+  var sitOut=null;
+  if(ids.length%2===1){
+    sitOut=ids[sitOutCursor%ids.length]; sitOutCursor++;
+    ids=ids.filter(function(p){return p!==sitOut;});
+  }
+  var pairs={};
+  for(var i=0;i<ids.length;i+=2){ pairs['P'+(i/2)]={kicker:ids[i],keeper:ids[i+1]}; }
+  currentPairs=pairs;
+
+  var startedAt=Date.now();
+  db.ref('shootout/'+raceId+'/duels/'+nextIdx).set(null).then(function(){
+    return db.ref('shootout/'+raceId+'/pairs/'+nextIdx).set(pairs);
+  }).then(function(){
+    return db.ref('shootout/'+raceId+'/state').set({phase:'round',qIndex:nextIdx,roundStartAt:startedAt,correctAnswer:''});
+  }).then(function(){
+    currentQ=nextIdx; phase='round';
+    buildLanes(pairs);
+    watchDuels(nextIdx);
+    el('hud-round').textContent='Round '+(nextIdx+1)+' / '+totalQ+(sitOut?' — 1 sitting out':'');
+    el('action-btn').className='action-btn next';
+    el('action-btn').textContent='⏩ Reveal Answer';
+    el('action-btn').disabled=false;
+    autoRevealTimeout(startedAt);
+  });
+}
+function autoRevealTimeout(startedAt){
+  var ms=timePerQ*1000+1500;
+  setTimeout(function(){ if(phase==='round') doReveal(); }, ms);
+}
+
+function watchDuels(qIdx){
+  if(duelsRef){ try{duelsRef.off('value');}catch(_){} }
+  duelsRef=db.ref('shootout/'+raceId+'/duels/'+qIdx);
+  duelsRef.on('value',function(snap){
+    var duels=(snap&&snap.val())||{};
+    Object.entries(duels).forEach(function(e){
+      var pairId=e[0], d=e[1];
+      if(d&&d.outcome){
+        var lane=laneGroups[pairId];
+        if(lane&&(!lane.anim||lane.anim.outcome!==d.outcome)) playOutcome(pairId,d.outcome);
+      }
+    });
+  });
+}
+
+function doReveal(){
+  if(phase!=='round') return;
+  if(duelsRef){ try{duelsRef.off('value');}catch(_){} duelsRef=null; }
+  phase='reveal';
+  var q=questions[currentQ]; var correct=q?(q.correctAnswer||q.correct_answer||''):'';
+  // finalize any duels nobody resolved as a miss
+  db.ref('shootout/'+raceId+'/duels/'+currentQ).once('value',function(snap){
+    var duels=(snap&&snap.val())||{};
+    Object.keys(currentPairs).forEach(function(pairId){
+      if(!duels[pairId]||!duels[pairId].outcome){
+        db.ref('shootout/'+raceId+'/duels/'+currentQ+'/'+pairId).update({outcome:'miss'});
+        playOutcome(pairId,'miss');
+      }
+    });
+  });
+  db.ref('shootout/'+raceId+'/state').update({phase:'reveal',correctAnswer:correct});
+  el('action-btn').className='action-btn next';
+  el('action-btn').textContent='\u{1F3C6} Show Leaderboard';
+}
+
+function doLeaderboard(){
+  if(phase!=='reveal') return;
+  phase='leaderboard';
+  db.ref('shootout/'+raceId+'/state').update({phase:'leaderboard'});
+  var isLast=currentQ>=totalQ-1;
+  el('action-btn').className=isLast?'action-btn end':'action-btn go';
+  el('action-btn').textContent=isLast?'\u{1F3C6} End Game & Final Results':'⚽ Pop Next Round ('+(currentQ+2)+' of '+totalQ+')';
+}
+
+function doFinal(){
+  phase='final';
+  db.ref('shootout/'+raceId+'/state').update({phase:'final'});
+  el('action-btn').disabled=true;
+  el('action-btn').textContent='Game Complete';
+}
+
+/* ════════════════ FIREBASE WATCHERS ════════════════ */
+function updateStandings(){
+  var sorted=Object.values(allPlayers).sort(function(a,b){ return ((b.goals||0)+(b.saves||0))-((a.goals||0)+(a.saves||0)); });
+  el('standings').innerHTML=sorted.map(function(p,i){
+    return '<div class="stand-row'+(i===0?' leader':'')+'"><div class="stand-pos">'+(i+1)+'</div>'
+      +'<div class="stand-name">'+esc((p.name||'?').slice(0,14))+'</div>'
+      +'<div class="stand-score">⚽'+(p.goals||0)+' \u{1F9E4}'+(p.saves||0)+'</div></div>';
+  }).join('')||'<div style="font-size:11px;color:var(--muted);padding:8px">Waiting…</div>';
+}
+
+if(!raceId){
+  el('w-err').textContent='No game ID — open via the Projector button in LiveHost';
+} else {
+  el('w-code').textContent=raceId;
+  el('w-status-txt').textContent='Waiting for players…';
+
+  var _metaLoaded=false, _qLoaded=false;
+  function _checkReady(){
+    if(_metaLoaded&&_qLoaded&&totalQ>0){
+      el('action-btn').disabled=false;
+      el('action-btn').textContent='⚽ Start Round 1';
+    }
+  }
+  metaRef=db.ref('shootout/'+raceId+'/meta');
+  metaRef.once('value',function(s){ var m=s.val()||{}; totalQ=m.totalQ||0; timePerQ=m.timePerQ||12; el('hud-round').textContent='Round 0 / '+totalQ; _metaLoaded=true; _checkReady(); });
+  questionsRef=db.ref('shootout/'+raceId+'/questions');
+  questionsRef.once('value',function(s){ var raw=s.val(); questions=raw?(Array.isArray(raw)?raw:Object.values(raw)).filter(Boolean):[]; totalQ=totalQ||questions.length; _qLoaded=true; _checkReady(); });
+
+  playersRef=db.ref('shootout/'+raceId+'/players');
+  playersRef.on('value',function(snap){
+    allPlayers=(snap&&snap.val())||{};
+    if(!gameStarted){
+      var names=Object.values(allPlayers).map(function(p){return p.name||'?';});
+      el('w-count').textContent=names.length;
+      el('w-chips').innerHTML=names.map(function(n){return '<div class="w-chip">'+esc(n)+'</div>';}).join('');
+    }
+    updateStandings();
+  });
+  stateRef=db.ref('shootout/'+raceId+'/state');
+  stateRef.on('value',function(snap){
+    var st=(snap&&snap.val())||{};
+    if(st.phase&&st.phase!=='lobby'&&!gameStarted){
+      gameStarted=true;
+      el('s-wait').classList.remove('on');
+      el('hud').style.display='flex';
+      el('hud-code').textContent=raceId;
+    }
+    if(st.phase==='ended'&&gameStarted&&phase!=='final'){
+      doFinal();
+    }
+  });
+}
+
+el('action-btn').addEventListener('click',doAction);
+
+initScene();
+
+window.addEventListener('beforeunload',function(){
+  [playersRef,stateRef,duelsRef].forEach(function(r){ if(r){ try{ r.off('value'); }catch(_){} } });
+});
+
+})();
+</script>
+</body>
+</html>

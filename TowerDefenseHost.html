@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tower Defense — Edurena Projector</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070d;--panel:#0a0d1a;--bdr:#1a2035;
+  --txt:#e8edf5;--muted:#5a6a8a;
+  --acc:#00d4ff;--grn:#00ff88;--red:#ff3355;--yel:#ffcc00;
+  --f:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'Orbitron',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt);font-family:var(--f)}
+#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;z-index:1}
+
+#hud{
+  position:fixed;top:0;right:0;bottom:0;width:240px;
+  background:rgba(5,7,13,.92);border-left:1px solid rgba(0,212,255,.15);
+  backdrop-filter:blur(16px);z-index:10;display:flex;flex-direction:column;padding:16px;overflow:hidden;
+}
+.hud-brand{font-family:var(--mono);font-size:11px;font-weight:900;letter-spacing:3px;color:var(--acc);margin-bottom:3px;text-transform:uppercase}
+.hud-code{font-family:var(--mono);font-size:20px;font-weight:900;letter-spacing:5px;color:#fff;text-shadow:0 0 14px rgba(0,212,255,.5);margin-bottom:14px}
+.hud-wave{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+
+.hp-lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:5px}
+.hp-bar-wrap{height:12px;background:#141a2c;border-radius:6px;overflow:hidden;border:1px solid var(--bdr);margin-bottom:16px}
+.hp-bar{height:100%;background:linear-gradient(90deg,#ff3355,#ffcc00,#00ff88);transition:width .4s ease}
+
+.hud-lbl{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+.side-row{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:7px;background:rgba(255,255,255,.04);margin-bottom:5px}
+.side-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.side-dot.N{background:#00d4ff}.side-dot.E{background:#00ff88}.side-dot.S{background:#ffcc00}.side-dot.W{background:#ff5fa8}
+.side-name{flex:1;font-size:12px;font-weight:600}
+.side-count{font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+#standings{flex:1;overflow-y:auto;min-height:0;margin-top:6px}
+.stand-row{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:7px;background:rgba(255,255,255,.03);margin-bottom:3px;font-size:11px}
+.stand-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stand-hits{font-family:var(--mono);font-size:10px;color:var(--grn)}
+
+.end-btn{margin-top:10px;padding:11px;background:rgba(255,51,85,.15);color:var(--red);border:1px solid rgba(255,51,85,.3);border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer}
+
+.oscreen{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,7,13,.94)}
+.oscreen.on{display:flex}
+.wait-card{text-align:center;padding:30px;max-width:600px;width:90%}
+.w-brand{font-family:var(--mono);font-size:13px;font-weight:900;color:var(--acc);letter-spacing:4px;text-transform:uppercase;margin-bottom:26px}
+.w-code{font-family:var(--mono);font-size:clamp(52px,11vw,80px);font-weight:900;color:var(--acc);letter-spacing:14px;text-shadow:0 0 40px rgba(0,212,255,.5);margin-bottom:4px}
+.w-count-big{font-family:var(--mono);font-size:52px;font-weight:900;color:var(--grn);margin-top:18px}
+.w-count-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+.w-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 20px}
+.w-chip{padding:4px 12px;background:#0a0d1a;border:1px solid #1a2035;border-radius:20px;font-size:12px;font-weight:600;color:var(--acc)}
+.w-status{font-size:13px;color:var(--muted);letter-spacing:1px}
+.pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:7px;animation:pdot 1.4s ease-in-out infinite;vertical-align:middle}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+.w-err{color:var(--red);font-size:13px;margin-top:12px}
+
+#result-banner{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(5,7,13,.88);backdrop-filter:blur(8px)}
+#result-banner.show{display:flex}
+.rb-title{font-family:var(--mono);font-size:clamp(40px,7vw,72px);font-weight:900;letter-spacing:6px}
+.rb-title.won{color:var(--grn);text-shadow:0 0 50px rgba(0,255,136,.5)}
+.rb-title.lost{color:var(--red);text-shadow:0 0 50px rgba(255,51,85,.5)}
+
+#load-bar{position:fixed;bottom:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--acc),var(--grn));z-index:80;transition:width .3s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="load-bar"></div>
+
+<div id="hud" style="display:none">
+  <div class="hud-brand">&#x1F3F0; Tower Defense</div>
+  <div class="hud-code" id="hud-code">----</div>
+  <div class="hud-wave" id="hud-wave">Wave 0 / 0</div>
+  <div class="hp-lbl"><span>TOWER HP</span><span id="hp-text">100/100</span></div>
+  <div class="hp-bar-wrap"><div class="hp-bar" id="hp-bar" style="width:100%"></div></div>
+  <div class="hud-lbl">Defenders</div>
+  <div id="side-rows"></div>
+  <div class="hud-lbl" style="margin-top:10px">Top Defenders</div>
+  <div id="standings"></div>
+  <button class="end-btn" id="endBtn">End Game</button>
+</div>
+
+<div class="oscreen on" id="s-wait">
+  <div class="wait-card">
+    <div class="w-brand">&#x1F3F0; Tower Defense — Projector View</div>
+    <div class="w-code" id="w-code">----</div>
+    <div class="w-count-big" id="w-count">0</div>
+    <div class="w-count-lbl">defenders in lobby</div>
+    <div class="w-chips" id="w-chips"></div>
+    <div class="w-status"><span class="pulse-dot"></span><span id="w-status-txt">Connecting…</span></div>
+    <div class="w-err" id="w-err"></div>
+  </div>
+</div>
+
+<div id="result-banner"><div class="rb-title" id="rb-title">VICTORY!</div></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js" } }
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+
+(function(){
+'use strict';
+
+var P      = new URLSearchParams(location.search);
+var raceId = (P.get('raceId') || '').trim().toUpperCase();
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setLoad(pct){ el('load-bar').style.width = pct + '%'; }
+
+var db;
+try {
+  var fbCfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var ea = null;
+  if(firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='towerhost') ea=a; });
+  db = firebase.database(ea || firebase.initializeApp(fbCfg,'towerhost'));
+} catch(e){ el('w-err').textContent = 'Firebase: ' + e.message; }
+
+var SIDES=['N','E','S','W'];
+var SIDE_DIR={N:{x:0,z:-1},S:{x:0,z:1},E:{x:1,z:0},W:{x:-1,z:0}};
+var SIDE_COLOR={N:0x00d4ff,E:0x00ff88,S:0xffcc00,W:0xff5fa8};
+var SIDE_NAME={N:'North',E:'East',S:'South',W:'West'};
+
+var TOWER_RADIUS=6, LANE_LENGTH=42;
+var BASE_ENEMIES_PER_WAVE=4, ENEMY_SPEED=0.045, WAVE_INTERVAL_MS=9000, TOTAL_WAVES=6, MAX_HP=100, HP_DAMAGE=8;
+
+/* ════════════════ GAME STATE (host-authoritative) ════════════════ */
+var allPlayers={}, gameStarted=false, isActiveHost=false, gameRunning=false, resultShown=false;
+var hostInstanceId=Math.random().toString(36).slice(2);
+var enemies={}, towerHp=MAX_HP, wave=-1, enemyCounter=0, lastWaveAt=0, lastFirebaseSync=0, lastTickTs=0;
+var playersRef=null, stateRef=null, shotRefs=[];
+
+/* ════════════════ THREE.JS ════════════════ */
+var renderer, scene, camera, enemyMeshes={};
+
+function initScene(){
+  var canvas=el('c');
+  renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.shadowMap.enabled=true;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+  scene=new THREE.Scene();
+  scene.fog=new THREE.Fog(0xc0e0f5,60,220);
+
+  camera=new THREE.PerspectiveCamera(48,window.innerWidth/window.innerHeight,0.5,400);
+  camera.position.set(0,62,22);
+  camera.lookAt(0,4,0);
+
+  window.addEventListener('resize',onResize);
+  setLoad(20);
+  buildEnvironment();
+  setLoad(80);
+  setLoad(100);
+  setTimeout(function(){el('load-bar').style.opacity=0;},500);
+  requestAnimationFrame(renderLoop);
+}
+function onResize(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+
+function buildEnvironment(){
+  scene.add(new THREE.HemisphereLight(0x9ecbe8,0x4a7a3a,1.1));
+  var sun=new THREE.DirectionalLight(0xfff8d0,2.6);
+  sun.position.set(40,70,30); sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024);
+  scene.add(sun);
+  scene.add(new THREE.AmbientLight(0xffffff,0.45));
+
+  var skyMat=new THREE.ShaderMaterial({
+    uniforms:{uTop:{value:new THREE.Color(0x2a7fd8)},uBot:{value:new THREE.Color(0xc8e8d8)}},
+    vertexShader:'varying float vY;void main(){vY=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'uniform vec3 uTop,uBot;varying float vY;void main(){gl_FragColor=vec4(mix(uBot,uTop,clamp(vY*1.4,0.0,1.0)),1.0);}',
+    side:THREE.BackSide, depthWrite:false
+  });
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(220,24,12),skyMat));
+
+  var ground=new THREE.Mesh(new THREE.PlaneGeometry(160,160),new THREE.MeshLambertMaterial({color:0x3a8a3a}));
+  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true;
+  scene.add(ground);
+
+  buildCastle();
+  SIDES.forEach(buildLane);
+}
+
+function buildCastle(){
+  var baseMat=new THREE.MeshStandardMaterial({color:0x9aa6b8,roughness:0.85});
+  var base=new THREE.Mesh(new THREE.CylinderGeometry(6,7,10,14),baseMat);
+  base.position.y=5; base.castShadow=true; base.receiveShadow=true; scene.add(base);
+  for(var i=0;i<14;i++){
+    var ang=i/14*Math.PI*2;
+    var cren=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.3,1.1),baseMat);
+    cren.position.set(Math.cos(ang)*6.1,10.6,Math.sin(ang)*6.1);
+    scene.add(cren);
+  }
+  var roof=new THREE.Mesh(new THREE.ConeGeometry(5.2,5,14),new THREE.MeshStandardMaterial({color:0x5a4030}));
+  roof.position.y=13.5; scene.add(roof);
+  var pole=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,5,6),new THREE.MeshStandardMaterial({color:0xcccccc}));
+  pole.position.y=18.5; scene.add(pole);
+  var flag=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.3),new THREE.MeshBasicMaterial({color:0x2ecc71,side:THREE.DoubleSide}));
+  flag.position.set(1.1,20.4,0); scene.add(flag);
+}
+function buildLane(side){
+  var dir=SIDE_DIR[side];
+  var mid={x:dir.x*(TOWER_RADIUS+LANE_LENGTH/2), z:dir.z*(TOWER_RADIUS+LANE_LENGTH/2)};
+  var pathMat=new THREE.MeshLambertMaterial({color:0x8a7858});
+  var path=new THREE.Mesh(new THREE.PlaneGeometry(dir.x?LANE_LENGTH:8, dir.x?8:LANE_LENGTH),pathMat);
+  path.rotation.x=-Math.PI/2; path.position.set(mid.x,0.02,mid.z); path.receiveShadow=true;
+  scene.add(path);
+
+  var labelCanvas=document.createElement('canvas'); labelCanvas.width=256; labelCanvas.height=80;
+  var lctx=labelCanvas.getContext('2d');
+  lctx.fillStyle='rgba(5,7,13,0.75)'; lctx.fillRect(0,0,256,80);
+  lctx.fillStyle='#'+SIDE_COLOR[side].toString(16).padStart(6,'0');
+  lctx.font='bold 36px Orbitron, monospace'; lctx.textAlign='center'; lctx.textBaseline='middle';
+  lctx.fillText(SIDE_NAME[side].toUpperCase(),128,40);
+  var labelSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(labelCanvas),transparent:true,depthWrite:false}));
+  labelSprite.scale.set(9,2.8,1);
+  labelSprite.position.set(dir.x*(TOWER_RADIUS+LANE_LENGTH+2), 4, dir.z*(TOWER_RADIUS+LANE_LENGTH+2));
+  scene.add(labelSprite);
+}
+
+function makeEnemyMesh(){
+  var g=new THREE.Group();
+  var body=new THREE.Mesh(new THREE.SphereGeometry(0.9,8,6),new THREE.MeshStandardMaterial({color:0x6a8a4a}));
+  body.position.y=0.9; body.castShadow=true; g.add(body);
+  var eyeMat=new THREE.MeshBasicMaterial({color:0xff3030});
+  [-0.35,0.35].forEach(function(x){
+    var eye=new THREE.Mesh(new THREE.SphereGeometry(0.16,6,6),eyeMat);
+    eye.position.set(x,1.1,0.75); g.add(eye);
+  });
+  var spike=new THREE.Mesh(new THREE.ConeGeometry(0.3,0.6,6),new THREE.MeshStandardMaterial({color:0x4a6a30}));
+  spike.position.y=1.8; g.add(spike);
+  return {group:g,dying:false};
+}
+function positionEnemyMesh(mesh,en){
+  var dir=SIDE_DIR[en.side];
+  var dist=TOWER_RADIUS+(1-Math.max(0,en.pos))*LANE_LENGTH;
+  mesh.group.position.set(dir.x*dist,0,dir.z*dist);
+  mesh.group.lookAt(0,0.9,0);
+}
+
+/* ════════════════ SIMULATION TICK (host-authoritative) ════════════════ */
+function spawnWave(){
+  wave++;
+  var counts={N:0,E:0,S:0,W:0};
+  Object.values(allPlayers).forEach(function(p){ if(p.online!==false&&counts[p.side]!==undefined) counts[p.side]++; });
+  var total=SIDES.reduce(function(s,k){return s+counts[k];},0)||1;
+  var avg=total/4;
+  var now=Date.now();
+  SIDES.forEach(function(side){
+    if(counts[side]<=0) return; /* no defenders on this lane — don't punish them */
+    var n=Math.max(1,Math.round(BASE_ENEMIES_PER_WAVE*(counts[side]/Math.max(0.5,avg))));
+    for(var i=0;i<n;i++){
+      var id='e'+(enemyCounter++);
+      enemies[id]={side:side,wave:wave,pos:0,alive:true,spawnAt:now+i*900};
+    }
+  });
+}
+
+function tickSimulation(dt){
+  var now=Date.now();
+  if(wave<TOTAL_WAVES && now-lastWaveAt>WAVE_INTERVAL_MS){ spawnWave(); lastWaveAt=now; }
+
+  Object.keys(enemies).forEach(function(id){
+    var en=enemies[id];
+    if(!en.alive||now<en.spawnAt) return;
+    en.pos+=ENEMY_SPEED*dt;
+    if(en.pos>=1){
+      en.alive=false; en.deadAt=now;
+      towerHp=Math.max(0,towerHp-HP_DAMAGE);
+      if(towerHp<=0) endGame('lost');
+    }
+  });
+
+  /* prune long-dead enemies to keep the synced payload small */
+  Object.keys(enemies).forEach(function(id){
+    var en=enemies[id];
+    if(!en.alive&&en.deadAt&&now-en.deadAt>3000) delete enemies[id];
+  });
+
+  if(wave>=TOTAL_WAVES-1){
+    var anyAlive=Object.values(enemies).some(function(e){return e.alive||Date.now()<e.spawnAt;});
+    if(!anyAlive&&towerHp>0) endGame('won');
+  }
+
+  if(now-lastFirebaseSync>250&&isActiveHost){
+    lastFirebaseSync=now;
+    syncToFirebase();
+  }
+}
+
+function syncToFirebase(){
+  db.ref('tower/'+raceId+'/enemies').set(enemies);
+  db.ref('tower/'+raceId+'/state').update({
+    phase:gameRunning?'playing':(towerHp<=0?'lost':'playing'),
+    towerHp:towerHp, maxHp:MAX_HP, wave:wave, lastTickAt:Date.now()
+  });
+  updateHud();
+}
+
+function endGame(result){
+  if(!gameRunning) return;
+  gameRunning=false;
+  db.ref('tower/'+raceId+'/state').update({phase:result,towerHp:towerHp,maxHp:MAX_HP,wave:wave,lastTickAt:Date.now()});
+  showResultBanner(result);
+}
+function showResultBanner(result){
+  if(resultShown) return; resultShown=true;
+  el('rb-title').className='rb-title '+(result==='won'?'won':'lost');
+  el('rb-title').textContent=result==='won'?'VICTORY!':'TOWER HAS FALLEN';
+  el('result-banner').classList.add('show');
+}
+
+function consumeShot(side,shotKey){
+  var best=null,bestPos=-1;
+  Object.keys(enemies).forEach(function(id){
+    var en=enemies[id];
+    if(en.side===side&&en.alive&&en.pos>bestPos){ bestPos=en.pos; best=id; }
+  });
+  if(best){ enemies[best].alive=false; enemies[best].deadAt=Date.now(); }
+  db.ref('tower/'+raceId+'/shots/'+side+'/'+shotKey).remove();
+}
+function watchShots(){
+  SIDES.forEach(function(side){
+    var r=db.ref('tower/'+raceId+'/shots/'+side);
+    r.on('child_added',function(snap){ if(isActiveHost) consumeShot(side,snap.key); });
+    shotRefs.push(r);
+  });
+}
+
+/* ════════════════ RENDER LOOP ════════════════ */
+function renderLoop(ts){
+  requestAnimationFrame(renderLoop);
+  var dt=Math.min(0.1,(ts-(lastTickTs||ts))/1000); lastTickTs=ts;
+
+  if(gameRunning&&isActiveHost) tickSimulation(dt);
+
+  /* sync Three.js meshes to the enemies map (works whether or not we're the active simulator) */
+  Object.keys(enemies).forEach(function(id){
+    var en=enemies[id];
+    var mesh=enemyMeshes[id];
+    if(!mesh){ mesh=makeEnemyMesh(); scene.add(mesh.group); enemyMeshes[id]=mesh; }
+    if(en.alive&&!mesh.dying){ positionEnemyMesh(mesh,en); }
+    else if(!mesh.dying){ mesh.dying=true; mesh.dieStart=performance.now(); }
+  });
+  Object.keys(enemyMeshes).forEach(function(id){
+    var mesh=enemyMeshes[id];
+    if(mesh.dying){
+      var t=(performance.now()-mesh.dieStart)/450;
+      if(t>=1||!enemies[id]){ scene.remove(mesh.group); delete enemyMeshes[id]; return; }
+      mesh.group.scale.setScalar(Math.max(0,1-t)); mesh.group.rotation.y+=0.25;
+    }
+  });
+
+  var camAngle=ts*0.00004;
+  camera.position.x=Math.sin(camAngle)*4;
+  camera.lookAt(0,4,0);
+
+  renderer.render(scene,camera);
+}
+
+/* ════════════════ HUD ════════════════ */
+function updateHud(){
+  el('hp-bar').style.width=Math.max(0,Math.min(100,Math.round((towerHp/MAX_HP)*100)))+'%';
+  el('hp-text').textContent=Math.round(towerHp)+'/'+MAX_HP;
+  el('hud-wave').textContent='Wave '+Math.max(0,wave+1)+' / '+TOTAL_WAVES;
+
+  var counts={N:0,E:0,S:0,W:0};
+  Object.values(allPlayers).forEach(function(p){ if(counts[p.side]!==undefined) counts[p.side]++; });
+  el('side-rows').innerHTML=SIDES.map(function(s){
+    return '<div class="side-row"><div class="side-dot '+s+'"></div><div class="side-name">'+SIDE_NAME[s]+'</div><div class="side-count">'+counts[s]+'</div></div>';
+  }).join('');
+
+  var sorted=Object.values(allPlayers).sort(function(a,b){return (b.correct||0)-(a.correct||0);}).slice(0,8);
+  el('standings').innerHTML=sorted.map(function(p){
+    return '<div class="stand-row"><div class="stand-name">'+esc((p.name||'?').slice(0,14))+'</div><div class="stand-hits">'+(p.correct||0)+'</div></div>';
+  }).join('')||'<div style="font-size:11px;color:var(--muted);padding:6px">Waiting…</div>';
+}
+
+/* ════════════════ BOOT ════════════════ */
+if(!raceId){
+  el('w-err').textContent='No game ID — open via the Projector button in LiveHost';
+} else {
+  el('w-code').textContent=raceId;
+  el('w-status-txt').textContent='Waiting for players…';
+
+  playersRef=db.ref('tower/'+raceId+'/players');
+  playersRef.on('value',function(snap){
+    allPlayers=(snap&&snap.val())||{};
+    if(!gameStarted){
+      var names=Object.values(allPlayers).map(function(p){return p.name||'?';});
+      el('w-count').textContent=names.length;
+      el('w-chips').innerHTML=names.map(function(n){return '<div class="w-chip">'+esc(n)+'</div>';}).join('');
+    }
+    updateHud();
+  });
+
+  stateRef=db.ref('tower/'+raceId+'/state');
+  stateRef.on('value',function(snap){
+    var st=(snap&&snap.val())||{};
+    if(st.phase==='started'&&!gameStarted){
+      gameStarted=true;
+      el('s-wait').classList.remove('on');
+      el('hud').style.display='flex';
+      el('hud-code').textContent=raceId;
+      claimHostAndRun();
+    }
+    /* passive (non-simulating) tabs trust Firebase as their only source of truth */
+    if(gameStarted&&!isActiveHost){
+      if(st.towerHp!==undefined) towerHp=st.towerHp;
+      if(st.wave!==undefined) wave=st.wave;
+      updateHud();
+    }
+    if((st.phase==='won'||st.phase==='lost')&&gameStarted){
+      gameRunning=false;
+      showResultBanner(st.phase);
+    }
+    if(st.phase==='ended'&&gameStarted){
+      gameRunning=false;
+      showResultBanner(towerHp>0?'won':'lost');
+    }
+  });
+}
+
+function claimHostAndRun(){
+  db.ref('tower/'+raceId+'/state/hostInstanceId').transaction(function(cur){
+    if(!cur) return hostInstanceId;
+    return; /* abort — another tab is already the active simulator */
+  }).then(function(result){
+    isActiveHost = !!(result.committed && result.snapshot.val()===hostInstanceId);
+    db.ref('tower/'+raceId+'/state').once('value').then(function(snap){
+      var st=snap.val()||{};
+      towerHp = st.towerHp!==undefined ? st.towerHp : MAX_HP;
+      wave = st.wave!==undefined ? st.wave : -1;
+      var lastTick = st.lastTickAt || Date.now();
+      var elapsedMs = Math.max(0, Date.now()-lastTick);
+      lastWaveAt = Date.now() - Math.min(elapsedMs, WAVE_INTERVAL_MS);
+      gameRunning = true;
+      if(isActiveHost) watchShots();
+    });
+  });
+}
+
+el('endBtn').addEventListener('click',function(){
+  if(!confirm('End this Tower Defense game for all players?')) return;
+  endGame(towerHp>0?'won':'lost');
+});
+
+initScene();
+
+window.addEventListener('beforeunload',function(){
+  if(playersRef){try{playersRef.off('value');}catch(_){}}
+  if(stateRef){try{stateRef.off('value');}catch(_){}}
+  shotRefs.forEach(function(r){try{r.off('child_added');}catch(_){}});
+});
+
+})();
+</script>
+</body>
+</html>
