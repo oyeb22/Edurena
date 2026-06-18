@@ -706,15 +706,26 @@ function _pidLane(pid){
 function updateKartObject(pid,player,dt){
   var ko=kartObjects[pid]; if(!ko) return;
 
-  /* ── lap-safe progress diff ──
-     player.progress is 0-1 (Race.html sends myProgress%1).
-     smoothProg accumulates >1 across laps, so compare against its fractional part. */
+  /* ── dead-reckoning ──
+     Race.html only syncs progress to Firebase on ~10% of frames, so raw
+     player.progress arrives in sparse steps. Extrapolate forward using the
+     last-measured velocity so the car keeps gliding between updates instead
+     of stalling near the old value and snapping when the next one lands. */
   var raw = player.progress||0;
+  if(ko.lastRawTime){
+    var sinceUpdate=Math.min((Date.now()-ko.lastRawTime)/1000,1.2);
+    raw = ((ko.lastRaw!==undefined?ko.lastRaw:raw) + (ko.vel||0)*sinceUpdate);
+    raw = ((raw%1)+1)%1;
+  }
+
+  /* ── lap-safe progress diff ──
+     predicted raw is 0-1, smoothProg accumulates >1 across laps, so compare
+     against its fractional part. */
   var cur_t = ((ko.smoothProg%1)+1)%1;
   var diff = raw - cur_t;
   if(diff<-0.5) diff+=1;   /* player crossed lap boundary forward */
   if(diff>0.5)  diff-=1;   /* safety: shouldn't happen in normal race */
-  ko.smoothProg += diff * Math.min(1.0, dt*6.0); /* faster lerp = more responsive */
+  ko.smoothProg += diff * Math.min(1.0, dt*7.0); /* faster lerp = more responsive */
 
   var t=((ko.smoothProg%1)+1)%1;
   trackCurve.getPointAt(t,_vP);
@@ -730,9 +741,9 @@ function updateKartObject(pid,player,dt){
   ko.group.rotation.y=Math.atan2(_vT.x,_vT.z);
   ko.group.rotation.z=0;
 
-  /* wheel roll — spin around local Y since cylinder lies along X after rotation.z=PI/2 */
+  /* wheel roll — spin around local X (the wheel's axle after the fixed rotation.z=PI/2 orientation) */
   var spd=diff/Math.max(dt,0.001);
-  if(ko.wheels.length&&Math.abs(spd)>0.0001) ko.wheels.forEach(function(w){w.rotation.y+=spd*90;});
+  if(ko.wheels.length&&Math.abs(spd)>0.0001) ko.wheels.forEach(function(w){w.rotation.x+=spd*85;});
 
   var fx=kartFx[pid]||{}, nitro=Math.max(0,fx.nitro||0), boost=Math.max(0,fx.boost||0);
   if(nitro>0){ ko.boostLight.intensity=700*nitro; ko.boostLight.color.set(0x0099ff); ko.boostLight.distance=20; _setEm(ko,0.45); }
@@ -829,6 +840,26 @@ function watchPlayers(){
     Object.keys(kartObjects).forEach(function(pid){ if(!next[pid]) removeKartForPlayer(pid); });
     allPlayers=next;
     Object.values(allPlayers).forEach(function(p){ if(!kartObjects[p.pid]) createKartForPlayer(p); });
+
+    /* velocity estimate for dead-reckoning — measured from consecutive Firebase values */
+    var _now=Date.now();
+    Object.values(allPlayers).forEach(function(p){
+      var ko=kartObjects[p.pid]; if(!ko) return;
+      var raw=p.progress||0;
+      if(ko.lastRawTime!==undefined){
+        var dtSec=(_now-ko.lastRawTime)/1000;
+        if(dtSec>0.05){
+          var draw=raw-ko.lastRaw;
+          if(draw<-0.5) draw+=1;
+          if(draw>0.5)  draw-=1;
+          var instVel=draw/dtSec;
+          ko.vel=(ko.vel===undefined)?instVel:ko.vel*0.4+instVel*0.6;
+          ko.vel=Math.max(0,Math.min(ko.vel,0.3));
+        }
+      }
+      ko.lastRaw=raw; ko.lastRawTime=_now;
+    });
+
     if(!raceStarted){
       var names=Object.values(allPlayers).map(function(p){return p.name||'?';});
       el('w-count').textContent=names.length;
