@@ -328,8 +328,12 @@ function lookupMyPairThenStart(st){
       if(p.kicker===playerId){ myPairId=pid; myRole='kicker'; myPartnerId=p.keeper; }
       else if(p.keeper===playerId){ myPairId=pid; myRole='keeper'; myPartnerId=p.kicker; }
     });
+    /* always clear any overlay screen (leaderboard, sitout, reveal) — same
+       fix as Whack-a-Mole: without this, an overlay from an earlier round
+       stays stuck on top of #game-wrap forever once it has .on */
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
     if(!myPairId){ showScreen('s-sitout'); return; }
-    if(!el('game-wrap').classList.contains('on')){ showScreen(''); el('game-wrap').classList.add('on'); el('hud-code').textContent=sessionId; }
+    if(!el('game-wrap').classList.contains('on')){ el('game-wrap').classList.add('on'); el('hud-code').textContent=sessionId; }
     startRound(st.qIndex, st.roundStartAt);
   });
 }

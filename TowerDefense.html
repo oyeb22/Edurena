@@ -77,6 +77,8 @@
     .tower-icon.hit{animation:towerHit .4s ease}
     @keyframes towerHit{0%{transform:translateY(-50%) scale(1)}30%{filter:drop-shadow(0 0 16px #ff3355) brightness(1.7);transform:translateY(-50%) scale(1.18)}100%{transform:translateY(-50%) scale(1)}}
     .enemy{position:absolute;top:50%;font-size:30px;transition:left .3s linear;animation:enemyBob .6s ease-in-out infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+    .enemy.giant{font-size:48px;filter:drop-shadow(0 4px 8px rgba(255,51,85,.6))}
+    .enemy-hp{position:absolute;top:-8px;right:-6px;background:var(--red);color:#fff;font-family:var(--display);font-size:10px;font-weight:700;border-radius:8px;padding:0 5px;line-height:1.4}
     @keyframes enemyBob{0%,100%{transform:translateY(-50%) rotate(-5deg)}50%{transform:translateY(-58%) rotate(5deg)}}
     .enemy.dying{animation:enemyDie .32s ease forwards!important}
     @keyframes enemyDie{0%{transform:translateY(-50%) scale(1) rotate(0);opacity:1}100%{transform:translateY(-50%) scale(.15) rotate(50deg);opacity:0}}
@@ -231,9 +233,11 @@ var SIDES=['N','E','S','W'];
 var SIDE_COLORS={N:'#00d4ff',E:'#00ff88',S:'#ffcc00',W:'#ff5fa8'};
 
 /* Streak-based weapon tiers — more kills per shot at higher streaks */
+var CLEAR_LANE_KILLS=999; /* sentinel — wipes every alive enemy on my lane */
 function weaponTier(s){
-  if(s>=6) return {kills:3,name:'MEGA BLAST',icon:'☄️',color:'#ff3355'};
-  if(s>=3) return {kills:2,name:'DOUBLE SHOT',icon:'\u{1F4A5}',color:'#ffcc00'};
+  if(s>=10) return {kills:CLEAR_LANE_KILLS,name:'APOCALYPSE',icon:'\u{1F525}',color:'#ff3355'};
+  if(s>=6)  return {kills:5,name:'MEGA BLAST',icon:'☄️',color:'#ff9433'};
+  if(s>=3)  return {kills:3,name:'DOUBLE SHOT',icon:'\u{1F4A5}',color:'#ffcc00'};
   return {kills:1,name:'CANNON',icon:'\u{1F52B}',color:'#00d4ff'};
 }
 
@@ -256,7 +260,7 @@ function doJoin(){
   btn.disabled=true; btn.textContent='JOINING…';
   playerId='p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 
-  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'getRaceQuestions',raceId:raceId})})
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'getRaceQuestionsWithKey',raceId:raceId})})
     .then(function(r){return r.json();})
     .then(function(res){
       if(!res||res.status!=='success') throw new Error((res&&res.message)||'Game not found. Check your code.');
@@ -353,8 +357,8 @@ function updateHp(st){
   el('hp-bar').style.width=pct+'%';
   el('hp-text').textContent=Math.max(0,Math.round(hp))+' / '+max;
 }
-function enemyEmoji(wave){
-  if(wave>=4) return '\u{1F409}';
+function enemyEmoji(wave,isGiant){
+  if(isGiant) return '\u{1F409}';
   if(wave>=2) return '\u{1F9DF}';
   return '\u{1F47A}';
 }
@@ -375,11 +379,17 @@ function renderLane(){
     }
     var div=enemyDivs[id];
     if(!div){
-      div=document.createElement('div'); div.className='enemy';
-      div.textContent=enemyEmoji(en.wave||0);
+      div=document.createElement('div'); div.className='enemy'+(en.giant?' giant':'');
+      div.textContent=enemyEmoji(en.wave||0,en.giant);
+      if(en.giant){
+        var hpTag=document.createElement('span'); hpTag.className='enemy-hp';
+        div.appendChild(hpTag);
+      }
       strip.appendChild(div);
       enemyDivs[id]=div;
     }
+    var hpTagEl=div.querySelector('.enemy-hp');
+    if(hpTagEl) hpTagEl.textContent=Math.max(0,en.hp||0);
     var pct=Math.max(0,Math.min(1,en.pos||0));
     div.style.left=(8+(1-pct)*84)+'%';
   });
@@ -426,43 +436,72 @@ function loadQ(){
   }
 }
 
+/* Mirrors LiveQuiz.html's client-side correctness check exactly — checking
+   locally (instead of waiting on a GAS round-trip like validateRaceAnswer)
+   is what makes LiveQuiz feel instant, so Tower Defense now does the same.
+   No contention risk here (unlike Whack-a-Mole/Shootout) to protect against. */
+function checkCorrectLocally(q,answer){
+  var sa=String(answer||'').trim().toLowerCase();
+  var ca=String(q.correct||'').trim().toLowerCase();
+  var ct=String(q.correctText||q.correct||'').trim().toLowerCase();
+  if(q.type==='SHORT'){
+    var variants=ca.split('|');
+    return variants.some(function(v){
+      var vt=v.trim();
+      return vt===sa||sa.indexOf(vt)!==-1||(vt.length>=3&&vt.indexOf(sa)!==-1&&sa.length>=3);
+    });
+  } else if(q.type==='TF'){
+    var normTF=function(x){
+      var s=String(x).trim().toLowerCase();
+      if(s==='true'||s==='a'||s==='yes'||s==='1') return 'true';
+      if(s==='false'||s==='b'||s==='no'||s==='0') return 'false';
+      return s;
+    };
+    return normTF(sa)===normTF(ca);
+  } else {
+    var correctText=ct||ca;
+    if(/^[a-d]$/.test(ca)&&q.options){
+      var li=ca.charCodeAt(0)-97;
+      if(q.options[li]) correctText=String(q.options[li]).trim().toLowerCase();
+    }
+    return sa===correctText||sa===ca;
+  }
+}
+
 function submitAns(answer,btnEl){
   if(answering||myFinished) return;
   answering=true;
   el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
   var q=questions[currentQ];
-  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'validateRaceAnswer',raceId:raceId,playerId:playerId,questionId:q.id,answer:answer})})
-    .then(function(r){return r.json();})
-    .then(function(res){
-      var correct=!!(res&&res.status==='success'&&res.data&&res.data.isCorrect===true);
-      if(correct){
-        streak++; if(streak>bestStreak) bestStreak=streak;
-        correctCount++; shotsFired++;
-        if(btnEl) btnEl.classList.add('correct');
-        el('streak-badge').textContent='\u{1F525} '+streak;
-        el('top-correct').textContent=correctCount+' hits';
-        var tier=weaponTier(streak);
-        updateWeaponBadge(tier);
-        if(tier.kills>lastWeaponKills) showWeaponBanner(tier);
-        lastWeaponKills=tier.kills;
-        fireShot(tier);
-        predictKill(tier.kills);
-        db.ref('tower/'+raceId+'/shots/'+mySide).push({playerId:playerId,firedAt:firebase.database.ServerValue.TIMESTAMP,kills:tier.kills});
-      } else {
-        streak=0;
-        if(btnEl) btnEl.classList.add('wrong');
-        el('streak-badge').textContent='\u{1F525} 0';
-        var resetTier=weaponTier(0);
-        updateWeaponBadge(resetTier); lastWeaponKills=resetTier.kills;
-      }
-      db.ref('tower/'+raceId+'/players/'+playerId).update({correct:correctCount,streak:streak});
-      currentQ++;
-      setTimeout(function(){ if(!myFinished) loadQ(); },600);
-    })
-    .catch(function(){
-      currentQ++; answering=false;
-      setTimeout(function(){ if(!myFinished) loadQ(); },400);
-    });
+  var correct=checkCorrectLocally(q,answer);
+
+  if(correct){
+    streak++; if(streak>bestStreak) bestStreak=streak;
+    correctCount++; shotsFired++;
+    if(btnEl) btnEl.classList.add('correct');
+    el('streak-badge').textContent='\u{1F525} '+streak;
+    el('top-correct').textContent=correctCount+' hits';
+    var tier=weaponTier(streak);
+    updateWeaponBadge(tier);
+    if(tier.kills>lastWeaponKills) showWeaponBanner(tier);
+    lastWeaponKills=tier.kills;
+    fireShot(tier);
+    predictKill(tier.kills);
+    db.ref('tower/'+raceId+'/shots/'+mySide).push({playerId:playerId,firedAt:firebase.database.ServerValue.TIMESTAMP,kills:tier.kills});
+  } else {
+    streak=0;
+    if(btnEl) btnEl.classList.add('wrong');
+    el('streak-badge').textContent='\u{1F525} 0';
+    var resetTier=weaponTier(0);
+    updateWeaponBadge(resetTier); lastWeaponKills=resetTier.kills;
+  }
+  db.ref('tower/'+raceId+'/players/'+playerId).update({correct:correctCount,streak:streak});
+
+  /* fire-and-forget — server-side record only, never blocks gameplay */
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'validateRaceAnswer',raceId:raceId,playerId:playerId,questionId:q.id,answer:answer})}).catch(function(){});
+
+  currentQ++;
+  setTimeout(function(){ if(!myFinished) loadQ(); },600);
 }
 function updateWeaponBadge(tier){
   var b=el('weapon-badge');
@@ -478,7 +517,8 @@ function showWeaponBanner(tier){
 }
 function fireShot(tier){
   var strip=el('lane-strip');
-  for(var i=0;i<tier.kills;i++){
+  var visualBursts=Math.min(tier.kills,5); /* cap visuals — Apocalypse's 999 "kills" is a sentinel, not a literal count */
+  for(var i=0;i<visualBursts;i++){
     (function(delay){
       setTimeout(function(){
         var fx=document.createElement('div');

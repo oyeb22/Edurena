@@ -140,7 +140,9 @@ var SIDE_COLOR={N:0x00d4ff,E:0x00ff88,S:0xffcc00,W:0xff5fa8};
 var SIDE_NAME={N:'North',E:'East',S:'South',W:'West'};
 
 var TOWER_RADIUS=6, LANE_LENGTH=42;
-var BASE_ENEMIES_PER_WAVE=4, ENEMY_SPEED=0.045, WAVE_INTERVAL_MS=9000, TOTAL_WAVES=6, MAX_HP=100, HP_DAMAGE=8;
+var BASE_ENEMIES_PER_WAVE=2, MAX_ENEMIES_PER_SIDE_WAVE=6, ENEMY_SPEED=0.035, WAVE_INTERVAL_MS=11000, TOTAL_WAVES=6, MAX_HP=100, HP_DAMAGE=6;
+var GIANT_HP=3;
+var CLEAR_LANE_KILLS=999; /* sentinel sent by the top weapon tier */
 
 /* ════════════════ GAME STATE (host-authoritative) ════════════════ */
 var allPlayers={}, gameStarted=false, isActiveHost=false, gameRunning=false, resultShown=false;
@@ -241,18 +243,20 @@ function buildLane(side){
   scene.add(labelSprite);
 }
 
-function makeEnemyMesh(){
+function makeEnemyMesh(isGiant){
   var g=new THREE.Group();
-  var body=new THREE.Mesh(new THREE.SphereGeometry(0.9,8,6),new THREE.MeshStandardMaterial({color:0x6a8a4a}));
+  var bodyColor=isGiant?0xaa3030:0x6a8a4a;
+  var body=new THREE.Mesh(new THREE.SphereGeometry(0.9,8,6),new THREE.MeshStandardMaterial({color:bodyColor}));
   body.position.y=0.9; body.castShadow=true; g.add(body);
   var eyeMat=new THREE.MeshBasicMaterial({color:0xff3030});
   [-0.35,0.35].forEach(function(x){
     var eye=new THREE.Mesh(new THREE.SphereGeometry(0.16,6,6),eyeMat);
     eye.position.set(x,1.1,0.75); g.add(eye);
   });
-  var spike=new THREE.Mesh(new THREE.ConeGeometry(0.3,0.6,6),new THREE.MeshStandardMaterial({color:0x4a6a30}));
+  var spike=new THREE.Mesh(new THREE.ConeGeometry(0.3,0.6,6),new THREE.MeshStandardMaterial({color:isGiant?0x6a2020:0x4a6a30}));
   spike.position.y=1.8; g.add(spike);
-  return {group:g,dying:false};
+  if(isGiant) g.scale.setScalar(1.8);
+  return {group:g,dying:false,giant:!!isGiant};
 }
 function positionEnemyMesh(mesh,en){
   var dir=SIDE_DIR[en.side];
@@ -266,15 +270,24 @@ function spawnWave(){
   wave++;
   var counts={N:0,E:0,S:0,W:0};
   Object.values(allPlayers).forEach(function(p){ if(p.online!==false&&counts[p.side]!==undefined) counts[p.side]++; });
-  var total=SIDES.reduce(function(s,k){return s+counts[k];},0)||1;
-  var avg=total/4;
+  /* Average must be computed over ACTIVE sides only — dividing by all 4
+     unconditionally meant a solo player (1 side active) got an avg of 0.25,
+     inflating their wave size to 8x the base instead of matching it 1:1.
+     That's why a fast, always-correct solo player still lost the tower. */
+  var activeSides=SIDES.filter(function(s){ return counts[s]>0; });
+  var avg = activeSides.length
+    ? activeSides.reduce(function(sum,s){ return sum+counts[s]; },0)/activeSides.length
+    : 1;
   var now=Date.now();
   SIDES.forEach(function(side){
     if(counts[side]<=0) return; /* no defenders on this lane — don't punish them */
     var n=Math.max(1,Math.round(BASE_ENEMIES_PER_WAVE*(counts[side]/Math.max(0.5,avg))));
+    n=Math.min(n,MAX_ENEMIES_PER_SIDE_WAVE);
     for(var i=0;i<n;i++){
+      var isGiant = wave>=2 && Math.random()<0.22;
       var id='e'+(enemyCounter++);
-      enemies[id]={side:side,wave:wave,pos:0,alive:true,spawnAt:now+i*900};
+      enemies[id]={side:side,wave:wave,pos:0,alive:true,spawnAt:now+i*1000,
+        hp:isGiant?GIANT_HP:1, maxHp:isGiant?GIANT_HP:1, giant:isGiant};
     }
   });
 }
@@ -305,7 +318,7 @@ function tickSimulation(dt){
     if(!anyAlive&&towerHp>0) endGame('won');
   }
 
-  if(now-lastFirebaseSync>250&&isActiveHost){
+  if(now-lastFirebaseSync>120&&isActiveHost){
     lastFirebaseSync=now;
     syncToFirebase();
   }
@@ -333,19 +346,33 @@ function showResultBanner(result){
   el('result-banner').classList.add('show');
 }
 
-function consumeShot(side,shotKey){
-  var best=null,bestPos=-1;
-  Object.keys(enemies).forEach(function(id){
-    var en=enemies[id];
-    if(en.side===side&&en.alive&&en.pos>bestPos){ bestPos=en.pos; best=id; }
-  });
-  if(best){ enemies[best].alive=false; enemies[best].deadAt=Date.now(); }
+function consumeShot(side,shotKey,kills){
+  /* kills===CLEAR_LANE_KILLS means "wipe everything alive on this lane" —
+     the top weapon tier. Otherwise it's a kill-point budget: giants have
+     hp>1 and absorb multiple kill-points before actually dying. */
+  var n = kills>=CLEAR_LANE_KILLS ? Infinity : Math.max(1,kills||1);
+  var candidates=Object.keys(enemies)
+    .filter(function(id){ var en=enemies[id]; return en.side===side&&en.alive; })
+    .sort(function(a,b){ return enemies[b].pos-enemies[a].pos; });
+  var remaining=n;
+  for(var i=0;i<candidates.length&&remaining>0;i++){
+    var en=enemies[candidates[i]];
+    var hpBefore=en.hp||1;
+    var spend=Math.min(remaining,hpBefore);
+    en.hp=hpBefore-spend;
+    remaining-=spend;
+    if(en.hp<=0){ en.alive=false; en.deadAt=Date.now(); en.hp=0; }
+  }
   db.ref('tower/'+raceId+'/shots/'+side+'/'+shotKey).remove();
+  /* immediate out-of-band sync so the shooter's own lane updates without
+     waiting for the next periodic tick — keeps hit feedback snappy */
+  lastFirebaseSync=Date.now();
+  syncToFirebase();
 }
 function watchShots(){
   SIDES.forEach(function(side){
     var r=db.ref('tower/'+raceId+'/shots/'+side);
-    r.on('child_added',function(snap){ if(isActiveHost) consumeShot(side,snap.key); });
+    r.on('child_added',function(snap){ if(isActiveHost) consumeShot(side,snap.key,snap.val()&&snap.val().kills); });
     shotRefs.push(r);
   });
 }
@@ -361,7 +388,7 @@ function renderLoop(ts){
   Object.keys(enemies).forEach(function(id){
     var en=enemies[id];
     var mesh=enemyMeshes[id];
-    if(!mesh){ mesh=makeEnemyMesh(); scene.add(mesh.group); enemyMeshes[id]=mesh; }
+    if(!mesh){ mesh=makeEnemyMesh(en.giant); scene.add(mesh.group); enemyMeshes[id]=mesh; }
     if(en.alive&&!mesh.dying){ positionEnemyMesh(mesh,en); }
     else if(!mesh.dying){ mesh.dying=true; mesh.dieStart=performance.now(); }
   });

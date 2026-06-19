@@ -277,7 +277,11 @@ function watchLobby(){
     var phase=st.phase||'lobby';
     if(phase==='countdown'){ detachLobby(); showScreen('s-countdown'); runCountdown(); }
     else if(phase==='round'){
-      if(!el('game-wrap').classList.contains('on')){ showScreen(''); el('game-wrap').classList.add('on'); el('hud-code').textContent=sessionId; }
+      /* always clear any overlay screen (leaderboard, reveal) — without this,
+         once #game-wrap gets its .on class in round 1 it's never re-cleared,
+         so the leaderboard overlay from round 1 stays stuck on top forever */
+      document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+      if(!el('game-wrap').classList.contains('on')){ el('game-wrap').classList.add('on'); el('hud-code').textContent=sessionId; }
       if(st.qIndex!==currentQIdx) startRound(st.qIndex, st.activeHole, st.roundStartAt);
     } else if(phase==='reveal'){
       stopTimer();
