@@ -140,9 +140,20 @@ var SIDE_COLOR={N:0x00d4ff,E:0x00ff88,S:0xffcc00,W:0xff5fa8};
 var SIDE_NAME={N:'North',E:'East',S:'South',W:'West'};
 
 var TOWER_RADIUS=6, LANE_LENGTH=42;
-var BASE_ENEMIES_PER_WAVE=2, MAX_ENEMIES_PER_SIDE_WAVE=6, ENEMY_SPEED=0.035, WAVE_INTERVAL_MS=11000, TOTAL_WAVES=6, MAX_HP=100, HP_DAMAGE=6;
+var MAX_ENEMIES_PER_SIDE_WAVE=6, TOTAL_WAVES=6, MAX_HP=100, HP_DAMAGE=6;
 var GIANT_HP=3;
 var CLEAR_LANE_KILLS=999; /* sentinel sent by the top weapon tier */
+
+/* ── Progressive difficulty curve ──
+   A single flat speed/spawn-rate either feels trivial the whole game or
+   punishing the whole game. Instead each wave gets a little faster, a
+   little denser, and a little more likely to throw a giant — so wave 1
+   is forgiving (build a streak, learn the weapon tiers) and wave 6 is a
+   real test, instead of the whole match sitting at one fixed difficulty. */
+function waveEnemySpeed(w){ return Math.min(0.052, 0.024 + w*0.0055); }   /* pos/sec: ~38s to cross on wave 0, ~19s by wave 5 */
+function waveIntervalMs(w){ return Math.max(7500, 13000 - w*900); }        /* ms between waves: 13s early, 8.5s late */
+function waveBaseCount(w){ return 2 + Math.floor(w/2); }                   /* enemies per active side: 2,2,3,3,4,4 */
+function waveGiantChance(w){ return Math.min(0.4, 0.06 + w*0.06); }       /* giant odds per enemy: 6% wave0 → 36% wave5 */
 
 /* ════════════════ GAME STATE (host-authoritative) ════════════════ */
 var allPlayers={}, gameStarted=false, isActiveHost=false, gameRunning=false, resultShown=false;
@@ -279,14 +290,15 @@ function spawnWave(){
     ? activeSides.reduce(function(sum,s){ return sum+counts[s]; },0)/activeSides.length
     : 1;
   var now=Date.now();
+  var speed=waveEnemySpeed(wave), giantChance=waveGiantChance(wave), baseCount=waveBaseCount(wave);
   SIDES.forEach(function(side){
     if(counts[side]<=0) return; /* no defenders on this lane — don't punish them */
-    var n=Math.max(1,Math.round(BASE_ENEMIES_PER_WAVE*(counts[side]/Math.max(0.5,avg))));
+    var n=Math.max(1,Math.round(baseCount*(counts[side]/Math.max(0.5,avg))));
     n=Math.min(n,MAX_ENEMIES_PER_SIDE_WAVE);
     for(var i=0;i<n;i++){
-      var isGiant = wave>=2 && Math.random()<0.22;
+      var isGiant = wave>=1 && Math.random()<giantChance;
       var id='e'+(enemyCounter++);
-      enemies[id]={side:side,wave:wave,pos:0,alive:true,spawnAt:now+i*1000,
+      enemies[id]={side:side,wave:wave,pos:0,alive:true,spawnAt:now+i*1000,speed:speed,
         hp:isGiant?GIANT_HP:1, maxHp:isGiant?GIANT_HP:1, giant:isGiant};
     }
   });
@@ -294,12 +306,12 @@ function spawnWave(){
 
 function tickSimulation(dt){
   var now=Date.now();
-  if(wave<TOTAL_WAVES && now-lastWaveAt>WAVE_INTERVAL_MS){ spawnWave(); lastWaveAt=now; }
+  if(wave<TOTAL_WAVES && now-lastWaveAt>waveIntervalMs(Math.max(0,wave+1))){ spawnWave(); lastWaveAt=now; }
 
   Object.keys(enemies).forEach(function(id){
     var en=enemies[id];
     if(!en.alive||now<en.spawnAt) return;
-    en.pos+=ENEMY_SPEED*dt;
+    en.pos+=(en.speed||waveEnemySpeed(0))*dt;
     if(en.pos>=1){
       en.alive=false; en.deadAt=now;
       towerHp=Math.max(0,towerHp-HP_DAMAGE);
@@ -483,7 +495,7 @@ function claimHostAndRun(){
       wave = st.wave!==undefined ? st.wave : -1;
       var lastTick = st.lastTickAt || Date.now();
       var elapsedMs = Math.max(0, Date.now()-lastTick);
-      lastWaveAt = Date.now() - Math.min(elapsedMs, WAVE_INTERVAL_MS);
+      lastWaveAt = Date.now() - Math.min(elapsedMs, waveIntervalMs(Math.max(0,wave+1)));
       gameRunning = true;
       if(isActiveHost) watchShots();
     });

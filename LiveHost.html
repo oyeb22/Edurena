@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -143,8 +143,12 @@
     .kh-phase-tag.board{background:rgba(167,139,250,.1);color:var(--pur);border:1px solid rgba(167,139,250,.3)}
     .kh-q-num{font-size:12px;color:var(--txt2);margin-bottom:5px}
     .kh-q-txt{font-size:18px;font-weight:700;color:var(--txt);line-height:1.4;margin-bottom:14px}
+    .kh-q-img-wrap{margin:0 0 14px;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.15)}
+    .kh-q-img-wrap img{width:100%;height:auto;max-height:240px;object-fit:contain;display:block;border-radius:10px}
     .kh-opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
     .kh-opt{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid transparent}
+    .kh-opt.has-img{flex-direction:column;align-items:stretch}
+    .kh-opt-img{width:100%;height:auto;max-height:100px;object-fit:contain;display:block;border-radius:6px;margin-bottom:4px}
     .kh-opt.k-red{background:#e21b3c18;border-color:#e21b3c44;color:#ff6b87}
     .kh-opt.k-blue{background:#1368ce18;border-color:#1368ce44;color:#60a5fa}
     .kh-opt.k-yellow{background:#d89e0018;border-color:#d89e0044;color:#fcd34d}
@@ -208,8 +212,12 @@
     .wm-timer-bar{flex:1;height:8px;background:var(--bdr);border-radius:4px;overflow:hidden}
     .wm-timer-fill{height:100%;border-radius:4px;transition:width .2s linear,background .5s}
     .wm-q-txt{font-size:18px;font-weight:700;color:var(--txt);line-height:1.4;margin-bottom:14px}
+    .wm-q-img-wrap{margin:0 0 14px;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.15)}
+    .wm-q-img-wrap img{width:100%;height:auto;max-height:240px;object-fit:contain;display:block;border-radius:10px}
     .wm-opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
     .wm-opt{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid transparent;background:var(--surf2)}
+    .wm-opt.has-img{flex-direction:column;align-items:stretch}
+    .wm-opt-img{width:100%;height:auto;max-height:100px;object-fit:contain;display:block;border-radius:6px;margin-bottom:4px}
     .wm-opt.correct{background:#1fc98e22;border-color:#1fc98e66!important;color:var(--grn)}
     .wm-action-btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:800;font-family:var(--f);cursor:pointer;transition:all .2s}
     .wm-action-btn.go{background:linear-gradient(135deg,#ff9433,#c0501c);color:#1a1006;box-shadow:0 6px 24px rgba(255,148,51,.3)}
@@ -373,6 +381,7 @@
       <div class="kh-phase-tag waiting" id="kh-phase-tag">Waiting</div>
       <div class="kh-q-num" id="kh-q-num">Question 1</div>
       <div class="kh-q-txt" id="kh-q-txt">Press the button below to begin</div>
+      <div class="kh-q-img-wrap" id="kh-q-img-wrap" style="display:none"></div>
 
       <div class="kh-timer-row" id="kh-timer-row" style="display:none">
         <div class="kh-timer-big" id="kh-timer-big">20</div>
@@ -434,6 +443,7 @@
       <div class="wm-claim-banner" id="wm-claim-banner"></div>
 
       <div class="kh-q-txt" id="wm-q-txt">Press the button below to pop the first mole</div>
+      <div class="wm-q-img-wrap" id="wm-q-img-wrap" style="display:none"></div>
 
       <div class="wm-timer-row" id="wm-timer-row" style="display:none">
         <div class="wm-timer-big" id="wm-timer-big">12</div>
@@ -869,6 +879,7 @@ function setupKahootHostPanel(){
   el('kh-progress').textContent='Q0 / '+khTotalQ;
   el('kh-q-num').textContent='Ready to begin';
   el('kh-q-txt').textContent='Press the button below to start the first question';
+  el('kh-q-img-wrap').style.display='none'; el('kh-q-img-wrap').innerHTML='';
   el('kh-timer-row').style.display='none';
   el('kh-ans-indicator').style.display='none';
   el('kh-dist').style.display='none';
@@ -892,6 +903,18 @@ function setKhPhaseTag(cls,txt){
   var t=el('kh-phase-tag');t.className='kh-phase-tag '+cls;t.textContent=txt;
 }
 
+/* Shared by the kahoot and whack host panels — shows/hides the question
+   body image, same source field LiveQuiz.html's students already see. */
+function setHostQuestionImage(wrapId,q){
+  var wrap=el(wrapId); if(!wrap) return;
+  if(q&&q.image_url){
+    wrap.style.display='';
+    wrap.innerHTML='<img src="'+esc(q.image_url)+'" alt="Question image" onerror="this.parentElement.style.display=\'none\'">';
+  } else {
+    wrap.style.display='none'; wrap.innerHTML='';
+  }
+}
+
 function setupWhackHostPanel(){
   wmQuestions=khQuestions; wmTotalQ=khTotalQ; wmTimePerQ=khTimePerQ; wmHoleCount=9;
   wmCurrentQ=-1; wmPhase='idle'; wmActiveHole=-1;
@@ -900,6 +923,7 @@ function setupWhackHostPanel(){
   el('wm-progress').textContent='Round 0 / '+wmTotalQ;
   el('wm-q-num').textContent='Ready to begin';
   el('wm-q-txt').textContent='Press the button below to pop the first mole';
+  el('wm-q-img-wrap').style.display='none'; el('wm-q-img-wrap').innerHTML='';
   el('wm-timer-row').style.display='none';
   el('wm-opts-grid').innerHTML='';
   el('wm-lb').style.display='none';
@@ -921,6 +945,7 @@ function renderKhOptions(qi,showCorrect,correctFromServer){
   el('kh-q-num').textContent='Q'+(qi+1)+' of '+khTotalQ;
   el('kh-progress').textContent='Q'+(qi+1)+' / '+khTotalQ;
   el('kh-q-txt').textContent=q.question||'';
+  setHostQuestionImage('kh-q-img-wrap',q);
 
   if(showCorrect){
     el('kh-opts-grid').style.display='grid';
@@ -930,9 +955,11 @@ function renderKhOptions(qi,showCorrect,correctFromServer){
         var serverAns=correctFromServer||q.correctAnswer||'';
         var isCorrect=opt.toLowerCase()===serverAns.toLowerCase()
                    || String.fromCharCode(65+i)===serverAns.toUpperCase();
+        var imgSrc=(q.option_images&&q.option_images[i])||'';
         var div=document.createElement('div');
-        div.className='kh-opt '+OPT_COLORS[i%4]+(isCorrect?' correct':'');
-        div.innerHTML='<div class="kh-opt-shape"></div><span class="kh-opt-txt">'+esc(opt)+'</span>'
+        div.className='kh-opt '+OPT_COLORS[i%4]+(isCorrect?' correct':'')+(imgSrc?' has-img':'');
+        div.innerHTML=(imgSrc?'<img class="kh-opt-img" src="'+esc(imgSrc)+'" alt="option '+(i+1)+'" onerror="this.remove()">':'')
+          +'<div class="kh-opt-shape"></div><span class="kh-opt-txt">'+esc(opt)+'</span>'
           +(isCorrect?'<span class="kh-correct-badge">&#x2713; Correct</span>':'');
         grid.appendChild(div);
       });
@@ -1040,14 +1067,16 @@ function renderWmOptions(q,showCorrect,correctFromServer){
   el('wm-q-num').textContent='Round '+(wmCurrentQ+1)+' of '+wmTotalQ;
   el('wm-progress').textContent='Round '+(wmCurrentQ+1)+' / '+wmTotalQ;
   el('wm-q-txt').textContent=q.question||'';
+  setHostQuestionImage('wm-q-img-wrap',q);
   var grid=el('wm-opts-grid'); grid.innerHTML='';
   if(q.type==='MCQ'||q.type==='TF'){
     (q.options||[]).forEach(function(opt,i){
       var serverAns=correctFromServer||'';
       var isCorrect=showCorrect&&(opt.toLowerCase()===serverAns.toLowerCase()||String.fromCharCode(65+i)===serverAns.toUpperCase());
+      var imgSrc=(q.option_images&&q.option_images[i])||'';
       var div=document.createElement('div');
-      div.className='wm-opt'+(isCorrect?' correct':'');
-      div.textContent=opt;
+      div.className='wm-opt'+(isCorrect?' correct':'')+(imgSrc?' has-img':'');
+      div.innerHTML=(imgSrc?'<img class="wm-opt-img" src="'+esc(imgSrc)+'" alt="option '+(i+1)+'" onerror="this.remove()">':'')+esc(opt);
       grid.appendChild(div);
     });
   } else if(showCorrect){
@@ -1338,6 +1367,7 @@ function doNextQuestion(){
       setKhPhaseTag('question','Live — Q'+(nextIdx+1));
       el('kh-q-num').textContent='Q'+(nextIdx+1)+' of '+khTotalQ+' — Live';
       el('kh-q-txt').textContent=q?q.question:'';
+      setHostQuestionImage('kh-q-img-wrap',q);
       el('kh-opts-grid').style.display='none';
       el('kh-progress').textContent='Q'+(nextIdx+1)+' / '+khTotalQ;
       el('kh-ans-indicator').style.display='none';

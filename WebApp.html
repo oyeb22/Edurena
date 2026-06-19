@@ -1,0 +1,542 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edurena — Start Exam</title>
+  <script src="edurena-dash.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 20%, rgba(167,139,250,0.1)  0%, transparent 50%),
+                  #080C16;
+      min-height:100dvh; display:flex; align-items:center; justify-content:center;
+      color:#e2e8f0; padding:20px;
+    }
+    .box {
+      background:#0F1523; border:1px solid #2e3248; border-radius:20px;
+      padding:36px 40px; width:460px; max-width:96vw;
+      box-shadow:0 24px 80px rgba(0,0,0,0.5);
+    }
+    @media(max-width:520px){
+      .box { padding:28px 20px; border-radius:16px; }
+    }
+    .logo { text-align:center; margin-bottom:28px; }
+    .logo .icon { font-size:40px; display:block; margin-bottom:10px; }
+    .logo h1 { font-size:22px; font-weight:700; color:#FB923C; }
+    .logo p  { font-size:12px; color:#7c85a2; margin-top:4px; }
+
+    /* Step indicator */
+    .steps { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:28px; }
+    .step  { width:28px; height:28px; border-radius:50%; border:2px solid #2e3248; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#7c85a2; transition:all 0.2s; }
+    .step.active  { border-color:#F97316; background:#F97316; color:white; }
+    .step.done    { border-color:#34d399; background:#34d399; color:#000; }
+    .step-line    { flex:1; max-width:40px; height:2px; background:#2e3248; border-radius:1px; }
+    .step-line.done { background:#34d399; }
+    .step-label   { font-size:11px; color:#7c85a2; text-align:center; margin-top:4px; }
+    .steps-wrap   { margin-bottom:28px; }
+    .steps-labels { display:flex; justify-content:space-between; padding:0 4px; }
+
+    .form-group { margin-bottom:16px; }
+    label { display:block; font-size:12px; font-weight:500; color:#7c85a2; margin-bottom:6px; }
+    input, select {
+      width:100%; padding:12px 14px;
+      background:#080C16; border:1px solid #2e3248; border-radius:10px;
+      color:#e2e8f0; font-size:16px; font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      outline:none; transition:border-color 0.15s, box-shadow 0.15s;
+      min-height:48px; touch-action:manipulation;
+    }
+    input:focus, select:focus {
+      border-color:#F97316;
+      box-shadow:0 0 0 3px rgba(249,115,22,0.15);
+    }
+    select option { background:#0F1523; }
+
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    .btn {
+      width:100%; padding:14px; background:#F97316; color:white;
+      border:none; border-radius:10px; font-size:15px; font-weight:700;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:background 0.15s, transform 0.1s; margin-top:6px;
+      min-height:50px; touch-action:manipulation; display:flex; align-items:center; justify-content:center;
+    }
+    .btn:hover:not(:disabled) { background:#EA6B10; }
+    .btn:active:not(:disabled) { transform:scale(.99); }
+    .btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .btn-ghost {
+      width:100%; padding:12px; background:transparent; color:#7c85a2;
+      border:1px solid #2e3248; border-radius:10px; font-size:14px; font-weight:500;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer; transition:all 0.15s; margin-top:8px;
+      min-height:46px; touch-action:manipulation;
+    }
+    .btn-ghost:hover { border-color:#F97316; color:#FB923C; }
+
+    /* Live game button — distinct teal colour so it stands out */
+    .btn-live {
+      width:100%; padding:13px; background:transparent; border:1px solid #2dd4a0;
+      border-radius:10px; color:#2dd4a0; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-live:hover { background:rgba(45,212,160,0.1); }
+
+    /* Divider with label */
+    .or-divider {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin:20px 0 4px;
+      color:#4a5270;
+      font-size:12px;
+    }
+    .or-divider::before,
+    .or-divider::after {
+      content:'';
+      flex:1;
+      height:1px;
+      background:#2e3248;
+    }
+
+    .error {
+      display:none; margin-top:14px;
+      background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3);
+      border-radius:8px; padding:10px 14px; color:#f87171; font-size:13px; line-height:1.4;
+    }
+    .error.on { display:block; }
+    .info {
+      display:none; margin-top:14px;
+      background:rgba(108,99,255,0.1); border:1px solid rgba(108,99,255,0.3);
+      border-radius:8px; padding:10px 14px; color:#FB923C; font-size:13px;
+      line-height:1.4; text-align:center;
+    }
+    .info.on { display:block; }
+    .spinner {
+      display:inline-block; width:14px; height:14px;
+      border:2px solid rgba(255,255,255,0.3); border-top-color:white;
+      border-radius:50%; animation:spin 0.7s linear infinite;
+      vertical-align:middle; margin-right:8px;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    .verified-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3);
+      border-radius:8px; padding:8px 12px; font-size:13px; color:#34d399; margin-bottom:16px; width:100%;
+    }
+  </style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">
+    <img src="assets/edurena_logo_64.png" class="icon" style="width:52px;height:52px;border-radius:50%;border:2px solid #f5a623;object-fit:cover;">
+    <h1 style="color:#F97316">Edurena</h1>
+    <p>AI-Proctored Examination Platform</p>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="steps-wrap">
+    <div class="steps">
+      <div class="step active" id="s1">1</div>
+      <div class="step-line" id="l1"></div>
+      <div class="step" id="s2">2</div>
+      <div class="step-line" id="l2"></div>
+      <div class="step" id="s3">3</div>
+    </div>
+    <div class="steps-labels">
+      <span class="step-label">Verify</span>
+      <span class="step-label">Profile</span>
+      <span class="step-label">Start</span>
+    </div>
+  </div>
+
+  <!-- PANEL 1: Exam code + email verification -->
+  <div class="panel active" id="panel1">
+    <div class="form-group">
+
+<label>Email / Student ID</label>
+<input type="text" id="email" placeholder="e.g. email@gmail.com or ADM/2025/001" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Exam Code</label>
+      <input type="text" id="code" placeholder="e.g. MATH7A-W1"
+             style="font-family:'DM Mono',monospace;text-transform:uppercase;"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <button class="btn" id="verifyBtn" onclick="doValidate()">Verify Exam Code &#x2192;</button>
+
+    <!-- Divider + Live Join button -->
+    <div class="or-divider">or</div>
+    <button class="btn-live" onclick="joinLiveGame()">
+      &#x26A1; Join a Live Game
+    </button>
+
+    <div class="error" id="errMsg1"></div>
+  </div>
+
+  <!-- PANEL 2: Student profile -->
+  <div class="panel" id="panel2">
+    <div class="verified-badge">&#x2705; Exam verified — complete your profile</div>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="studentName" placeholder="e.g. John Doe" autocomplete="name">
+    </div>
+    <div class="row2">
+      <div class="form-group">
+        <label>Class</label>
+        <input type="text" id="studentClass" placeholder="e.g. SS2A">
+      </div>
+      <div class="form-group">
+        <label>School</label>
+        <input type="text" id="studentSchool" placeholder="School name">
+      </div>
+    </div>
+    <button class="btn" id="profileBtn" onclick="doRegister()">Save &amp; Continue &#x2192;</button>
+    <button class="btn-ghost" onclick="goBack()">&#x2190; Back</button>
+    <div class="error" id="errMsg2"></div>
+  </div>
+
+  <!-- PANEL 3: Launch -->
+  <div class="panel" id="panel3">
+    <div class="verified-badge">&#x1F393; Ready to begin your exam</div>
+    <div id="examSummary" style="font-size:13px;color:#7c85a2;margin-bottom:20px;line-height:1.8;"></div>
+    <button class="btn" id="launchBtn" onclick="doLaunch()">Open Exam in New Tab &#x2192;</button>
+    <div class="info" id="infoMsg"></div>
+    <div class="error" id="errMsg3"></div>
+  </div>
+</div>
+
+<script>
+// SCRIPT_URL and the page URLs come from edurena-dash.js (DASH).
+// Hard fallbacks are used only if DASH.ready hasn't resolved yet by the
+// time a user clicks a button (extremely unlikely; <100ms typical).
+var SCRIPT_URL    = '';
+var EXAM_PAGE_URL = 'https://oyeb22.github.io/Edurena/Exam.html';
+var LIVEQUIZ_URL  = 'https://oyeb22.github.io/Edurena/livequiz.html';
+var PUZZLE_URL    = 'https://oyeb22.github.io/Edurena/Puzzle.html';
+var WHACK_URL     = 'https://oyeb22.github.io/Edurena/WhackAMole.html';
+var SHOOTOUT_URL  = 'https://oyeb22.github.io/Edurena/PenaltyShootout.html';
+var TOWER_URL     = 'https://oyeb22.github.io/Edurena/TowerDefense.html';
+
+function refreshFromDash() {
+  if (!window.DASH) return;
+  if (DASH.scriptUrl)     SCRIPT_URL    = DASH.scriptUrl;
+  if (DASH.examPageUrl)   EXAM_PAGE_URL = DASH.examPageUrl;
+  if (DASH.kahootPageUrl) LIVEQUIZ_URL  = DASH.kahootPageUrl;
+}
+// Apply immediately (in case DASH is already initialised) and again on .ready
+refreshFromDash();
+if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
+
+ var _email         = '';
+  var _code          = '';
+  var _quizMeta      = null;
+  var _quizSchool    = '';
+  var _prefillName   = '';
+  var _prefillClass  = '';
+  var _prefillSchool = '';
+  var _profileLocked = false;
+
+  function applyPrefill() {
+    var nameEl   = document.getElementById('studentName');
+    var classEl  = document.getElementById('studentClass');
+    var schoolEl = document.getElementById('studentSchool');
+    if (nameEl)   nameEl.value   = _prefillName;
+    if (classEl)  classEl.value  = _prefillClass;
+    if (schoolEl) schoolEl.value = _prefillSchool;
+
+    if (_profileLocked) {
+      // Locked profile: show data, disable editing
+      if (nameEl)   nameEl.readOnly = true;
+      if (classEl)  classEl.readOnly = true;
+      if (schoolEl) schoolEl.readOnly = true;
+      var verifiedEl = document.querySelector('#panel2 .verified-badge');
+      if (verifiedEl) verifiedEl.innerHTML = '🔒 Profile loaded — fields are locked to your registered details';
+    } else {
+      if (nameEl)   nameEl.readOnly = false;
+      if (classEl)  classEl.readOnly = false;
+      if (schoolEl) schoolEl.readOnly = false;
+    }
+  }
+
+  function showErr(panel, msg) {
+    var el = document.getElementById('errMsg' + panel);
+    if (el) { el.textContent = msg; el.classList.add('on'); }
+  }
+  function clearErr(panel) {
+    var el = document.getElementById('errMsg' + panel);
+    if (el) el.classList.remove('on');
+  }
+  function setStep(n) {
+    [1,2,3].forEach(function(i) {
+      var s = document.getElementById('s' + i);
+      if (i < n)  { s.className = 'step done'; s.textContent = '\u2713'; }
+      if (i === n) { s.className = 'step active'; s.textContent = i; }
+      if (i > n)  { s.className = 'step'; s.textContent = i; }
+      if (i < 3) {
+        var l = document.getElementById('l' + i);
+        if (l) l.className = 'step-line' + (i < n ? ' done' : '');
+      }
+    });
+    [1,2,3].forEach(function(i) {
+      var p = document.getElementById('panel' + i);
+      if (p) p.className = 'panel' + (i === n ? ' active' : '');
+    });
+  }
+  function goBack() { setStep(1); }
+
+  // ── Helper: wait for DASH to be ready before firing requests ──
+  function whenReady(fn) {
+    refreshFromDash();
+    if (SCRIPT_URL) { fn(); return; }
+    if (window.DASH && DASH.ready) {
+      DASH.ready.then(function(){ refreshFromDash(); fn(); }).catch(fn);
+    } else {
+      fn();
+    }
+  }
+
+  // ── Join Live Game ──────────────────────────────────────────
+  function joinLiveGame() {
+  var box = document.getElementById('live-picker');
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+
+  var picker = document.createElement('div');
+  picker.id = 'live-picker';
+  picker.style.cssText = [
+    'margin-top:12px',
+    'border:1px solid #2e3248',
+    'border-radius:12px',
+    'overflow:hidden'
+  ].join(';');
+
+  var GAME_ROWS = [
+    {mode:'kahoot',   icon:'🎮', glow:'108,99,255',  title:'Live Quiz',
+     desc:'Host-controlled · questions appear one at a time · live leaderboard'},
+    {mode:'puzzle',   icon:'🧩', glow:'168,85,247',  title:'Puzzle Race',
+     desc:'Self-paced · correct answers earn pieces · finish your picture first'},
+    {mode:'whack',    icon:'🔨', glow:'255,148,51',  title:'Whack-a-Mole',
+     desc:'Shared board · first correct answer whacks the mole'},
+    {mode:'shootout', icon:'⚽',       glow:'46,204,113',  title:'Penalty Shootout',
+     desc:'Random kicker/keeper pairs · fastest correct answer wins the duel'},
+    {mode:'tower',    icon:'🏰', glow:'0,212,255',   title:'Tower Defense',
+     desc:'4 teams · defend your side · everyone shares one tower'}
+  ];
+
+  picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
+    + 'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Choose Game Mode</div>'
+    + GAME_ROWS.map(function(g, i){
+        var borderBottom = i < GAME_ROWS.length - 1 ? 'border-bottom:1px solid #2e3248;' : '';
+        return '<button onclick="openGame(\'' + g.mode + '\')" style="'
+          + 'width:100%;padding:14px 16px;background:transparent;border:none;' + borderBottom
+          + 'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;'
+          + 'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"'
+          + ' onmouseenter="this.style.background=\'rgba(' + g.glow + ',0.08)\'"'
+          + ' onmouseleave="this.style.background=\'transparent\'">'
+          + '<span style="font-size:20px">' + g.icon + '</span>'
+          + '<div>'
+          + '<div style="font-weight:600">' + g.title + '</div>'
+          + '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">' + g.desc + '</div>'
+          + '</div>'
+          + '</button>';
+      }).join('');
+
+  var liveBtn = document.querySelector('.btn-live');
+  if (liveBtn && liveBtn.parentNode) {
+    liveBtn.parentNode.insertBefore(picker, liveBtn.nextSibling);
+  }
+}
+
+function openGame(mode) {
+  whenReady(function(){
+    var GAME_URLS = {
+      kahoot:   LIVEQUIZ_URL,
+      puzzle:   PUZZLE_URL,
+      whack:    WHACK_URL,
+      shootout: SHOOTOUT_URL,
+      tower:    TOWER_URL
+    };
+    var base = GAME_URLS[mode] || LIVEQUIZ_URL;
+    var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
+             + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
+}
+
+  // ── Step 1: validate exam code ──
+  function doValidate() {
+    clearErr(1);
+    var email = (document.getElementById('email').value || '').trim();
+    var code  = (document.getElementById('code').value  || '').trim().toUpperCase();
+    if (!email || email.length < 3) { showErr(1,'Please enter your email or student ID'); return; }
+    if (!code)  { showErr(1,'Please enter your exam code'); return; }
+
+    var btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Verifying...';
+
+    whenReady(function(){
+      if (!SCRIPT_URL) {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Exam Code &#x2192;';
+        showErr(1, 'Cannot reach server — please refresh the page.');
+        return;
+      }
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action:'validateExamCode', studentEmail:email, examCode:code })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(result) {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Exam Code &#x2192;';
+        if (!result || result.status !== 'success') {
+          showErr(1, result ? result.message : 'Verification failed');
+          return;
+        }
+        _email      = email;
+        _code       = code;
+        _quizMeta   = result.data.quizData;
+        _quizSchool = result.data.quizSchool || '';
+
+        fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'getStudentProfilePublic',
+            email:  email,
+            school: _quizSchool
+          })
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(profileResult) {
+          if (profileResult && profileResult.status === 'success' && profileResult.data && profileResult.data.exists) {
+            var d = profileResult.data;
+            _prefillName   = d.name       || '';
+            _prefillClass  = d.className  || '';
+            _prefillSchool = d.school     || _quizSchool || '';
+            _profileLocked = d.locked     || false;
+          } else {
+            _prefillName   = '';
+            _prefillClass  = '';
+            _prefillSchool = _quizSchool || '';
+            _profileLocked = false;
+          }
+          setStep(2);
+          applyPrefill();
+        })
+        .catch(function() {
+          _prefillName = ''; _prefillClass = ''; _prefillSchool = _quizSchool || '';
+          setStep(2);
+          applyPrefill();
+        });
+      })
+      .catch(function(e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Exam Code &#x2192;';
+        showErr(1, 'Network error: ' + e.message);
+      });
+    });
+  }
+
+  // ── Step 2: register student profile ──
+ function doRegister() {
+    clearErr(2);
+    var name   = (document.getElementById('studentName').value   || '').trim();
+    var cls    = (document.getElementById('studentClass').value  || '').trim();
+    var school = (document.getElementById('studentSchool').value || '').trim();
+    if (!name)   { showErr(2,'Please enter your full name'); return; }
+    if (!cls)    { showErr(2,'Please enter your class'); return; }
+    if (!school) { showErr(2,'Please enter your school name'); return; }
+
+    var btn = document.getElementById('profileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Saving...';
+
+    whenReady(function(){
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action:'registerStudent', email:_email, name:name, className:cls, school:school })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(result) {
+        btn.disabled = false;
+        btn.innerHTML = 'Save &amp; Continue &#x2192;';
+        if (!result || result.status !== 'success') {
+          showErr(2, result ? result.message : 'Could not save profile');
+          return;
+        }
+        var summary = document.getElementById('examSummary');
+        if (summary) {
+          summary.innerHTML =
+            '<strong style="color:#e2e8f0">' + (_quizMeta ? _quizMeta.title : 'Exam') + '</strong><br>'
+            + 'Student: ' + name + '<br>'
+            + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
+            + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
+        }
+        setStep(3);
+      })
+      .catch(function(e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Save &amp; Continue &#x2192;';
+        showErr(2, 'Network error: ' + e.message);
+      });
+    });
+  }
+
+  // ── Step 3: open exam tab ──
+  function doLaunch() {
+    clearErr(3);
+    whenReady(function(){
+      if (!EXAM_PAGE_URL || !SCRIPT_URL) {
+        showErr(3, 'Configuration error — please contact your administrator');
+        return;
+      }
+
+      var examUrl = EXAM_PAGE_URL
+        + '?email='  + encodeURIComponent(_email)
+        + '&code='   + encodeURIComponent(_code)
+        + '&script=' + encodeURIComponent(SCRIPT_URL);
+
+      var infoEl = document.getElementById('infoMsg');
+      if (infoEl) {
+        infoEl.innerHTML =
+          '<span class="spinner"></span>Opening exam tab...<br><br>' +
+          '<small>If nothing opens, ' +
+          '<a href="' + examUrl + '" target="_blank" style="color:#FB923C;">click here</a></small>';
+        infoEl.classList.add('on');
+      }
+
+      window.open(examUrl, '_blank');
+    });
+  }
+
+  // Enter key shortcuts
+  document.addEventListener('DOMContentLoaded', function() {
+    ['email','code'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doValidate();
+      });
+    });
+    ['studentName','studentClass','studentSchool'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doRegister();
+      });
+    });
+  });
+</script>
+</body>
+</html>

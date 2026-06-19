@@ -105,6 +105,12 @@
     .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn)}
     .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red)}
     .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#121a2e;color:var(--muted)}
+    .q-img-wrap{margin:4px 0 6px;text-align:center}
+    .q-img-wrap img{max-width:100%;max-height:110px;border-radius:8px;object-fit:contain;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03)}
+    .opt-img{max-width:100%;max-height:60px;border-radius:6px;margin-top:4px;object-fit:contain;display:block}
+    .opts-grid.img-grid{grid-template-columns:1fr 1fr;gap:8px}
+    .opt-btn.img-only{flex-direction:column;align-items:center;min-height:90px;padding:6px 8px;gap:4px}
+    .opt-btn.img-only .opt-img{max-height:72px;width:100%;margin-top:0}
     .short-area{display:flex;gap:6px}
     .short-inp{flex:1;padding:10px 12px;min-height:48px;background:#0a0e1a;border:1.5px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none}
     .sub-btn{padding:8px 18px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#0a0e1a;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);min-height:48px}
@@ -173,6 +179,7 @@
       <div class="weapon-badge" id="weapon-badge">&#x1F52B; CANNON</div>
       <div class="q-num" id="q-num">Q 1 / 1</div>
       <div class="q-txt" id="q-txt">Loading&hellip;</div>
+      <div id="q-img-area"></div>
       <div id="q-area"></div>
     </div>
   </div>
@@ -413,14 +420,28 @@ function loadQ(){
   var q=questions[currentQ];
   el('q-num').textContent='Q '+(currentQ+1)+' / '+totalQ;
   el('q-txt').textContent=q.question||'';
+  var qia=el('q-img-area'); qia.innerHTML='';
+  if(q.image_url&&q.image_url.trim()){
+    var qw=document.createElement('div'); qw.className='q-img-wrap';
+    var qi=document.createElement('img'); qi.src=q.image_url; qi.alt='Question image';
+    qi.onerror=function(){qw.remove();};
+    qw.appendChild(qi); qia.appendChild(qw);
+  }
   el('q-area').innerHTML='';
   answering=false;
   if(q.type==='MCQ'||q.type==='TF'){
     var labels=['A','B','C','D'];
-    var grid=document.createElement('div'); grid.className='opts-grid';
+    var imgs=q.option_images||[];
+    var anyImgOnly=(q.options||[]).some(function(o,i){ return imgs[i]&&!o; });
+    var grid=document.createElement('div'); grid.className=anyImgOnly?'opts-grid img-grid':'opts-grid';
     (q.options||[]).forEach(function(opt,i){
       var btn=document.createElement('button'); btn.className='opt-btn';
-      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><span>'+esc(opt)+'</span>';
+      var imgSrc=imgs[i]||'';
+      var isImgOnly=imgSrc&&!opt;
+      if(isImgOnly) btn.classList.add('img-only');
+      var txtPart=opt?'<span>'+esc(opt)+'</span>':'';
+      var imgPart=imgSrc?'<img class="opt-img" src="'+esc(imgSrc)+'" alt="option '+(i+1)+'" loading="lazy" onerror="this.remove()">':'';
+      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><div style="flex:1">'+txtPart+imgPart+'</div>';
       btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt||labels[i],btn));
       grid.appendChild(btn);
     });
