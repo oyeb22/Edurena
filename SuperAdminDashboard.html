@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -249,6 +249,7 @@
       <button class="ni"    onclick="navTo('activate',this)"><span class="ico">⚡</span>Activate School</button>
       <button class="ni"    onclick="navTo('pricing',this)"><span class="ico">₦</span>Pricing</button>
       <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
+      <button class="ni"    onclick="navTo('questionbank',this)"><span class="ico">📚</span>Question Bank</button>
       <div class="nsec">Account</div>
       <button class="ni"    onclick="navTo('security',this)"><span class="ico">🔒</span>Security</button>
     </nav>
@@ -444,6 +445,49 @@
             <button class="btn btn-g btn-sm" onclick="sendTestEmail()">Send Test Email to Self</button>
           </div>
           <div id="email-test-result" style="margin-top:10px;font-size:12px;color:var(--txt2);display:none"></div>
+        </div>
+      </div>
+
+      <!-- QUESTION BANK IMPORT -->
+      <div class="tp" id="tp-questionbank">
+        <div class="sh">
+          <h2>Question Bank Import</h2>
+        </div>
+        <div class="info-box">
+          <strong>How this works:</strong> Paste a JSON batch of questions drafted
+          and reviewed by Claude into the box below. Click <em>Validate &amp; Preview</em>
+          to check the format and see a summary before anything is saved. Nothing
+          is written to the database until you click <em>Commit to Database</em>.
+        </div>
+
+        <div class="card">
+          <div class="ct">Paste Question Batch (JSON)</div>
+          <textarea id="qb-paste"
+            style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
+                   background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
+                   border-radius:8px;padding:12px;resize:vertical"
+            placeholder='[ { "theme": "human-body", "tier": "middle", ... } ]'></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-g btn-sm" onclick="qbValidate()">🔍 Validate &amp; Preview</button>
+            <button class="btn btn-p btn-sm" id="qb-commit-btn" onclick="qbCommit()" disabled>✅ Commit to Database</button>
+            <button class="btn btn-g btn-sm" onclick="qbClear()">🗑 Clear</button>
+          </div>
+        </div>
+
+        <div class="card" id="qb-preview-card" style="display:none">
+          <div class="ct">Preview</div>
+          <div id="qb-preview-summary" style="margin-bottom:12px;font-size:13px;color:var(--txt2)"></div>
+          <div class="tw">
+            <table id="qb-preview-table">
+              <thead><tr><th>#</th><th>Theme</th><th>Tier</th><th>Format</th><th>Question</th><th>Status</th><th>Notes</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="qb-result-card" style="display:none">
+          <div class="ct">Import Result</div>
+          <div id="qb-result-summary" style="font-size:13px;color:var(--txt2)"></div>
         </div>
       </div>
 
@@ -797,6 +841,7 @@ var tabTitles = {
   activate: ['Activate School', 'Manually activate or renew a school subscription'],
   pricing:  ['Pricing', 'Per-student pricing — changes apply immediately'],
   settings: ['Global Settings', 'Platform configuration'],
+  questionbank: ['Question Bank', 'Import drafted questions into the parent/child question bank'],
   security: ['Account Security', 'Change your password']
 };
 
@@ -1396,6 +1441,121 @@ function loadSettings() {
     var tog = document.getElementById('tog-ai');
     if (d.aiExplanationsEnabled) tog.classList.add('on'); else tog.classList.remove('on');
   });
+}
+
+// ── QUESTION BANK IMPORT ─────────────────────────────────────────
+var qbValidatedData = null;
+
+function qbValidate() {
+  var raw = document.getElementById('qb-paste').value.trim();
+  var previewCard = document.getElementById('qb-preview-card');
+  var resultCard = document.getElementById('qb-result-card');
+  var commitBtn = document.getElementById('qb-commit-btn');
+
+  resultCard.style.display = 'none';
+  qbValidatedData = null;
+  commitBtn.disabled = true;
+
+  if (!raw) {
+    alert('Paste a JSON batch first.');
+    return;
+  }
+
+  var parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    alert('Invalid JSON: ' + e.message);
+    return;
+  }
+
+  if (!Array.isArray(parsed)) {
+    alert('Expected a JSON array of question objects.');
+    return;
+  }
+
+  var requiredFields = ['theme', 'tier', 'format', 'question_text', 'correct_answer', 'explanation'];
+  var errors = [];
+  var approved = 0, flagged = 0;
+
+  parsed.forEach(function(q, i) {
+    requiredFields.forEach(function(field) {
+      if (!q[field]) errors.push('Row ' + (i + 1) + ': missing "' + field + '"');
+    });
+    if (q.review_status === 'flagged') flagged++;
+    else approved++;
+  });
+
+  if (errors.length) {
+    alert('Validation errors found:\n\n' + errors.slice(0, 10).join('\n') +
+          (errors.length > 10 ? '\n...and ' + (errors.length - 10) + ' more' : ''));
+    return;
+  }
+
+  // Build preview table
+  var tbody = document.querySelector('#qb-preview-table tbody');
+  tbody.innerHTML = parsed.map(function(q, i) {
+    var statusBadge = q.review_status === 'flagged'
+      ? '<span style="color:var(--yel)">⚠ Flagged</span>'
+      : '<span style="color:var(--grn)">✓ Approved</span>';
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escH(q.theme) + '</td>' +
+      '<td>' + escH(q.tier) + '</td>' +
+      '<td>' + escH(q.format) + '</td>' +
+      '<td style="max-width:280px">' + escH(q.question_text) + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td style="max-width:200px;font-size:11px;color:var(--txt2)">' + escH(q.reviewer_notes || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  document.getElementById('qb-preview-summary').textContent =
+    parsed.length + ' questions total — ' + approved + ' approved, ' + flagged + ' flagged for your review.';
+  previewCard.style.display = 'block';
+
+  qbValidatedData = parsed;
+  commitBtn.disabled = false;
+}
+
+function qbCommit() {
+  if (!qbValidatedData || !qbValidatedData.length) {
+    alert('Validate a batch first.');
+    return;
+  }
+  if (!confirm('Insert ' + qbValidatedData.length + ' questions into the database?')) return;
+
+  var commitBtn = document.getElementById('qb-commit-btn');
+  commitBtn.disabled = true;
+  commitBtn.textContent = 'Importing…';
+
+  call('importQuestionBatch', { questions: qbValidatedData }, function(d) {
+    commitBtn.textContent = '✅ Commit to Database';
+    var resultCard = document.getElementById('qb-result-card');
+    var resultSummary = document.getElementById('qb-result-summary');
+
+    if (d && d.success) {
+      resultSummary.innerHTML =
+        '<strong style="color:var(--grn)">Import complete.</strong><br>' +
+        'Inserted: ' + (d.inserted || 0) + ' / ' + qbValidatedData.length +
+        (d.errors && d.errors.length ? '<br><span style="color:var(--yel)">Errors: ' + d.errors.length + '</span>' : '');
+      qbValidatedData = null;
+      document.getElementById('qb-paste').value = '';
+      document.getElementById('qb-preview-card').style.display = 'none';
+    } else {
+      resultSummary.innerHTML = '<strong style="color:var(--red)">Import failed.</strong> ' +
+        ((d && d.message) || 'Unknown error. Check the console / backend logs.');
+      commitBtn.disabled = false;
+    }
+    resultCard.style.display = 'block';
+  });
+}
+
+function qbClear() {
+  document.getElementById('qb-paste').value = '';
+  document.getElementById('qb-preview-card').style.display = 'none';
+  document.getElementById('qb-result-card').style.display = 'none';
+  qbValidatedData = null;
+  document.getElementById('qb-commit-btn').disabled = true;
 }
 
 function toggleAI() {
