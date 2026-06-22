@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -557,15 +557,24 @@
           <div style="max-width:420px;display:flex;flex-direction:column;gap:10px">
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Current password</label>
-              <input type="password" id="pwd-current" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+              <div style="position:relative">
+                <input type="password" id="pwd-current" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 36px 8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+                <button type="button" onclick="togglePw('pwd-current',this)" aria-label="Show password" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">👁</button>
+              </div>
             </div>
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">New password</label>
-              <input type="password" id="pwd-new" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+              <div style="position:relative">
+                <input type="password" id="pwd-new" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 36px 8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+                <button type="button" onclick="togglePw('pwd-new',this)" aria-label="Show password" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">👁</button>
+              </div>
             </div>
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Confirm new password</label>
-              <input type="password" id="pwd-confirm" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+              <div style="position:relative">
+                <input type="password" id="pwd-confirm" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 36px 8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+                <button type="button" onclick="togglePw('pwd-confirm',this)" aria-label="Show password" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">👁</button>
+              </div>
             </div>
             <button class="btn btn-p" onclick="savePassword()" style="margin-top:6px;align-self:flex-start">Update Password</button>
             <div id="pwd-status" style="margin-top:4px;font-size:12px;display:none"></div>
@@ -729,17 +738,22 @@ function spin(on) { document.getElementById('sp-ov').classList.toggle('on', on);
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function togglePw(id, btn) {
+  var el = document.getElementById(id); if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
 
 // ── AUTH ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   var token = '';
-  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  try { token = localStorage.getItem('qf_token') || ''; } catch(_) {}
   if (!token) { var p = new URLSearchParams(window.location.search); token = p.get('token') || ''; }
   if (!token) { authFail('No active session.'); return; }
   callRaw('validateSuperadminSession', { token: token }, function(e, r) {
     if (e || !r || r.status !== 'success') { authFail((r && r.message) || 'Super-admin access denied.'); return; }
     S = Object.assign(S, r.data, { token: token });
-    try { sessionStorage.setItem('qf_token', token); } catch(_) {}
+    try { localStorage.setItem('qf_token', token); } catch(_) {}
     boot();
   });
 });
@@ -771,6 +785,7 @@ function boot() {
 
 function doLogout() {
   callRaw('teacherLogout', { token: S.token }, function(){});
+  try { localStorage.removeItem('qf_token'); } catch(_) {}
   try { sessionStorage.clear(); } catch(_) {}
   goLogin();
 }
@@ -1449,7 +1464,7 @@ function qfhwOpen() {
   var s = _qfhwS();
   document.getElementById('qfhw-email').textContent = s.email || '—';
   document.getElementById('qfhw-role').textContent  = s.role  || '—';
-  var supportEmail = (window.DASH && DASH.superadminEmail) || 'hello@edurena.online';
+  var supportEmail = (window.DASH && DASH.supportEmail) || 'hello@edurena.online';
   document.getElementById('qfhw-email-link').href =
     'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
     + '&body=' + encodeURIComponent('My account: ' + (s.email || '-') + '\nRole: ' + (s.role || '-') + '\n\nWhat I need help with:\n');

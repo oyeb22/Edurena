@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -168,6 +168,10 @@
     .fg input,.fg select,.fg textarea{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 9px;color:var(--txt);font-size:12px;font-family:var(--font);transition:border-color .15s;outline:none;}
     .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--acc);}
     .fg select option{background:var(--surf);}
+    .pw-wrap{position:relative;}
+    .pw-wrap input{padding-right:36px;width:100%;}
+    .pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;transition:color .15s;touch-action:manipulation;}
+    .pw-toggle:hover{color:var(--txt);}
 
     /* BUTTONS */
     .btn{padding:6px 12px;border:none;border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);transition:all .14s;white-space:nowrap;}
@@ -721,9 +725,9 @@
         <div class="card">
           <div class="ct">Change Password</div>
           <div class="fgrid c3">
-            <div class="fg"><label>Current Password</label><input type="password" id="pw-cur" placeholder="••••••••"></div>
-            <div class="fg"><label>New Password</label><input type="password" id="pw-new" placeholder="Min 8 chars"></div>
-            <div class="fg"><label>Confirm New</label><input type="password" id="pw-cnf" placeholder="••••••••"></div>
+            <div class="fg"><label>Current Password</label><div class="pw-wrap"><input type="password" id="pw-cur" placeholder="••••••••"><button type="button" class="pw-toggle" onclick="togglePw('pw-cur',this)" aria-label="Show password">👁</button></div></div>
+            <div class="fg"><label>New Password</label><div class="pw-wrap"><input type="password" id="pw-new" placeholder="Min 8 chars"><button type="button" class="pw-toggle" onclick="togglePw('pw-new',this)" aria-label="Show password">👁</button></div></div>
+            <div class="fg"><label>Confirm New</label><div class="pw-wrap"><input type="password" id="pw-cnf" placeholder="••••••••"><button type="button" class="pw-toggle" onclick="togglePw('pw-cnf',this)" aria-label="Show password">👁</button></div></div>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-top:9px">
             <button class="btn btn-g" onclick="doChangePw()">Update Password</button>
@@ -879,7 +883,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // v5.1: wait for edurena-dash to provide SCRIPT_URL before calling the API.
   DASH.ready.then(function() {
     var token = '';
-    try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+    try { token = localStorage.getItem('qf_token') || ''; } catch(_) {}
     if (!token) { authFail('No active session.'); return; }
 
     callRaw('validateSession', { token: token }, function(e, r) {
@@ -894,7 +898,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       S = { token: token, email: t.email, name: t.name, role: t.role,
             school: t.school || '', phone: t.phone || '', photoUrl: t.photoUrl || '' };
-      try { sessionStorage.setItem('qf_sa_user', JSON.stringify(S)); } catch(_) {}
+      try { localStorage.setItem('qf_sa_user', JSON.stringify(S)); } catch(_) {}
       boot();
     });
   }).catch(function(e) {
@@ -962,6 +966,11 @@ function spin(on) { document.getElementById('sp-ov').classList.toggle('on', on);
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
 function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
+function togglePw(id, btn) {
+  var el = document.getElementById(id); if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
 function p2(n) { return String(n).padStart(2,'0'); }
 
 var TAB_NAMES = {
@@ -1805,7 +1814,7 @@ function saveProfile() {
   call('updateTeacherProfile', { name: name, phone: phone }, function() {
     S.name  = name;
     S.phone = phone;
-    try { sessionStorage.setItem('qf_sa_user', JSON.stringify(S)); } catch(_) {}
+    try { localStorage.setItem('qf_sa_user', JSON.stringify(S)); } catch(_) {}
     setText('prof-name', name);
     toast('success', 'Profile saved');
   });
@@ -1826,6 +1835,7 @@ function doChangePw() {
 
 function doLogout() {
   callRaw('teacherLogout', { token: S.token }, function(){});
+  try { localStorage.removeItem('qf_token'); localStorage.removeItem('qf_sa_user'); } catch(_) {}
   try { sessionStorage.clear(); } catch(_) {}
   goLogin();
 }

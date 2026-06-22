@@ -568,7 +568,7 @@ try{
 }catch(e){console.error('[Edurena] Firebase init failed:',e.message);}
 
 window.addEventListener('load',function(){
-  try{TOKEN=sessionStorage.getItem('qf_token')||'';}catch(_){}
+  try{TOKEN=localStorage.getItem('qf_token')||'';}catch(_){}
   if(!TOKEN){show('s-auth');return;}
   post('validateSession',{token:TOKEN},function(e,r){
     if(e||!r||r.status!=='success'){show('s-auth');return;}

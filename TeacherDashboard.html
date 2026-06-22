@@ -1,4 +1,4 @@
-<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
+﻿<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
      RESTORED: per-week exclude checkboxes (excluded-weeks-block, renderExcludedWeeksUI, getExcludedWeeks)
      KEPT:     M-gamepad logo, sidebar mini-stats (Active quizzes / Today's attempts / Avg score), densified tables
      API:      sends excludedWeeks[] to getSubjectsForWeek + createQuiz (backend v5.5 code.gs handles this) -->
@@ -208,35 +208,12 @@ body:not(.dark) .btn-sys { background: rgba(255,255,255,0.08); border-color: rgb
 body:not(.dark) .btn-sys:hover { background: rgba(255,255,255,0.13); color: #fff; border-color: rgba(255,255,255,0.22); }
 body:not(.dark) .btn-out { background: rgba(255,80,80,0.15); border-color: rgba(255,80,80,0.28); color: #fca5a5; }
 body:not(.dark) .btn-out:hover { background: rgba(255,80,80,0.22); }
-body:not(.dark) .mob-nav { background: #2c1608; border-top-color: #1e0e04; }
-body:not(.dark) .mob-ni { color: rgba(255,255,255,0.45); }
-body:not(.dark) .mob-ni.on { color: #f5a623; background: rgba(245,166,35,0.18); }
-/* Mobile header: dark chocolate to match sidebar + bottom nav */
+/* Mobile header: dark chocolate to match sidebar */
 body:not(.dark) .mob-header { background: #3a1f08; border-bottom-color: #1e0e04; }
 body:not(.dark) .mob-title { color: #ffc144; }
 body:not(.dark) .mob-sub { color: rgba(255,255,255,0.4); }
 body:not(.dark) .mob-hamburger { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); }
 body:not(.dark) .mob-av { color: #ffc144; background: rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.4); }
-
-/* ── MOBILE NAV BAR (bottom) ── */
-.mob-nav {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  z-index: 100;
-  padding: 0 4px 2px;
-  padding-bottom: calc(2px + env(safe-area-inset-bottom));
-}
-.mob-nav-inner { display: flex; overflow-x: auto; scrollbar-width: none; gap: 2px; }
-.mob-nav-inner::-webkit-scrollbar { display: none; }
-.mob-ni { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 10px 6px; border: none; background: none; cursor: pointer; border-radius: var(--r-sm); color: var(--text3); font-size: 10px; font-family: var(--font); font-weight: 400; transition: all .12s; min-width: 56px; position: relative; touch-action: manipulation; }
-.mob-ni.on { color: var(--accent); background: var(--accent-bg); }
-.mob-ni .mico { font-size: 18px; line-height: 1; }
-.mob-ni .mlbl { font-size: 9.5px; white-space: nowrap; }
-.mob-ni .mbadge { position: absolute; top: 5px; right: 8px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; display: none; }
-.mob-ni .mbadge.vis { display: block; }
 
 /* ── MOBILE HEADER ── */
 .mob-header {
@@ -326,6 +303,18 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--border2); }
 .fg select option { background: var(--surface); }
 .fg input[type="datetime-local"] { color-scheme: light; }
+
+/* PASSWORD REVEAL */
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 36px; width: 100%; }
+.pw-toggle {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  border: none; background: none; font-size: 14px; cursor: pointer;
+  color: var(--text3); padding: 6px; min-width: 32px; min-height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .15s; touch-action: manipulation;
+}
+.pw-toggle:hover { color: var(--text); }
 
 /* TOGGLES */
 .tr-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
@@ -504,8 +493,6 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
   .sb.drawer-open { transform: translateX(0); }
   .mob-header { display: flex; }
   .topbar { display: none; }
-  .main { padding-bottom: 66px; }
-  .mob-nav { display: block; }
   .content { padding: 14px; }
   .sgrid { grid-template-columns: repeat(2, 1fr); }
   .cgrid { grid-template-columns: 1fr; }
@@ -536,8 +523,6 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
   tbody td { padding: 7px 8px; }
   .tc { flex-wrap: wrap; gap: 6px; }
   .mob-header { padding: 9px 12px; }
-  /* Prevent long labels from overlapping on small screens */
-  .mob-ni .mlbl { font-size: 9px; }
   /* Fullscreen modal on small mobile */
   .mbox { border-radius: 0 !important; max-height: 100vh !important; }
 }
@@ -545,7 +530,6 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
 /* ── Very small (≤360px) ── */
 @media (max-width: 360px) {
   .sgrid { grid-template-columns: 1fr; }
-  .mob-ni { min-width: 50px; padding: 7px 8px 5px; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1371,9 +1355,9 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         <div class="card">
           <div class="ct">Change Password</div>
           <div class="fgrid c3">
-            <div class="fg"><label>Current Password</label><input type="password" id="pw-cur" placeholder="••••••••"></div>
-            <div class="fg"><label>New Password</label><input type="password" id="pw-new" placeholder="Min 8 chars"></div>
-            <div class="fg"><label>Confirm New</label><input type="password" id="pw-cnf" placeholder="••••••••"></div>
+            <div class="fg"><label>Current Password</label><div class="pw-wrap"><input type="password" id="pw-cur" placeholder="••••••••"><button type="button" class="pw-toggle" onclick="togglePw('pw-cur',this)" aria-label="Show password">👁</button></div></div>
+            <div class="fg"><label>New Password</label><div class="pw-wrap"><input type="password" id="pw-new" placeholder="Min 8 chars"><button type="button" class="pw-toggle" onclick="togglePw('pw-new',this)" aria-label="Show password">👁</button></div></div>
+            <div class="fg"><label>Confirm New</label><div class="pw-wrap"><input type="password" id="pw-cnf" placeholder="••••••••"><button type="button" class="pw-toggle" onclick="togglePw('pw-cnf',this)" aria-label="Show password">👁</button></div></div>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-top:9px">
             <button class="btn" onclick="doChangePw()">Update Password</button>
@@ -1383,36 +1367,6 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
 
     </div><!-- /content -->
   </div><!-- /main -->
-
-  <!-- ── MOBILE BOTTOM NAV ── -->
-  <nav class="mob-nav" id="mob-nav" aria-label="Mobile navigation">
-    <div class="mob-nav-inner">
-      <button class="mob-ni on" onclick="nav('overview',this)" data-page="overview">
-        <span class="mico">◻</span><span class="mlbl">Overview</span>
-      </button>
-      <button class="mob-ni" onclick="nav('create',this)" data-page="create">
-        <span class="mico">＋</span><span class="mlbl">Create</span>
-      </button>
-      <button class="mob-ni" onclick="nav('manage',this)" data-page="manage">
-        <span class="mico">≡</span><span class="mlbl">Quizzes</span>
-      </button>
-      <button class="mob-ni" onclick="nav('questions',this)" data-page="questions">
-        <span class="mico">？</span><span class="mlbl">Questions</span>
-      </button>
-      <button class="mob-ni" onclick="nav('students',this)" data-page="students">
-        <span class="mico">◉</span><span class="mlbl">Students<span class="mbadge" id="mob-pend-badge"></span></span>
-      </button>
-      <button class="mob-ni admin-only" onclick="nav('teachers',this)" data-page="teachers">
-        <span class="mico">♟</span><span class="mlbl">Teachers</span>
-      </button>
-      <button class="mob-ni" onclick="nav('profile',this)" data-page="profile">
-        <span class="mico">◯</span><span class="mlbl">Profile</span>
-      </button>
-      <button class="mob-ni" onclick="doLogout()" style="color:var(--danger)">
-        <span class="mico">⎋</span><span class="mlbl">Sign Out</span>
-      </button>
-    </div>
-  </nav>
 
 </div><!-- /app -->
 
@@ -1606,12 +1560,12 @@ function closeSidebar(){
 /* ── Auth Gate ── */
 document.addEventListener('DOMContentLoaded', function() {
   var token = '';
-  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  try { token = localStorage.getItem('qf_token') || ''; } catch(_) {}
   if (!token) { authFail('No active session.'); return; }
   callRaw('validateSession', { token: token }, function(e, r) {
     if (e || !r || r.status !== 'success') { authFail((r && r.message) || 'Session invalid.'); return; }
     S = Object.assign(S, r.data, { token: token });
-    try { sessionStorage.setItem('qf_teacher', JSON.stringify(S)); } catch(_) {}
+    try { localStorage.setItem('qf_teacher', JSON.stringify(S)); } catch(_) {}
     boot();
   });
   var inp = document.getElementById('tag-inp');
@@ -1727,6 +1681,11 @@ function setAv(id, url) {
   e.appendChild(img);
 }
 function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+function togglePw(id, btn) {
+  var el = document.getElementById(id); if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function p2(n) { return String(n).padStart(2,'0'); }
 
@@ -1763,17 +1722,24 @@ setInterval(function() {
   try { if (!sessionStorage.getItem('qf_theme_manual')) autoTheme(); } catch(_) {}
 }, 300000);
 
+// Tabs that hit the network on load get a short TTL cache so switching
+// back to a tab you just viewed doesn't re-pay GAS round-trip latency.
+var _tabLoadedAt = {};
+var TAB_CACHE_TTL = 30000;
+var TAB_LOADERS = {
+  overview: loadOverview, manage: loadQuizzes, archive: loadArchived,
+  classes: loadClassesTab, questions: loadQBTab, passages: loadPassagesTab,
+  teachers: loadTeachersTab, students: loadStudentsTab, settings: loadSettingsTab
+};
+
 function nav(name, el) {
   document.querySelectorAll('.tp').forEach(function(t){ t.classList.remove('on'); });
   document.querySelectorAll('.ni').forEach(function(n){ n.classList.remove('on'); });
-  document.querySelectorAll('.mob-ni').forEach(function(n){ n.classList.remove('on'); });
 
   var tp = document.getElementById('tp-'+name);
   if (tp) tp.classList.add('on');
   if (el && el.classList) el.classList.add('on');
-
-  // sync mobile bottom nav
-  document.querySelectorAll('.mob-ni[data-page="'+name+'"]').forEach(function(b){ b.classList.add('on'); });
+  document.querySelectorAll('.ni[onclick*="nav(\'' + name + '\'"]').forEach(function(n){ n.classList.add('on'); });
 
   var label = TAB_NAMES[name] || name;
   setText('tb-title', label);
@@ -1781,17 +1747,12 @@ function nav(name, el) {
   setText('mob-title', label);
   setText('mob-sub', '');
 
-  if (name==='overview')  loadOverview();
-  if (name==='manage')    loadQuizzes();
-  if (name==='archive')   loadArchived();
-  if (name==='classes')   loadClassesTab();
-  if (name==='questions') loadQBTab();
-  if (name==='passages')  loadPassagesTab();
-  if (name==='create')    loadCreateTab();
-  if (name==='teachers')  loadTeachersTab();
-  if (name==='students')  loadStudentsTab();
-  if (name==='profile')   populateProfile();
-  if (name==='settings')  loadSettingsTab();
+  if (name === 'create')  loadCreateTab();
+  else if (name === 'profile') populateProfile();
+  else if (TAB_LOADERS[name]) {
+    var fresh = _tabLoadedAt[name] && (Date.now() - _tabLoadedAt[name] < TAB_CACHE_TTL);
+    if (!fresh) { _tabLoadedAt[name] = Date.now(); TAB_LOADERS[name](); }
+  }
 
   // scroll main back to top
   var main = document.querySelector('.main');
@@ -2536,7 +2497,7 @@ function collectRubricData(){
 /* ── Teachers ── */
 function loadTeachersTab(){ loadPending(); loadActiveTeachers(); }
 function refreshPendingBadge(){
-  call('getPendingTeachers',{},function(list){ var n=(list||[]).length; ['pend-badge','mob-pend-badge'].forEach(function(id){ var b=document.getElementById(id); if(b){ b.textContent=n; b.classList.toggle('vis',n>0); } }); });
+  call('getPendingTeachers',{},function(list){ var n=(list||[]).length; var b=document.getElementById('pend-badge'); if(b){ b.textContent=n; b.classList.toggle('vis',n>0); } });
 }
 function loadPending(){
   call('getPendingTeachers',{},function(list){ var el=document.getElementById('pend-list'),ct=document.getElementById('pend-count'); if(!list||!list.length){ el.innerHTML='<p style="color:var(--text2);font-size:13px;text-align:center;padding:10px">No pending registrations.</p>'; setText('pend-count',''); refreshPendingBadge(); return; } setText('pend-count','('+list.length+')'); refreshPendingBadge(); el.innerHTML=list.map(function(t){ return '<div class="pc"><div class="pc-info"><div class="pc-name">'+esc(t.name)+'</div><div class="pc-meta">'+esc(t.email)+' · Registered: '+(t.createdAt?t.createdAt.substring(0,10):'—')+'</div></div><div class="pc-act"><button class="btn btn-ok btn-sm" onclick="openApprove(\''+esc(t.email)+'\',\''+esc(t.name)+'\')">✓ Approve</button><button class="btn btn-d btn-sm" onclick="doReject(\''+esc(t.email)+'\')">✗ Reject</button></div></div>'; }).join(''); });
@@ -2690,10 +2651,10 @@ function downloadStudentCSV(){ if(!_allStudents.length){ toast('error','No stude
 function populateProfile(){ setText('prof-name',S.name||'—'); setText('prof-email',S.email||'—'); setText('prof-role',formatRole(S.role)); var n=document.getElementById('pf-name'); if(n) n.value=S.name||''; var p=document.getElementById('pf-phone'); if(p) p.value=S.phone||''; var sc=document.getElementById('pf-school'); if(sc) sc.value=S.school||''; if(S.photoUrl){ setAv('prof-av',S.photoUrl); }else{ var av=document.getElementById('prof-av'); if(av) av.textContent=initials(S.name||S.email); } subjectTags=S.subjects||[]; renderTags(); var ci=document.getElementById('prof-cls'); if(ci) ci.textContent=S.classes&&S.classes.length?'Assigned: '+S.classes.join(', '):'No classes assigned. Contact your administrator.'; loadVoiceProfileCard();}
 function renderTags(){ var wrap=document.getElementById('subj-tags'); if(!wrap) return; var inp=document.getElementById('tag-inp'); wrap.querySelectorAll('.tag').forEach(function(t){ t.remove(); }); subjectTags.forEach(function(s){ var t=document.createElement('div'); t.className='tag'; t.innerHTML=esc(s)+'<button class="trm" onclick="removeTag(\''+esc(s)+'\')">×</button>'; wrap.insertBefore(t,inp); }); }
 function removeTag(s){ subjectTags=subjectTags.filter(function(t){ return t!==s; }); renderTags(); }
-function saveProfile(){ var name=(document.getElementById('pf-name').value||'').trim(), phone=(document.getElementById('pf-phone').value||'').trim(), school=(document.getElementById('pf-school').value||'').trim(); if(!name){ toast('error','Name is required'); return; } call('updateTeacherProfile',{name:name,phone:phone,school:school,subjects:subjectTags},function(){ S.name=name; S.phone=phone; S.school=school; S.subjects=subjectTags; try{ sessionStorage.setItem('qf_teacher',JSON.stringify(S)); }catch(_){} setText('prof-name',name); setText('sb-name',name); toast('success','Profile saved'); }); }
+function saveProfile(){ var name=(document.getElementById('pf-name').value||'').trim(), phone=(document.getElementById('pf-phone').value||'').trim(), school=(document.getElementById('pf-school').value||'').trim(); if(!name){ toast('error','Name is required'); return; } call('updateTeacherProfile',{name:name,phone:phone,school:school,subjects:subjectTags},function(){ S.name=name; S.phone=phone; S.school=school; S.subjects=subjectTags; try{ localStorage.setItem('qf_teacher',JSON.stringify(S)); }catch(_){} setText('prof-name',name); setText('sb-name',name); toast('success','Profile saved'); }); }
 function doChangePw(){ var cur=document.getElementById('pw-cur').value||'', nw=document.getElementById('pw-new').value||'', cnf=document.getElementById('pw-cnf').value||''; if(!cur||!nw){ toast('error','Fill all password fields'); return; } if(nw!==cnf){ toast('error','New passwords do not match'); return; } if(nw.length<8){ toast('error','Password must be at least 8 characters'); return; } call('changePassword',{currentPassword:cur,newPassword:nw},function(){ toast('success','Password changed'); ['pw-cur','pw-new','pw-cnf'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; }); }); }
-function doUploadPhoto(event){ var file=event.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(e){ call('uploadProfilePhoto',{imageBase64:e.target.result},function(d){ S.photoUrl=d.photoUrl; try{ sessionStorage.setItem('qf_teacher',JSON.stringify(S)); }catch(_){} setAv('prof-av',d.photoUrl); setAv('sb-av',d.photoUrl); setAv('mob-av',d.photoUrl); toast('success','Photo updated'); }); }; reader.readAsDataURL(file); event.target.value=''; }
-function doLogout(){ callRaw('teacherLogout',{token:S.token},function(){}); try{ sessionStorage.clear(); }catch(_){} goLogin(); }
+function doUploadPhoto(event){ var file=event.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(e){ call('uploadProfilePhoto',{imageBase64:e.target.result},function(d){ S.photoUrl=d.photoUrl; try{ localStorage.setItem('qf_teacher',JSON.stringify(S)); }catch(_){} setAv('prof-av',d.photoUrl); setAv('sb-av',d.photoUrl); setAv('mob-av',d.photoUrl); toast('success','Photo updated'); }); }; reader.readAsDataURL(file); event.target.value=''; }
+function doLogout(){ callRaw('teacherLogout',{token:S.token},function(){}); try{ localStorage.removeItem('qf_token'); localStorage.removeItem('qf_teacher'); }catch(_){} try{ sessionStorage.clear(); }catch(_){} goLogin(); }
 function runInit(){ if(!confirm('Initialize / repair system?')) return; call('initializeSystem',{},function(msg){ toast('success',msg||'Done'); loadClasses(loadOverview); }); }
 
 /* ── Broadsheet ── */
@@ -2866,7 +2827,7 @@ function qfhwOpen() {
   var s = _qfhwS();
   document.getElementById('qfhw-email').textContent = s.email || '—';
   document.getElementById('qfhw-role').textContent  = s.role  || '—';
-  var supportEmail = (window.DASH && DASH.superadminEmail) || 'hello@edurena.online';
+  var supportEmail = (window.DASH && DASH.supportEmail) || 'hello@edurena.online';
   document.getElementById('qfhw-email-link').href =
     'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
     + '&body=' + encodeURIComponent('My account: ' + (s.email || '-') + '\nRole: ' + (s.role || '-') + '\n\nWhat I need help with:\n');

@@ -21,7 +21,8 @@
  *
  * EXPOSES:
  *   DASH.scriptUrl          — GAS deployment URL
- *   DASH.superadminEmail    — from ?page=config
+ *   DASH.superadminEmail    — from ?page=config (founder login identity — NOT for display)
+ *   DASH.supportEmail       — from ?page=config (public contact address — use this for mailto/help links)
  *   DASH.examPageUrl        — full URL to Exam.html on GitHub
  *   DASH.kahootPageUrl      — full URL to kahoot.html on GitHub
  *   DASH.racePageUrl        — full URL to race.html on GitHub
@@ -69,6 +70,7 @@
 
   // ── Config state ──────────────────────────────────────────────────────
   var _superadminEmail = '';
+  var _supportEmail    = '';
   var _platformName    = 'Edurena';
   var _version         = '5.4';
   var _examPageUrl     = '';
@@ -86,8 +88,8 @@
       .then(function(r) { return r.json(); })
       .then(function(cfg) {
         var d = (cfg && cfg.data) ? cfg.data : cfg;
-        if (d.supportEmail)     _superadminEmail = d.supportEmail;
-        if (d.superadminEmail)  _superadminEmail = d.superadminEmail; // prefer specific key
+        if (d.supportEmail)     _supportEmail    = d.supportEmail;
+        if (d.superadminEmail)  _superadminEmail = d.superadminEmail;
         if (d.platformName)     _platformName    = d.platformName;
         if (d.brandName)        _platformName    = d.brandName;
         if (d.version)          _version         = d.version;
@@ -97,6 +99,7 @@
         _resolveReady({
           scriptUrl:       _scriptUrl,
           superadminEmail: _superadminEmail,
+          supportEmail:    _supportEmail,
           examPageUrl:     _examPageUrl,
           kahootPageUrl:   _kahootPageUrl,
           racePageUrl:     _racePageUrl
@@ -187,6 +190,7 @@
   window.DASH = {
     get scriptUrl()       { return _scriptUrl; },
     get superadminEmail() { return _superadminEmail; },
+    get supportEmail()    { return _supportEmail; },
     get platformName()    { return _platformName; },
     get version()         { return _version; },
     get examPageUrl()     { return _examPageUrl; },

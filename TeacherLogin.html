@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <base target="_top">
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
     validateResetToken(params.token);
   }
   try {
-    var stored = JSON.parse(sessionStorage.getItem('qf_teacher') || '{}');
+    var stored = JSON.parse(localStorage.getItem('qf_teacher') || '{}');
     if (stored.role === 'admin' || stored.role === 'superadmin') {
       document.getElementById('sa-link').classList.remove('hidden');
     }
@@ -478,8 +478,8 @@ function doLogin() {
       return;
     }
     try {
-      sessionStorage.setItem('qf_token', r.data.token);
-      sessionStorage.setItem('qf_teacher', JSON.stringify(r.data));
+      localStorage.setItem('qf_token', r.data.token);
+      localStorage.setItem('qf_teacher', JSON.stringify(r.data));
     } catch(_) {}
 
     /* ── ROUTING FIX: dashboards live on GitHub Pages, accessed via DASH ── */
@@ -566,7 +566,7 @@ function doResetPassword() {
 
 function goSuperadmin() {
   var token = '';
-  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  try { token = localStorage.getItem('qf_token') || ''; } catch(_) {}
   if (!token) { alert('Please sign in first.'); return; }
   window.location.href = DASH.pageUrl('SuperAdminDashboard.html');
 }
