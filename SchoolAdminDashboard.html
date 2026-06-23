@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -599,8 +599,8 @@
         <div class="card" style="padding:0">
           <div class="tw">
             <table id="t-students">
-              <thead><tr><th>Name</th><th>Email / ID</th><th>Class</th><th>Profile</th><th>Actions</th></tr></thead>
-              <tbody><tr class="er"><td colspan="5">Click Refresh to load students.</td></tr></tbody>
+              <thead><tr><th>Name</th><th>Admission #</th><th>Challenge Email</th><th>Class</th><th>Profile</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="6">Click Refresh to load students.</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -826,8 +826,14 @@
     <div class="mb">
       <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Jane Doe"></div>
       <div class="fg" style="margin-bottom:10px">
-        <label>Email / Student ID *</label>
-        <input type="text" id="st-email" placeholder="e.g. student@gmail.com or ADM/2025/001">
+        <label>Admission Number *</label>
+        <input type="text" id="st-email" placeholder="e.g. ADM/2025/001">
+        <div style="font-size:11px;color:var(--txt2);margin-top:3px">Used to log in and take exams. Can't be changed after creation.</div>
+      </div>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Email</label>
+        <input type="email" id="st-student-email" placeholder="e.g. student@gmail.com">
+        <div style="font-size:11px;color:var(--txt2);margin-top:3px">Optional — required only if this student wants to play Challenge Mode.</div>
       </div>
       <div class="fg" style="margin-bottom:14px">
         <label>Class *</label>
@@ -1512,19 +1518,23 @@ function loadStudents() {
 function renderStudentTable(students) {
   var tb = document.querySelector('#t-students tbody'); if (!tb) return;
   if (!students.length) {
-    tb.innerHTML = '<tr class="er"><td colspan="5">No students registered yet.</td></tr>'; return;
+    tb.innerHTML = '<tr class="er"><td colspan="6">No students registered yet.</td></tr>'; return;
   }
   tb.innerHTML = students.map(function(s) {
     var locked = s.locked
       ? '<span class="bdg bg" style="font-size:9px">🔒 Locked</span>'
       : '<span class="bdg by" style="font-size:9px">Unlocked</span>';
+    var chEmail = s.studentEmail
+      ? '<span class="bdg bg" style="font-size:9px">' + esc(s.studentEmail) + '</span>'
+      : '<span class="bdg" style="font-size:9px;background:var(--surf2);color:var(--txt2)">Not set</span>';
     return '<tr>'
       + '<td style="font-weight:600">' + esc(s.name || '—') + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + esc(s.email) + '</td>'
+      + '<td>' + chEmail + '</td>'
       + '<td><span class="bdg bb">' + esc(s.className || '—') + '</span></td>'
       + '<td>' + locked + '</td>'
       + '<td class="fx">'
-      + '<button class="btn btn-g btn-sm" onclick="openEditStudent(\'' + esc(s.email) + '\')">' + (s.locked ? '👁' : '✏') + '</button>'
+      + '<button class="btn btn-g btn-sm" onclick="openEditStudent(\'' + esc(s.email) + '\')">✏</button>'
       + '<button class="btn btn-d btn-sm" onclick="doDeleteStudent(\'' + esc(s.email) + '\')">Del</button>'
       + '</td></tr>';
   }).join('');
@@ -1548,6 +1558,7 @@ function openAddStudentModal() {
   document.getElementById('st-name').value  = '';
   document.getElementById('st-email').value = '';
   document.getElementById('st-email').disabled = false;
+  document.getElementById('st-student-email').value = '';
   document.getElementById('st-class').value = '';
   document.getElementById('student-mo').classList.add('on');
 }
@@ -1556,24 +1567,27 @@ function openEditStudent(email) {
   var s = _allStudents.find(function(x){ return x.email === email; });
   if (!s) return;
   _editingStudentEmail = email;
-  setText('student-mo-title', s.locked ? 'View Student (Locked)' : 'Edit Student');
-  document.getElementById('st-name').value       = s.name      || '';
-  document.getElementById('st-email').value      = s.email     || '';
-  document.getElementById('st-email').disabled   = true;
-  document.getElementById('st-class').value      = s.className || '';
-  document.getElementById('st-name').disabled    = s.locked;
-  document.getElementById('st-class').disabled   = s.locked;
+  setText('student-mo-title', s.locked ? 'Edit Student (Locked)' : 'Edit Student');
+  document.getElementById('st-name').value          = s.name         || '';
+  document.getElementById('st-email').value         = s.email        || '';
+  document.getElementById('st-email').disabled      = true; // admission number is the login ID — can't be changed in place
+  document.getElementById('st-student-email').value = s.studentEmail || '';
+  document.getElementById('st-class').value         = s.className    || '';
+  document.getElementById('st-name').disabled       = s.locked;
+  document.getElementById('st-class').disabled      = s.locked;
   document.getElementById('student-mo').classList.add('on');
 }
 
 function saveStudent() {
-  var name  = (document.getElementById('st-name').value  || '').trim();
-  var email = (document.getElementById('st-email').value || '').trim();
-  var cls   = (document.getElementById('st-class').value || '').trim();
+  var name         = (document.getElementById('st-name').value  || '').trim();
+  var email        = (document.getElementById('st-email').value || '').trim();
+  var studentEmail = (document.getElementById('st-student-email').value || '').trim();
+  var cls          = (document.getElementById('st-class').value || '').trim();
   if (!name)  { toast('error', 'Name is required');  return; }
-  if (!email || email.length < 2) { toast('error', 'Email or Student ID is required'); return; }
+  if (!email || email.length < 2) { toast('error', 'Admission number is required'); return; }
   if (!cls)   { toast('error', 'Class is required'); return; }
-  call('upsertStudent', { name: name, email: email, className: cls, school: S.school }, function() {
+  if (studentEmail && studentEmail.indexOf('@') < 0) { toast('error', 'Enter a valid email, or leave it blank'); return; }
+  call('upsertStudent', { name: name, email: email, studentEmail: studentEmail, className: cls, school: S.school }, function() {
     toast('success', _editingStudentEmail ? 'Student updated' : 'Student added');
     closeMo('student-mo');
     loadStudents();
