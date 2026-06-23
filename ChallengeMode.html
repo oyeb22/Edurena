@@ -304,7 +304,8 @@ var sessionId='', playerId='', playerName='', playerNickname='';
 var questions=[], totalQ=0, timePerQ=12, meta={};
 var lastState=null, currentQIdx=-1, answered=false, myScore=0, myCorrect=0;
 var stateRef=null, playersRef=null, claimRef=null;
-var botsScheduledForQIdx=-1, botSkillRoster=null;
+var botsScheduledForQIdx=-1, botSkillRoster=null, botJoinList=null, _botPoolFetching=false;
+var lastPlayersSnapshot={};
 var timerRaf=null, roundDeadline=0;
 
 playerId='p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -343,7 +344,10 @@ function joinChallengeLobby(cb){
 
 function watchGame(){
   playersRef = db.ref('challenge/'+sessionId+'/players');
-  playersRef.on('value', function(snap){ renderPlayerChips((snap&&snap.val())||{}); });
+  playersRef.on('value', function(snap){
+    lastPlayersSnapshot = (snap&&snap.val())||{};
+    renderPlayerChips(lastPlayersSnapshot);
+  });
 
   stateRef = db.ref('challenge/'+sessionId+'/state');
   stateRef.on('value', function(snap){
@@ -385,7 +389,9 @@ function gameTick(){
   if(st.phase==='lobby'){
     var remain = Math.max(0, Math.ceil((meta.fillDeadlineAt-now)/1000));
     el('lby-fill').textContent = remain>0 ? ('Filling remaining seats in '+remain+'s…') : 'Starting…';
-    if(now >= meta.fillDeadlineAt) trySealLobby();
+    var deadlinePassed = now >= meta.fillDeadlineAt;
+    maybeAddScheduledBots(deadlinePassed);
+    if(deadlinePassed) tryAdvanceToCountdown();
   } else if(st.phase==='countdown'){
     if(now >= (st.countdownStartAt||0) + COUNTDOWN_MS) tryStartRound(0);
   } else if(st.phase==='round'){
@@ -401,24 +407,33 @@ function gameTick(){
   }
 }
 
-var _sealing=false;
-function trySealLobby(){
-  if(_sealing) return; _sealing=true;
-  post('sealChallengeLobby',{sessionId:sessionId}).then(function(res){
-    _sealing=false;
-    if(!res||res.status!=='success') return;
-    var bots = res.data.bots||[];
-    var updates = {};
-    bots.forEach(function(b){
+// Bots trickle into the lobby one at a time as their pre-assigned arrival
+// timestamp passes (see generateChallengeBotPool in code.gs), instead of
+// all appearing at once when the fill window closes — a burst of new
+// "players" at the exact deadline would be an obvious tell that they're
+// not real. Once the deadline passes, any still-needed bots are added
+// immediately as a catch-up so the match always starts at full size.
+function maybeAddScheduledBots(deadlinePassed){
+  ensureBotPool(function(){
+    var currentTotal = Object.keys(lastPlayersSnapshot||{}).length;
+    if(currentTotal >= meta.targetSize) return;
+    var now = serverNow(), updates = {}, added = 0;
+    botJoinList.forEach(function(b){
+      if(lastPlayersSnapshot && lastPlayersSnapshot[b.id]) return; // already joined
+      if(currentTotal + added >= meta.targetSize) return; // lobby already full enough
+      if(!deadlinePassed && now < b.joinAtMs) return; // not due yet
       updates[b.id] = { name:b.name, nickname:b.nickname, score:0, correctCount:0, online:true, joinedAt:firebase.database.ServerValue.TIMESTAMP };
+      added++;
     });
-    return db.ref('challenge/'+sessionId+'/players').update(updates);
-  }).then(function(){
-    return stateRef.transaction(function(cur){
-      if(!cur||cur.phase!=='lobby') return undefined;
-      return Object.assign({}, cur, { phase:'countdown', sealed:true, countdownStartAt:firebase.database.ServerValue.TIMESTAMP });
-    });
-  }).catch(function(){ _sealing=false; });
+    if(added>0) db.ref('challenge/'+sessionId+'/players').update(updates);
+  });
+}
+
+function tryAdvanceToCountdown(){
+  stateRef.transaction(function(cur){
+    if(!cur||cur.phase!=='lobby') return undefined;
+    return Object.assign({}, cur, { phase:'countdown', sealed:true, countdownStartAt:firebase.database.ServerValue.TIMESTAMP });
+  });
 }
 
 function tryStartRound(qIdx){
@@ -480,19 +495,26 @@ function hashStr(s){
   };
 }
 
-function ensureBotSkillRoster(cb){
-  if(botSkillRoster){ cb(); return; }
+function ensureBotPool(cb){
+  if(botJoinList){ cb(); return; }
+  if(_botPoolFetching){ setTimeout(function(){ ensureBotPool(cb); }, 200); return; }
+  _botPoolFetching=true;
   post('getChallengeBotRoster',{sessionId:sessionId}).then(function(res){
+    _botPoolFetching=false;
     botSkillRoster = (res&&res.data&&res.data.roster)||{};
+    botJoinList = (res&&res.data&&res.data.list)||[];
     cb();
-  }).catch(function(){ botSkillRoster={}; cb(); });
+  }).catch(function(){ _botPoolFetching=false; botSkillRoster={}; botJoinList=[]; cb(); });
 }
 
 function simulateBotsForRound(qIdx, roundStartAt){
   if(botsScheduledForQIdx===qIdx || !roundStartAt) return;
   botsScheduledForQIdx=qIdx;
-  ensureBotSkillRoster(function(){
+  ensureBotPool(function(){
     Object.keys(botSkillRoster).forEach(function(botId){
+      // Skip candidates that never actually joined this match — enough real
+      // players may have filled the lobby before this bot's turn came up.
+      if(!lastPlayersSnapshot || !lastPlayersSnapshot[botId]) return;
       var skill = botSkillRoster[botId];
       var rng = hashStr(sessionId+'_'+qIdx+'_'+botId);
       var r1=rng(), r2=rng();
@@ -598,27 +620,38 @@ function submitAns(answer, btnEl){
   answered=true;
   el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
   var qIdx=currentQIdx;
+
+  // Fire the claim transaction and the GAS validation call AT THE SAME TIME
+  // instead of one after the other — the GAS round-trip is the slower of
+  // the two, so running them in parallel cuts the wait roughly in half
+  // versus waiting for the transaction to finish before even starting it.
   var claimNode = db.ref('challenge/'+sessionId+'/claims/'+qIdx+'/claimedBy');
-  claimNode.transaction(function(cur){ return cur ? undefined : playerId; }).then(function(result){
-    var iWonClaim = result.committed && result.snapshot.val()===playerId;
-    post('validateChallengeAnswer',{sessionId:sessionId,qIndex:qIdx,answer:answer}).then(function(res){
-      var isCorrect = !!(res&&res.status==='success'&&res.data&&res.data.isCorrect===true);
-      if(btnEl) btnEl.classList.add(isCorrect?'correct':'wrong');
-      if(iWonClaim && !isCorrect){
-        db.ref('challenge/'+sessionId+'/claims/'+qIdx).update({claimedBy:null});
-      }
-      if(iWonClaim && isCorrect){
-        myScore+=100; myCorrect++;
-        db.ref('challenge/'+sessionId+'/players/'+playerId+'/score').transaction(function(cur){ return (cur||0)+100; });
-        db.ref('challenge/'+sessionId+'/players/'+playerId+'/correctCount').transaction(function(cur){ return (cur||0)+1; });
-        el('hud-score').textContent=myScore+' pts';
-        el('claim-banner').textContent='You got it first! ⚡';
-      } else if(!iWonClaim){
-        el('q-area').insertAdjacentHTML('beforeend','<div class="answered-msg">'+(isCorrect?'Correct, but too slow!':'Locked in.')+'</div>');
-      } else {
-        el('q-area').insertAdjacentHTML('beforeend','<div class="answered-msg">Wrong answer.</div>');
-      }
-    }).catch(function(){ if(iWonClaim) db.ref('challenge/'+sessionId+'/claims/'+qIdx).update({claimedBy:null}); });
+  var claimPromise    = claimNode.transaction(function(cur){ return cur ? undefined : playerId; });
+  var validatePromise = post('validateChallengeAnswer',{sessionId:sessionId,qIndex:qIdx,answer:answer});
+
+  // allSettled, not all — if the GAS call fails we must still know whether
+  // the claim transaction itself succeeded, so we only ever release a claim
+  // we actually won (never one another player legitimately holds).
+  Promise.allSettled([claimPromise, validatePromise]).then(function(results){
+    var claimResult = results[0], validateResult = results[1];
+    var iWonClaim = claimResult.status==='fulfilled' && claimResult.value.committed && claimResult.value.snapshot.val()===playerId;
+    var res       = validateResult.status==='fulfilled' ? validateResult.value : null;
+    var isCorrect = !!(res&&res.status==='success'&&res.data&&res.data.isCorrect===true);
+    if(btnEl) btnEl.classList.add(isCorrect?'correct':'wrong');
+    if(iWonClaim && !isCorrect){
+      db.ref('challenge/'+sessionId+'/claims/'+qIdx).update({claimedBy:null});
+    }
+    if(iWonClaim && isCorrect){
+      myScore+=100; myCorrect++;
+      db.ref('challenge/'+sessionId+'/players/'+playerId+'/score').transaction(function(cur){ return (cur||0)+100; });
+      db.ref('challenge/'+sessionId+'/players/'+playerId+'/correctCount').transaction(function(cur){ return (cur||0)+1; });
+      el('hud-score').textContent=myScore+' pts';
+      el('claim-banner').textContent='You got it first! ⚡';
+    } else if(!iWonClaim){
+      el('q-area').insertAdjacentHTML('beforeend','<div class="answered-msg">'+(isCorrect?'Correct, but too slow!':'Locked in.')+'</div>');
+    } else {
+      el('q-area').insertAdjacentHTML('beforeend','<div class="answered-msg">Wrong answer.</div>');
+    }
   });
 }
 
