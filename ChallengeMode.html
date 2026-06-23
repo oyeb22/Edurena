@@ -84,7 +84,8 @@
     .lb-row{display:flex;align-items:center;gap:10px;width:min(86vw,360px);padding:9px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px}
     .lb-row.me{border-color:var(--acc2)}
     .lb-pos{font-family:var(--display);font-size:13px;color:var(--muted);width:22px}
-    .lb-name{flex:1;font-size:13px;font-weight:600}
+    .lb-name{flex:1;font-size:13px;font-weight:600;min-width:0}
+    .lb-school{font-size:10.5px;font-weight:400;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .lb-score{font-family:var(--display);font-size:13px;color:var(--yel)}
 
     .finish-overlay{position:fixed;inset:0;background:rgba(10,14,28,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .8s}
@@ -292,7 +293,7 @@ el('reg-nickname-btn').addEventListener('click', function(){
   var nickname=(el('reg-nickname').value||'').trim();
   if(nickname.length<2){ el('reg-err').textContent='Pick a nickname (min 2 characters).'; return; }
   var btn=el('reg-nickname-btn'); btn.disabled=true; btn.textContent='JOINING…';
-  playerName = regConfirmed.name; playerNickname = nickname;
+  playerName = regConfirmed.name; playerNickname = nickname; playerSchool = regConfirmed.school || '';
   joinChallengeLobby(function(errMsg){
     btn.disabled=false; btn.textContent='JOIN CHALLENGE';
     if(errMsg) el('reg-err').textContent=errMsg;
@@ -300,7 +301,7 @@ el('reg-nickname-btn').addEventListener('click', function(){
 });
 
 /* ════════════════ GAME STATE ════════════════ */
-var sessionId='', playerId='', playerName='', playerNickname='';
+var sessionId='', playerId='', playerName='', playerNickname='', playerSchool='';
 var questions=[], totalQ=0, timePerQ=12, meta={};
 var lastState=null, currentQIdx=-1, answered=false, myScore=0, myCorrect=0;
 var stateRef=null, playersRef=null;
@@ -323,7 +324,7 @@ function joinChallengeLobby(cb){
 
     setupPromise.then(function(){
       return db.ref('challenge/'+sessionId+'/players/'+playerId).set({
-        name:playerName, nickname:playerNickname, score:0, correctCount:0, online:true,
+        name:playerName, nickname:playerNickname, school:playerSchool, score:0, correctCount:0, online:true,
         joinedAt:firebase.database.ServerValue.TIMESTAMP
       });
     }).then(function(){
@@ -425,7 +426,7 @@ function maybeAddScheduledBots(deadlinePassed){
       if(lastPlayersSnapshot && lastPlayersSnapshot[b.id]) return; // already joined
       if(currentTotal + added >= meta.targetSize) return; // lobby already full enough
       if(!deadlinePassed && now < b.joinAtMs) return; // not due yet
-      updates[b.id] = { name:b.name, nickname:b.nickname, score:0, correctCount:0, online:true, joinedAt:firebase.database.ServerValue.TIMESTAMP };
+      updates[b.id] = { name:b.name, nickname:b.nickname, school:b.school, score:0, correctCount:0, online:true, joinedAt:firebase.database.ServerValue.TIMESTAMP };
       added++;
     });
     if(added>0) db.ref('challenge/'+sessionId+'/players').update(updates);
@@ -677,7 +678,10 @@ function renderLeaderboardUI(){
     var players = Object.values((snap&&snap.val())||{}).sort(function(a,b){ return (b.score||0)-(a.score||0); });
     el('lb-rows').innerHTML = players.map(function(p,i){
       var mine = p.name===playerName && p.nickname===playerNickname;
-      return '<div class="lb-row'+(mine?' me':'')+'"><div class="lb-pos">#'+(i+1)+'</div><div class="lb-name">'+esc(p.nickname||p.name||'?')+'</div><div class="lb-score">'+(p.score||0)+'</div></div>';
+      return '<div class="lb-row'+(mine?' me':'')+'"><div class="lb-pos">#'+(i+1)+'</div>'
+        + '<div class="lb-name">'+esc(p.nickname||p.name||'?')
+        + (p.school?'<div class="lb-school">'+esc(p.school)+'</div>':'')+'</div>'
+        + '<div class="lb-score">'+(p.score||0)+'</div></div>';
     }).join('');
   });
 }
