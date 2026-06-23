@@ -689,6 +689,11 @@
           <input type="date" id="mo-expiry">
         </div>
       </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label>Student Slots (Paid)</label>
+        <input type="number" id="mo-slots" min="0" placeholder="Leave blank for unlimited">
+        <div class="hint">Caps how many students this school can register. Blank = unlimited (legacy default).</div>
+      </div>
       <div class="fg" style="margin-bottom:14px">
         <label>Internal Notes</label>
         <input type="text" id="mo-notes" placeholder="e.g. Paid via bank transfer Dec 2025">
@@ -1204,7 +1209,7 @@ function renderSchoolRows(list) {
       '<td style="font-size:11px;color:var(--txt2)">'+escH(s.contactEmail||'—')+'</td>' +
       '<td><span class="bdg '+planBadge+'">'+escH(s.plan)+'</span></td>' +
       '<td>'+(s.aiEnabled?'<span class="bdg bg">On</span>':'<span class="bdg bmute">Off</span>')+'</td>' +
-      '<td style="font-family:var(--mono)">'+(s.studentCount||0)+'</td>' +
+      '<td style="font-family:var(--mono)">'+(s.studentCount||0)+(s.studentSlotsPaid!==''?' / '+s.studentSlotsPaid:'')+'</td>' +
       '<td>'+expBadge+'</td>' +
       '<td style="display:flex;gap:4px;flex-wrap:wrap">' +
         '<button class="btn btn-g btn-sm" onclick="openSchoolMo('+idx+')">Edit</button>' +
@@ -1240,6 +1245,7 @@ function openSchoolMo(idx) {
   document.getElementById('mo-contact-email').value = s ? (s.contactEmail || '') : '';
   document.getElementById('mo-plan').value          = s ? (s.plan || 'standard') : 'standard';
   document.getElementById('mo-notes').value         = s ? (s.notes || '')        : '';
+  document.getElementById('mo-slots').value         = s && s.studentSlotsPaid !== '' ? s.studentSlotsPaid : '';
   document.getElementById('mo-expiry').value        = s && s.subscriptionExpiry
     ? String(s.subscriptionExpiry).substring(0, 10) : '';
 
@@ -1266,6 +1272,8 @@ function saveSchool() {
   };
   var expiry = document.getElementById('mo-expiry').value;
   if (expiry) payload.subscriptionExpiry = expiry;
+  var slots = document.getElementById('mo-slots').value;
+  payload.studentSlots = slots; // '' clears to unlimited, a number sets the cap
 
   call('upsertSchool', payload, function() {
     toast('success', _editingSchool ? 'School updated' : 'School added');
