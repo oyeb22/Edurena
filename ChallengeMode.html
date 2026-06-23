@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Challenge Mode — Edurena</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0a0e1c; --panel:#141a30; --bdr:#27305a;
+      --txt:#eef1ff; --muted:#8088b0;
+      --acc:#7c5cff; --acc2:#00d4ff; --grn:#00ff88; --red:#ff3355; --yel:#ffcc00;
+      --f:'Plus Jakarta Sans',system-ui,sans-serif;
+      --display:'Orbitron',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{
+      position:fixed;inset:0;width:100%;height:100vh;height:100dvh;
+      background:var(--bg);color:var(--txt);font-family:var(--f);
+      overflow:hidden;touch-action:none;overscroll-behavior:none;
+    }
+    .screen{display:none;position:fixed;inset:0;z-index:100;overflow-y:auto}
+    .screen.on{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px}
+    #s-fatal{background:var(--bg);z-index:9999}
+    #s-fatal h2{color:var(--red);font-family:var(--display);font-size:22px;margin-bottom:12px}
+    #s-fatal p{color:var(--muted);font-size:14px;line-height:1.8;max-width:420px;text-align:center}
+
+    .brand-title{font-family:var(--display);font-size:clamp(18px,5vw,30px);font-weight:900;letter-spacing:2px;color:var(--acc2);margin-bottom:4px;text-shadow:0 0 20px rgba(0,212,255,.35)}
+    .brand-sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;text-align:center}
+    .card{max-width:360px;width:100%;background:rgba(20,26,48,.95);border:1px solid var(--bdr);border-radius:16px;padding:24px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .field-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .inp{display:block;width:100%;padding:12px 14px;min-height:48px;background:#0c1024;border:1.5px solid var(--bdr);border-radius:10px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none;margin-bottom:14px;-webkit-appearance:none;touch-action:manipulation}
+    .inp:focus{border-color:var(--acc2);box-shadow:0 0 0 3px rgba(0,212,255,0.15)}
+    .pbtn{width:100%;padding:14px;min-height:52px;background:linear-gradient(135deg,#5b3fd9,#00d4ff);color:#06081a;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--display);letter-spacing:1px;cursor:pointer;touch-action:manipulation;box-shadow:0 4px 24px rgba(124,92,255,0.3)}
+    .pbtn:disabled{opacity:.5;cursor:not-allowed}
+    .pbtn.ghost{background:transparent;border:1.5px solid var(--bdr);color:var(--muted);box-shadow:none;margin-top:8px}
+    .reg-err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+    .reg-msg{color:var(--muted);font-size:13px;margin-bottom:14px;text-align:center;line-height:1.6}
+    .reg-name{font-family:var(--display);font-size:20px;color:var(--acc2);text-align:center;margin-bottom:16px}
+    .reg-step{display:none}
+    .reg-step.on{display:block}
+
+    #s-lobby{background:var(--bg)}
+    .lobby-count{font-family:var(--display);font-size:44px;font-weight:900;color:var(--grn);margin-top:6px}
+    .lobby-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 16px;min-height:32px}
+    .chip{padding:4px 12px;background:#1a2140;border:1px solid var(--bdr);border-radius:20px;font-size:12px;font-weight:600;color:var(--acc2)}
+    .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc2);margin-right:7px;animation:pdot 1.4s ease-in-out infinite;vertical-align:middle}
+    @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+    .lobby-wait{font-size:13px;color:var(--muted)}
+    .lobby-fill{font-family:var(--display);font-size:13px;color:var(--yel);margin-top:10px}
+
+    #s-countdown{background:var(--bg)}
+    .cd-num{font-family:var(--display);font-size:clamp(100px,22vw,180px);font-weight:900;color:#fff;text-shadow:0 0 60px var(--acc)}
+
+    #game-wrap{position:fixed;inset:0;display:none;flex-direction:column;z-index:1}
+    #game-wrap.on{display:flex}
+    .game-top{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(20,26,48,.9);border-bottom:1px solid var(--bdr)}
+    .top-pill{background:rgba(124,92,255,.18);color:var(--acc2);font-family:var(--display);font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid rgba(124,92,255,.35)}
+    .top-timer{font-family:var(--display);font-size:18px;color:var(--yel);text-shadow:0 0 8px rgba(255,204,0,.4)}
+    .top-score{font-family:var(--display);font-size:13px;color:var(--grn)}
+
+    #q-area-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:10px;overflow-y:auto}
+    .q-card{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--bdr);border-left:3px solid var(--acc2);border-radius:10px;padding:16px}
+    .q-num{font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+    .q-txt{font-size:clamp(15px,2.6vw,18px);font-weight:600;color:var(--txt);line-height:1.4;margin-bottom:14px}
+    .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @media(max-width:380px){.opts-grid{grid-template-columns:1fr}}
+    .opt-btn{display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:10px;background:#0c1024;border:1.5px solid var(--bdr);color:var(--txt);font-size:14px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;width:100%;min-height:50px;touch-action:manipulation}
+    .opt-btn:disabled{cursor:not-allowed;opacity:.6}
+    .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn)}
+    .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red)}
+    .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#1a2140;color:var(--muted)}
+    .short-area{display:flex;gap:8px}
+    .short-inp{flex:1;padding:12px 14px;min-height:48px;background:#0c1024;border:1.5px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none}
+    .sub-btn{padding:8px 18px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#06081a;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);min-height:48px}
+    .answered-msg{text-align:center;padding:14px;font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:1px}
+    #claim-banner{font-family:var(--display);font-size:13px;font-weight:700;color:var(--yel);text-align:center;min-height:18px;letter-spacing:1px;margin-top:10px}
+    .reveal-box{margin-top:10px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:8px;font-size:12.5px;color:var(--grn);line-height:1.6}
+
+    #s-leaderboard{background:var(--bg)}
+    .lb-title{font-family:var(--display);font-size:18px;color:var(--acc2);letter-spacing:2px;margin-bottom:18px}
+    .lb-row{display:flex;align-items:center;gap:10px;width:min(86vw,360px);padding:9px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px}
+    .lb-row.me{border-color:var(--acc2)}
+    .lb-pos{font-family:var(--display);font-size:13px;color:var(--muted);width:22px}
+    .lb-name{flex:1;font-size:13px;font-weight:600}
+    .lb-score{font-family:var(--display);font-size:13px;color:var(--yel)}
+
+    .finish-overlay{position:fixed;inset:0;background:rgba(10,14,28,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .8s}
+    .finish-overlay.show{opacity:1;pointer-events:auto}
+    .finish-title{font-family:var(--display);font-size:clamp(24px,7vw,42px);font-weight:900;color:var(--acc2);letter-spacing:3px;text-shadow:0 0 30px rgba(0,212,255,.5)}
+    .finish-rank{font-family:var(--display);font-size:clamp(40px,9vw,64px);font-weight:900;color:var(--yel);margin:16px 0}
+    .finish-stat-val{font-family:var(--display);font-size:24px;font-weight:900;color:var(--acc2)}
+    .finish-stat-lbl{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+    .finish-stats{display:flex;gap:26px}
+    .finish-stat{text-align:center}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <base target="_blank">
+</head>
+<body>
+
+<div class="screen on" id="s-fatal"><h2>CANNOT LOAD</h2><p id="fatal-msg">Open this from the Edurena student portal.</p></div>
+
+<div class="screen" id="s-register">
+  <div class="brand-title">⚡ CHALLENGE MODE</div>
+  <div class="brand-sub">Edurena &nbsp;&#x25BA;&nbsp; Race other players, live</div>
+  <div class="card">
+
+    <div class="reg-step on" id="rs-email">
+      <div class="field-lbl">Your Email</div>
+      <input class="inp" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button class="pbtn" id="reg-email-btn">FIND MY ACCOUNT</button>
+    </div>
+
+    <div class="reg-step" id="rs-confirmname">
+      <div class="reg-msg">Is this you?</div>
+      <div class="reg-name" id="rs-name-display">—</div>
+      <button class="pbtn" id="rs-yes-btn">YES, THAT'S ME</button>
+      <button class="pbtn ghost" id="rs-no-btn">Not me — try another email</button>
+    </div>
+
+    <div class="reg-step" id="rs-school">
+      <div class="reg-msg">Type your school's name to confirm it's really you.</div>
+      <div class="field-lbl">School Name</div>
+      <input class="inp" id="reg-school" type="text" placeholder="e.g. Edurena Demo School" autocomplete="off">
+      <button class="pbtn" id="reg-school-btn">CONFIRM SCHOOL</button>
+    </div>
+
+    <div class="reg-step" id="rs-nickname">
+      <div class="reg-msg">Pick a nickname — this is what other players will see.</div>
+      <div class="field-lbl">Nickname</div>
+      <input class="inp" id="reg-nickname" type="text" placeholder="e.g. Speedy" maxlength="16" autocomplete="off">
+      <button class="pbtn" id="reg-nickname-btn">JOIN CHALLENGE</button>
+    </div>
+
+    <div class="reg-err" id="reg-err"></div>
+  </div>
+</div>
+
+<div class="screen" id="s-lobby">
+  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:6px">⚡ CHALLENGE MODE</div>
+  <div class="lobby-count" id="lby-count">1</div>
+  <div class="lobby-lbl">players in lobby</div>
+  <div class="chips" id="lby-chips"></div>
+  <div class="lobby-wait"><span class="pulse-dot"></span>Waiting for more players&hellip;</div>
+  <div class="lobby-fill" id="lby-fill"></div>
+</div>
+
+<div class="screen" id="s-countdown"><div class="cd-num" id="cd-num">3</div></div>
+
+<div id="game-wrap">
+  <div class="game-top">
+    <div class="top-pill" id="hud-tag">CHALLENGE</div>
+    <div class="top-timer" id="hud-timer">--</div>
+    <div class="top-score" id="hud-score">0 pts</div>
+  </div>
+  <div id="q-area-wrap">
+    <div class="q-card">
+      <div class="q-num" id="q-num">Round 1</div>
+      <div class="q-txt" id="q-txt">Loading&hellip;</div>
+      <div id="q-area"></div>
+      <div id="claim-banner"></div>
+      <div id="reveal-area"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-leaderboard">
+  <div class="lb-title">&#x1F3C6; STANDINGS</div>
+  <div id="lb-rows"></div>
+</div>
+
+<div class="finish-overlay" id="finish-overlay">
+  <div class="finish-title">CHALLENGE OVER!</div>
+  <div class="finish-rank" id="finish-rank-num">P1</div>
+  <div class="finish-stats">
+    <div class="finish-stat"><div class="finish-stat-val" id="finish-correct">0</div><div class="finish-stat-lbl">Correct</div></div>
+    <div class="finish-stat"><div class="finish-stat-val" id="finish-score">0</div><div class="finish-stat-lbl">Total Score</div></div>
+  </div>
+  <button class="pbtn" style="max-width:240px;margin-top:24px" onclick="location.reload()">PLAY AGAIN</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ════════════════ MOBILE ZOOM LOCK ════════════════ */
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturechange', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', function(e){ if(e.touches&&e.touches.length>1) e.preventDefault(); }, {passive:false});
+var _lastTapTs=0;
+document.addEventListener('touchend', function(e){ var now=Date.now(); if(now-_lastTapTs<300) e.preventDefault(); _lastTapTs=now; }, {passive:false});
+function lockMobileZoom(){
+  var vp=document.querySelector('meta[name=viewport]');
+  if(vp){ var content=vp.getAttribute('content'); vp.setAttribute('content', content+', shrink-to-fit=no');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ vp.setAttribute('content', content); }); }); }
+  if(window.scrollTo) window.scrollTo(0,0);
+}
+window.addEventListener('load', lockMobileZoom);
+
+var TIER = 'middle'; // v1: launch with a single narrow grade band
+var COUNTDOWN_MS = 3000, REVEAL_MS = 2500, LEADERBOARD_MS = 3000;
+
+var P = new URLSearchParams(window.location.search);
+var GAS_URL = (P.get('script') || '').trim();
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');}); var t=el(id); if(t) t.classList.add('on'); }
+function post(action, payload){
+  return fetch(GAS_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload||{}))})
+    .then(function(r){return r.json();});
+}
+
+if (!GAS_URL) { el('fatal-msg').textContent = 'Missing backend URL.'; return; }
+showScreen('s-register');
+
+var db, serverTimeOffset = 0;
+try {
+  var cfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var existingApp = null;
+  if (firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='challenge') existingApp=a; });
+  db = firebase.database(existingApp || firebase.initializeApp(cfg,'challenge'));
+  db.ref('.info/serverTimeOffset').on('value', function(snap){ serverTimeOffset = snap.val()||0; });
+} catch(e) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Firebase error: ' + e.message; return; }
+function serverNow(){ return Date.now() + serverTimeOffset; }
+
+/* ════════════════ REGISTRATION ════════════════ */
+var regEmail='', regCandidates=[], regConfirmed=null;
+
+function regStep(id){
+  document.querySelectorAll('.reg-step').forEach(function(s){s.classList.remove('on');});
+  el(id).classList.add('on');
+  el('reg-err').textContent='';
+}
+
+el('reg-email-btn').addEventListener('click', function(){
+  var email=(el('reg-email').value||'').trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){ el('reg-err').textContent='Enter a valid email.'; return; }
+  var btn=el('reg-email-btn'); btn.disabled=true; btn.textContent='LOOKING…';
+  post('lookupChallengeStudent',{email:email}).then(function(res){
+    btn.disabled=false; btn.textContent='FIND MY ACCOUNT';
+    if(!res||res.status!=='success'){ el('reg-err').textContent=(res&&res.message)||'Could not look that up.'; return; }
+    regEmail=email; regCandidates=res.data.matches||[];
+    if(!regCandidates.length){ el('reg-err').textContent='No record found for that email. Ask your teacher to register you first.'; return; }
+    if(regCandidates.length===1){
+      el('rs-name-display').textContent=regCandidates[0].name;
+      regStep('rs-confirmname');
+    } else {
+      regStep('rs-school'); // multiple matches — confirm school first, before showing any name
+    }
+  }).catch(function(){ btn.disabled=false; btn.textContent='FIND MY ACCOUNT'; el('reg-err').textContent='Network error. Try again.'; });
+});
+
+el('rs-yes-btn').addEventListener('click', function(){
+  regConfirmed = regCandidates[0];
+  regStep('rs-school');
+});
+el('rs-no-btn').addEventListener('click', function(){ regStep('rs-email'); });
+
+el('reg-school-btn').addEventListener('click', function(){
+  var school=(el('reg-school').value||'').trim();
+  if(!school){ el('reg-err').textContent='Enter your school name.'; return; }
+  var btn=el('reg-school-btn'); btn.disabled=true; btn.textContent='CHECKING…';
+  post('confirmChallengeStudent',{email:regEmail,schoolNameTyped:school}).then(function(res){
+    btn.disabled=false; btn.textContent='CONFIRM SCHOOL';
+    if(!res||res.status!=='success'){ el('reg-err').textContent=(res&&res.message)||'That school name doesn’t match.'; return; }
+    regConfirmed = res.data;
+    if(regCandidates.length>1){
+      // we skipped the name-confirm step earlier (ambiguous email) — show it now
+      el('rs-name-display').textContent=regConfirmed.name;
+      regStep('rs-confirmname');
+      el('rs-yes-btn').onclick=function(){ regStep('rs-nickname'); };
+      el('rs-no-btn').onclick=function(){ regStep('rs-email'); };
+    } else {
+      regStep('rs-nickname');
+    }
+  }).catch(function(){ btn.disabled=false; btn.textContent='CONFIRM SCHOOL'; el('reg-err').textContent='Network error. Try again.'; });
+});
+
+el('reg-nickname-btn').addEventListener('click', function(){
+  var nickname=(el('reg-nickname').value||'').trim();
+  if(nickname.length<2){ el('reg-err').textContent='Pick a nickname (min 2 characters).'; return; }
+  var btn=el('reg-nickname-btn'); btn.disabled=true; btn.textContent='JOINING…';
+  playerName = regConfirmed.name; playerNickname = nickname;
+  joinChallengeLobby(function(errMsg){
+    btn.disabled=false; btn.textContent='JOIN CHALLENGE';
+    if(errMsg) el('reg-err').textContent=errMsg;
+  });
+});
+
+/* ════════════════ GAME STATE ════════════════ */
+var sessionId='', playerId='', playerName='', playerNickname='';
+var questions=[], totalQ=0, timePerQ=12, meta={};
+var lastState=null, currentQIdx=-1, answered=false, myScore=0, myCorrect=0;
+var stateRef=null, playersRef=null, claimRef=null;
+var botsScheduledForQIdx=-1, botSkillRoster=null;
+var timerRaf=null, roundDeadline=0;
+
+playerId='p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+
+function joinChallengeLobby(cb){
+  post('findOrCreateChallengeLobby',{tier:TIER}).then(function(res){
+    if(!res||res.status!=='success'){ cb((res&&res.message)||'Could not start a lobby.'); return; }
+    var d=res.data;
+    sessionId=d.sessionId; meta=d.meta; questions=d.questions; totalQ=meta.totalQ; timePerQ=meta.timePerQ;
+
+    var setupPromise = d.isNew
+      ? db.ref('challenge/'+sessionId).set({ meta:meta, questions:questions, state:d.state })
+      : Promise.resolve();
+
+    setupPromise.then(function(){
+      return db.ref('challenge/'+sessionId+'/players/'+playerId).set({
+        name:playerName, nickname:playerNickname, score:0, correctCount:0, online:true,
+        joinedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+    }).then(function(){
+      db.ref('challenge/'+sessionId+'/players/'+playerId+'/online').onDisconnect().set(false);
+      showScreen('s-lobby');
+      watchGame();
+      cb(null);
+    }).catch(function(e){ cb(e.message||'Could not join the lobby.'); });
+  }).catch(function(){ cb('Network error. Try again.'); });
+}
+
+/* ════════════════ DECENTRALIZED PHASE MACHINE ════════════════
+   No host device exists for Challenge Mode. Every connected client
+   independently watches `state` and, once a deadline passes locally,
+   attempts the next transition via a Firebase transaction guarded by
+   compare-and-swap on the expected current phase/qIndex. Concurrent
+   attempts from multiple clients collapse safely — only the first
+   commits, the rest are harmless no-ops. */
+
+function watchGame(){
+  playersRef = db.ref('challenge/'+sessionId+'/players');
+  playersRef.on('value', function(snap){ renderPlayerChips((snap&&snap.val())||{}); });
+
+  stateRef = db.ref('challenge/'+sessionId+'/state');
+  stateRef.on('value', function(snap){
+    var st = (snap&&snap.val())||{};
+    lastState = st;
+    var phase = st.phase||'lobby';
+    if(phase==='lobby'){
+      showScreen('s-lobby');
+    } else if(phase==='countdown'){
+      showScreen('s-countdown');
+    } else if(phase==='round'){
+      document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+      if(!el('game-wrap').classList.contains('on')) el('game-wrap').classList.add('on');
+      if(st.qIndex!==currentQIdx){ currentQIdx=st.qIndex; startRoundUI(st.qIndex, st.roundStartAt); watchClaim(st.qIndex); }
+    } else if(phase==='reveal'){
+      stopTimer();
+      showRevealUI(st);
+    } else if(phase==='leaderboard'){
+      stopTimer();
+      renderLeaderboardUI();
+    } else if(phase==='final'){
+      stopTimer();
+      showFinishUI();
+    }
+  });
+
+  setInterval(gameTick, 500);
+}
+
+function renderPlayerChips(players){
+  var names = Object.values(players).map(function(p){ return p.nickname||p.name||'?'; });
+  el('lby-count').textContent = names.length;
+  el('lby-chips').innerHTML = names.map(function(n){ return '<div class="chip">'+esc(n)+'</div>'; }).join('');
+}
+
+function gameTick(){
+  if(!sessionId || !lastState || !meta.fillDeadlineAt) return;
+  var st = lastState, now = serverNow();
+  if(st.phase==='lobby'){
+    var remain = Math.max(0, Math.ceil((meta.fillDeadlineAt-now)/1000));
+    el('lby-fill').textContent = remain>0 ? ('Filling remaining seats in '+remain+'s…') : 'Starting…';
+    if(now >= meta.fillDeadlineAt) trySealLobby();
+  } else if(st.phase==='countdown'){
+    if(now >= (st.countdownStartAt||0) + COUNTDOWN_MS) tryStartRound(0);
+  } else if(st.phase==='round'){
+    if(now >= (st.roundStartAt||0) + timePerQ*1000) tryReveal(st.qIndex);
+    else simulateBotsForRound(st.qIndex, st.roundStartAt);
+  } else if(st.phase==='reveal'){
+    if(now >= (st.revealedAt||0) + REVEAL_MS) tryLeaderboard(st.qIndex);
+  } else if(st.phase==='leaderboard'){
+    if(now >= (st.leaderboardAt||0) + LEADERBOARD_MS){
+      if(st.qIndex+1 < totalQ) tryStartRound(st.qIndex+1);
+      else tryFinal();
+    }
+  }
+}
+
+var _sealing=false;
+function trySealLobby(){
+  if(_sealing) return; _sealing=true;
+  post('sealChallengeLobby',{sessionId:sessionId}).then(function(res){
+    _sealing=false;
+    if(!res||res.status!=='success') return;
+    var bots = res.data.bots||[];
+    var updates = {};
+    bots.forEach(function(b){
+      updates[b.id] = { name:b.name, nickname:b.nickname, score:0, correctCount:0, online:true, joinedAt:firebase.database.ServerValue.TIMESTAMP };
+    });
+    return db.ref('challenge/'+sessionId+'/players').update(updates);
+  }).then(function(){
+    return stateRef.transaction(function(cur){
+      if(!cur||cur.phase!=='lobby') return undefined;
+      return Object.assign({}, cur, { phase:'countdown', sealed:true, countdownStartAt:firebase.database.ServerValue.TIMESTAMP });
+    });
+  }).catch(function(){ _sealing=false; });
+}
+
+function tryStartRound(qIdx){
+  stateRef.transaction(function(cur){
+    if(!cur) return undefined;
+    if(qIdx===0){ if(cur.phase!=='countdown') return undefined; }
+    else { if(cur.phase!=='leaderboard' || cur.qIndex!==qIdx-1) return undefined; }
+    return Object.assign({}, cur, {
+      phase:'round', qIndex:qIdx, roundStartAt:firebase.database.ServerValue.TIMESTAMP,
+      correctAnswer:'', explanation:''
+    });
+  });
+}
+
+function tryReveal(qIdx){
+  post('getChallengeReveal',{sessionId:sessionId,qIndex:qIdx}).then(function(res){
+    var d = (res&&res.data)||{};
+    return stateRef.transaction(function(cur){
+      if(!cur||cur.phase!=='round'||cur.qIndex!==qIdx) return undefined;
+      return Object.assign({}, cur, {
+        phase:'reveal', correctAnswer:d.correctAnswer||'', explanation:d.explanation||'',
+        revealedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+    });
+  });
+}
+
+function tryLeaderboard(qIdx){
+  stateRef.transaction(function(cur){
+    if(!cur||cur.phase!=='reveal'||cur.qIndex!==qIdx) return undefined;
+    return Object.assign({}, cur, { phase:'leaderboard', leaderboardAt:firebase.database.ServerValue.TIMESTAMP });
+  });
+}
+
+function tryFinal(){
+  stateRef.transaction(function(cur){
+    if(!cur||cur.phase!=='leaderboard') return undefined;
+    return Object.assign({}, cur, { phase:'final' });
+  });
+}
+
+/* ════════════════ BOT SIMULATION — deterministic, no coordination ════════════════
+   Every connected client derives the IDENTICAL outcome for every bot from a
+   seeded PRNG (sessionId+qIndex+botId), so all clients independently schedule
+   the same bot "moves" with zero network round-trip. Whichever client's local
+   timer fires first wins the underlying Firebase transaction; the rest no-op. */
+
+function hashStr(s){
+  var h = 1779033703 ^ s.length;
+  for (var i = 0; i < s.length; i++) {
+    h = Math.imul(h ^ s.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function(){
+    h = Math.imul(h ^ (h >>> 16), 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 3266489917);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+function ensureBotSkillRoster(cb){
+  if(botSkillRoster){ cb(); return; }
+  post('getChallengeBotRoster',{sessionId:sessionId}).then(function(res){
+    botSkillRoster = (res&&res.data&&res.data.roster)||{};
+    cb();
+  }).catch(function(){ botSkillRoster={}; cb(); });
+}
+
+function simulateBotsForRound(qIdx, roundStartAt){
+  if(botsScheduledForQIdx===qIdx || !roundStartAt) return;
+  botsScheduledForQIdx=qIdx;
+  ensureBotSkillRoster(function(){
+    Object.keys(botSkillRoster).forEach(function(botId){
+      var skill = botSkillRoster[botId];
+      var rng = hashStr(sessionId+'_'+qIdx+'_'+botId);
+      var r1=rng(), r2=rng();
+      var isCorrect = r1 < skill.accuracy;
+      var spread = skill.skillTier==='sharp' ? [1200,4000] : skill.skillTier==='steady' ? [2000,7000] : [3500,9500];
+      var delayMs = spread[0] + r2*(spread[1]-spread[0]);
+      var fireAt = roundStartAt + delayMs;
+      var wait = Math.max(50, fireAt - serverNow());
+      setTimeout(function(){
+        if(!lastState||lastState.phase!=='round'||lastState.qIndex!==qIdx) return;
+        attemptBotClaim(botId, qIdx, isCorrect);
+      }, wait);
+    });
+  });
+}
+
+function attemptBotClaim(botId, qIdx, isCorrect){
+  var claimNode = db.ref('challenge/'+sessionId+'/claims/'+qIdx+'/claimedBy');
+  claimNode.transaction(function(cur){ return cur ? undefined : botId; }).then(function(result){
+    var won = result.committed && result.snapshot.val()===botId;
+    if(won && isCorrect){
+      db.ref('challenge/'+sessionId+'/players/'+botId+'/score').transaction(function(cur){ return (cur||0)+100; });
+      db.ref('challenge/'+sessionId+'/players/'+botId+'/correctCount').transaction(function(cur){ return (cur||0)+1; });
+    } else if(won && !isCorrect){
+      db.ref('challenge/'+sessionId+'/claims/'+qIdx).update({claimedBy:null});
+    }
+  });
+}
+
+/* ════════════════ ROUND UI ════════════════ */
+function startRoundUI(qIdx, roundStartAt){
+  answered=false;
+  el('claim-banner').textContent='';
+  el('reveal-area').innerHTML='';
+  var q=questions[qIdx]; if(!q) return;
+  el('q-num').textContent='Round '+(qIdx+1)+' / '+totalQ;
+  el('q-txt').textContent=q.question||'';
+  el('q-area').innerHTML='';
+
+  if(q.format==='mcq'){
+    var labels=['A','B','C','D'];
+    var grid=document.createElement('div'); grid.className='opts-grid';
+    (q.options||[]).forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><span>'+esc(opt)+'</span>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt,btn));
+      grid.appendChild(btn);
+    });
+    el('q-area').appendChild(grid);
+  } else if(q.format==='true_false'){
+    var grid2=document.createElement('div'); grid2.className='opts-grid';
+    ['True','False'].forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      btn.innerHTML='<div class="opt-key">'+(i===0?'A':'B')+'</div><span>'+opt+'</span>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt,btn));
+      grid2.appendChild(btn);
+    });
+    el('q-area').appendChild(grid2);
+  } else {
+    var area=document.createElement('div'); area.className='short-area';
+    var inp=document.createElement('input'); inp.className='short-inp'; inp.type='text'; inp.placeholder='Type answer…';
+    var sbtn=document.createElement('button'); sbtn.className='sub-btn'; sbtn.textContent='GO';
+    sbtn.addEventListener('click',function(){ if(!inp.disabled&&inp.value.trim()) submitAns(inp.value.trim(),null); });
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter') sbtn.click(); });
+    area.appendChild(inp); area.appendChild(sbtn);
+    el('q-area').appendChild(area);
+  }
+
+  roundDeadline = roundStartAt + timePerQ*1000;
+  startTimer();
+}
+
+function startTimer(){
+  stopTimer();
+  function tick(){
+    var rem=Math.max(0,Math.ceil((roundDeadline-serverNow())/1000));
+    el('hud-timer').textContent=rem+'s';
+    if(rem<=0){ stopTimer(); return; }
+    timerRaf=requestAnimationFrame(tick);
+  }
+  tick();
+}
+function stopTimer(){ if(timerRaf){cancelAnimationFrame(timerRaf);timerRaf=null;} }
+
+function watchClaim(qIdx){
+  if(claimRef){ try{claimRef.off('value');}catch(_){} }
+  claimRef = db.ref('challenge/'+sessionId+'/claims/'+qIdx);
+  claimRef.on('value', function(snap){
+    var c = snap&&snap.val();
+    if(c&&c.claimedBy){
+      db.ref('challenge/'+sessionId+'/players/'+c.claimedBy+'/nickname').once('value', function(nSnap){
+        var nm = nSnap.val()||'Someone';
+        el('claim-banner').textContent = (c.claimedBy===playerId?'You':nm)+' got it first! ⚡';
+      });
+    } else {
+      el('claim-banner').textContent='';
+    }
+  });
+}
+
+function submitAns(answer, btnEl){
+  if(answered) return;
+  answered=true;
+  el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
+  var qIdx=currentQIdx;
+  var claimNode = db.ref('challenge/'+sessionId+'/claims/'+qIdx+'/claimedBy');
+  claimNode.transaction(function(cur){ return cur ? undefined : playerId; }).then(function(result){
+    var iWonClaim = result.committed && result.snapshot.val()===playerId;
+    post('validateChallengeAnswer',{sessionId:sessionId,qIndex:qIdx,answer:answer}).then(function(res){
+      var isCorrect = !!(res&&res.status==='success'&&res.data&&res.data.isCorrect===true);
+      if(btnEl) btnEl.classList.add(isCorrect?'correct':'wrong');
+      if(iWonClaim && !isCorrect){
+        db.ref('challenge/'+sessionId+'/claims/'+qIdx).update({claimedBy:null});
+      }
+      if(iWonClaim && isCorrect){
+        myScore+=100; myCorrect++;
+        db.ref('challenge/'+sessionId+'/players/'+playerId+'/score').transaction(function(cur){ return (cur||0)+100; });
+        db.ref('challenge/'+sessionId+'/players/'+playerId+'/correctCount').transaction(function(cur){ return (cur||0)+1; });
+        el('hud-score').textContent=myScore+' pts';
+        el('claim-banner').textContent='You got it first! ⚡';
+      } else if(!iWonClaim){
+        el('q-area').insertAdjacentHTML('beforeend','<div class="answered-msg">'+(isCorrect?'Correct, but too slow!':'Locked in.')+'</div>');
+      } else {
+        el('q-area').insertAdjacentHTML('beforeend','<div class="answered-msg">Wrong answer.</div>');
+      }
+    }).catch(function(){ if(iWonClaim) db.ref('challenge/'+sessionId+'/claims/'+qIdx).update({claimedBy:null}); });
+  });
+}
+
+function showRevealUI(st){
+  if(claimRef){ try{claimRef.off('value');}catch(_){} claimRef=null; }
+  if(!answered){ el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;}); }
+  if(st.correctAnswer){
+    el('reveal-area').innerHTML = '<div class="reveal-box">Correct answer: <strong>'+esc(st.correctAnswer)+'</strong>'
+      + (st.explanation?('<br>'+esc(st.explanation)):'') + '</div>';
+  }
+}
+
+function renderLeaderboardUI(){
+  showScreen('s-leaderboard');
+  db.ref('challenge/'+sessionId+'/players').once('value', function(snap){
+    var players = Object.values((snap&&snap.val())||{}).sort(function(a,b){ return (b.score||0)-(a.score||0); });
+    el('lb-rows').innerHTML = players.map(function(p,i){
+      var mine = p.name===playerName && p.nickname===playerNickname;
+      return '<div class="lb-row'+(mine?' me':'')+'"><div class="lb-pos">#'+(i+1)+'</div><div class="lb-name">'+esc(p.nickname||p.name||'?')+'</div><div class="lb-score">'+(p.score||0)+'</div></div>';
+    }).join('');
+  });
+}
+
+function showFinishUI(){
+  el('finish-correct').textContent=myCorrect;
+  el('finish-score').textContent=myScore;
+  db.ref('challenge/'+sessionId+'/players').once('value', function(snap){
+    var players = Object.entries((snap&&snap.val())||{}).map(function(e){ return Object.assign({pid:e[0]},e[1]); })
+      .sort(function(a,b){ return (b.score||0)-(a.score||0); });
+    var idx = players.findIndex(function(p){ return p.pid===playerId; });
+    el('finish-rank-num').textContent='P'+(idx>=0?idx+1:players.length);
+  });
+  el('finish-overlay').classList.add('show');
+}
+
+window.addEventListener('beforeunload', function(){
+  [playersRef,stateRef,claimRef].forEach(function(r){ if(r){ try{r.off('value');}catch(_){} } });
+});
+
+})();
+</script>
+</body>
+</html>
