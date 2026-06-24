@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -489,6 +489,49 @@
           <div class="ct">Import Result</div>
           <div id="qb-result-summary" style="font-size:13px;color:var(--txt2)"></div>
         </div>
+
+        <div class="card">
+          <div class="ct">Challenge Mode Themes</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 12px;line-height:1.6">
+            Each Challenge Mode match draws its questions from one active theme below and uses that theme's own timer for every round. If no themes are active, matches fall back to mixing all approved questions for the tier with a 12s default.
+          </p>
+          <div class="tw">
+            <table id="theme-table">
+              <thead><tr><th>Theme</th><th>Label</th><th>Time/Q (s)</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:end">
+            <div style="flex:1;min-width:120px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Theme key</label>
+              <input type="text" id="theme-key" placeholder="e.g. human-body" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--mono);font-size:12.5px;outline:none">
+            </div>
+            <div style="flex:1;min-width:140px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Display label</label>
+              <input type="text" id="theme-label" placeholder="e.g. Human Body" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none">
+            </div>
+            <div style="width:100px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Time/Q (s)</label>
+              <input type="number" id="theme-time" min="5" max="60" value="12" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--mono);font-size:12.5px;outline:none">
+            </div>
+            <button class="btn btn-p btn-sm" onclick="saveTheme()">+ Add / Update</button>
+            <button class="btn btn-g btn-sm" onclick="clearThemeForm()">Clear</button>
+          </div>
+          <div id="theme-status" style="margin-top:8px;font-size:12px;display:none"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Topic of the Day — Calendar</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 12px;line-height:1.6">
+            Assign one featured theme per day — every Challenge Mode match that day uses it and its timer. Days left unset pick a random active theme instead.
+          </p>
+          <div class="tw">
+            <table id="cal-table">
+              <thead><tr><th>Date</th><th>Day</th><th>Theme</th></tr></thead>
+              <tbody><tr class="er"><td colspan="3">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- v5.5: PRICING — per-student price control (mutable anytime) -->
@@ -859,9 +902,10 @@ function navTo(name, el) {
   var t = tabTitles[name] || [name, ''];
   setText('tb-title', t[0]);
   setText('tb-sub', t[1]);
-  if (name === 'settings') loadSettings();
-  if (name === 'pricing')  loadPricing();
-  if (name === 'security') loadSecurity();
+  if (name === 'settings')     loadSettings();
+  if (name === 'pricing')      loadPricing();
+  if (name === 'security')     loadSecurity();
+  if (name === 'questionbank') loadThemes();
 }
 
 // ── OVERVIEW ────────────────────────────────────────────────────
@@ -1564,6 +1608,103 @@ function qbClear() {
   document.getElementById('qb-result-card').style.display = 'none';
   qbValidatedData = null;
   document.getElementById('qb-commit-btn').disabled = true;
+}
+
+// ── CHALLENGE MODE THEMES ──────────────────────────────────────
+var allThemes = [];
+function loadThemes() {
+  call('getPcThemes', {}, function(d) {
+    allThemes = d || [];
+    renderThemeTable();
+    loadThemeCalendar();
+  });
+}
+
+// ── TOPIC OF THE DAY CALENDAR ──────────────────────────────────
+var calEntries = {}; // 'yyyy-mm-dd' -> theme
+function loadThemeCalendar() {
+  call('getThemeCalendar', {}, function(rows) {
+    calEntries = {};
+    (rows || []).forEach(function(r){ calEntries[r.date] = r.theme; });
+    renderCalendarTable();
+  });
+}
+function renderCalendarTable() {
+  var tb = document.querySelector('#cal-table tbody'); if (!tb) return;
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var today = new Date();
+  var rows = '';
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    var dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var current = calEntries[dateStr] || '';
+    var label = i===0 ? 'Today' : (i===1 ? 'Tomorrow' : dayNames[d.getDay()]);
+    var options = '<option value="">— Not set (random) —</option>' + allThemes.map(function(t) {
+      return '<option value="' + escH(t.theme) + '"' + (t.theme===current?' selected':'') + '>' + escH(t.label || t.theme) + '</option>';
+    }).join('');
+    rows += '<tr><td style="font-family:var(--mono);font-size:12px">' + dateStr + '</td>'
+      + '<td>' + label + '</td>'
+      + '<td><select onchange="setCalendarDay(\'' + dateStr + '\',this.value)" style="background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;color:var(--txt);font-family:var(--font);font-size:12px;outline:none;width:100%">' + options + '</select></td></tr>';
+  }
+  tb.innerHTML = rows;
+}
+function setCalendarDay(date, theme) {
+  call('setThemeCalendarEntry', { date: date, theme: theme }, function() {
+    toast('success', theme ? 'Theme scheduled' : 'Cleared — will use a random active theme');
+    calEntries[date] = theme;
+  });
+}
+function renderThemeTable() {
+  var tb = document.querySelector('#theme-table tbody'); if (!tb) return;
+  if (!allThemes.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="5">No themes configured yet — matches mix all approved questions for the tier.</td></tr>';
+    return;
+  }
+  tb.innerHTML = allThemes.map(function(t) {
+    var statusBadge = t.active
+      ? '<span class="bdg bg">Active</span>'
+      : '<span class="bdg" style="background:var(--surf2);color:var(--txt2)">Off</span>';
+    return '<tr>'
+      + '<td><code>' + escH(t.theme) + '</code></td>'
+      + '<td>' + escH(t.label || '—') + '</td>'
+      + '<td style="font-family:var(--mono)">' + (t.timePerQ || 12) + '</td>'
+      + '<td>' + statusBadge + '</td>'
+      + '<td style="display:flex;gap:4px;flex-wrap:wrap">'
+      + '<button class="btn btn-g btn-sm" onclick="editThemeForm(\'' + escH(t.theme) + '\')">Edit</button>'
+      + '<button class="btn btn-g btn-sm" onclick="toggleThemeActive(\'' + escH(t.theme) + '\',' + !t.active + ')">' + (t.active ? 'Deactivate' : 'Activate') + '</button>'
+      + '<button class="btn btn-d btn-sm" onclick="deleteTheme(\'' + escH(t.theme) + '\')">Del</button>'
+      + '</td></tr>';
+  }).join('');
+}
+function editThemeForm(theme) {
+  var t = allThemes.find(function(x){ return x.theme === theme; });
+  if (!t) return;
+  document.getElementById('theme-key').value = t.theme;
+  document.getElementById('theme-label').value = t.label || '';
+  document.getElementById('theme-time').value = t.timePerQ || 12;
+}
+function clearThemeForm() {
+  document.getElementById('theme-key').value = '';
+  document.getElementById('theme-label').value = '';
+  document.getElementById('theme-time').value = '12';
+}
+function saveTheme() {
+  var theme    = (document.getElementById('theme-key').value || '').trim();
+  var label    = (document.getElementById('theme-label').value || '').trim();
+  var timePerQ = parseInt(document.getElementById('theme-time').value, 10) || 12;
+  if (!theme) { toast('error', 'Theme key is required'); return; }
+  call('upsertPcTheme', { theme: theme, label: label, timePerQ: timePerQ, active: true }, function() {
+    toast('success', 'Theme saved');
+    clearThemeForm();
+    loadThemes();
+  });
+}
+function toggleThemeActive(theme, makeActive) {
+  call('upsertPcTheme', { theme: theme, active: makeActive }, function() { loadThemes(); });
+}
+function deleteTheme(theme) {
+  if (!confirm('Remove theme "' + theme + '"? Existing questions keep this theme tag but won\'t be picked for new matches.')) return;
+  call('deletePcTheme', { theme: theme }, function() { toast('success', 'Theme removed'); loadThemes(); });
 }
 
 function toggleAI() {

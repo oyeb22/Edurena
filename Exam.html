@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -45,6 +45,17 @@
     body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overscroll-behavior:none;}
     #loadingScreen{display:none;position:fixed;inset:0;background:rgba(8,11,20,.92);z-index:99999;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(6px);}
     #loadingScreen.on{display:flex;}
+    #consentGate{display:none;position:fixed;inset:0;background:rgba(8,11,20,.94);z-index:99998;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+    #consentGate.on{display:flex;}
+    .cg-box{max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 26px;}
+    .cg-box h3{font-size:16px;margin-bottom:12px;color:var(--text);}
+    .cg-box p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;}
+    .cg-check{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text);cursor:pointer;margin-bottom:20px;}
+    .cg-check input{margin-top:2px;width:16px;height:16px;flex-shrink:0;}
+    .cg-actions{display:flex;flex-direction:column;gap:10px;align-items:center;}
+    #cgContinueBtn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#7c6ff7);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;}
+    #cgContinueBtn:disabled{opacity:.4;cursor:not-allowed;}
+    .cg-decline{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;}
     .ld-ring{width:52px;height:52px;border:3px solid var(--surface3);border-top-color:var(--accent);border-right-color:var(--accent2);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px;}
     #loadingText{color:var(--text2);font-size:13px;letter-spacing:.3px;}
     @keyframes spin{to{transform:rotate(360deg);}}
@@ -403,6 +414,21 @@
       <p style="font-size:11px;color:#7c85a2;margin-top:14px;line-height:1.6;border-top:1px solid #2e3248;padding-top:12px;">
         If the button doesn't work, screenshot this screen and contact your teacher with the reference code above.
       </p>
+    </div>
+  </div>
+</div>
+
+<div id="consentGate">
+  <div class="cg-box" id="cgBox">
+    <h3>📷 Before You Begin</h3>
+    <p>This exam uses webcam proctoring. A photo of you is captured when the exam starts, and again each time a violation (such as leaving fullscreen) is flagged. Photos are used only by your school's teachers and administrators to review exam integrity.</p>
+    <label class="cg-check">
+      <input type="checkbox" id="cgCheckbox" onchange="document.getElementById('cgContinueBtn').disabled=!this.checked">
+      <span>I understand and agree to proceed.</span>
+    </label>
+    <div class="cg-actions">
+      <button id="cgContinueBtn" disabled onclick="confirmProctoringConsent()">Continue</button>
+      <span class="cg-decline" onclick="declineProctoringConsent()">I do not agree</span>
     </div>
   </div>
 </div>
@@ -1543,8 +1569,6 @@ window.addEventListener('load',function(){
         if (instrBox && instrTxt) { instrTxt.textContent = quizMeta.examInstruction; instrBox.style.display = 'block'; }
       }
       safeText('bannerCode', student.examCode);
-      fetchStudentInfo();
-      initMedia();
       CFG.MAX_VIOLATIONS = quizMeta.maxViolations || 3;
       if (quizMeta.enableTTS) {
         post('getTeacherVoiceProfileForExam', { examCode: student.examCode }, function(e2, r2) {
@@ -1553,6 +1577,12 @@ window.addEventListener('load',function(){
           }
         });
       }
+      // Gated BEFORE the camera activates — a first-time student must see
+      // and accept this before any proctoring data is captured, not after.
+      gateOnProctoringConsent(function(){
+        fetchStudentInfo();
+        initMedia();
+      });
     }).catch(function(e) {
       hideLoading();
       safeText('preTitle', 'Access Denied');
@@ -1569,6 +1599,28 @@ window.addEventListener('load',function(){
     safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.');
   }
 });   // ← ADD THIS: closes the load event listener callback
+
+var _proctoringConsentCb = null;
+function gateOnProctoringConsent(cb){
+  post('getProctoringConsentStatus',{email:student.email,school:quizMeta.school||''},function(err,res){
+    if(!err && res && res.status==='success' && res.data && res.data.consented){ cb(); return; }
+    _proctoringConsentCb = cb;
+    document.getElementById('consentGate').classList.add('on');
+  });
+}
+function confirmProctoringConsent(){
+  var btn=document.getElementById('cgContinueBtn');
+  btn.disabled=true; btn.textContent='Please wait…';
+  post('recordProctoringConsent',{email:student.email,school:quizMeta.school||''},function(err,res){
+    document.getElementById('consentGate').classList.remove('on');
+    if(_proctoringConsentCb) _proctoringConsentCb();
+  });
+}
+function declineProctoringConsent(){
+  document.getElementById('cgBox').innerHTML = '<h3>Exam Not Started</h3>'
+    + '<p>You chose not to agree to webcam proctoring, so this exam cannot continue. '
+    + 'Please speak with your teacher if you have questions, then return to this link when you\'re ready.</p>';
+}
 
 function fetchStudentInfo(){
   var email=student.email;

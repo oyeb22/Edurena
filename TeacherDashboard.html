@@ -429,7 +429,7 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
 .photo-reason.violation { background: var(--danger-bg); color: var(--danger); }
 #photo-lb { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.88); align-items: center; justify-content: center; flex-direction: column; gap: 10px; }
 #photo-lb.on { display: flex; }
-#photo-lb img { max-width: 90vw; max-height: 80vh; border-radius: 8px; }
+#photo-lb canvas { max-width: 90vw; max-height: 80vh; border-radius: 8px; }
 #photo-lb-close { position: absolute; top: 14px; right: 18px; font-size: 20px; color: #fff; cursor: pointer; opacity: .7; background: none; border: none; }
 #photo-lb-close:hover { opacity: 1; }
 #photo-lb-cap { font-size: 12px; color: rgba(255,255,255,.6); }
@@ -739,18 +739,12 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <!-- OVERVIEW -->
       <div class="tp on" id="tp-overview">
 
-        <!-- Welcome banner -->
+        <!-- Welcome banner — quiz-count badge and "+ New Quiz" live in the
+             topbar above (visible on every tab), so this just greets. -->
         <div class="ovw-banner">
           <div>
             <div class="ovw-greeting" id="ovw-greeting">Welcome back 👋</div>
             <div class="ovw-sub" id="ovw-sub">Here's what's happening today</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-            <span class="ovw-badge" id="ovw-active-badge" style="display:none">
-              <span class="live-dot" style="width:5px;height:5px;margin-right:2px"></span>
-              <span id="ovw-active-count">0</span> active
-            </span>
-            <button class="btn-qc" onclick="nav('create',null)">+ New Quiz</button>
           </div>
         </div>
 
@@ -1206,10 +1200,10 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         </div>
         <div class="card" style="margin-top:10px">
           <div class="ct">Bulk Register Students</div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">Paste a JSON array. Existing unlocked profiles are updated.</p>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">Paste a JSON array. Existing unlocked profiles are updated. The "email" field accepts an admission number too — it's just an identifier, not validated as an email format.</p>
           <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-bottom:10px;font-family:var(--mono);font-size:10.5px;color:var(--text2);line-height:1.7">
             <div style="color:var(--accent-text);font-weight:500;margin-bottom:3px;font-family:var(--font)">Format:</div>
-[{ "name": "Jane Doe", "email": "jane@school.com", "class": "SS2A", "school": "Your School Name" }]
+[{ "name": "Jane Doe", "email": "ADM/2025/001", "class": "SS2A", "school": "Your School Name" }]
           </div>
           <div class="fgrid" style="margin-bottom:9px">
             <div class="fg"><label>Override School</label><select id="bulk-school" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Use school from JSON —</option></select></div>
@@ -1455,7 +1449,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
     <div class="mh"><span class="mh-title" id="student-mo-title">Add Student</span><button class="mc" onclick="closeMo('student-mo')">✕</button></div>
     <div class="mb">
       <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Jane Doe"></div>
-      <div class="fg" style="margin-bottom:10px"><label>Email / Student ID *</label><input type="text" id="st-email" placeholder="e.g. student@gmail.com or ADM/2025/001"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Admission Number / Email *</label><input type="text" id="st-email" placeholder="e.g. ADM/2025/001 or student@gmail.com"></div>
       <div class="fg" style="margin-bottom:10px"><label>Class *</label><select id="st-class" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Select class —</option></select></div>
       <div class="fg" style="margin-bottom:10px"><label>School *</label><select id="st-school" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"><option value="">— Select school —</option></select></div>
       <div style="background:var(--surface2);border-radius:var(--r-sm);padding:9px 11px;font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">Profile locks after first exam submission.</div>
@@ -1519,9 +1513,9 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
   </div>
 </div>
 
-<div id="photo-lb">
+<div id="photo-lb" oncontextmenu="return false" style="user-select:none;-webkit-user-select:none">
   <button id="photo-lb-close" onclick="closeLightbox()">✕</button>
-  <img id="photo-lb-img" src="" alt="Proctoring photo">
+  <canvas id="photo-lb-canvas"></canvas>
   <div id="photo-lb-cap"></div>
 </div>
 
@@ -1856,11 +1850,9 @@ function loadOverview() {
     countUp('s-tot', allQuizzes.length);
     countUp('s-cls', allClasses.length);
     countUp('s-act', activeCount);
-    // Update active badge in banner + topbar
-    ['ovw-active-badge','tb-active-badge'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.style.display = activeCount>0?'inline-flex':'none';
-    });
-    ['ovw-active-count','tb-active-count'].forEach(function(id){ setText(id,activeCount); });
+    // Update active badge in topbar
+    var tbBadge=document.getElementById('tb-active-badge'); if(tbBadge) tbBadge.style.display = activeCount>0?'inline-flex':'none';
+    setText('tb-active-count',activeCount);
     renderRecentTable(); check();
   },function(){ check(); });
   if(allQuestions.length){ countUp('s-qs', allQuestions.length); check(); }
@@ -2113,9 +2105,43 @@ function loadAllStudentPhotos(email,container){
   container.innerHTML='<p style="text-align:center;color:var(--text2);padding:10px">Loading photos…</p>';
   call('getStudentAllPhotos',{email:email},function(photos){ renderPhotosGrid(photos||[],container,email); });
 }
+// Canvas, not <img> — burns a watermark into the pixels (viewer name + time)
+// and most browsers don't offer "Save image as" on a canvas the way they do
+// for <img>. This can't stop an OS-level screenshot (nothing can), but it
+// deters casual right-click copying and leaves an audit trail if a photo
+// does leak.
+function drawPhotoWatermark(ctx,w,h,text){
+  ctx.save();
+  ctx.font=Math.max(13,Math.round(w/32))+'px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.32)';
+  ctx.strokeStyle='rgba(0,0,0,0.22)';
+  ctx.lineWidth=1;
+  ctx.textAlign='center';
+  ctx.translate(w/2,h/2); ctx.rotate(-Math.PI/8); ctx.translate(-w/2,-h/2);
+  var stepX=w/2.1, stepY=h/4.2;
+  for(var y=-h*0.5;y<h*1.5;y+=stepY){
+    for(var x=-w*0.5;x<w*1.5;x+=stepX){ ctx.strokeText(text,x,y); ctx.fillText(text,x,y); }
+  }
+  ctx.restore();
+}
 function openLightbox(url,caption){
-  var lb=document.getElementById('photo-lb'),img=document.getElementById('photo-lb-img'),cap=document.getElementById('photo-lb-cap');
-  if(lb) lb.classList.add('on'); if(img) img.src=url; if(cap) cap.textContent=caption||'';
+  var lb=document.getElementById('photo-lb'),canvas=document.getElementById('photo-lb-canvas'),cap=document.getElementById('photo-lb-cap');
+  if(lb) lb.classList.add('on'); if(cap) cap.textContent=caption||'';
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var img=new Image();
+  img.onload=function(){
+    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    var who=(S.name||S.email||'Teacher');
+    drawPhotoWatermark(ctx,canvas.width,canvas.height,who+' · '+new Date().toLocaleString());
+  };
+  img.onerror=function(){
+    canvas.width=320; canvas.height=120;
+    ctx.fillStyle='#222'; ctx.fillRect(0,0,320,120);
+    ctx.fillStyle='#fff'; ctx.font='14px sans-serif'; ctx.fillText('Could not load photo',20,60);
+  };
+  img.src=url;
 }
 function closeLightbox(){ var lb=document.getElementById('photo-lb'); if(lb) lb.classList.remove('on'); }
 function loadHistory() {
