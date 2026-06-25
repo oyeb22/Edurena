@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -151,6 +151,9 @@
     .filter-bar input{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;transition:border-color .15s;flex:1;}
     .filter-bar input:focus{border-color:var(--acc);}
     .filter-bar select{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;}
+    /* Native <option> list defaults to the OS theme (usually white) regardless
+       of the closed <select>'s own styling — set it explicitly everywhere. */
+    select option{background:var(--surf);color:var(--txt);}
 
     .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
     .mo.on{display:flex;}
@@ -250,6 +253,7 @@
       <button class="ni"    onclick="navTo('pricing',this)"><span class="ico">₦</span>Pricing</button>
       <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
       <button class="ni"    onclick="navTo('questionbank',this)"><span class="ico">📚</span>Question Bank</button>
+      <button class="ni"    onclick="navTo('competitions',this)"><span class="ico">🏆</span>Competitions</button>
       <div class="nsec">Account</div>
       <button class="ni"    onclick="navTo('security',this)"><span class="ico">🔒</span>Security</button>
     </nav>
@@ -534,6 +538,26 @@
         </div>
       </div>
 
+      <!-- COMPETITION MODE -->
+      <div class="tp" id="tp-competitions">
+        <div class="sh"><h2>Competitions</h2></div>
+        <div class="info-box">
+          <strong>How this works:</strong> Schedule a competition, hand-pick its theme and exact questions, set a ticket price and cash prize pool with a placement split. New competitions start as <strong>Draft</strong> — switch to <strong>Test</strong> to try the full flow yourself with payment skipped, then <strong>Published</strong> only when ready to charge real money.
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">All Competitions</div>
+            <button class="btn btn-p btn-sm" onclick="openCompetitionModal()">+ New Competition</button>
+          </div>
+          <div class="tw">
+            <table id="comp-table">
+              <thead><tr><th>Title</th><th>Date</th><th>Status</th><th>Ticket</th><th>Prize Pool</th><th>Questions</th><th>Tickets Sold</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="8">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- v5.5: PRICING — per-student price control (mutable anytime) -->
       <div class="tp" id="tp-pricing">
         <div class="sh"><h2>Per-Student Pricing</h2></div>
@@ -785,6 +809,109 @@
   </div>
 </div>
 
+<!-- COMPETITION EDIT MODAL -->
+<div class="mo" id="comp-mo">
+  <div class="mbox" style="width:640px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title" id="comp-mo-title">New Competition</span>
+      <button class="mc" onclick="closeMo('comp-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg" style="margin-bottom:10px"><label>Title *</label><input type="text" id="comp-title" placeholder="e.g. June Knowledge Cup" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Description</label><input type="text" id="comp-desc" placeholder="Optional — shown to participants" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none"></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Theme</label>
+          <select id="comp-theme" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none"><option value="">— Select —</option></select>
+        </div>
+        <div style="flex:1;min-width:120px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Tier</label>
+          <input type="text" id="comp-tier" placeholder="e.g. middle" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:120px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Status</label>
+          <select id="comp-status" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+            <option value="draft">Draft</option>
+            <option value="test">Test (bypass payment)</option>
+            <option value="published">Published (real money)</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Competition Date/Time *</label>
+          <input type="datetime-local" id="comp-date" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:180px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Lobby Opens At</label>
+          <input type="datetime-local" id="comp-lobby-open" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Questions *</label>
+          <input type="number" id="comp-qcount" min="1" value="10" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Time/Q (s)</label>
+          <input type="number" id="comp-timeq" min="5" max="60" value="12" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Target Lobby Size</label>
+          <input type="number" id="comp-lobby-size" min="1" placeholder="optional" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Max Tickets</label>
+          <input type="number" id="comp-max-tickets" min="1" placeholder="unlimited" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Ticket Price (₦) *</label>
+          <input type="number" id="comp-price" min="0" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:140px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Prize Pool (₦)</label>
+          <input type="number" id="comp-prize-pool" min="0" value="0" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:6px"><label>Prize Split (%) — 1st / 2nd / 3rd</label></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px">
+        <input type="number" id="comp-split-1" min="0" max="100" value="50" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        <input type="number" id="comp-split-2" min="0" max="100" value="30" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        <input type="number" id="comp-split-3" min="0" max="100" value="20" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+      </div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:14px">Must add up to 100% or less. Each percentage is applied to the prize pool above.</div>
+      <div id="comp-locked-notice" class="info-box warn" style="display:none;margin-bottom:14px">Tickets have already been sold — ticket price and prize terms are locked and can no longer be changed.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <button class="btn btn-g" id="comp-manage-q-btn" style="display:none" onclick="openQuestionPicker()">📝 Manage Questions</button>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button class="btn btn-g" onclick="closeMo('comp-mo')">Cancel</button>
+          <button class="btn btn-p" onclick="saveCompetition()">Save Competition</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION PICKER MODAL -->
+<div class="mo" id="qpick-mo">
+  <div class="mbox" style="width:680px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Pick Competition Questions</span>
+      <button class="mc" onclick="closeMo('qpick-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:end">
+        <div style="flex:1"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Filter by theme</label>
+          <select id="qpick-theme-filter" onchange="loadQuestionPickerOptions()" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none"><option value="">— All approved questions —</option></select>
+        </div>
+        <div style="font-size:12px;color:var(--txt2)" id="qpick-selected-count">0 selected</div>
+      </div>
+      <div class="tw" style="max-height:50vh;overflow-y:auto">
+        <table id="qpick-table">
+          <thead><tr><th style="width:30px"></th><th>Theme</th><th>Format</th><th>Question</th></tr></thead>
+          <tbody><tr class="er"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button class="btn btn-g" onclick="closeMo('qpick-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="saveCompetitionQuestionPicks()">Save Question Set</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="sp-ov" id="sp-ov"><div class="sp-box"><div class="sp"></div><div id="sp-txt">Working…</div></div></div>
 <div class="ts-stack" id="toasts"></div>
 
@@ -906,6 +1033,7 @@ function navTo(name, el) {
   if (name === 'pricing')      loadPricing();
   if (name === 'security')     loadSecurity();
   if (name === 'questionbank') loadThemes();
+  if (name === 'competitions') loadCompetitions();
 }
 
 // ── OVERVIEW ────────────────────────────────────────────────────
@@ -1705,6 +1833,207 @@ function toggleThemeActive(theme, makeActive) {
 function deleteTheme(theme) {
   if (!confirm('Remove theme "' + theme + '"? Existing questions keep this theme tag but won\'t be picked for new matches.')) return;
   call('deletePcTheme', { theme: theme }, function() { toast('success', 'Theme removed'); loadThemes(); });
+}
+
+// ── COMPETITIONS ────────────────────────────────────────────────
+var allCompetitions = [];
+var _editingCompetitionId = null;
+var _qpickAllRows = [];
+var _qpickSelectedOrder = []; // array of question id strings, in pick order
+
+function loadCompetitions() {
+  if (!allThemes.length) loadThemes();
+  call('getCompetitionsAdmin', {}, function(d) {
+    allCompetitions = d || [];
+    renderCompetitionsTable();
+  });
+}
+
+function renderCompetitionsTable() {
+  var tb = document.querySelector('#comp-table tbody'); if (!tb) return;
+  if (!allCompetitions.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="8">No competitions yet.</td></tr>';
+    return;
+  }
+  var badges = {
+    draft:     '<span class="bdg" style="background:var(--surf2);color:var(--txt2)">Draft</span>',
+    test:      '<span class="bdg by">Test</span>',
+    published: '<span class="bdg bg">Published</span>',
+    completed: '<span class="bdg bb">Completed</span>',
+    cancelled: '<span class="bdg br">Cancelled</span>'
+  };
+  tb.innerHTML = allCompetitions.map(function(c) {
+    var dateStr = c.competition_date ? new Date(c.competition_date).toLocaleString() : '—';
+    var actions = '<button class="btn btn-g btn-sm" onclick="openCompetitionModal(\'' + c.id + '\')">Edit</button>';
+    if (!c.finalized_at) actions += ' <button class="btn btn-d btn-sm" onclick="deleteCompetitionRow(\'' + c.id + '\')">Del</button>';
+    return '<tr>'
+      + '<td style="font-weight:600">' + escH(c.title) + '</td>'
+      + '<td style="font-size:12px">' + dateStr + '</td>'
+      + '<td>' + (badges[c.status] || escH(c.status)) + '</td>'
+      + '<td style="font-family:var(--mono)">₦' + Number(c.price_per_ticket_ngn || 0).toLocaleString() + '</td>'
+      + '<td style="font-family:var(--mono)">₦' + Number(c.prize_pool_ngn || 0).toLocaleString() + '</td>'
+      + '<td>' + (c.total_question_count || 0) + '</td>'
+      + '<td style="font-family:var(--mono)">' + (c.ticketsSold || 0) + '</td>'
+      + '<td style="display:flex;gap:4px;flex-wrap:wrap">' + actions + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function openCompetitionModal(id) {
+  _editingCompetitionId = id || null;
+  var c = id ? allCompetitions.find(function(x){ return x.id === id; }) : null;
+
+  setText('comp-mo-title', c ? 'Edit Competition' : 'New Competition');
+
+  // Theme dropdown sourced from the same Themes list used elsewhere
+  var themeSel = document.getElementById('comp-theme');
+  themeSel.innerHTML = '<option value="">— Select —</option>' + allThemes.map(function(t) {
+    return '<option value="' + escH(t.theme) + '">' + escH(t.label || t.theme) + '</option>';
+  }).join('');
+
+  document.getElementById('comp-title').value = c ? (c.title || '') : '';
+  document.getElementById('comp-desc').value = c ? (c.description || '') : '';
+  themeSel.value = c ? (c.theme || '') : '';
+  document.getElementById('comp-tier').value = c ? (c.tier || '') : '';
+  document.getElementById('comp-status').value = c ? (c.status || 'draft') : 'draft';
+  document.getElementById('comp-date').value = c && c.competition_date ? toLocalDatetimeInput(c.competition_date) : '';
+  document.getElementById('comp-lobby-open').value = c && c.lobby_open_at ? toLocalDatetimeInput(c.lobby_open_at) : '';
+  document.getElementById('comp-qcount').value = c ? (c.total_question_count || 10) : 10;
+  document.getElementById('comp-timeq').value = c ? (c.time_per_question_sec || 12) : 12;
+  document.getElementById('comp-lobby-size').value = c && c.target_lobby_size ? c.target_lobby_size : '';
+  document.getElementById('comp-max-tickets').value = c && c.max_tickets ? c.max_tickets : '';
+  document.getElementById('comp-price').value = c ? (c.price_per_ticket_ngn || '') : '';
+  document.getElementById('comp-prize-pool').value = c ? (c.prize_pool_ngn || 0) : 0;
+
+  var split = { '1': 50, '2': 30, '3': 20 };
+  if (c && c.prize_split_json) { try { split = JSON.parse(c.prize_split_json); } catch (e2) {} }
+  document.getElementById('comp-split-1').value = split['1'] || 0;
+  document.getElementById('comp-split-2').value = split['2'] || 0;
+  document.getElementById('comp-split-3').value = split['3'] || 0;
+
+  var locked = !!(c && c.ticketsSold > 0);
+  document.getElementById('comp-locked-notice').style.display = locked ? 'block' : 'none';
+  document.getElementById('comp-price').disabled = locked;
+  document.getElementById('comp-prize-pool').disabled = locked;
+  document.getElementById('comp-split-1').disabled = locked;
+  document.getElementById('comp-split-2').disabled = locked;
+  document.getElementById('comp-split-3').disabled = locked;
+
+  document.getElementById('comp-manage-q-btn').style.display = id ? 'inline-flex' : 'none';
+
+  document.getElementById('comp-mo').classList.add('on');
+}
+
+function toLocalDatetimeInput(iso) {
+  var d = new Date(iso);
+  var p = function(n){ return String(n).padStart(2,'0'); };
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+function saveCompetition() {
+  var split1 = parseFloat(document.getElementById('comp-split-1').value) || 0;
+  var split2 = parseFloat(document.getElementById('comp-split-2').value) || 0;
+  var split3 = parseFloat(document.getElementById('comp-split-3').value) || 0;
+  var payload = {
+    id: _editingCompetitionId || undefined,
+    title: document.getElementById('comp-title').value,
+    description: document.getElementById('comp-desc').value,
+    theme: document.getElementById('comp-theme').value,
+    tier: document.getElementById('comp-tier').value,
+    status: document.getElementById('comp-status').value,
+    competitionDate: document.getElementById('comp-date').value,
+    lobbyOpenAt: document.getElementById('comp-lobby-open').value || null,
+    totalQuestionCount: document.getElementById('comp-qcount').value,
+    timePerQuestionSec: document.getElementById('comp-timeq').value,
+    targetLobbySize: document.getElementById('comp-lobby-size').value || null,
+    maxTickets: document.getElementById('comp-max-tickets').value || null,
+    pricePerTicketNgn: document.getElementById('comp-price').value,
+    prizePoolNgn: document.getElementById('comp-prize-pool').value,
+    prizeSplitJson: JSON.stringify({ '1': split1, '2': split2, '3': split3 })
+  };
+  call('upsertCompetitionAdmin', payload, function(d) {
+    toast('success', _editingCompetitionId ? 'Competition updated' : 'Competition created');
+    closeMo('comp-mo');
+    loadCompetitions();
+    if (d && d.id && !_editingCompetitionId) {
+      _editingCompetitionId = d.id;
+      setTimeout(function(){ openQuestionPicker(); }, 300);
+    }
+  });
+}
+
+function deleteCompetitionRow(id) {
+  var c = allCompetitions.find(function(x){ return x.id === id; });
+  if (!confirm('Delete competition "' + (c ? c.title : id) + '"? This only works if no tickets have been sold.')) return;
+  call('deleteCompetitionAdmin', { id: id }, function() { toast('success', 'Competition deleted'); loadCompetitions(); });
+}
+
+// ── QUESTION PICKER ─────────────────────────────────────────────
+function openQuestionPicker() {
+  if (!_editingCompetitionId) { toast('error', 'Save the competition first'); return; }
+  var themeFilter = document.getElementById('qpick-theme-filter');
+  themeFilter.innerHTML = '<option value="">— All approved questions —</option>' + allThemes.map(function(t) {
+    return '<option value="' + escH(t.theme) + '">' + escH(t.label || t.theme) + '</option>';
+  }).join('');
+  var c = allCompetitions.find(function(x){ return x.id === _editingCompetitionId; });
+  themeFilter.value = (c && c.theme) || '';
+
+  call('getCompetitionQuestionsAdmin', { competitionId: _editingCompetitionId }, function(existingRows) {
+    _qpickSelectedOrder = (existingRows || []).sort(function(a,b){ return a.question_order - b.question_order; }).map(function(r){ return String(r.pc_question_id); });
+    document.getElementById('qpick-mo').classList.add('on');
+    loadQuestionPickerOptions();
+  });
+}
+
+function loadQuestionPickerOptions() {
+  var theme = document.getElementById('qpick-theme-filter').value;
+  call('getCompetitionQuestionPicker', { theme: theme }, function(rows) {
+    _qpickAllRows = rows || [];
+    renderQuestionPickerTable();
+  });
+}
+
+function renderQuestionPickerTable() {
+  var tb = document.querySelector('#qpick-table tbody'); if (!tb) return;
+  if (!_qpickAllRows.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="4">No approved questions for this filter.</td></tr>';
+  } else {
+    tb.innerHTML = _qpickAllRows.map(function(q) {
+      var qid = String(q.id);
+      var checked = _qpickSelectedOrder.indexOf(qid) !== -1;
+      return '<tr>'
+        + '<td><input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleQuestionPick(\'' + qid + '\',this.checked)"></td>'
+        + '<td><code>' + escH(q.theme) + '</code></td>'
+        + '<td>' + escH(q.format) + '</td>'
+        + '<td style="max-width:320px">' + escH(q.question_text) + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+  updateQpickCount();
+}
+
+function toggleQuestionPick(qid, checked) {
+  var idx = _qpickSelectedOrder.indexOf(qid);
+  if (checked && idx === -1) _qpickSelectedOrder.push(qid);
+  else if (!checked && idx !== -1) _qpickSelectedOrder.splice(idx, 1);
+  updateQpickCount();
+}
+
+function updateQpickCount() {
+  var el = document.getElementById('qpick-selected-count');
+  if (el) el.textContent = _qpickSelectedOrder.length + ' selected';
+}
+
+function saveCompetitionQuestionPicks() {
+  if (!_qpickSelectedOrder.length) { toast('error', 'Select at least one question'); return; }
+  call('setCompetitionQuestions', { competitionId: _editingCompetitionId, questionIds: _qpickSelectedOrder }, function(d) {
+    toast('success', (d.inserted || _qpickSelectedOrder.length) + ' questions saved');
+    closeMo('qpick-mo');
+  });
+}
+
+function viewCompetitionResults(id) {
+  toast('error', 'Results view is coming with the finalize-results step.');
 }
 
 function toggleAI() {
