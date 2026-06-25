@@ -87,6 +87,26 @@
     }
     .btn-live:hover { background:rgba(45,212,160,0.1); }
 
+    /* Challenge Mode button — purple/cyan to match its own brand identity */
+    .btn-challenge {
+      width:100%; padding:13px; background:transparent; border:1px solid #7c5cff;
+      border-radius:10px; color:#7c5cff; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-challenge:hover { background:rgba(124,92,255,0.1); }
+
+    /* Competition Mode button — gold/trophy to match its own brand identity */
+    .btn-competition {
+      width:100%; padding:13px; background:transparent; border:1px solid #f5a623;
+      border-radius:10px; color:#f5a623; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-competition:hover { background:rgba(245,166,35,0.1); }
+
     /* Divider with label */
     .or-divider {
       display:flex;
@@ -163,8 +183,8 @@
   <div class="panel active" id="panel1">
     <div class="form-group">
 
-<label>Email / Student ID</label>
-<input type="text" id="email" placeholder="e.g. email@gmail.com or ADM/2025/001" autocomplete="off">
+<label>Admission Number / Email</label>
+<input type="text" id="email" placeholder="e.g. ADM/2025/001 or email@gmail.com" autocomplete="off">
     </div>
     <div class="form-group">
       <label>Exam Code</label>
@@ -178,6 +198,12 @@
     <div class="or-divider">or</div>
     <button class="btn-live" onclick="joinLiveGame()">
       &#x26A1; Join a Live Game
+    </button>
+    <button class="btn-challenge" onclick="openChallengeMode()">
+      &#x26A1; Challenge Mode
+    </button>
+    <button class="btn-competition" onclick="openCompetitionMode()">
+      &#x1F3C6; Competitions
     </button>
 
     <div class="error" id="errMsg1"></div>
@@ -220,12 +246,14 @@
 // Hard fallbacks are used only if DASH.ready hasn't resolved yet by the
 // time a user clicks a button (extremely unlikely; <100ms typical).
 var SCRIPT_URL    = '';
-var EXAM_PAGE_URL = 'https://oyeb22.github.io/Edurena/Exam.html';
-var LIVEQUIZ_URL  = 'https://oyeb22.github.io/Edurena/livequiz.html';
-var PUZZLE_URL    = 'https://oyeb22.github.io/Edurena/Puzzle.html';
-var WHACK_URL     = 'https://oyeb22.github.io/Edurena/WhackAMole.html';
-var SHOOTOUT_URL  = 'https://oyeb22.github.io/Edurena/PenaltyShootout.html';
-var TOWER_URL     = 'https://oyeb22.github.io/Edurena/TowerDefense.html';
+var EXAM_PAGE_URL = 'https://edurena.online/Exam.html';
+var LIVEQUIZ_URL  = 'https://edurena.online/livequiz.html';
+var PUZZLE_URL    = 'https://edurena.online/Puzzle.html';
+var WHACK_URL     = 'https://edurena.online/WhackAMole.html';
+var SHOOTOUT_URL  = 'https://edurena.online/PenaltyShootout.html';
+var TOWER_URL     = 'https://edurena.online/TowerDefense.html';
+var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
+var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 
 function refreshFromDash() {
   if (!window.DASH) return;
@@ -371,6 +399,84 @@ function openGame(mode) {
     var base = GAME_URLS[mode] || LIVEQUIZ_URL;
     var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
              + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
+}
+
+// Challenge Mode has no room code / teacher — it's a standalone entry point,
+// not part of the joinLiveGame() picker above.
+function openChallengeMode() {
+  whenReady(function(){
+    var url = CHALLENGE_URL + (CHALLENGE_URL.indexOf('?') === -1 ? '?' : '&')
+            + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
+}
+
+// Competitions are per-event (each needs its own ?competitionId=), so
+// unlike Challenge Mode this fetches the live published list first and
+// shows a picker — same pattern as joinLiveGame()'s dropdown. Drafts and
+// test-status competitions never appear here (getPublishedCompetitions
+// only returns status='published'), so this stays harmlessly empty until
+// the admin actually publishes one.
+function openCompetitionMode() {
+  var box = document.getElementById('competition-picker');
+  if (box) { box.parentNode.removeChild(box); return; }
+
+  whenReady(function(){
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getPublishedCompetitions' })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(result) {
+      var rows = (result && result.status === 'success') ? (result.data || []) : [];
+      var picker = document.createElement('div');
+      picker.id = 'competition-picker';
+      picker.style.cssText = 'margin-top:12px;border:1px solid #2e3248;border-radius:12px;overflow:hidden';
+
+      if (!rows.length) {
+        picker.innerHTML = '<div style="padding:14px 16px;background:#12151f;font-size:13px;color:#7c85a2">'
+          + 'No competitions are open right now — check back soon.</div>';
+      } else {
+        picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
+          + 'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Open Competitions</div>'
+          + rows.map(function(c, i) {
+              var dateStr = '';
+              try { dateStr = new Date(c.competition_date).toLocaleString(); } catch(e) {}
+              var price = '₦' + Number(c.price_per_ticket_ngn || 0).toLocaleString();
+              var prize = '₦' + Number(c.prize_pool_ngn || 0).toLocaleString();
+              var borderBottom = i < rows.length - 1 ? 'border-bottom:1px solid #2e3248;' : '';
+              return '<button onclick="openCompetitionById(\'' + c.id + '\')" style="'
+                + 'width:100%;padding:14px 16px;background:transparent;border:none;' + borderBottom
+                + 'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;'
+                + 'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"'
+                + ' onmouseenter="this.style.background=\'rgba(245,166,35,0.08)\'"'
+                + ' onmouseleave="this.style.background=\'transparent\'">'
+                + '<span style="font-size:20px">\u{1F3C6}</span>'
+                + '<div>'
+                + '<div style="font-weight:600">' + (c.title || 'Competition') + '</div>'
+                + '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">'
+                + dateStr + ' &middot; ' + price + ' ticket &middot; ' + prize + ' prize pool</div>'
+                + '</div>'
+                + '</button>';
+            }).join('');
+      }
+
+      var compBtn = document.querySelector('.btn-competition');
+      if (compBtn && compBtn.parentNode) {
+        compBtn.parentNode.insertBefore(picker, compBtn.nextSibling);
+      }
+    })
+    .catch(function(){});
+  });
+}
+
+function openCompetitionById(competitionId) {
+  whenReady(function(){
+    var url = COMPETITION_URL + (COMPETITION_URL.indexOf('?') === -1 ? '?' : '&')
+            + 'competitionId=' + encodeURIComponent(competitionId)
+            + '&script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
   });
 }

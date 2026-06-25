@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Competition Mode — Edurena</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#1a0e08; --panel:#2a1a10; --bdr:#4a2f1a;
+      --txt:#fff4e8; --muted:#bfa087;
+      --acc:#f5a623; --acc2:#ffc144; --grn:#00ff88; --red:#ff3355; --yel:#ffcc00;
+      --f:'Plus Jakarta Sans',system-ui,sans-serif;
+      --display:'Orbitron',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{
+      position:fixed;inset:0;width:100%;height:100vh;height:100dvh;
+      background:var(--bg);color:var(--txt);font-family:var(--f);
+      overflow:hidden;touch-action:none;overscroll-behavior:none;
+    }
+    .screen{display:none;position:fixed;inset:0;z-index:100;overflow-y:auto}
+    .screen.on{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px}
+    #s-fatal{background:var(--bg);z-index:9999}
+    #s-fatal h2{color:var(--red);font-family:var(--display);font-size:22px;margin-bottom:12px}
+    #s-fatal p{color:var(--muted);font-size:14px;line-height:1.8;max-width:420px;text-align:center}
+
+    .brand-title{font-family:var(--display);font-size:clamp(18px,5vw,30px);font-weight:900;letter-spacing:2px;color:var(--acc2);margin-bottom:4px;text-shadow:0 0 20px rgba(245,166,35,.35)}
+    .brand-sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;text-align:center}
+    .card{max-width:380px;width:100%;background:rgba(42,26,16,.95);border:1px solid var(--bdr);border-radius:16px;padding:24px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .field-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .inp{display:block;width:100%;padding:12px 14px;min-height:48px;background:#150b06;border:1.5px solid var(--bdr);border-radius:10px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none;margin-bottom:14px;-webkit-appearance:none;touch-action:manipulation}
+    .inp:focus{border-color:var(--acc2);box-shadow:0 0 0 3px rgba(245,166,35,0.15)}
+    .pbtn{width:100%;padding:14px;min-height:52px;background:linear-gradient(135deg,#f5a623,#ffc144);color:#1a0e08;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--display);letter-spacing:1px;cursor:pointer;touch-action:manipulation;box-shadow:0 4px 24px rgba(245,166,35,0.3)}
+    .pbtn:disabled{opacity:.5;cursor:not-allowed}
+    .pbtn.ghost{background:transparent;border:1.5px solid var(--bdr);color:var(--muted);box-shadow:none;margin-top:8px}
+    .reg-err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+    .reg-msg{color:var(--muted);font-size:13px;margin-bottom:14px;text-align:center;line-height:1.6}
+    .reg-name{font-family:var(--display);font-size:20px;color:var(--acc2);text-align:center;margin-bottom:16px}
+    .reg-step{display:none}
+    .reg-step.on{display:block}
+
+    .ticket-box{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:16px}
+    .ticket-title{font-size:15px;font-weight:700;color:var(--acc2);margin-bottom:4px}
+    .ticket-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .ticket-price{font-family:var(--display);font-size:22px;color:var(--yel)}
+    .ticket-prize{font-size:11.5px;color:var(--grn);margin-top:4px}
+    .test-badge{display:inline-block;background:rgba(245,192,38,.15);border:1px solid rgba(245,192,38,.4);color:var(--yel);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-bottom:10px}
+
+    #s-lobby{background:var(--bg)}
+    .lobby-count{font-family:var(--display);font-size:44px;font-weight:900;color:var(--grn);margin-top:6px}
+    .lobby-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 16px;min-height:32px}
+    .chip{padding:4px 12px;background:#2a1a10;border:1px solid var(--bdr);border-radius:20px;font-size:12px;font-weight:600;color:var(--acc2)}
+    .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc2);margin-right:7px;animation:pdot 1.4s ease-in-out infinite;vertical-align:middle}
+    @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+    .lobby-wait{font-size:13px;color:var(--muted)}
+    .lobby-fill{font-family:var(--display);font-size:13px;color:var(--yel);margin-top:10px;text-align:center}
+
+    #s-countdown{background:var(--bg)}
+    .cd-num{font-family:var(--display);font-size:clamp(100px,22vw,180px);font-weight:900;color:#fff;text-shadow:0 0 60px var(--acc)}
+
+    #game-wrap{position:fixed;inset:0;display:none;flex-direction:column;z-index:1}
+    #game-wrap.on{display:flex}
+    .game-top{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(42,26,16,.9);border-bottom:1px solid var(--bdr)}
+    .top-pill{background:rgba(245,166,35,.18);color:var(--acc2);font-family:var(--display);font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid rgba(245,166,35,.35)}
+    .top-timer{font-family:var(--display);font-size:18px;color:var(--yel);text-shadow:0 0 8px rgba(255,204,0,.4)}
+    .top-score{font-family:var(--display);font-size:13px;color:var(--grn)}
+
+    #q-area-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:10px;overflow-y:auto}
+    .q-card{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--bdr);border-left:3px solid var(--acc2);border-radius:10px;padding:16px}
+    .q-num{font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+    .q-txt{font-size:clamp(15px,2.6vw,18px);font-weight:600;color:var(--txt);line-height:1.4;margin-bottom:14px}
+    .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @media(max-width:380px){.opts-grid{grid-template-columns:1fr}}
+    .opt-btn{display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:10px;background:#150b06;border:1.5px solid var(--bdr);color:var(--txt);font-size:14px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;width:100%;min-height:50px;touch-action:manipulation}
+    .opt-btn:disabled{cursor:not-allowed;opacity:.6}
+    .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn)}
+    .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red)}
+    .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#2a1a10;color:var(--muted)}
+    .short-area{display:flex;gap:8px}
+    .short-inp{flex:1;padding:12px 14px;min-height:48px;background:#150b06;border:1.5px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none}
+    .sub-btn{padding:8px 18px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#1a0e08;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);min-height:48px}
+    .answered-msg{text-align:center;padding:14px;font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:1px}
+    #claim-banner{font-family:var(--display);font-size:13px;font-weight:700;color:var(--yel);text-align:center;min-height:18px;letter-spacing:1px;margin-top:10px}
+    .reveal-box{margin-top:10px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:8px;font-size:12.5px;color:var(--grn);line-height:1.6}
+
+    #s-leaderboard{background:var(--bg)}
+    .lb-title{font-family:var(--display);font-size:18px;color:var(--acc2);letter-spacing:2px;margin-bottom:18px}
+    .lb-row{display:flex;align-items:center;gap:10px;width:min(86vw,360px);padding:9px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px}
+    .lb-row.me{border-color:var(--acc2)}
+    .lb-pos{font-family:var(--display);font-size:13px;color:var(--muted);width:22px}
+    .lb-name{flex:1;font-size:13px;font-weight:600;min-width:0}
+    .lb-school{font-size:10.5px;font-weight:400;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lb-score{font-family:var(--display);font-size:13px;color:var(--yel)}
+
+    .finish-overlay{position:fixed;inset:0;background:rgba(26,14,8,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .8s}
+    .finish-overlay.show{opacity:1;pointer-events:auto}
+    .finish-title{font-family:var(--display);font-size:clamp(24px,7vw,42px);font-weight:900;color:var(--acc2);letter-spacing:3px;text-shadow:0 0 30px rgba(245,166,35,.5)}
+    .finish-rank{font-family:var(--display);font-size:clamp(40px,9vw,64px);font-weight:900;color:var(--yel);margin:16px 0}
+    .finish-stat-val{font-family:var(--display);font-size:24px;font-weight:900;color:var(--acc2)}
+    .finish-stat-lbl{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+    .finish-stats{display:flex;gap:26px}
+    .finish-stat{text-align:center}
+    .finish-note{font-size:11px;color:var(--muted);max-width:320px;text-align:center;margin-top:14px;line-height:1.6}
+
+    /* Podium — revealed 3rd, then 2nd, then 1st for suspense */
+    .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:18px 0;width:100%;max-width:380px}
+    .podium-spot{display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(26px) scale(.88);transition:opacity .45s ease-out,transform .45s cubic-bezier(.34,1.4,.4,1)}
+    .podium-spot.show{opacity:1;transform:translateY(0) scale(1)}
+    .podium-card{background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:7px 8px;text-align:center;margin-bottom:6px;min-width:80px;max-width:96px}
+    .podium-spot.p1 .podium-card{border-color:var(--yel);box-shadow:0 0 22px rgba(245,200,66,.4)}
+    .podium-medal{font-size:20px;line-height:1}
+    .podium-name{font-size:11.5px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .podium-school{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .podium-score{font-family:var(--display);font-size:12.5px;color:var(--yel);margin-top:2px}
+    .podium-block{width:80px;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;color:#1a0e08}
+    .podium-spot.p1 .podium-block{height:70px;background:linear-gradient(135deg,#f5d44a,#f0a93a);font-size:20px}
+    .podium-spot.p2 .podium-block{height:50px;background:linear-gradient(135deg,#c9d3e0,#9aa7bb);font-size:17px}
+    .podium-spot.p3 .podium-block{height:34px;background:linear-gradient(135deg,#e0a774,#b97a4a);font-size:15px}
+    @keyframes podiumPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+    .podium-spot.p1.pulse .podium-card{animation:podiumPulse .55s ease-out 2}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <base target="_blank">
+</head>
+<body>
+
+<div class="screen on" id="s-fatal"><h2>CANNOT LOAD</h2><p id="fatal-msg">Open this from the Edurena student portal.</p></div>
+
+<div class="screen" id="s-register">
+  <div class="brand-title">🏆 COMPETITION MODE</div>
+  <div class="brand-sub" id="comp-brand-sub">Edurena &nbsp;&#x25BA;&nbsp; Loading…</div>
+  <div class="card">
+
+    <div class="reg-step on" id="rs-email">
+      <div class="field-lbl">Your Email</div>
+      <input class="inp" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button class="pbtn" id="reg-email-btn">FIND MY ACCOUNT</button>
+    </div>
+
+    <div class="reg-step" id="rs-confirmname">
+      <div class="reg-msg">Is this you?</div>
+      <div class="reg-name" id="rs-name-display">—</div>
+      <button class="pbtn" id="rs-yes-btn">YES, THAT'S ME</button>
+      <button class="pbtn ghost" id="rs-no-btn">Not me — try another email</button>
+    </div>
+
+    <div class="reg-step" id="rs-school">
+      <div class="reg-msg">Type your school's name to confirm it's really you.</div>
+      <div class="field-lbl">School Name</div>
+      <input class="inp" id="reg-school" type="text" placeholder="e.g. Edurena Demo School" autocomplete="off">
+      <button class="pbtn" id="reg-school-btn">CONFIRM SCHOOL</button>
+    </div>
+
+    <div class="reg-step" id="rs-ticket">
+      <div class="test-badge" id="rs-test-badge" style="display:none">Test Mode — No Real Payment</div>
+      <div class="ticket-box">
+        <div class="ticket-title" id="rt-title">—</div>
+        <div class="ticket-meta" id="rt-date">—</div>
+        <div class="ticket-price" id="rt-price">₦0</div>
+        <div class="ticket-prize" id="rt-prize"></div>
+      </div>
+      <div class="field-lbl">Phone Number (for prize contact)</div>
+      <input class="inp" id="reg-phone" type="tel" placeholder="e.g. 0803 123 4567" autocomplete="tel">
+      <button class="pbtn" id="rs-ticket-btn">BUY TICKET</button>
+    </div>
+
+    <div class="reg-step" id="rs-already-ticketed">
+      <div class="reg-msg">You already have a ticket for this competition.</div>
+      <button class="pbtn" id="rs-enter-btn">ENTER COMPETITION</button>
+    </div>
+
+    <div class="reg-step" id="rs-nickname">
+      <div class="reg-msg">Pick a nickname — this is what other players will see.</div>
+      <div class="field-lbl">Nickname</div>
+      <input class="inp" id="reg-nickname" type="text" placeholder="e.g. Speedy" maxlength="16" autocomplete="off">
+      <button class="pbtn" id="reg-nickname-btn">JOIN COMPETITION</button>
+    </div>
+
+    <div class="reg-err" id="reg-err"></div>
+  </div>
+</div>
+
+<div class="screen" id="s-lobby">
+  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:6px">🏆 COMPETITION MODE</div>
+  <div class="lobby-count" id="lby-count">1</div>
+  <div class="lobby-lbl">players in lobby</div>
+  <div class="chips" id="lby-chips"></div>
+  <div class="lobby-wait"><span class="pulse-dot"></span>Waiting for the competition to start&hellip;</div>
+  <div class="lobby-fill" id="lby-fill"></div>
+</div>
+
+<div class="screen" id="s-countdown"><div class="cd-num" id="cd-num">3</div></div>
+
+<div id="game-wrap">
+  <div class="game-top">
+    <div class="top-pill" id="hud-tag">COMPETITION</div>
+    <div class="top-timer" id="hud-timer">--</div>
+    <div class="top-score" id="hud-score">0 pts</div>
+  </div>
+  <div id="q-area-wrap">
+    <div class="q-card">
+      <div class="q-num" id="q-num">Round 1</div>
+      <div class="q-txt" id="q-txt">Loading&hellip;</div>
+      <div id="q-area"></div>
+      <div id="claim-banner"></div>
+      <div id="reveal-area"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-leaderboard">
+  <div class="lb-title">&#x1F3C6; STANDINGS</div>
+  <div id="lb-rows"></div>
+</div>
+
+<div class="finish-overlay" id="finish-overlay">
+  <div class="finish-title">COMPETITION OVER!</div>
+
+  <div class="podium-wrap" id="podium-wrap">
+    <div class="podium-spot p2" id="podium-2">
+      <div class="podium-card"><div class="podium-medal">&#x1F948;</div><div class="podium-name" id="pod2-name"></div><div class="podium-school" id="pod2-school"></div><div class="podium-score" id="pod2-score"></div></div>
+      <div class="podium-block">2</div>
+    </div>
+    <div class="podium-spot p1" id="podium-1">
+      <div class="podium-card"><div class="podium-medal">&#x1F947;</div><div class="podium-name" id="pod1-name"></div><div class="podium-school" id="pod1-school"></div><div class="podium-score" id="pod1-score"></div></div>
+      <div class="podium-block">1</div>
+    </div>
+    <div class="podium-spot p3" id="podium-3">
+      <div class="podium-card"><div class="podium-medal">&#x1F949;</div><div class="podium-name" id="pod3-name"></div><div class="podium-school" id="pod3-school"></div><div class="podium-score" id="pod3-score"></div></div>
+      <div class="podium-block">3</div>
+    </div>
+  </div>
+
+  <div class="finish-rank" id="finish-rank-num" style="opacity:0;transition:opacity .5s ease-out">P1</div>
+  <div class="finish-stats" id="finish-stats-wrap" style="opacity:0;transition:opacity .5s ease-out">
+    <div class="finish-stat"><div class="finish-stat-val" id="finish-correct">0</div><div class="finish-stat-lbl">Correct</div></div>
+    <div class="finish-stat"><div class="finish-stat-val" id="finish-score">0</div><div class="finish-stat-lbl">Total Score</div></div>
+  </div>
+  <div class="finish-note" id="finish-note" style="opacity:0;transition:opacity .5s ease-out">Standings above are live game scores. Official prize winners are confirmed separately by Edurena after the competition closes.</div>
+  <button class="pbtn" id="finish-play-again-btn" style="max-width:240px;margin-top:24px;opacity:0;transition:opacity .5s ease-out" onclick="window.close()">DONE</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ════════════════ MOBILE ZOOM LOCK ════════════════ */
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturechange', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', function(e){ if(e.touches&&e.touches.length>1) e.preventDefault(); }, {passive:false});
+var _lastTapTs=0;
+document.addEventListener('touchend', function(e){ var now=Date.now(); if(now-_lastTapTs<300) e.preventDefault(); _lastTapTs=now; }, {passive:false});
+function lockMobileZoom(){
+  var vp=document.querySelector('meta[name=viewport]');
+  if(vp){ var content=vp.getAttribute('content'); vp.setAttribute('content', content+', shrink-to-fit=no');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ vp.setAttribute('content', content); }); }); }
+  if(window.scrollTo) window.scrollTo(0,0);
+}
+window.addEventListener('load', lockMobileZoom);
+
+var COUNTDOWN_MS = 3000, REVEAL_MS = 2500, LEADERBOARD_MS = 3000;
+var PAYSTACK_PK = 'pk_test_REPLACE_WITH_YOUR_TEST_PUBLIC_KEY'; // same key used in Pricing.html
+
+var P = new URLSearchParams(window.location.search);
+var GAS_URL = (P.get('script') || '').trim();
+var COMPETITION_ID = (P.get('competitionId') || '').trim();
+// Only used for the superadmin test-mode bypass — picked up automatically
+// if the tester is already logged into a dashboard in this same browser.
+var ADMIN_TOKEN = '';
+try { ADMIN_TOKEN = localStorage.getItem('qf_token') || ''; } catch(_) {}
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');}); var t=el(id); if(t) t.classList.add('on'); }
+function post(action, payload){
+  return fetch(GAS_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload||{}))})
+    .then(function(r){return r.json();});
+}
+
+if (!GAS_URL) { el('fatal-msg').textContent = 'Missing backend URL.'; return; }
+if (!COMPETITION_ID) { el('fatal-msg').textContent = 'Missing competition link. Ask Edurena for the correct entry link.'; return; }
+showScreen('s-register');
+
+var db, serverTimeOffset = 0;
+try {
+  var cfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var existingApp = null;
+  if (firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='competition') existingApp=a; });
+  db = firebase.database(existingApp || firebase.initializeApp(cfg,'competition'));
+  db.ref('.info/serverTimeOffset').on('value', function(snap){ serverTimeOffset = snap.val()||0; });
+} catch(e) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Firebase error: ' + e.message; return; }
+function serverNow(){ return Date.now() + serverTimeOffset; }
+
+/* ════════════════ REGISTRATION + TICKET PURCHASE ════════════════ */
+var regEmail='', regCandidates=[], regConfirmed=null, compInfo=null;
+
+function regStep(id){
+  document.querySelectorAll('.reg-step').forEach(function(s){s.classList.remove('on');});
+  el(id).classList.add('on');
+  el('reg-err').textContent='';
+}
+
+el('reg-email-btn').addEventListener('click', function(){
+  var email=(el('reg-email').value||'').trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){ el('reg-err').textContent='Enter a valid email.'; return; }
+  var btn=el('reg-email-btn'); btn.disabled=true; btn.textContent='LOOKING…';
+  post('lookupChallengeStudent',{email:email}).then(function(res){
+    btn.disabled=false; btn.textContent='FIND MY ACCOUNT';
+    if(!res||res.status!=='success'){ el('reg-err').textContent=(res&&res.message)||'Could not look that up.'; return; }
+    regEmail=email; regCandidates=res.data.matches||[];
+    if(!regCandidates.length){ el('reg-err').textContent='No record found for that email. Ask your teacher to register you first.'; return; }
+    if(regCandidates.length===1){
+      el('rs-name-display').textContent=regCandidates[0].name;
+      regStep('rs-confirmname');
+    } else {
+      regStep('rs-school');
+    }
+  }).catch(function(){ btn.disabled=false; btn.textContent='FIND MY ACCOUNT'; el('reg-err').textContent='Network error. Try again.'; });
+});
+
+el('rs-yes-btn').addEventListener('click', function(){
+  regConfirmed = regCandidates[0];
+  regStep('rs-school');
+});
+el('rs-no-btn').addEventListener('click', function(){ regStep('rs-email'); });
+
+el('reg-school-btn').addEventListener('click', function(){
+  var school=(el('reg-school').value||'').trim();
+  if(!school){ el('reg-err').textContent='Enter your school name.'; return; }
+  var btn=el('reg-school-btn'); btn.disabled=true; btn.textContent='CHECKING…';
+  post('confirmChallengeStudent',{email:regEmail,schoolNameTyped:school}).then(function(res){
+    btn.disabled=false; btn.textContent='CONFIRM SCHOOL';
+    if(!res||res.status!=='success'){ el('reg-err').textContent=(res&&res.message)||'That school name doesn’t match.'; return; }
+    regConfirmed = res.data;
+    proceedToTicketCheck();
+  }).catch(function(){ btn.disabled=false; btn.textContent='CONFIRM SCHOOL'; el('reg-err').textContent='Network error. Try again.'; });
+});
+
+// After identity is confirmed, check eligibility/existing ticket before
+// deciding whether to show "buy a ticket" or "you're already in".
+function proceedToTicketCheck(){
+  post('checkCompetitionEligibility',{competitionId:COMPETITION_ID, email:regEmail}).then(function(res){
+    if(res && res.status==='success' && res.data && res.data.eligible){
+      regStep('rs-already-ticketed');
+      return;
+    }
+    showTicketStep();
+  }).catch(function(){ showTicketStep(); });
+}
+
+function showTicketStep(){
+  if(!compInfo){
+    el('reg-err').textContent='Could not load competition details.';
+    return;
+  }
+  el('rt-title').textContent = compInfo.title || 'Competition';
+  el('rt-date').textContent = compInfo.competition_date ? new Date(compInfo.competition_date).toLocaleString() : '';
+  el('rt-price').textContent = '₦' + Number(compInfo.price_per_ticket_ngn||0).toLocaleString();
+  if(compInfo.prize_pool_ngn){ el('rt-prize').textContent = '🏆 ₦' + Number(compInfo.prize_pool_ngn).toLocaleString() + ' prize pool'; }
+  el('rs-test-badge').style.display = compInfo.status==='test' ? 'inline-block' : 'none';
+  regStep('rs-ticket');
+}
+
+el('rs-enter-btn').addEventListener('click', function(){
+  playerSchool = regConfirmed.school || '';
+  playerName = regConfirmed.name || '';
+  regStep('rs-nickname');
+});
+
+el('rs-ticket-btn').addEventListener('click', function(){
+  var phone=(el('reg-phone').value||'').trim();
+  if(!phone){ el('reg-err').textContent='Enter a phone number — needed to reach you if you win.'; return; }
+  var btn=el('rs-ticket-btn'); btn.disabled=true; btn.textContent='PROCESSING…';
+
+  if(compInfo && compInfo.status==='test'){
+    post('activateCompetitionTestBypass',{
+      token:ADMIN_TOKEN, competitionId:COMPETITION_ID, email:regEmail,
+      schoolNameTyped:regConfirmed.school, contactPhone:phone
+    }).then(function(res){
+      btn.disabled=false; btn.textContent='BUY TICKET';
+      if(!res||res.status!=='success'){ el('reg-err').textContent=(res&&res.message)||'Could not activate test entry. Are you logged in as the superadmin in this browser?'; return; }
+      playerSchool = regConfirmed.school || ''; playerName = regConfirmed.name || '';
+      regStep('rs-nickname');
+    }).catch(function(){ btn.disabled=false; btn.textContent='BUY TICKET'; el('reg-err').textContent='Network error. Try again.'; });
+    return;
+  }
+
+  post('createCompetitionTicketIntent',{
+    competitionId:COMPETITION_ID, email:regEmail, schoolNameTyped:regConfirmed.school
+  }).then(function(res){
+    btn.disabled=false; btn.textContent='BUY TICKET';
+    if(!res||res.status!=='success'){ el('reg-err').textContent=(res&&res.message)||'Could not start payment.'; return; }
+    var d = res.data;
+    var handler = PaystackPop.setup({
+      key: PAYSTACK_PK,
+      email: regEmail,
+      amount: d.amountKobo,
+      ref: d.reference,
+      currency: 'NGN',
+      label: d.studentName || regEmail,
+      metadata: {
+        // Flat fields so Paystack's OWN async webhook (if it wins the race
+        // against the client-triggered call below) can still be classified
+        // correctly by handlePaystackWebhook's verifiedMeta.purchaseType
+        // check — custom_fields alone would make it fall through to the
+        // school-subscription branch and consume the reference dedup slot.
+        purchaseType: 'competition_ticket',
+        competitionId: d.competitionId,
+        studentEmail: d.studentEmail,
+        studentName: d.studentName,
+        schoolName: d.schoolName,
+        contactPhone: phone,
+        custom_fields: [
+          { display_name:'Competition', variable_name:'competitionId', value:d.competitionId },
+          { display_name:'Student', variable_name:'studentName', value:d.studentName||'' },
+          { display_name:'School', variable_name:'schoolName', value:d.schoolName||'' }
+        ]
+      },
+      // Same pattern as Pricing.html's verifyAndActivate — don't wait on
+      // Paystack's own async server-to-server webhook to actually create
+      // the ticket. Post the SAME paystackWebhook action directly from here
+      // the instant the popup reports success, so activation usually
+      // happens before any network round-trip to Paystack's own infra
+      // completes. The real webhook still arrives later with the same
+      // reference and is just a harmless no-op (idempotency dedup).
+      callback: function(response){
+        el('rs-ticket-btn').textContent = 'CONFIRMING PAYMENT…';
+        post('paystackWebhook', {
+          event: 'charge.success',
+          data: {
+            reference: response.reference, amount: d.amountKobo,
+            customer: { email: regEmail },
+            metadata: {
+              purchaseType: 'competition_ticket', competitionId: d.competitionId,
+              studentEmail: d.studentEmail, studentName: d.studentName,
+              schoolName: d.schoolName, contactPhone: phone
+            }
+          }
+        }).then(function(activateRes){
+          el('rs-ticket-btn').disabled=false; el('rs-ticket-btn').textContent='BUY TICKET';
+          if(!activateRes || (activateRes.status!=='success' && !(activateRes.data&&activateRes.data.duplicate))){
+            el('reg-err').textContent = 'Payment succeeded but activation failed — email hello@edurena.online with reference ' + response.reference;
+            return;
+          }
+          playerSchool = regConfirmed.school || ''; playerName = regConfirmed.name || '';
+          regStep('rs-nickname');
+        }).catch(function(){
+          el('rs-ticket-btn').disabled=false; el('rs-ticket-btn').textContent='BUY TICKET';
+          el('reg-err').textContent = 'Payment succeeded but we couldn\'t confirm it — email hello@edurena.online with reference ' + response.reference;
+        });
+      },
+      onClose: function(){ btn.disabled=false; btn.textContent='BUY TICKET'; }
+    });
+    handler.openIframe();
+  }).catch(function(){ btn.disabled=false; btn.textContent='BUY TICKET'; el('reg-err').textContent='Network error. Try again.'; });
+});
+
+el('reg-nickname-btn').addEventListener('click', function(){
+  var nickname=(el('reg-nickname').value||'').trim();
+  if(nickname.length<2){ el('reg-err').textContent='Pick a nickname (min 2 characters).'; return; }
+  var btn=el('reg-nickname-btn'); btn.disabled=true; btn.textContent='JOINING…';
+  playerNickname = nickname;
+  joinCompetitionLobby(function(errMsg){
+    btn.disabled=false; btn.textContent='JOIN COMPETITION';
+    if(errMsg) el('reg-err').textContent=errMsg;
+  });
+});
+
+/* ════════════════ GAME STATE ════════════════ */
+var sessionId='', playerId='', playerName='', playerNickname='', playerSchool='';
+var questions=[], totalQ=0, timePerQ=12, meta={};
+var lastState=null, currentQIdx=-1, answered=false, myScore=0, myCorrect=0;
+var stateRef=null, playersRef=null;
+var botsScheduledForQIdx=-1, botSkillRoster=null, botJoinList=null, _botPoolFetching=false;
+var lastPlayersSnapshot={};
+var _countdownStarted=false;
+var timerRaf=null, roundDeadline=0;
+
+// Fetch public competition info up front so the ticket step and lobby
+// branding have something to show.
+post('getPublishedCompetitions',{}).then(function(res){
+  var list = (res&&res.data)||[];
+  compInfo = list.find(function(c){ return c.id===COMPETITION_ID; }) || null;
+  if(!compInfo){
+    // Not in the public list (draft/test status, or a different account
+    // looking it up) — that's expected pre-launch; fall back to a minimal
+    // placeholder so testing still works via direct link.
+    compInfo = { id:COMPETITION_ID, status:'test' };
+  }
+  el('comp-brand-sub').textContent = compInfo.title ? ('Compete for real prizes — ' + compInfo.title) : 'Compete for real prizes, live';
+}).catch(function(){
+  compInfo = { id:COMPETITION_ID, status:'test' };
+});
+
+function joinCompetitionLobby(cb){
+  post('joinCompetitionLobby',{competitionId:COMPETITION_ID, email:regEmail}).then(function(res){
+    if(!res||res.status!=='success'){ cb((res&&res.message)||'Could not join the competition.'); return; }
+    var d=res.data;
+    sessionId=d.sessionId; playerId=d.playerId; meta=d.meta; questions=d.questions; totalQ=meta.totalQ; timePerQ=meta.timePerQ;
+    playerName = d.playerName || playerName; playerSchool = d.school || playerSchool;
+
+    var setupPromise = d.isNew
+      ? db.ref('competition/'+sessionId).set({ meta:meta, questions:questions, state:d.state })
+      : Promise.resolve();
+
+    setupPromise.then(function(){
+      return db.ref('competition/'+sessionId+'/players/'+playerId).set({
+        name:playerName, nickname:playerNickname, school:playerSchool, score:0, correctCount:0, online:true,
+        joinedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+    }).then(function(){
+      db.ref('competition/'+sessionId+'/players/'+playerId+'/online').onDisconnect().set(false);
+      showScreen('s-lobby');
+      watchGame();
+      cb(null);
+    }).catch(function(e){ cb(e.message||'Could not join the lobby.'); });
+  }).catch(function(){ cb('Network error. Try again.'); });
+}
+
+/* ════════════════ DECENTRALIZED PHASE MACHINE ════════════════
+   Same no-host-device pattern as Challenge Mode — every connected client
+   independently watches `state` and, once a deadline passes locally,
+   attempts the next transition via a Firebase transaction guarded by
+   compare-and-swap. Concurrent attempts collapse safely. The fill deadline
+   here is the literal scheduled competition_date, not a short ad-hoc
+   window, since this is a single scheduled event, not an on-demand match. */
+
+function watchGame(){
+  playersRef = db.ref('competition/'+sessionId+'/players');
+  playersRef.on('value', function(snap){
+    lastPlayersSnapshot = (snap&&snap.val())||{};
+    renderPlayerChips(lastPlayersSnapshot);
+  });
+
+  stateRef = db.ref('competition/'+sessionId+'/state');
+  stateRef.on('value', function(snap){
+    var st = (snap&&snap.val())||{};
+    lastState = st;
+    var phase = st.phase||'lobby';
+    if(phase==='lobby'){
+      showScreen('s-lobby');
+      _countdownStarted=false;
+    } else if(phase==='countdown'){
+      showScreen('s-countdown');
+      if(!_countdownStarted){ _countdownStarted=true; runCountdownVisual(st.countdownStartAt); }
+    } else if(phase==='round'){
+      document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+      if(!el('game-wrap').classList.contains('on')) el('game-wrap').classList.add('on');
+      if(st.qIndex!==currentQIdx){ currentQIdx=st.qIndex; startRoundUI(st.qIndex, st.roundStartAt); }
+    } else if(phase==='reveal'){
+      stopTimer();
+      showRevealUI(st);
+    } else if(phase==='leaderboard'){
+      stopTimer();
+      renderLeaderboardUI();
+    } else if(phase==='final'){
+      stopTimer();
+      showFinishUI();
+    }
+  });
+
+  setInterval(gameTick, 200);
+}
+
+function renderPlayerChips(players){
+  var names = Object.values(players).map(function(p){ return p.nickname||p.name||'?'; });
+  el('lby-count').textContent = names.length;
+  el('lby-chips').innerHTML = names.map(function(n){ return '<div class="chip">'+esc(n)+'</div>'; }).join('');
+}
+
+function gameTick(){
+  if(!sessionId || !lastState || !meta.fillDeadlineAt) return;
+  var st = lastState, now = serverNow();
+  if(st.phase==='lobby'){
+    var remain = Math.max(0, Math.ceil((meta.fillDeadlineAt-now)/1000));
+    el('lby-fill').textContent = remain>0 ? ('Competition starts in '+formatCountdown(remain)) : 'Starting…';
+    var deadlinePassed = now >= meta.fillDeadlineAt;
+    if(meta.targetSize) maybeAddScheduledBots(deadlinePassed);
+    if(deadlinePassed) tryAdvanceToCountdown();
+  } else if(st.phase==='countdown'){
+    if(now >= (st.countdownStartAt||0) + COUNTDOWN_MS) tryStartRound(0);
+  } else if(st.phase==='round'){
+    if(now >= (st.roundStartAt||0) + timePerQ*1000) tryReveal(st.qIndex);
+    else simulateBotsForRound(st.qIndex, st.roundStartAt);
+  } else if(st.phase==='reveal'){
+    if(now >= (st.revealedAt||0) + REVEAL_MS) tryLeaderboard(st.qIndex);
+  } else if(st.phase==='leaderboard'){
+    if(now >= (st.leaderboardAt||0) + LEADERBOARD_MS){
+      if(st.qIndex+1 < totalQ) tryStartRound(st.qIndex+1);
+      else tryFinal();
+    }
+  }
+}
+
+function formatCountdown(sec){
+  if(sec < 60) return sec+'s';
+  if(sec < 3600) return Math.floor(sec/60)+'m '+(sec%60)+'s';
+  return Math.floor(sec/3600)+'h '+Math.floor((sec%3600)/60)+'m';
+}
+
+// Bots trickle in across the whole fill window, same staggered-arrival
+// pattern as Challenge Mode (see generateChallengeBotPool in code.gs) —
+// just potentially spread over a much longer window since this is a
+// scheduled event, not an on-demand match.
+function maybeAddScheduledBots(deadlinePassed){
+  ensureBotPool(function(){
+    var currentTotal = Object.keys(lastPlayersSnapshot||{}).length;
+    if(currentTotal >= meta.targetSize) return;
+    var now = serverNow(), updates = {}, added = 0;
+    botJoinList.forEach(function(b){
+      if(lastPlayersSnapshot && lastPlayersSnapshot[b.id]) return;
+      if(currentTotal + added >= meta.targetSize) return;
+      if(!deadlinePassed && now < b.joinAtMs) return;
+      updates[b.id] = { name:b.name, nickname:b.nickname, school:b.school, score:0, correctCount:0, online:true, joinedAt:firebase.database.ServerValue.TIMESTAMP };
+      added++;
+    });
+    if(added>0) db.ref('competition/'+sessionId+'/players').update(updates);
+  });
+}
+
+function tryAdvanceToCountdown(){
+  stateRef.transaction(function(cur){
+    if(!cur||cur.phase!=='lobby') return undefined;
+    return Object.assign({}, cur, { phase:'countdown', sealed:true, countdownStartAt:firebase.database.ServerValue.TIMESTAMP });
+  });
+  // No equivalent of markChallengeLobbySealed needed — a competition's
+  // session_id is permanent once set, there's no "open lobby" pool to retire.
+}
+
+function runCountdownVisual(countdownStartAt){
+  var startAt = countdownStartAt || serverNow();
+  function tick(){
+    var elapsed = serverNow() - startAt;
+    var n = Math.ceil((COUNTDOWN_MS - elapsed) / 1000);
+    if(n <= 0){ el('cd-num').textContent = 'GO!'; return; }
+    el('cd-num').textContent = n;
+    setTimeout(tick, 200);
+  }
+  tick();
+}
+
+function tryStartRound(qIdx){
+  stateRef.transaction(function(cur){
+    if(!cur) return undefined;
+    if(qIdx===0){ if(cur.phase!=='countdown') return undefined; }
+    else { if(cur.phase!=='leaderboard' || cur.qIndex!==qIdx-1) return undefined; }
+    return Object.assign({}, cur, {
+      phase:'round', qIndex:qIdx, roundStartAt:firebase.database.ServerValue.TIMESTAMP,
+      correctAnswer:'', explanation:''
+    });
+  });
+}
+
+function tryReveal(qIdx){
+  post('getCompetitionReveal',{competitionId:COMPETITION_ID,qIndex:qIdx}).then(function(res){
+    var d = (res&&res.data)||{};
+    return stateRef.transaction(function(cur){
+      if(!cur||cur.phase!=='round'||cur.qIndex!==qIdx) return undefined;
+      return Object.assign({}, cur, {
+        phase:'reveal', correctAnswer:d.correctAnswer||'', explanation:d.explanation||'',
+        revealedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+    });
+  });
+}
+
+function tryLeaderboard(qIdx){
+  stateRef.transaction(function(cur){
+    if(!cur||cur.phase!=='reveal'||cur.qIndex!==qIdx) return undefined;
+    return Object.assign({}, cur, { phase:'leaderboard', leaderboardAt:firebase.database.ServerValue.TIMESTAMP });
+  });
+}
+
+function tryFinal(){
+  stateRef.transaction(function(cur){
+    if(!cur||cur.phase!=='leaderboard') return undefined;
+    return Object.assign({}, cur, { phase:'final' });
+  });
+}
+
+/* ════════════════ BOT SIMULATION — deterministic, no coordination ════════════════ */
+function hashStr(s){
+  var h = 1779033703 ^ s.length;
+  for (var i = 0; i < s.length; i++) {
+    h = Math.imul(h ^ s.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function(){
+    h = Math.imul(h ^ (h >>> 16), 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 3266489917);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+function ensureBotPool(cb){
+  if(botJoinList){ cb(); return; }
+  if(_botPoolFetching){ setTimeout(function(){ ensureBotPool(cb); }, 200); return; }
+  _botPoolFetching=true;
+  post('getCompetitionBotRoster',{sessionId:sessionId}).then(function(res){
+    _botPoolFetching=false;
+    botSkillRoster = (res&&res.data&&res.data.roster)||{};
+    botJoinList = (res&&res.data&&res.data.list)||[];
+    cb();
+  }).catch(function(){ _botPoolFetching=false; botSkillRoster={}; botJoinList=[]; cb(); });
+}
+
+function computeCompetitionScore(timeRemSec){
+  var frac = Math.max(0, Math.min(1, timeRemSec / timePerQ));
+  return 1000 + Math.round(frac * 1000);
+}
+
+function simulateBotsForRound(qIdx, roundStartAt){
+  if(botsScheduledForQIdx===qIdx || !roundStartAt) return;
+  botsScheduledForQIdx=qIdx;
+  ensureBotPool(function(){
+    if(!botSkillRoster || !Object.keys(botSkillRoster).length) return; // no bots configured
+    var q = questions[qIdx];
+    var qLen = (q && q.question) ? q.question.length : 60;
+    var readingFloorMs = 1100 + qLen * 24;
+    Object.keys(botSkillRoster).forEach(function(botId){
+      if(!lastPlayersSnapshot || !lastPlayersSnapshot[botId]) return;
+      var skill = botSkillRoster[botId];
+      var rng = hashStr(sessionId+'_'+qIdx+'_'+botId);
+      var r1=rng(), r2=rng();
+      var isCorrect = r1 < skill.accuracy;
+      var tierSpread = skill.skillTier==='sharp' ? [2200,6500] : skill.skillTier==='steady' ? [3200,9000] : [4200,11500];
+      var minDelay = Math.max(tierSpread[0], readingFloorMs);
+      var maxDelay = Math.max(minDelay+1200, tierSpread[1]);
+      var delayMs = minDelay + r2*(maxDelay-minDelay);
+      var fireAt = roundStartAt + delayMs;
+      var wait = Math.max(50, fireAt - serverNow());
+      setTimeout(function(){
+        if(!lastState||lastState.phase!=='round'||lastState.qIndex!==qIdx) return;
+        submitBotAnswer(botId, qIdx, isCorrect, delayMs);
+      }, wait);
+    });
+  });
+}
+
+function submitBotAnswer(botId, qIdx, isCorrect, delayMs){
+  var marker = db.ref('competition/'+sessionId+'/answered/'+qIdx+'/'+botId);
+  marker.transaction(function(cur){ return cur ? undefined : true; }).then(function(result){
+    if(!result.committed || !isCorrect) return;
+    var timeRemSec = Math.max(0, timePerQ*1000 - delayMs) / 1000;
+    var pts = computeCompetitionScore(timeRemSec);
+    db.ref('competition/'+sessionId+'/players/'+botId+'/score').transaction(function(cur){ return (cur||0)+pts; });
+    db.ref('competition/'+sessionId+'/players/'+botId+'/correctCount').transaction(function(cur){ return (cur||0)+1; });
+  });
+}
+
+/* ════════════════ ROUND UI ════════════════ */
+function startRoundUI(qIdx, roundStartAt){
+  answered=false;
+  el('claim-banner').textContent='';
+  el('reveal-area').innerHTML='';
+  var q=questions[qIdx]; if(!q) return;
+  el('q-num').textContent='Round '+(qIdx+1)+' / '+totalQ;
+  el('q-txt').textContent=q.question||'';
+  el('q-area').innerHTML='';
+
+  if(q.format==='mcq'){
+    var labels=['A','B','C','D'];
+    var grid=document.createElement('div'); grid.className='opts-grid';
+    (q.options||[]).forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><span>'+esc(opt)+'</span>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt,btn));
+      grid.appendChild(btn);
+    });
+    el('q-area').appendChild(grid);
+  } else if(q.format==='true_false'){
+    var grid2=document.createElement('div'); grid2.className='opts-grid';
+    ['True','False'].forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      btn.innerHTML='<div class="opt-key">'+(i===0?'A':'B')+'</div><span>'+opt+'</span>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt,btn));
+      grid2.appendChild(btn);
+    });
+    el('q-area').appendChild(grid2);
+  } else {
+    var area=document.createElement('div'); area.className='short-area';
+    var inp=document.createElement('input'); inp.className='short-inp'; inp.type='text'; inp.placeholder='Type answer…';
+    var sbtn=document.createElement('button'); sbtn.className='sub-btn'; sbtn.textContent='GO';
+    sbtn.addEventListener('click',function(){ if(!inp.disabled&&inp.value.trim()) submitAns(inp.value.trim(),null); });
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter') sbtn.click(); });
+    area.appendChild(inp); area.appendChild(sbtn);
+    el('q-area').appendChild(area);
+  }
+
+  roundDeadline = roundStartAt + timePerQ*1000;
+  startTimer();
+}
+
+function startTimer(){
+  stopTimer();
+  function tick(){
+    var rem=Math.max(0,Math.ceil((roundDeadline-serverNow())/1000));
+    el('hud-timer').textContent=rem+'s';
+    if(rem<=0){ stopTimer(); return; }
+    timerRaf=requestAnimationFrame(tick);
+  }
+  tick();
+}
+function stopTimer(){ if(timerRaf){cancelAnimationFrame(timerRaf);timerRaf=null;} }
+
+function submitAns(answer, btnEl){
+  if(answered) return;
+  answered=true;
+  el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
+  var qIdx=currentQIdx;
+  var timeRemSec = Math.max(0, roundDeadline - serverNow()) / 1000;
+
+  var marker = db.ref('competition/'+sessionId+'/answered/'+qIdx+'/'+playerId);
+  var markerPromise   = marker.transaction(function(cur){ return cur ? undefined : true; });
+  var validatePromise = post('validateCompetitionAnswer',{competitionId:COMPETITION_ID,qIndex:qIdx,answer:answer});
+
+  Promise.allSettled([markerPromise, validatePromise]).then(function(results){
+    var markerResult = results[0], validateResult = results[1];
+    var recorded  = markerResult.status==='fulfilled' && markerResult.value.committed;
+    var res       = validateResult.status==='fulfilled' ? validateResult.value : null;
+    var isCorrect = !!(res&&res.status==='success'&&res.data&&res.data.isCorrect===true);
+    if(btnEl) btnEl.classList.add(isCorrect?'correct':'wrong');
+    if(!recorded) return;
+    if(isCorrect){
+      var pts = computeCompetitionScore(timeRemSec);
+      myScore+=pts; myCorrect++;
+      db.ref('competition/'+sessionId+'/players/'+playerId+'/score').transaction(function(cur){ return (cur||0)+pts; });
+      db.ref('competition/'+sessionId+'/players/'+playerId+'/correctCount').transaction(function(cur){ return (cur||0)+1; });
+      el('hud-score').textContent=myScore+' pts';
+      el('claim-banner').textContent='Correct! +'+pts+' pts ⚡';
+    } else {
+      el('claim-banner').textContent='Wrong answer';
+    }
+  });
+}
+
+function showRevealUI(st){
+  if(!answered){ el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;}); }
+  if(st.correctAnswer){
+    el('reveal-area').innerHTML = '<div class="reveal-box">Correct answer: <strong>'+esc(st.correctAnswer)+'</strong>'
+      + (st.explanation?('<br>'+esc(st.explanation)):'') + '</div>';
+  }
+}
+
+function renderLeaderboardUI(){
+  showScreen('s-leaderboard');
+  db.ref('competition/'+sessionId+'/players').once('value', function(snap){
+    var val = (snap&&snap.val())||{};
+    var players = Object.keys(val).map(function(id){ return Object.assign({pid:id}, val[id]); })
+      .sort(function(a,b){ return (b.score||0)-(a.score||0); });
+    var container = el('lb-rows');
+
+    var oldRects = {};
+    container.querySelectorAll('.lb-row').forEach(function(row){
+      var pid = row.getAttribute('data-pid');
+      if (pid) oldRects[pid] = row.getBoundingClientRect();
+    });
+
+    container.innerHTML = players.map(function(p,i){
+      var mine = p.pid===playerId;
+      return '<div class="lb-row'+(mine?' me':'')+'" data-pid="'+esc(p.pid)+'"><div class="lb-pos">#'+(i+1)+'</div>'
+        + '<div class="lb-name">'+esc(p.nickname||p.name||'?')
+        + (p.school?'<div class="lb-school">'+esc(p.school)+'</div>':'')+'</div>'
+        + '<div class="lb-score">'+(p.score||0)+'</div></div>';
+    }).join('');
+
+    container.querySelectorAll('.lb-row').forEach(function(row, idx){
+      var pid = row.getAttribute('data-pid');
+      var oldRect = oldRects[pid];
+      if (oldRect) {
+        var dy = oldRect.top - row.getBoundingClientRect().top;
+        if (Math.abs(dy) > 1) {
+          row.style.transition = 'none';
+          row.style.transform = 'translateY('+dy+'px)';
+          requestAnimationFrame(function(){
+            row.style.transition = 'transform .35s ease-out';
+            row.style.transform = '';
+          });
+        }
+      } else {
+        row.style.transition = 'none';
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(8px)';
+        setTimeout(function(){
+          row.style.transition = 'opacity .3s ease-out, transform .3s ease-out';
+          row.style.opacity = '1';
+          row.style.transform = '';
+        }, idx*40);
+      }
+    });
+  });
+}
+
+function showFinishUI(){
+  db.ref('competition/'+sessionId+'/players').once('value', function(snap){
+    var players = Object.entries((snap&&snap.val())||{}).map(function(e){ return Object.assign({pid:e[0]},e[1]); })
+      .sort(function(a,b){ return (b.score||0)-(a.score||0); });
+    var idx = players.findIndex(function(p){ return p.pid===playerId; });
+
+    [1,2,3].forEach(function(rank){ fillPodiumSpot(rank, players[rank-1]); });
+
+    el('finish-rank-num').textContent = 'P'+(idx>=0?idx+1:players.length);
+    el('finish-correct').textContent = myCorrect;
+    el('finish-score').textContent = myScore;
+
+    el('finish-overlay').classList.add('show');
+    setTimeout(function(){ var s=el('podium-3'); if(s) s.classList.add('show'); }, 700);
+    setTimeout(function(){ var s=el('podium-2'); if(s) s.classList.add('show'); }, 1700);
+    setTimeout(function(){
+      var s=el('podium-1'); if(!s) return;
+      s.classList.add('show');
+      setTimeout(function(){ s.classList.add('pulse'); }, 450);
+    }, 2700);
+    setTimeout(function(){
+      ['finish-rank-num','finish-stats-wrap','finish-note','finish-play-again-btn'].forEach(function(id){
+        var e=el(id); if(e) e.style.opacity='1';
+      });
+    }, 3600);
+  });
+}
+function fillPodiumSpot(rank, p){
+  var spot = el('podium-'+rank);
+  if (!spot) return;
+  if (!p) { spot.style.visibility = 'hidden'; return; }
+  el('pod'+rank+'-name').textContent = p.nickname || p.name || '?';
+  el('pod'+rank+'-school').textContent = p.school || '';
+  el('pod'+rank+'-score').textContent = (p.score||0) + ' pts';
+}
+
+window.addEventListener('beforeunload', function(){
+  [playersRef,stateRef].forEach(function(r){ if(r){ try{r.off('value');}catch(_){} } });
+});
+
+})();
+</script>
+</body>
+</html>

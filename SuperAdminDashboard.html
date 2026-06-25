@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -907,6 +907,32 @@
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
         <button class="btn btn-g" onclick="closeMo('qpick-mo')">Cancel</button>
         <button class="btn btn-p" onclick="saveCompetitionQuestionPicks()">Save Question Set</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPETITION RESULTS / PAYOUTS MODAL -->
+<div class="mo" id="results-mo">
+  <div class="mbox" style="width:720px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Results &amp; Prize Payouts</span>
+      <button class="mc" onclick="closeMo('results-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="ct">Standings</div>
+      <div class="tw" style="margin-bottom:18px">
+        <table id="results-table">
+          <thead><tr><th>Rank</th><th>Name</th><th>School</th><th>Score</th><th>Correct</th><th>Email</th><th>Phone</th></tr></thead>
+          <tbody><tr class="er"><td colspan="7">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="ct">Prize Payouts</div>
+      <div class="tw">
+        <table id="payouts-table">
+          <thead><tr><th>Place</th><th>Amount</th><th>Status</th><th>Payout Details</th><th>Action</th></tr></thead>
+          <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1865,6 +1891,8 @@ function renderCompetitionsTable() {
   tb.innerHTML = allCompetitions.map(function(c) {
     var dateStr = c.competition_date ? new Date(c.competition_date).toLocaleString() : '—';
     var actions = '<button class="btn btn-g btn-sm" onclick="openCompetitionModal(\'' + c.id + '\')">Edit</button>';
+    if (c.session_id && !c.finalized_at) actions += ' <button class="btn btn-ok btn-sm" onclick="finalizeCompetition(\'' + c.id + '\')">Finalize</button>';
+    if (c.finalized_at) actions += ' <button class="btn btn-g btn-sm" onclick="viewCompetitionResults(\'' + c.id + '\')">Results</button>';
     if (!c.finalized_at) actions += ' <button class="btn btn-d btn-sm" onclick="deleteCompetitionRow(\'' + c.id + '\')">Del</button>';
     return '<tr>'
       + '<td style="font-weight:600">' + escH(c.title) + '</td>'
@@ -2032,8 +2060,62 @@ function saveCompetitionQuestionPicks() {
   });
 }
 
+function finalizeCompetition(id) {
+  var c = allCompetitions.find(function(x){ return x.id === id; });
+  if (!confirm('Finalize results for "' + (c ? c.title : id) + '"? This locks the competition permanently and computes prize payouts. This cannot be undone.')) return;
+  call('finalizeCompetitionResults', { competitionId: id }, function(d) {
+    toast('success', 'Finalized — ' + (d.realPlayerCount||0) + ' real players ranked, ' + (d.payoutsCreated||0) + ' prize(s) created.');
+    loadCompetitions();
+  });
+}
+
 function viewCompetitionResults(id) {
-  toast('error', 'Results view is coming with the finalize-results step.');
+  document.getElementById('results-mo').classList.add('on');
+  call('getCompetitionResultsAdmin', { competitionId: id }, function(d) {
+    var tickets = (d && d.tickets) || [];
+    var payouts = (d && d.payouts) || [];
+
+    var rtb = document.querySelector('#results-table tbody');
+    rtb.innerHTML = tickets.length ? tickets.map(function(t) {
+      return '<tr>'
+        + '<td style="font-family:var(--mono)">#' + (t.final_rank||'—') + '</td>'
+        + '<td>' + escH(t.student_name||'—') + '</td>'
+        + '<td>' + escH(t.school_name||'—') + '</td>'
+        + '<td style="font-family:var(--mono)">' + (t.final_score||0) + '</td>'
+        + '<td style="font-family:var(--mono)">' + (t.final_correct_count||0) + '</td>'
+        + '<td style="font-size:11px">' + escH(t.student_email||'') + '</td>'
+        + '<td style="font-size:11px">' + escH(t.contact_phone||'—') + '</td>'
+        + '</tr>';
+    }).join('') : '<tr class="er"><td colspan="7">No results.</td></tr>';
+
+    var ptb = document.querySelector('#payouts-table tbody');
+    ptb.innerHTML = payouts.length ? payouts.map(function(p) {
+      var statusBadge = p.payout_status === 'paid' ? '<span class="bdg bg">Paid</span>'
+        : p.payout_status === 'submitted' ? '<span class="bdg by">Details In</span>'
+        : '<span class="bdg" style="background:var(--surf2);color:var(--txt2)">Awaiting Details</span>';
+      var details = p.payout_status === 'awaiting_details'
+        ? '<span style="color:var(--txt2)">Share payout link: ?payout=' + p.id + '</span>'
+        : (escH(p.payout_name||'') + ' · ' + escH(p.payout_bank_name||'') + ' · ' + escH(p.payout_account_number||''));
+      var action = p.payout_status === 'submitted'
+        ? '<button class="btn btn-ok btn-sm" onclick="markPayoutPaid(\'' + p.id + '\',\'' + escH(p.competition_id) + '\')">Mark Paid</button>'
+        : '—';
+      return '<tr>'
+        + '<td>#' + p.place + '</td>'
+        + '<td style="font-family:var(--mono)">₦' + Number(p.prize_amount_ngn||0).toLocaleString() + '</td>'
+        + '<td>' + statusBadge + '</td>'
+        + '<td style="font-size:11px">' + details + '</td>'
+        + '<td>' + action + '</td>'
+        + '</tr>';
+    }).join('') : '<tr class="er"><td colspan="5">No prizes configured.</td></tr>';
+  });
+}
+
+function markPayoutPaid(payoutId, competitionId) {
+  if (!confirm('Mark this prize as paid? Only do this after you\'ve actually sent the money.')) return;
+  call('markPrizePaid', { payoutId: payoutId }, function() {
+    toast('success', 'Marked as paid');
+    viewCompetitionResults(competitionId);
+  });
 }
 
 function toggleAI() {
