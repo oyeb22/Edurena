@@ -995,7 +995,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text2)">
             <span>Type: MCQ · TF · SHORT</span>
             <span>Correct Answer: full text matching an option · True/False for TF · text for SHORT · <strong>A / B / C / D</strong> for image-only options</span>
-            <span>SHORT variants: separate with | e.g. <code>6|six|Six</code></span>
+            <span>SHORT variants/list points: separate with a comma e.g. <code>Agbada, Iro and Buba, Babban riga</code> (| and ; also work)</span>
           </div>
         </div>
 
@@ -2078,11 +2078,24 @@ function renderAnswerReviewTab() {
     var skipped=!a.studentAnswer||a.studentAnswer==='(no answer)';
     var cls=skipped?'skipped':(a.isCorrect?'correct':'wrong');
     var bdg=skipped?'<span class="ar-bdg skip">Skipped</span>':a.isCorrect?'<span class="ar-bdg ok">✓ Correct</span>':(a.partialMode&&a.pointsEarned>0)?'<span class="ar-bdg" style="background:var(--warn-bg);color:var(--warn)">Partial '+a.pointsEarned+'/'+a.maxPoints+'pt</span>':'<span class="ar-bdg bad">✗ Wrong</span>';
+    var aiBdg=(a.aiGraded&&r.id)?(' <span class="ar-bdg" style="background:rgba(124,92,255,0.15);color:#7c5cff;cursor:pointer" onclick="onRevertAiGrade('+ri+',\''+esc(a.questionId)+'\')" title="Claude judged this answer correct even though it did not match exactly. Click to revert it back to wrong.">AI-verified · revert</span>'):(a.aiOverridden?' <span class="ar-bdg" style="background:var(--surface3);color:var(--text2)">AI suggestion overridden</span>':'');
     var partialInfo='';
     if(a.partialMode&&a.matchedItems&&a.matchedItems.length){ partialInfo='<div class="ar-row"><span class="ar-lbl">Got Right</span><span class="ar-val ok">✓ '+a.matchedItems.map(function(m){ return esc(m); }).join(', ')+'</span></div><div class="ar-row"><span class="ar-lbl">Missed</span><span class="ar-val bad">✗ '+(a.missedItems||[]).map(function(m){ return esc(m); }).join(', ')+'</span></div>'; }
-    return '<div class="ar-item '+cls+'"><div class="ar-q"><span>Q'+(i+1)+'. '+esc(a.questionText||'Q'+(i+1))+'</span>'+bdg+'</div><div class="ar-row"><span class="ar-lbl">Picked</span><span class="ar-val '+(a.isCorrect?'ok':skipped?'':'bad')+'">'+esc(a.studentAnswer||'(no answer)')+'</span></div>'+(!a.isCorrect&&!a.partialMode?'<div class="ar-row"><span class="ar-lbl">Correct</span><span class="ar-val ok">'+esc(a.correctAnswer)+'</span></div>':'')+partialInfo+'<div class="ar-row"><span class="ar-lbl">Points</span><span class="ar-val">'+esc(a.pointsEarned)+'/'+esc(a.maxPoints)+'</span></div>'+(a.explanation?'<div class="ar-row"><span class="ar-lbl">Explanation</span><span class="ar-val" style="color:var(--accent-text);line-height:1.5">'+esc(a.explanation)+'</span></div>':'')+'</div>';
+    return '<div class="ar-item '+cls+'"><div class="ar-q"><span>Q'+(i+1)+'. '+esc(a.questionText||'Q'+(i+1))+'</span>'+bdg+aiBdg+'</div><div class="ar-row"><span class="ar-lbl">Picked</span><span class="ar-val '+(a.isCorrect?'ok':skipped?'':'bad')+'">'+esc(a.studentAnswer||'(no answer)')+'</span></div>'+(!a.isCorrect&&!a.partialMode?'<div class="ar-row"><span class="ar-lbl">Correct</span><span class="ar-val ok">'+esc(a.correctAnswer)+'</span></div>':'')+partialInfo+'<div class="ar-row"><span class="ar-lbl">Points</span><span class="ar-val">'+esc(a.pointsEarned)+'/'+esc(a.maxPoints)+'</span></div>'+(a.explanation?'<div class="ar-row"><span class="ar-lbl">Explanation</span><span class="ar-val" style="color:var(--accent-text);line-height:1.5">'+esc(a.explanation)+'</span></div>':'')+'</div>';
   }).join('');
   body.innerHTML=html;
+}
+function onRevertAiGrade(ri,questionId){
+  var r=_currentResponses[ri];
+  if(!r||!r.id){ toast('error','Cannot revert — missing result id.'); return; }
+  if(!confirm('Claude judged this answer correct. Revert it back to wrong?')) return;
+  call('revertAiGrade',{resultId:r.id,questionId:questionId},function(d){
+    var a=(r.answers||[]).filter(function(x){ return String(x.questionId)===String(questionId); })[0];
+    if(a){ a.isCorrect=false; a.pointsEarned=0; a.aiGraded=false; a.aiOverridden=true; }
+    r.score=d.score; r.totalPoints=d.totalPoints; r.percentage=d.percentage+'%'; r.status=d.status;
+    renderAnswerReviewTab();
+    toast('success','Answer reverted to wrong.');
+  });
 }
 function viewStudentPhotosTab(email,code){ switchMTab(5,5); var sel=document.getElementById('photos-student-sel'); if(sel) sel.value=email; loadPhotosForSelected(code); }
 function loadPhotosForSelected(code) {
