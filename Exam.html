@@ -119,16 +119,24 @@
     .sbadge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
     .progress-strip{height:3px;background:var(--surface3);position:relative;}
     .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
-    .monitor{position:fixed;top:120px;right:12px;z-index:200;width:176px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);}
-    @media(max-width:768px){.monitor{width:120px;top:70px;right:8px;padding:6px;}}
+        .monitor{position:fixed;bottom:100px;right:12px;z-index:200;width:160px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+    .monitor-info{margin-bottom:8px;padding:0 2px;}
+    .monitor-student{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .monitor-exam{font-size:9px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
     .monitor-title{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:5px;margin-bottom:8px;}
     .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite;}
     .monitor-video{border-radius:8px;overflow:hidden;aspect-ratio:4/3;position:relative;margin-bottom:8px;border:1px solid var(--border);}
     .monitor-video video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block;}
     .monitor-video canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
-    .monitor-badges{display:flex;flex-wrap:wrap;gap:3px;}
-    .mbadge{font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;background:var(--green-glow);color:var(--green);border:1px solid rgba(45,212,160,.2);}
+    .monitor-badges{display:flex;flex-wrap:wrap;gap:4px;}
+    .mbadge{font-size:9px;padding:3px 6px;border-radius:8px;font-weight:700;background:var(--green-glow);color:var(--green);border:1px solid rgba(45,212,160,.2);}
     .mbadge.warn{background:var(--red-glow);color:var(--red);border-color:rgba(240,107,107,.2);}
+    @media(max-width:768px){
+      .monitor{width:140px;bottom:90px;right:10px;padding:8px;}
+      .monitor-student{font-size:10px;}
+      .monitor-exam{font-size:8px;}
+      .mbadge{font-size:8px;padding:2px 5px;}
+    }
     .sec-log{position:fixed;bottom:90px;left:12px;z-index:200;width:220px;max-height:150px;overflow-y:auto;background:rgba(14,18,33,.93);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:10px;font-family:var(--mono);}
     @media(max-width:768px){.sec-log{display:none;}}
     .log-entry{padding:3px 0;border-bottom:1px solid rgba(37,42,66,.5);color:var(--muted);}
@@ -545,8 +553,12 @@
 
 <!-- EXAM SCREEN -->
 <div id="examScreen" class="screen">
-  <div class="monitor">
+   <div class="monitor">
     <div class="monitor-title"><div class="pulse-dot"></div> AI Proctor Live</div>
+    <div class="monitor-info">
+      <div class="monitor-student" id="monitorStudentName">Student</div>
+      <div class="monitor-exam" id="monitorExamTitle">Exam</div>
+    </div>
     <div class="monitor-video">
       <video id="examVideo" autoplay playsinline muted></video>
       <canvas id="examCanvas"></canvas>
@@ -1667,6 +1679,8 @@ function updateCandidateDisplays(sInfo){
   safeText('bannerName',name); safeText('bannerMeta',(quizMeta?quizMeta.title:'')+(metaStr?' · '+metaStr:''));
   safeText('eccName',name); safeText('eccMeta',metaStr||student.email);
   safeText('examSubBar',[name,metaStr].filter(Boolean).join(' · '));
+  safeText('monitorStudentName',name);
+  safeText('monitorExamTitle',quizMeta?quizMeta.title:'Exam');
   buildExamDetails();
   if(locked){ var n=document.getElementById('lockedNotice'); if(n)n.classList.add('on'); }
 }
