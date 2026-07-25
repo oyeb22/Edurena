@@ -794,6 +794,21 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <div class="tp" id="tp-create">
         <div class="sh"><h2>Create New Quiz</h2></div>
         <div class="card">
+          <div class="ct">Quiz Type</div>
+          <div class="fgrid" style="margin-bottom:0">
+            <div class="fg"><label>Type *</label>
+              <select id="c-quiz-type" onchange="onQuizTypeChange()">
+                <option value="standard">Standard Proctored Exam</option>
+                <option value="jamb">JAMB / Multi-Subject Exam</option>
+                <option value="adaptive">Adaptive Difficulty Exam</option>
+              </select>
+            </div>
+            <div class="fg" id="c-type-desc-wrap" style="display:flex;align-items:flex-end;padding-bottom:2px">
+              <p id="c-type-desc" style="font-size:12px;color:var(--text2);line-height:1.5">Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
           <div class="ct">Basic Info</div>
           <div class="fgrid" style="margin-bottom:10px">
             <div class="fg"><label>Quiz Title *</label><input type="text" id="c-title" placeholder="e.g. Week 1 Maths Exam"></div>
@@ -805,6 +820,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
           <div class="fgrid" style="margin-top:10px">
+            <div class="fg"><label>Topic (optional)</label><input type="text" id="c-topic" placeholder="e.g. Algebra, Photosynthesis…" oninput="onWeekChange()"></div>
             <div class="fg"><label>Session (optional)</label><input type="text" id="c-session" list="session-list" placeholder="e.g. 2024/2025"><datalist id="session-list"><option value="2024/2025"><option value="2025/2026"></datalist></div>
             <div class="fg"><label>Term (optional)</label><input type="text" id="c-term" list="term-list" placeholder="e.g. First Term"><datalist id="term-list"><option value="First Term"><option value="Second Term"><option value="Third Term"></datalist></div>
           </div>
@@ -863,6 +879,17 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
   <input type="number" id="c-max-violations" value="3" min="1" max="10"
     style="width:56px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;outline:none">
 </div>
+        </div>
+        <div class="card hidden" id="adaptive-card">
+          <div class="ct">Adaptive Difficulty Settings</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Choose which difficulty levels to include. Questions will be ordered Easy → Medium → Hard so students build confidence before tackling harder material.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="easy" checked><span>Easy</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="medium" checked><span>Medium</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="hard" checked><span>Hard</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value=""><span>Unset (include questions with no difficulty tag)</span></label>
+          </div>
+          <p style="font-size:11px;color:var(--text2);">Questions with no difficulty tag are treated as "unset". Enable that checkbox to include them.</p>
         </div>
         <div class="card">
           <div class="ct">Exam Instructions <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— optional</span></div>
@@ -981,6 +1008,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:30px">#</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:110px">Subject *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:55px">Week *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Topic</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:75px">Type *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:220px">Question *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option A</th>
@@ -994,6 +1022,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                   <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">Q Img URL</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:130px">Correct Answer *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:45px">Pts</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:75px">Difficulty</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:140px">Explanation</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:100px">Session</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:100px">Term</th>
@@ -1021,7 +1050,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
               </div>
               <button class="btn btn-sm" onclick="copyCSVFormat()">Copy Headers</button>
             </div>
-            <code id="csv-format-display" style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all;cursor:pointer" onclick="copyCSVFormat()" title="Click to copy">subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id</code>
+            <code id="csv-format-display" style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all;cursor:pointer" onclick="copyCSVFormat()" title="Click to copy">subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id</code>
           </div>
 
           <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;margin-bottom:12px">
@@ -2379,6 +2408,7 @@ function addInlineRow(){
   tr.innerHTML='<td style="padding:4px 6px;border:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;vertical-align:top;padding-top:9px">'+idx+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','e.g. Mathematics')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:48px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','e.g. Algebra')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('select-type','','')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Question text here')+'</td>'+
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option A')+'</td>'+
@@ -2392,6 +2422,7 @@ function addInlineRow(){
     '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Full text of correct option')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:38px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top"><select style="background:transparent;border:none;outline:none;width:100%;color:var(--text);font-family:var(--font);font-size:12px;padding:5px 4px;cursor:pointer"><option value="">—</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Why this is correct')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','2025/2026')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','First Term')+'</td>'+
@@ -2407,7 +2438,9 @@ function toggleQBImgCols(){
   cols.forEach(function(el){ el.style.display=showing?'none':''; });
   if(btn) btn.textContent=showing?'⊞ Show Image Cols':'⊟ Hide Image Cols';
 }
-function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var inp=td.querySelector('input[type="text"]'); if(inp) return inp.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),image_url:cv(13),correct_answer:cv(14),points:cv(15)||'1',explanation:cv(16),session:cv(17),term:cv(18) }; }
+function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var inp=td.querySelector('input[type="text"]'); if(inp) return inp.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; }
+// Columns: 0=# 1=subject 2=week 3=topic 4=type 5=question 6=optA 7=optB 8=optC 9=optD 10=imgA 11=imgB 12=imgC 13=imgD 14=imgQ 15=correct 16=pts 17=difficulty 18=explanation 19=session 20=term 21=del
+return { subject:cv(1),week:cv(2),topic:cv(3),type:cv(4),question:cv(5),option_A:cv(6),option_B:cv(7),option_C:cv(8),option_D:cv(9),option_A_image:cv(10),option_B_image:cv(11),option_C_image:cv(12),option_D_image:cv(13),image_url:cv(14),correct_answer:cv(15),points:cv(16)||'1',difficulty:cv(17),explanation:cv(18),session:cv(19),term:cv(20) }; }
 function importInlineTable(){
   var cid=(document.getElementById('inline-class')||{}).value||'';
   if(!cid){ toast('error','Select a class first'); return; }
@@ -2431,11 +2464,11 @@ function insertQBSym(s){
   el.dispatchEvent(new Event('input',{bubbles:true}));
 }
 function copyCSVFormat() {
-  var h='subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
+  var h='subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
   navigator.clipboard.writeText(h).then(function(){ toast('success','CSV headers copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=h; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','CSV headers copied'); });
 }
 function copyJSONFormat() {
-  var schema=JSON.stringify([{subject:"Mathematics",week:1,type:"MCQ",question:"Question text here?",option_A:"Option A",option_B:"Option B",option_C:"Option C",option_D:"Option D",option_A_image:"",option_B_image:"",option_C_image:"",option_D_image:"",correct_answer:"Option B",points:1,explanation:"Why this answer is correct",session:"2025/2026",term:"First Term",image_url:"",passage_id:""}],null,2);
+  var schema=JSON.stringify([{subject:"Mathematics",week:1,topic:"Algebra",difficulty:"medium",type:"MCQ",question:"Question text here?",option_A:"Option A",option_B:"Option B",option_C:"Option C",option_D:"Option D",option_A_image:"",option_B_image:"",option_C_image:"",option_D_image:"",correct_answer:"Option B",points:1,explanation:"Why this answer is correct",session:"2025/2026",term:"First Term",image_url:"",passage_id:""}],null,2);
   navigator.clipboard.writeText(schema).then(function(){ toast('success','JSON schema copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=schema; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','JSON schema copied'); });
 }
 function _parseCSVLine(line){var res=[],cur='',inQ=false;for(var i=0;i<line.length;i++){var c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(c===','&&!inQ){res.push(cur);cur='';}else cur+=c;}res.push(cur);return res;}
@@ -2450,6 +2483,18 @@ function importFromJSON(jsonData,classId){ var parsed; try{ parsed=JSON.parse(js
 function showImportStatus(msg,type){ var el=document.getElementById('import-status'); if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color=type==='success'?'var(--success)':type==='error'?'var(--danger)':type==='warn'?'var(--warn)':'var(--text2)'; if(type==='success') setTimeout(function(){ el.style.display='none'; },5000); }
 
 /* ── Create Quiz ── */
+var _QUIZ_TYPE_DESC = {
+  standard: 'Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.',
+  jamb:     'Multi-subject exam. Questions are grouped by subject — students see a subject tab bar and can navigate between sections.',
+  adaptive: 'Difficulty-aware exam. Questions are sorted Easy → Medium → Hard. Filter by difficulty level below.'
+};
+function onQuizTypeChange(){
+  var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
+  var desc = document.getElementById('c-type-desc');
+  if (desc) desc.textContent = _QUIZ_TYPE_DESC[t] || '';
+  var adaptiveCard = document.getElementById('adaptive-card');
+  if (adaptiveCard) adaptiveCard.classList.toggle('hidden', t !== 'adaptive');
+}
 function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); },100); }); }
 function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
@@ -2501,7 +2546,7 @@ function updateExclWeeksSummary(){
   else { summary.innerHTML='<strong style="color:var(--warn)">Excluding:</strong> '+excl.map(function(w){return 'Week '+w;}).join(', '); }
 }
 function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
-function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
+function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); var filterTopic=(document.getElementById('c-topic')||{}).value||''; call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks,topic:filterTopic},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
 function renderSubjAlloc(subjs,wk,weekMode){ if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode(); var tot=0,types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):''; var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk; document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e){ var subjectName=e[0],available=e[1],suggested=Math.min(available,20); tot+=suggested; var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5); return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+'</div></div><input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjectName.replace(/"/g,'&quot;')+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()"></div>'; }).join(''); setText('tot-q',tot); }
@@ -2512,6 +2557,9 @@ function doCreate(){
   var sc={}; document.querySelectorAll('.sinput').forEach(function(el){ var s=el.getAttribute('data-subject'),c=parseInt(el.value)||0; if(s&&c>0) sc[s]=c; });
   if(!Object.keys(sc).length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
   var rubric=collectRubricData(); if(!rubric){ return; }
+  var quizType=(document.getElementById('c-quiz-type')||{}).value||'standard';
+  var diffLevels=[];
+  if(quizType==='adaptive'){ document.querySelectorAll('.diff-chk:checked').forEach(function(cb){ diffLevels.push(cb.value); }); }
   spin(true,'Creating quiz…');
   function localToISO(v){ if(!v) return ''; return new Date(v).toISOString(); }
   call('createQuiz', {
@@ -2525,9 +2573,12 @@ function doCreate(){
     endTime:             localToISO(en),
     questionTypes:       getSelectedTypes(),
     weekMode:            getWeekMode(),
-    excludedWeeks:       getExcludedWeeks(),  // v5.3: cumulative mode only — empty if single or all weeks included
+    excludedWeeks:       getExcludedWeeks(),
     session:             document.getElementById('c-session').value,
     term:                document.getElementById('c-term').value,
+    topic:               (document.getElementById('c-topic')||{}).value||'',
+    quizType:            quizType,
+    difficultyLevels:    diffLevels.length ? diffLevels : null,
     faceDetection:       document.getElementById('tog-face').classList.contains('on'),
     showCorrectAnswers:  document.getElementById('tog-ans').classList.contains('on'),
     allowRetakes:        document.getElementById('tog-retakes').classList.contains('on'),
@@ -2562,6 +2613,11 @@ function resetCreate(){
   var ps=document.getElementById('passage-select'); if(ps){ ps.innerHTML='<option value="">— Select class & week first —</option>'; ps.disabled=true; }
   var pp=document.getElementById('passage-preview'); if(pp) pp.style.display='none';
   _selectedPassageId=''; resetRubricRanges();
+  var qt=document.getElementById('c-quiz-type'); if(qt) qt.value='standard';
+  var tp=document.getElementById('c-topic'); if(tp) tp.value='';
+  document.querySelectorAll('.diff-chk').forEach(function(cb){ cb.checked=true; });
+  var ac=document.getElementById('adaptive-card'); if(ac) ac.classList.add('hidden');
+  var td=document.getElementById('c-type-desc'); if(td) td.textContent=_QUIZ_TYPE_DESC['standard']||'';
 }
 
 /* ── Grading Rubric ── */
