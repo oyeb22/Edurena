@@ -96,6 +96,23 @@
     .finish-stat-lbl{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
     .finish-stats{display:flex;gap:26px}
     .finish-stat{text-align:center}
+
+    /* Podium — revealed 3rd, then 2nd, then 1st for suspense */
+    .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:18px 0;width:100%;max-width:380px}
+    .podium-spot{display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(26px) scale(.88);transition:opacity .45s ease-out,transform .45s cubic-bezier(.34,1.4,.4,1)}
+    .podium-spot.show{opacity:1;transform:translateY(0) scale(1)}
+    .podium-card{background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:7px 8px;text-align:center;margin-bottom:6px;min-width:80px;max-width:96px}
+    .podium-spot.p1 .podium-card{border-color:var(--yel);box-shadow:0 0 22px rgba(245,200,66,.4)}
+    .podium-medal{font-size:20px;line-height:1}
+    .podium-name{font-size:11.5px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .podium-school{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .podium-score{font-family:var(--display);font-size:12.5px;color:var(--yel);margin-top:2px}
+    .podium-block{width:80px;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;color:#06081a}
+    .podium-spot.p1 .podium-block{height:70px;background:linear-gradient(135deg,#f5d44a,#f0a93a);font-size:20px}
+    .podium-spot.p2 .podium-block{height:50px;background:linear-gradient(135deg,#c9d3e0,#9aa7bb);font-size:17px}
+    .podium-spot.p3 .podium-block{height:34px;background:linear-gradient(135deg,#e0a774,#b97a4a);font-size:15px}
+    @keyframes podiumPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+    .podium-spot.p1.pulse .podium-card{animation:podiumPulse .55s ease-out 2}
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -176,12 +193,28 @@
 
 <div class="finish-overlay" id="finish-overlay">
   <div class="finish-title">CHALLENGE OVER!</div>
-  <div class="finish-rank" id="finish-rank-num">P1</div>
-  <div class="finish-stats">
+
+  <div class="podium-wrap" id="podium-wrap">
+    <div class="podium-spot p2" id="podium-2">
+      <div class="podium-card"><div class="podium-medal">&#x1F948;</div><div class="podium-name" id="pod2-name"></div><div class="podium-school" id="pod2-school"></div><div class="podium-score" id="pod2-score"></div></div>
+      <div class="podium-block">2</div>
+    </div>
+    <div class="podium-spot p1" id="podium-1">
+      <div class="podium-card"><div class="podium-medal">&#x1F947;</div><div class="podium-name" id="pod1-name"></div><div class="podium-school" id="pod1-school"></div><div class="podium-score" id="pod1-score"></div></div>
+      <div class="podium-block">1</div>
+    </div>
+    <div class="podium-spot p3" id="podium-3">
+      <div class="podium-card"><div class="podium-medal">&#x1F949;</div><div class="podium-name" id="pod3-name"></div><div class="podium-school" id="pod3-school"></div><div class="podium-score" id="pod3-score"></div></div>
+      <div class="podium-block">3</div>
+    </div>
+  </div>
+
+  <div class="finish-rank" id="finish-rank-num" style="opacity:0;transition:opacity .5s ease-out">P1</div>
+  <div class="finish-stats" id="finish-stats-wrap" style="opacity:0;transition:opacity .5s ease-out">
     <div class="finish-stat"><div class="finish-stat-val" id="finish-correct">0</div><div class="finish-stat-lbl">Correct</div></div>
     <div class="finish-stat"><div class="finish-stat-val" id="finish-score">0</div><div class="finish-stat-lbl">Total Score</div></div>
   </div>
-  <button class="pbtn" style="max-width:240px;margin-top:24px" onclick="location.reload()">PLAY AGAIN</button>
+  <button class="pbtn" id="finish-play-again-btn" style="max-width:240px;margin-top:24px;opacity:0;transition:opacity .5s ease-out" onclick="location.reload()">PLAY AGAIN</button>
 </div>
 
 <script>
@@ -203,7 +236,7 @@ function lockMobileZoom(){
 window.addEventListener('load', lockMobileZoom);
 
 var TIER = 'middle'; // v1: launch with a single narrow grade band
-var COUNTDOWN_MS = 3000, REVEAL_MS = 2500, LEADERBOARD_MS = 3000;
+var COUNTDOWN_MS = 3000, REVEAL_MS = 10000, LEADERBOARD_MS = 3000;
 
 var P = new URLSearchParams(window.location.search);
 var GAS_URL = (P.get('script') || '').trim();
@@ -686,30 +719,99 @@ function showRevealUI(st){
   }
 }
 
+// FLIP animation: rows slide from their OLD rendered position to their NEW
+// one instead of snapping straight to the re-sorted order — the motion
+// itself communicates "this player moved up/down" (transform/opacity only,
+// per perf guidance). First-ever render staggers each row in instead.
 function renderLeaderboardUI(){
   showScreen('s-leaderboard');
   db.ref('challenge/'+sessionId+'/players').once('value', function(snap){
-    var players = Object.values((snap&&snap.val())||{}).sort(function(a,b){ return (b.score||0)-(a.score||0); });
-    el('lb-rows').innerHTML = players.map(function(p,i){
-      var mine = p.name===playerName && p.nickname===playerNickname;
-      return '<div class="lb-row'+(mine?' me':'')+'"><div class="lb-pos">#'+(i+1)+'</div>'
+    var val = (snap&&snap.val())||{};
+    var players = Object.keys(val).map(function(id){ return Object.assign({pid:id}, val[id]); })
+      .sort(function(a,b){ return (b.score||0)-(a.score||0); });
+    var container = el('lb-rows');
+
+    var oldRects = {};
+    container.querySelectorAll('.lb-row').forEach(function(row){
+      var pid = row.getAttribute('data-pid');
+      if (pid) oldRects[pid] = row.getBoundingClientRect();
+    });
+
+    container.innerHTML = players.map(function(p,i){
+      var mine = p.pid===playerId;
+      return '<div class="lb-row'+(mine?' me':'')+'" data-pid="'+esc(p.pid)+'"><div class="lb-pos">#'+(i+1)+'</div>'
         + '<div class="lb-name">'+esc(p.nickname||p.name||'?')
         + (p.school?'<div class="lb-school">'+esc(p.school)+'</div>':'')+'</div>'
         + '<div class="lb-score">'+(p.score||0)+'</div></div>';
     }).join('');
+
+    container.querySelectorAll('.lb-row').forEach(function(row, idx){
+      var pid = row.getAttribute('data-pid');
+      var oldRect = oldRects[pid];
+      if (oldRect) {
+        var dy = oldRect.top - row.getBoundingClientRect().top;
+        if (Math.abs(dy) > 1) {
+          row.style.transition = 'none';
+          row.style.transform = 'translateY('+dy+'px)';
+          requestAnimationFrame(function(){
+            row.style.transition = 'transform .35s ease-out';
+            row.style.transform = '';
+          });
+        }
+      } else {
+        row.style.transition = 'none';
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(8px)';
+        setTimeout(function(){
+          row.style.transition = 'opacity .3s ease-out, transform .3s ease-out';
+          row.style.opacity = '1';
+          row.style.transform = '';
+        }, idx*40);
+      }
+    });
   });
 }
 
+// Podium reveal: 3rd, then 2nd, then 1st (the order builds suspense toward
+// the winner), each spot fading/rising into place; the winner's card pulses
+// once revealed. The player's own personal result fades in last, after the
+// podium settles, so everyone still sees their own outcome clearly.
 function showFinishUI(){
-  el('finish-correct').textContent=myCorrect;
-  el('finish-score').textContent=myScore;
   db.ref('challenge/'+sessionId+'/players').once('value', function(snap){
     var players = Object.entries((snap&&snap.val())||{}).map(function(e){ return Object.assign({pid:e[0]},e[1]); })
       .sort(function(a,b){ return (b.score||0)-(a.score||0); });
     var idx = players.findIndex(function(p){ return p.pid===playerId; });
-    el('finish-rank-num').textContent='P'+(idx>=0?idx+1:players.length);
+
+    [1,2,3].forEach(function(rank){
+      fillPodiumSpot(rank, players[rank-1]);
+    });
+
+    el('finish-rank-num').textContent = 'P'+(idx>=0?idx+1:players.length);
+    el('finish-correct').textContent = myCorrect;
+    el('finish-score').textContent = myScore;
+
+    el('finish-overlay').classList.add('show');
+    setTimeout(function(){ var s=el('podium-3'); if(s) s.classList.add('show'); }, 700);
+    setTimeout(function(){ var s=el('podium-2'); if(s) s.classList.add('show'); }, 1700);
+    setTimeout(function(){
+      var s=el('podium-1'); if(!s) return;
+      s.classList.add('show');
+      setTimeout(function(){ s.classList.add('pulse'); }, 450);
+    }, 2700);
+    setTimeout(function(){
+      ['finish-rank-num','finish-stats-wrap','finish-play-again-btn'].forEach(function(id){
+        var e=el(id); if(e) e.style.opacity='1';
+      });
+    }, 3600);
   });
-  el('finish-overlay').classList.add('show');
+}
+function fillPodiumSpot(rank, p){
+  var spot = el('podium-'+rank);
+  if (!spot) return;
+  if (!p) { spot.style.visibility = 'hidden'; return; }
+  el('pod'+rank+'-name').textContent = p.nickname || p.name || '?';
+  el('pod'+rank+'-school').textContent = p.school || '';
+  el('pod'+rank+'-score').textContent = (p.score||0) + ' pts';
 }
 
 window.addEventListener('beforeunload', function(){
