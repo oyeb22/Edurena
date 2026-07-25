@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -110,13 +110,6 @@
     .timer{font-family:var(--mono);font-size:clamp(20px,5vw,26px);font-weight:600;color:var(--accent2);letter-spacing:2px;line-height:1;}
     .timer.warn{color:var(--red);animation:flash 1s infinite;}
     .timer-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
-    @media(max-width:768px){
-      .exam-header-top{padding:8px 12px;}
-      .exam-title-main{font-size:13px;}
-      .exam-title-sub{display:none;}
-      .timer{font-size:20px;}
-      .timer-label{font-size:8px;}
-    }
     @keyframes flash{0%,100%{opacity:1}50%{opacity:.35}}
     .exam-status-strip{display:flex;align-items:center;gap:6px;padding:6px 16px 8px;overflow-x:auto;scrollbar-width:none;}
     .exam-status-strip::-webkit-scrollbar{display:none;}
@@ -126,38 +119,22 @@
     .sbadge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
     .progress-strip{height:3px;background:var(--surface3);position:relative;}
     .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
-        .monitor{position:fixed;top:65px;right:12px;z-index:200;width:150px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:8px;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,0.4);}
-    .monitor-info{margin-bottom:6px;padding:0 2px;}
-    .monitor-student{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .monitor-exam{font-size:9px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
-    .monitor-title{font-size:9px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:4px;margin-bottom:6px;}
-    .pulse-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite;}
-    .monitor-video{border-radius:6px;overflow:hidden;aspect-ratio:4/3;position:relative;margin-bottom:6px;border:1px solid var(--border);}
+    .monitor{position:fixed;top:120px;right:12px;z-index:200;width:176px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);}
+    @media(max-width:768px){.monitor{top:auto;bottom:80px;right:10px;width:110px;padding:6px;}.monitor-title{display:none;}.monitor-badges{display:none;}}
+    .monitor-title{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:5px;margin-bottom:8px;}
+    .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite;}
+    .monitor-video{border-radius:8px;overflow:hidden;aspect-ratio:4/3;position:relative;margin-bottom:8px;border:1px solid var(--border);}
     .monitor-video video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block;}
     .monitor-video canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
     .monitor-badges{display:flex;flex-wrap:wrap;gap:3px;}
-    .mbadge{font-size:8px;padding:2px 5px;border-radius:6px;font-weight:700;background:var(--green-glow);color:var(--green);border:1px solid rgba(45,212,160,.2);}
+    .mbadge{font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;background:var(--green-glow);color:var(--green);border:1px solid rgba(45,212,160,.2);}
     .mbadge.warn{background:var(--red-glow);color:var(--red);border-color:rgba(240,107,107,.2);}
-    @media(max-width:768px){
-      .monitor{width:110px;top:58px;right:8px;padding:6px;}
-      .monitor-info{margin-bottom:4px;}
-      .monitor-student{font-size:9px;}
-      .monitor-exam{font-size:8px;}
-      .monitor-title{font-size:8px;margin-bottom:4px;}
-      .monitor-video{margin-bottom:4px;}
-      .mbadge{font-size:7px;padding:2px 4px;}
-      .exam-status-strip{display:none;}
-      .sec-log{display:none;}
-    }
     .sec-log{position:fixed;bottom:90px;left:12px;z-index:200;width:220px;max-height:150px;overflow-y:auto;background:rgba(14,18,33,.93);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:10px;font-family:var(--mono);}
     @media(max-width:768px){.sec-log{display:none;}}
     .log-entry{padding:3px 0;border-bottom:1px solid rgba(37,42,66,.5);color:var(--muted);}
     .log-entry.vio{color:var(--red);}
     .log-entry.warn{color:var(--yellow);}
-        .question-wrap{flex:1;max-width:700px;width:100%;margin:0 auto;padding:16px 14px 130px;}
-    @media(max-width:768px){
-      .question-wrap{padding:12px 10px 120px;}
-    }
+    .question-wrap{flex:1;max-width:700px;width:100%;margin:0 auto;padding:16px 14px 130px;}
     .exam-candidate-card{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;}
     .ecc-avatar{width:34px;height:34px;background:linear-gradient(135deg,rgba(91,110,245,.3),rgba(129,140,248,.2));border:1px solid rgba(91,110,245,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
     .ecc-info{flex:1;min-width:0;}
@@ -245,6 +222,9 @@
     .opt-read-btn:hover{color:var(--accent2);border-color:rgba(91,110,245,.4);}
     .short-input{width:100%;padding:clamp(11px,3vw,13px) clamp(12px,3vw,14px);background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:var(--font);resize:vertical;min-height:100px;outline:none;transition:border-color .18s;-webkit-appearance:none;}
     .short-input:focus{border-color:var(--accent);}
+    .sym-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+    .sym-bar button{padding:4px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;cursor:pointer;line-height:1;touch-action:manipulation;}
+    .sym-bar button:active{background:var(--surface3);}
     .q-dots-wrap{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
     .q-dot{width:10px;height:10px;border-radius:50%;background:var(--surface3);border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;flex-shrink:0;position:relative;}
     .q-dot.answered{background:var(--accent);border-color:var(--accent);}
@@ -568,12 +548,8 @@
 
 <!-- EXAM SCREEN -->
 <div id="examScreen" class="screen">
-   <div class="monitor">
+  <div class="monitor">
     <div class="monitor-title"><div class="pulse-dot"></div> AI Proctor Live</div>
-    <div class="monitor-info">
-      <div class="monitor-student" id="monitorStudentName">Student</div>
-      <div class="monitor-exam" id="monitorExamTitle">Exam</div>
-    </div>
     <div class="monitor-video">
       <video id="examVideo" autoplay playsinline muted></video>
       <canvas id="examCanvas"></canvas>
@@ -1604,12 +1580,22 @@ window.addEventListener('load',function(){
           }
         });
       }
-      // Gated BEFORE the camera activates — a first-time student must see
-      // and accept this before any proctoring data is captured, not after.
-      gateOnProctoringConsent(function(){
+      if (faceEnabled) {
+        // Gated BEFORE the camera activates — a first-time student must see
+        // and accept this before any proctoring data is captured, not after.
+        gateOnProctoringConsent(function(){
+          fetchStudentInfo();
+          initMedia();
+        });
+      } else {
+        // No live proctoring — skip consent gate and camera check UI
+        var monitorEl = document.querySelector('.monitor');
+        if (monitorEl) monitorEl.style.display = 'none';
+        var camCard = document.querySelector('.check-card');
+        if (camCard) camCard.style.display = 'none';
         fetchStudentInfo();
-        initMedia();
-      });
+        initMedia(); // still needed for start-of-exam photo capture
+      }
     }).catch(function(e) {
       hideLoading();
       safeText('preTitle', 'Access Denied');
@@ -1694,8 +1680,6 @@ function updateCandidateDisplays(sInfo){
   safeText('bannerName',name); safeText('bannerMeta',(quizMeta?quizMeta.title:'')+(metaStr?' · '+metaStr:''));
   safeText('eccName',name); safeText('eccMeta',metaStr||student.email);
   safeText('examSubBar',[name,metaStr].filter(Boolean).join(' · '));
-  safeText('monitorStudentName',name);
-  safeText('monitorExamTitle',quizMeta?quizMeta.title:'Exam');
   buildExamDetails();
   if(locked){ var n=document.getElementById('lockedNotice'); if(n)n.classList.add('on'); }
 }
@@ -1847,6 +1831,7 @@ function enterFullscreen() {
 }
 
 function startExam(){
+  if(!faceEnabled){ var m=document.querySelector('.monitor'); if(m) m.style.display='none'; }
   var ev=document.getElementById('examVideo');
   if(ev&&mediaStream){ev.srcObject=mediaStream;ev.play().catch(function(){});}
   var ec=document.getElementById('examCanvas'); if(ec){ec.width=320;ec.height=240;}
@@ -2030,8 +2015,21 @@ function renderQuestion(){
     html+='</div>';
   }else{
     var val=answers[q.id]||'';
+    html+='<div class="sym-bar">'
+      +'<button type="button" onclick="insertSym(\'%\')">%</button>'
+      +'<button type="button" onclick="insertSym(\'°\')">°</button>'
+      +'<button type="button" onclick="insertSym(\'²\')">²</button>'
+      +'<button type="button" onclick="insertSym(\'³\')">³</button>'
+      +'<button type="button" onclick="insertSym(\'√\')">√</button>'
+      +'<button type="button" onclick="insertSym(\'π\')">π</button>'
+      +'<button type="button" onclick="insertSym(\'×\')">×</button>'
+      +'<button type="button" onclick="insertSym(\'÷\')">÷</button>'
+      +'<button type="button" onclick="insertSym(\'≤\')">≤</button>'
+      +'<button type="button" onclick="insertSym(\'≥\')">≥</button>'
+      +'<button type="button" onclick="insertSym(\'≠\')">≠</button>'
+      +'</div>';
     html+='<textarea class="short-input" data-qid="'+esc(String(q.id))+'" placeholder="Type your answer here…" '
-      +'onchange="answers[this.dataset.qid]=this.value.trim();updateDots();">'+esc(val)+'</textarea>';
+      +'oninput="answers[this.dataset.qid]=this.value.trim();updateDots();">'+esc(val)+'</textarea>';
   }
   html+='</div>';
 
@@ -2071,6 +2069,14 @@ function selectAns(qId,letter,el){
 function saveShort(){
   var q=questions[qIndex]; if(!q||q.type!=='SHORT')return;
   var el=document.querySelector('.short-input[data-qid]'); if(el)answers[q.id]=el.value.trim();
+}
+function insertSym(s){
+  var el=document.querySelector('.short-input[data-qid]'); if(!el) return;
+  var p=el.selectionStart||0;
+  el.value=el.value.slice(0,p)+s+el.value.slice(el.selectionEnd||p);
+  el.selectionStart=el.selectionEnd=p+s.length;
+  el.focus();
+  answers[el.dataset.qid]=el.value.trim(); updateDots();
 }
 function prevQ(){ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}}
 function nextQ(){ttsStop();saveShort();if(qIndex<questions.length-1){qIndex++;renderQuestion();}}
@@ -2132,7 +2138,12 @@ function setupSecurity(){
       setTimeout(function(){if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});},2500);
     }else{setBadge('b-fs',false,'⛶ Full');setMobileBadge('sb-fs','ok','⛶ Fullscreen');}
   });
-  window.addEventListener('blur',function(){if(!examSubmitted){setBadge('b-tab',true,'🖥 Blur');setMobileBadge('sb-tab','warn','🖥 Blur');}});
+  window.addEventListener('blur',function(){
+    if(examSubmitted) return;
+    setBadge('b-tab',true,'🖥 Blur'); setMobileBadge('sb-tab','warn','🖥 Blur');
+    // Only trigger if tab is still visible — tab-switch is handled by visibilitychange
+    if(!document.hidden) triggerViolation('Switched to another application or pressed system key','app-switch');
+  });
   window.addEventListener('focus',function(){setBadge('b-tab',false,'🖥 Focus');setMobileBadge('sb-tab','ok','🖥 Focus OK');});
   document.addEventListener('keydown',function(e){
     if(examSubmitted)return;
