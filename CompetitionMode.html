@@ -86,14 +86,24 @@
     #claim-banner{font-family:var(--display);font-size:13px;font-weight:700;color:var(--yel);text-align:center;min-height:18px;letter-spacing:1px;margin-top:10px}
     .reveal-box{margin-top:10px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:8px;font-size:12.5px;color:var(--grn);line-height:1.6}
 
-    #s-leaderboard{background:var(--bg)}
+    #s-leaderboard{background:var(--bg);overflow-y:auto}
     .lb-title{font-family:var(--display);font-size:18px;color:var(--acc2);letter-spacing:2px;margin-bottom:18px}
-    .lb-row{display:flex;align-items:center;gap:10px;width:min(86vw,360px);padding:9px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px}
-    .lb-row.me{border-color:var(--acc2)}
-    .lb-pos{font-family:var(--display);font-size:13px;color:var(--muted);width:22px}
+    .lb-row{display:flex;align-items:center;gap:10px;width:min(86vw,360px);padding:9px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px;transition:border-color .3s}
+    .lb-row.me{border-color:var(--acc2);box-shadow:0 0 10px rgba(0,212,255,.15)}
+    .lb-row.p1{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.05)}
+    .lb-row.p2{border-color:rgba(192,192,192,.4);background:rgba(192,192,192,.04)}
+    .lb-row.p3{border-color:rgba(205,127,50,.4);background:rgba(205,127,50,.04)}
+    .lb-pos{font-family:var(--display);font-size:14px;color:var(--muted);width:26px;flex-shrink:0;text-align:center}
+    .lb-arrow{font-size:11px;width:14px;flex-shrink:0;text-align:center}
+    .lb-arrow.up{color:var(--grn)}
+    .lb-arrow.down{color:var(--red)}
+    .lb-arrow.same{color:var(--muted)}
     .lb-name{flex:1;font-size:13px;font-weight:600;min-width:0}
     .lb-school{font-size:10.5px;font-weight:400;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lb-score-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
     .lb-score{font-family:var(--display);font-size:13px;color:var(--yel)}
+    .lb-delta{font-size:10px;color:var(--grn);font-weight:700;animation:delta-fade 1.8s ease-out forwards}
+    @keyframes delta-fade{0%{opacity:1;transform:translateY(0)}70%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
 
     .finish-overlay{position:fixed;inset:0;background:rgba(26,14,8,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .8s}
     .finish-overlay.show{opacity:1;pointer-events:auto}
@@ -488,6 +498,7 @@ var botsScheduledForQIdx=-1, botSkillRoster=null, botJoinList=null, _botPoolFetc
 var lastPlayersSnapshot={};
 var _countdownStarted=false;
 var timerRaf=null, roundDeadline=0;
+var _lbPrevRank={}, _lbPrevScore={};
 
 // Fetch public competition info up front so the ticket step and lobby
 // branding have something to show.
@@ -856,6 +867,7 @@ function showRevealUI(st){
   }
 }
 
+var _MEDALS=['🥇','🥈','🥉'];
 function renderLeaderboardUI(){
   showScreen('s-leaderboard');
   db.ref('competition/'+sessionId+'/players').once('value', function(snap){
@@ -872,11 +884,27 @@ function renderLeaderboardUI(){
 
     container.innerHTML = players.map(function(p,i){
       var mine = p.pid===playerId;
-      return '<div class="lb-row'+(mine?' me':'')+'" data-pid="'+esc(p.pid)+'"><div class="lb-pos">#'+(i+1)+'</div>'
+      var rank = i+1;
+      var prevRank = _lbPrevRank[p.pid];
+      var prevScore = _lbPrevScore[p.pid]||0;
+      var scoreDelta = (p.score||0) - prevScore;
+      var arrowCls, arrowCh;
+      if (prevRank==null)        { arrowCls='same'; arrowCh=''; }
+      else if (rank < prevRank)  { arrowCls='up';   arrowCh='▲'; }
+      else if (rank > prevRank)  { arrowCls='down'; arrowCh='▼'; }
+      else                       { arrowCls='same'; arrowCh='—'; }
+      var posLabel = _MEDALS[i] || ('#'+(i+1));
+      var rowCls = 'lb-row'+(mine?' me':'')+(rank===1?' p1':rank===2?' p2':rank===3?' p3':'');
+      var deltaHtml = (scoreDelta>0&&prevRank!=null) ? '<div class="lb-delta">+'+scoreDelta+'</div>' : '';
+      return '<div class="'+rowCls+'" data-pid="'+esc(p.pid)+'">'
+        + '<div class="lb-pos">'+posLabel+'</div>'
+        + '<div class="lb-arrow '+arrowCls+'">'+arrowCh+'</div>'
         + '<div class="lb-name">'+esc(p.nickname||p.name||'?')
         + (p.school?'<div class="lb-school">'+esc(p.school)+'</div>':'')+'</div>'
-        + '<div class="lb-score">'+(p.score||0)+'</div></div>';
+        + '<div class="lb-score-wrap"><div class="lb-score">'+(p.score||0)+'</div>'+deltaHtml+'</div></div>';
     }).join('');
+
+    players.forEach(function(p,i){ _lbPrevRank[p.pid]=i+1; _lbPrevScore[p.pid]=p.score||0; });
 
     container.querySelectorAll('.lb-row').forEach(function(row, idx){
       var pid = row.getAttribute('data-pid');
@@ -887,7 +915,7 @@ function renderLeaderboardUI(){
           row.style.transition = 'none';
           row.style.transform = 'translateY('+dy+'px)';
           requestAnimationFrame(function(){
-            row.style.transition = 'transform .35s ease-out';
+            row.style.transition = 'transform .35s cubic-bezier(.34,1.56,.64,1)';
             row.style.transform = '';
           });
         }
