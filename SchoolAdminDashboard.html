@@ -816,6 +816,26 @@
   </div>
 </div>
 
+<!-- TRANSFER CLASS -->
+<div class="mo" id="transfer-mo">
+  <div class="mbox" style="width:400px;max-width:96vw">
+    <div class="mh"><span class="mh-title">Transfer Class</span><span class="mc" onclick="closeMo('transfer-mo')">✕</span></div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:var(--txt2);margin-bottom:14px;line-height:1.6">Transfer a class from <strong id="tr-from-name"></strong> to another teacher. The original teacher immediately loses access to that class.</p>
+      <div class="fg" style="margin-bottom:10px"><label>Class to transfer *</label>
+        <select id="tr-class" style="width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 10px;color:var(--txt);font-size:12.5px;outline:none"></select>
+      </div>
+      <div class="fg" style="margin-bottom:16px"><label>Transfer to teacher *</label>
+        <select id="tr-to" style="width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 10px;color:var(--txt);font-size:12.5px;outline:none"></select>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:7px">
+        <button class="btn btn-g" onclick="closeMo('transfer-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="confirmTransfer()">Transfer →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ADD / EDIT STUDENT -->
 <div class="mo" id="student-mo">
   <div class="mbox" style="width:420px;max-width:96vw">
@@ -1356,8 +1376,10 @@ function doReject(email) {
   });
 }
 
+var _allTeachers = [];
 function loadActiveTeachers() {
   call('getTeachers', {}, function(teachers) {
+    _allTeachers = teachers || [];
     var el = document.getElementById('teacher-list');
     if (!teachers || !teachers.length) {
       el.innerHTML = '<p style="color:var(--txt2);font-size:12px;text-align:center;padding:22px">No active teachers yet. Approve pending registrations above.</p>';
@@ -1375,9 +1397,35 @@ function loadActiveTeachers() {
         + '</div>'
         + '<div class="tc-act">'
         + '<button class="btn btn-g btn-sm" onclick="openAssign(\'' + esc(t.email) + '\',\'' + esc(t.name) + '\')">Classes</button>'
+        + '<button class="btn btn-sm" onclick="openTransfer(\'' + esc(t.email) + '\',\'' + esc(t.name) + '\')">Transfer</button>'
         + '<button class="btn btn-d btn-sm" onclick="doDelTeacher(\'' + esc(t.email) + '\')">Remove</button>'
         + '</div></div>';
     }).join('');
+  });
+}
+var _transferFrom = '';
+function openTransfer(email, name) {
+  _transferFrom = email;
+  setText('tr-from-name', name);
+  var from = _allTeachers.find(function(t){ return t.email === email; });
+  var fromClasses = (from && from.classes) || [];
+  document.getElementById('tr-class').innerHTML = fromClasses.length
+    ? fromClasses.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('')
+    : '<option value="">No classes assigned</option>';
+  document.getElementById('tr-to').innerHTML = _allTeachers
+    .filter(function(t){ return t.email !== email; })
+    .map(function(t){ return '<option value="' + esc(t.email) + '">' + esc(t.name) + ' (' + esc(t.email) + ')</option>'; }).join('');
+  document.getElementById('transfer-mo').classList.add('on');
+}
+function confirmTransfer() {
+  var classId = (document.getElementById('tr-class').value || '').trim();
+  var toEmail = (document.getElementById('tr-to').value || '').trim();
+  if (!classId || !toEmail) { toast('error', 'Select a class and a target teacher'); return; }
+  if (!confirm('Transfer class "' + classId + '" to ' + toEmail + '?\n\nThe current teacher will immediately lose access.')) return;
+  call('transferClass', { classId: classId, fromEmail: _transferFrom, toEmail: toEmail }, function() {
+    toast('success', 'Class transferred');
+    closeMo('transfer-mo');
+    loadActiveTeachers();
   });
 }
 
