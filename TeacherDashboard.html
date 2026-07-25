@@ -1,4 +1,4 @@
-﻿<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
+<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
      RESTORED: per-week exclude checkboxes (excluded-weeks-block, renderExcludedWeeksUI, getExcludedWeeks)
      KEPT:     M-gamepad logo, sidebar mini-stats (Active quizzes / Today's attempts / Avg score), densified tables
      API:      sends excludedWeeks[] to getSubjectsForWeek + createQuiz (backend v5.5 code.gs handles this) -->
@@ -959,6 +959,18 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
               <button class="btn btn-sm" onclick="addInlineRow()">+ Row</button>
               <button class="btn btn-sm" onclick="clearInlineTable()">Clear</button>
               <button class="btn btn-p btn-sm" onclick="importInlineTable()">Import →</button>
+              <span style="margin-left:4px;display:flex;gap:3px;flex-wrap:wrap" title="Click a symbol to insert it into the focused cell">
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('%')">%</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('°')">°</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('²')">²</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('³')">³</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('√')">√</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('π')">π</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('×')">×</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('÷')">÷</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('≤')">≤</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('≥')">≥</button>
+              </span>
               <button class="btn btn-sm" id="qb-img-toggle" onclick="toggleQBImgCols()" title="Show/hide image URL columns" style="font-size:10.5px">⊞ Show Image Cols</button>
             </div>
           </div>
@@ -995,7 +1007,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text2)">
             <span>Type: MCQ · TF · SHORT</span>
             <span>Correct Answer: full text matching an option · True/False for TF · text for SHORT · <strong>A / B / C / D</strong> for image-only options</span>
-            <span>SHORT variants/list points: separate with a comma e.g. <code>Agbada, Iro and Buba, Babban riga</code> (| and ; also work)</span>
+            <span>SHORT variants: separate with | or ; e.g. <code>Agbada | Iro and Buba | Babban riga</code></span>
           </div>
         </div>
 
@@ -1077,6 +1089,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
     <button class="btn btn-sm" id="qb-select-all-btn" onclick="toggleSelectAllQB()" style="display:none">☐ Select All</button>
     <button class="btn btn-d btn-sm" id="qb-bulk-delete-btn" onclick="bulkDeleteSelected()" style="display:none">🗑 Delete Selected (<span id="qb-sel-count">0</span>)</button>
     <button class="btn btn-d btn-sm" onclick="openBulkDeleteModal()">🗑 Bulk Wipe</button>
+    <button class="btn btn-sm" onclick="downloadQBCSV()">⬇ CSV</button>
   </div>
 </div>
           <div id="qb-list"><p style="text-align:center;color:var(--text2);padding:22px;font-size:13px">Select a class above to browse questions.</p></div>
@@ -1532,7 +1545,7 @@ var _selectedPassageId='';
 var _currentCode='', _currentResponses=[];
 var _qbPage=0, _qbPageSize=30;
 var _schoolsList=[], _editingSchoolIdx=-1;
-var _broadsheetData=null, _broadsheetClass='';
+var _broadsheetData=null, _broadsheetClass='', _bsSortIdx=-1, _bsSortDir=1;
 var _scheduleTarget='', _liveExamCode='';
 var _allStudents=[], _editingStudentEmail=null;
 var SUPERADMIN_EMAIL = '';
@@ -2231,6 +2244,16 @@ function showBulkQBControls(){
   var b1=document.getElementById('qb-select-all-btn'), b2=document.getElementById('qb-bulk-delete-btn');
   if(b1) b1.style.display='inline-flex'; if(b2) b2.style.display='inline-flex';
 }
+function downloadQBCSV(){
+  if(!allQuestions.length){ toast('error','Load a class first'); return; }
+  var cols=['subject','week','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','session','term','instruction_group','instruction_text','image_url','passage_id'];
+  function csvCell(v){ var s=String(v==null?'':v); return s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0?'"'+s.replace(/"/g,'""')+'"':s; }
+  var rows=[cols.join(',')];
+  allQuestions.forEach(function(q){ rows.push(cols.map(function(c){ return csvCell(q[c]); }).join(',')); });
+  var blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='questions_'+(new Date().toISOString().substring(0,10))+'.csv'; a.click();
+  toast('success',allQuestions.length+' question(s) exported');
+}
 function updateBulkSelCount(){
   var count=Object.keys(_selectedQBIds).filter(function(k){ return _selectedQBIds[k]; }).length;
   var el=document.getElementById('qb-sel-count'); if(el) el.textContent=count;
@@ -2366,6 +2389,14 @@ function importInlineTable(){
 function showInlineStatus(msg,type){ var el=document.getElementById('inline-import-status'); if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color=type==='success'?'var(--success)':type==='error'?'var(--danger)':type==='warn'?'var(--warn)':'var(--text2)'; if(type==='success') setTimeout(function(){ el.style.display='none'; },5000); }
 
 /* ── Import ── */
+function insertQBSym(s){
+  var el=document.activeElement;
+  if(!el||!('selectionStart' in el)) return;
+  var p=el.selectionStart||0, end=el.selectionEnd||p;
+  el.value=el.value.slice(0,p)+s+el.value.slice(end);
+  el.selectionStart=el.selectionEnd=p+s.length;
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
 function copyCSVFormat() {
   var h='subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
   navigator.clipboard.writeText(h).then(function(){ toast('success','CSV headers copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=h; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','CSV headers copied'); });
@@ -2678,7 +2709,7 @@ function openAddStudentModal(){
   });
   document.getElementById('student-mo').classList.add('on');
 }
-function openEditStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!s) return; _editingStudentEmail=email; setText('student-mo-title',s.locked?'View Student (Locked)':'Edit Student'); document.getElementById('st-name').value=s.name||''; document.getElementById('st-email').value=s.email||''; document.getElementById('st-email').disabled=true; document.getElementById('st-class').value=s.className||''; document.getElementById('st-school').value=s.school||''; ['st-name','st-class','st-school'].forEach(function(id){ var el=document.getElementById(id); if(el) el.disabled=!!s.locked; }); document.getElementById('student-mo').classList.add('on'); }
+function openEditStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!s) return; _editingStudentEmail=email; setText('student-mo-title',s.locked?'View Student (Locked)':'Edit Student'); document.getElementById('st-name').value=s.name||''; document.getElementById('st-email').value=s.email||''; document.getElementById('st-email').disabled=true; document.getElementById('st-class').value=s.className||''; var _ssel=document.getElementById('st-school'); if(_ssel&&s.school){ if(!Array.from(_ssel.options).some(function(o){return o.value===s.school;})){var _sopt=document.createElement('option');_sopt.value=s.school;_sopt.textContent=s.school;_ssel.appendChild(_sopt);} _ssel.value=s.school; } ['st-name','st-class','st-school'].forEach(function(id){ var el=document.getElementById(id); if(el) el.disabled=!!s.locked; }); document.getElementById('student-mo').classList.add('on'); }
 function saveStudent(){ var name=(document.getElementById('st-name').value||'').trim(), email=(document.getElementById('st-email').value||'').trim(), cls=(document.getElementById('st-class').value||'').trim(), school=(document.getElementById('st-school').value||'').trim(); if(!name){ toast('error','Name is required'); return; } if(!email||email.length<2){ toast('error','Email or Student ID is required'); return; } if(!cls){ toast('error','Class is required'); return; } if(!school){ toast('error','School is required'); return; } call('upsertStudent',{name:name,email:email,className:cls,school:school},function(){ toast('success',(_editingStudentEmail?'Student updated':'Student added')+' — '+name); closeMo('student-mo'); loadStudents(); }); }
 function doDeleteStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!confirm('Remove student "'+(s?s.name:email)+'"?\n\nExam results are kept.')) return; call('deleteStudent',{email:email},function(){ toast('success','Student removed'); loadStudents(); }); }
 function parseBulkJSON(){ var raw=(document.getElementById('bulk-json').value||'').trim(); if(!raw){ toast('error','Paste JSON data first'); return null; } var parsed; try{ parsed=JSON.parse(raw); }catch(e){ toast('error','Invalid JSON: '+e.message); return null; } if(!Array.isArray(parsed)){ toast('error','JSON must be an array [ ... ]'); return null; } var overrideSchool=(document.getElementById('bulk-school').value||'').trim(), overrideClass=(document.getElementById('bulk-class').value||'').trim(); var valid=[],errors=[]; parsed.forEach(function(row,i){ var name=String(row.name||row.Name||'').trim(), email=String(row.email||row.Email||'').trim().toLowerCase(), cls=overrideClass||String(row.class||row.Class||row.className||'').trim(), school=overrideSchool||String(row.school||row.School||'').trim(); if(!name){ errors.push('Row '+(i+1)+': missing name'); return; } if(!email||email.length<2){ errors.push('Row '+(i+1)+': missing email/ID'); return; } if(!cls){ errors.push('Row '+(i+1)+': missing class'); return; } if(!school){ errors.push('Row '+(i+1)+': missing school'); return; } valid.push({name:name,email:email,className:cls,school:school}); }); if(errors.length){ toast('error',errors.slice(0,4).join('\n')); if(!valid.length) return null; } return valid; }
@@ -2699,7 +2730,8 @@ function runInit(){ if(!confirm('Initialize / repair system?')) return; call('in
 /* ── Broadsheet ── */
 function openBroadsheet(){ var classes=allQuizzes.map(function(q){ return q.classId; }).filter(function(v,i,a){ return a.indexOf(v)===i; }); if(!classes.length){ toast('error','No quizzes to build broadsheet from.'); return; } if(classes.length===1){ _broadsheetClass=classes[0]; loadBroadsheet(classes[0]); } else{ var cls=prompt('Enter class ID:\n\nAvailable: '+classes.join(', ')); if(!cls) return; _broadsheetClass=cls.trim(); loadBroadsheet(cls.trim()); } }
 function loadBroadsheet(classId){ document.getElementById('bs-title').textContent='Broadsheet — '+classId; document.getElementById('bs-body').innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">Loading…</p>'; document.getElementById('broadsheet-mo').classList.add('on'); call('getBroadsheet',{classId:classId},function(d){ _broadsheetData=d; renderBroadsheet(d); }); }
-function renderBroadsheet(d){ var body=document.getElementById('bs-body'); if(!d||!d.quizzes||!d.quizzes.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No quizzes found.</p>'; return; } if(!d.rows||!d.rows.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No student submissions yet.</p>'; return; } var html='<table style="border-collapse:collapse;width:100%;font-size:12px;min-width:600px"><thead><tr style="background:var(--surface2)"><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);min-width:130px;position:sticky;left:0;background:var(--surface2);z-index:2">Student</th><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);white-space:nowrap">Class</th>'+d.quizzes.map(function(q){ return '<th style="padding:7px 9px;text-align:center;border:1px solid var(--border);min-width:90px;color:var(--accent-text)" colspan="3">'+esc(q.title)+'</th>'; }).join('')+'<th style="padding:7px 9px;text-align:center;border:1px solid var(--border)">Avg</th></tr><tr style="background:var(--surface)"><th style="padding:5px 9px;border:1px solid var(--border);position:sticky;left:0;background:var(--surface);z-index:2"></th><th style="padding:5px 9px;border:1px solid var(--border)"></th>'+d.quizzes.map(function(){ return '<th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Score</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">%</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Status</th>'; }).join('')+'<th style="padding:5px 9px;border:1px solid var(--border)"></th></tr></thead><tbody>'; d.rows.forEach(function(row){ var s=row.student,pcts=[]; var cells=d.quizzes.map(function(q,qi){ var r=row.results[qi]; if(!r) return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:var(--text2)" colspan="3">—</td>'; var pct=parseFloat(r.percentage)||0; pcts.push(pct); var stCol=r.status==='Pass'?'var(--success)':'var(--danger)'; return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+pct.toFixed(1)+'%</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:'+stCol+';font-weight:600">'+esc(r.status)+'</td>'; }).join(''); var avg=pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':'—'; html+='<tr><td style="padding:7px 9px;border:1px solid var(--border);font-weight:600;position:sticky;left:0;background:var(--surface2);z-index:1">'+esc(s.name)+'</td><td style="padding:7px 9px;border:1px solid var(--border);color:var(--text2)">'+esc(s.className||'—')+'</td>'+cells+'<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono);font-weight:600;color:var(--accent-text)">'+avg+'</td></tr>'; }); html+='</tbody></table>'; body.innerHTML=html; }
+function renderBroadsheet(d){ var body=document.getElementById('bs-body'); if(!d||!d.quizzes||!d.quizzes.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No quizzes found.</p>'; return; } if(!d.rows||!d.rows.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No student submissions yet.</p>'; return; } var html='<table style="border-collapse:collapse;width:100%;font-size:12px;min-width:600px"><thead><tr style="background:var(--surface2)"><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);min-width:130px;position:sticky;left:0;background:var(--surface2);z-index:2">Student</th><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);white-space:nowrap">Class</th>'+d.quizzes.map(function(q,qi){ var arrow=qi===_bsSortIdx?(_bsSortDir===1?' ↑':' ↓'):''; return '<th style="padding:7px 9px;text-align:center;border:1px solid var(--border);min-width:90px;color:var(--accent-text);cursor:pointer" colspan="3" onclick="sortBroadsheet('+qi+')" title="Sort by this exam">'+esc(q.title)+arrow+'</th>'; }).join('')+'<th style="padding:7px 9px;text-align:center;border:1px solid var(--border)">Avg</th></tr><tr style="background:var(--surface)"><th style="padding:5px 9px;border:1px solid var(--border);position:sticky;left:0;background:var(--surface);z-index:2"></th><th style="padding:5px 9px;border:1px solid var(--border)"></th>'+d.quizzes.map(function(){ return '<th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Score</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">%</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Status</th>'; }).join('')+'<th style="padding:5px 9px;border:1px solid var(--border)"></th></tr></thead><tbody>'; var sortedRows=d.rows.slice(); if(_bsSortIdx>=0){ sortedRows.sort(function(a,b){ var pa=a.results[_bsSortIdx]?parseFloat(a.results[_bsSortIdx].percentage)||0:0; var pb=b.results[_bsSortIdx]?parseFloat(b.results[_bsSortIdx].percentage)||0:0; return _bsSortDir*(pb-pa); }); } sortedRows.forEach(function(row){ var s=row.student,pcts=[]; var cells=d.quizzes.map(function(q,qi){ var r=row.results[qi]; if(!r) return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:var(--text2)" colspan="3">—</td>'; var pct=parseFloat(r.percentage)||0; pcts.push(pct); var stCol=r.status==='Pass'?'var(--success)':'var(--danger)'; return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+pct.toFixed(1)+'%</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:'+stCol+';font-weight:600">'+esc(r.status)+'</td>'; }).join(''); var avg=pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':'—'; html+='<tr><td style="padding:7px 9px;border:1px solid var(--border);font-weight:600;position:sticky;left:0;background:var(--surface2);z-index:1">'+esc(s.name)+'</td><td style="padding:7px 9px;border:1px solid var(--border);color:var(--text2)">'+esc(s.className||'—')+'</td>'+cells+'<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono);font-weight:600;color:var(--accent-text)">'+avg+'</td></tr>'; }); html+='</tbody></table>'; body.innerHTML=html; }
+function sortBroadsheet(qi){ if(_bsSortIdx===qi){_bsSortDir*=-1;}else{_bsSortIdx=qi;_bsSortDir=1;} if(_broadsheetData) renderBroadsheet(_broadsheetData); }
 function downloadBroadsheet(){ if(!_broadsheetData){ toast('error','Load broadsheet first'); return; } var d=_broadsheetData,lines=[]; var header=['Student','Email','Class','School']; d.quizzes.forEach(function(q){ header.push(q.title+' Score',q.title+' %',q.title+' Status'); }); header.push('Average %'); lines.push(header.map(function(h){ return '"'+String(h).replace(/"/g,'""')+'"'; }).join(',')); d.rows.forEach(function(row){ var s=row.student,pcts=[],cells=['"'+(s.name||'')+'"','"'+(s.email||'')+'"','"'+(s.className||'')+'"','"'+(s.school||'')+'"']; d.quizzes.forEach(function(q,qi){ var r=row.results[qi]; if(r){ var pct=parseFloat(r.percentage)||0; pcts.push(pct); cells.push(r.score+'/'+r.totalPoints,r.percentage,r.status); }else cells.push('','',''); }); cells.push(pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':''); lines.push(cells.join(',')); }); var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='broadsheet_'+_broadsheetClass+'_'+new Date().toISOString().substring(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url); toast('success','Broadsheet downloaded'); }
 
 /* ── Schedule Live ── */
