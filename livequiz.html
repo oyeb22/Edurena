@@ -162,6 +162,8 @@
     .lb-score{font-family:monospace;font-size:16px;font-weight:700;color:#4ade80}
     .lb-me{outline:2px solid #4f78ff;outline-offset:-2px;border-radius:10px}
     .lb-delta{font-size:11px;color:#4ade80;margin-left:4px}
+    .lb-arrow{font-size:11px;width:14px;flex-shrink:0;text-align:center;margin-left:2px}
+    .lb-arrow.up{color:#4ade80}.lb-arrow.down{color:#f87171}.lb-arrow.same{color:var(--muted)}
     .lb-next-auto{font-size:12px;color:var(--muted);margin-top:8px}
 
     /* FINAL */
@@ -406,6 +408,7 @@ var ARC_TOTAL=113;
 var SHAPES=['&#9650;','&#9632;','&#9679;','&#9830;'];
 var COLORS=['k-red','k-blue','k-yellow','k-green'];
 var stateRef=null, playersRef=null, lobbyPRef=null, answerKeyRef=null;
+var _lbPrevRank={};
 var answerKeyCache={};
 
 /* ── BOOT ── */
@@ -935,16 +938,51 @@ function showLeaderboard(autoAdvanceAt){
       .filter(function(e){return e[1].name;})
       .sort(function(a,b){return (b[1].score||0)-(a[1].score||0);});
     var medals=['🥇','🥈','🥉'];
-    el('lb-list').innerHTML=sorted.slice(0,10).map(function(e,i){
+    var container=el('lb-list');
+
+    var oldRects={};
+    container.querySelectorAll('.lb-row[data-pid]').forEach(function(row){
+      var pid=row.getAttribute('data-pid');
+      if(pid) oldRects[pid]=row.getBoundingClientRect();
+    });
+
+    container.innerHTML=sorted.slice(0,10).map(function(e,i){
       var pid=e[0],p=e[1],isMe=pid===playerId;
+      var rank=i+1;
+      var prevRank=_lbPrevRank[pid];
+      var arrowCls,arrowCh;
+      if(prevRank==null)          {arrowCls='same';arrowCh='';}
+      else if(rank<prevRank)      {arrowCls='up';  arrowCh='▲';}
+      else if(rank>prevRank)      {arrowCls='down';arrowCh='▼';}
+      else                        {arrowCls='same';arrowCh='—';}
       var delta=p.lastPoints>0?'<span class="lb-delta">+'+p.lastPoints+'</span>':'';
-      return '<div class="lb-row'+(isMe?' lb-me':'')+'" style="animation-delay:'+i*55+'ms">'
+      return '<div class="lb-row'+(isMe?' lb-me':'')+'" data-pid="'+esc(pid)+'" style="animation-delay:'+i*55+'ms">'
         +'<div class="lb-rank">'+(medals[i]||(i+1))+'</div>'
         +'<div class="lb-name">'+esc(p.name)+(isMe?' <span style="font-size:10px;color:#7fa4ff">(you)</span>':'')+'</div>'
         +(p.streak>1?'<span style="font-size:11px;color:#f59e0b">🔥'+p.streak+'</span>':'')
         +'<div class="lb-score">'+((p.score||0).toLocaleString())+delta+'</div>'
+        +'<span class="lb-arrow '+arrowCls+'">'+arrowCh+'</span>'
         +'</div>';
     }).join('');
+
+    sorted.slice(0,10).forEach(function(e,i){ _lbPrevRank[e[0]]=i+1; });
+
+    container.querySelectorAll('.lb-row[data-pid]').forEach(function(row,idx){
+      var pid=row.getAttribute('data-pid');
+      var oldRect=oldRects[pid];
+      if(oldRect){
+        var dy=oldRect.top-row.getBoundingClientRect().top;
+        if(Math.abs(dy)>1){
+          row.style.transition='none';
+          row.style.transform='translateY('+dy+'px)';
+          requestAnimationFrame(function(){
+            row.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
+            row.style.transform='';
+          });
+        }
+      }
+    });
+
     show('s-leaderboard');
 
     if(autoAdvanceAt&&autoAdvanceAt>Date.now()){
