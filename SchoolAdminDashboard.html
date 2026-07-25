@@ -394,7 +394,7 @@
               <div style="font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Subscription</div>
               <div style="font-size:14px;font-weight:700" id="sub-status-text">Loading…</div>
             </div>
-            <button class="btn btn-p btn-sm" onclick="nav('subscription',document.querySelector(\'.ni:nth-child(2)\'))">Manage →</button>
+            <button class="btn btn-p btn-sm" onclick="nav('subscription',document.querySelector('.ni:nth-child(2)'))">Manage →</button>
           </div>
           <div class="sub-expiry-bar" style="margin-top:12px">
             <div class="sub-expiry-fill" id="sub-expiry-fill" style="width:0%;background:var(--grn)"></div>
@@ -1058,8 +1058,7 @@ function refreshActiveQuizCount() {
     setText('s-quizzes', d.activeQuizCount != null ? d.activeQuizCount : '—');
   }, function() {});
 }
-// Poll active quiz count every 30 seconds
-setInterval(refreshActiveQuizCount, 30000);
+// ponytail: polling removed — spinner flashed every 30s; count refreshes on page load
 
 // v5.5: fetch slot usage and render both the overview card + sidebar mini-stat
 function loadSlotUsage() {
