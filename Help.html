@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edurena — Help &amp; User Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03060f;--surface:#060d1e;--surface2:#0c1428;
+  --border:rgba(17,32,64,1);--border2:#1e2d4a;
+  --accent:#5b6ef5;--accent2:#818cf8;--accent-glow:rgba(91,110,245,.18);
+  --amber:#f5a623;--amber2:#ffc144;
+  --green:#22c55e;--red:#ef4444;
+  --text:#e8eaf4;--text2:#9ba3c0;--muted:#5c6480;
+  --font:'Sora',system-ui,sans-serif;
+  --radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;gap:12px;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo{width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.nav-logo img{width:100%;height:100%;object-fit:cover;}
+.nav-wordmark{font-size:16px;font-weight:800;color:var(--text);}
+.nav-wordmark span{color:var(--amber);}
+.nav-back{font-size:13px;color:var(--text2);text-decoration:none;padding:6px 12px;border:1px solid var(--border2);border-radius:7px;transition:color .2s;}
+.nav-back:hover{color:var(--text);}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:56px 20px 40px;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(91,110,245,.1) 0%,transparent 70%);}
+.hero h1{font-size:clamp(24px,5vw,38px);font-weight:800;letter-spacing:-.5px;margin-bottom:10px;}
+.hero h1 span{color:var(--accent2);}
+.hero p{font-size:14px;color:var(--text2);max-width:500px;margin:0 auto;}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;gap:4px;overflow-x:auto;padding:0 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:58px;z-index:99;scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text2);background:transparent;border:none;border-bottom:2px solid transparent;padding:14px 16px;cursor:pointer;transition:color .2s,border-color .2s;white-space:nowrap;}
+.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+
+/* ── CONTENT ── */
+.tab-panel{display:none;max-width:820px;margin:0 auto;padding:36px 20px 64px;}
+.tab-panel.active{display:block;}
+
+.section{margin-bottom:36px;}
+.section h2{font-size:18px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+.section h2 .icon{font-size:20px;}
+.section h3{font-size:14px;font-weight:700;color:var(--accent2);margin:18px 0 8px;}
+
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;}
+.card p,.step p{font-size:13px;color:var(--text2);line-height:1.75;}
+
+.steps{counter-reset:step-counter;margin-top:4px;}
+.step{display:flex;gap:14px;margin-bottom:14px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--accent-glow);border:1px solid var(--accent2);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step p{font-size:13px;color:var(--text2);line-height:1.7;}
+.step strong{color:var(--text);}
+
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.bdg{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;}
+.bdg-blue{background:rgba(91,110,245,.15);border:1px solid rgba(91,110,245,.3);color:var(--accent2);}
+.bdg-green{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--green);}
+.bdg-amber{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);color:var(--amber);}
+.bdg-red{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+
+.tip{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);border-radius:9px;padding:12px 14px;font-size:12.5px;color:var(--text2);line-height:1.7;margin-top:10px;}
+.tip strong{color:var(--amber);}
+.warn{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:9px;padding:12px 14px;font-size:12.5px;color:var(--text2);line-height:1.7;margin-top:10px;}
+.warn strong{color:var(--red);}
+
+.faq-item{border-bottom:1px solid var(--border);padding:16px 0;}
+.faq-q{font-size:13px;font-weight:600;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.faq-q .chevron{font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.faq-item.open .chevron{transform:rotate(180deg);}
+.faq-a{font-size:13px;color:var(--text2);line-height:1.75;padding-top:10px;display:none;}
+.faq-item.open .faq-a{display:block;}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px;}
+th{text-align:left;padding:9px 12px;background:var(--surface2);color:var(--text2);font-weight:600;border-bottom:1px solid var(--border2);}
+td{padding:9px 12px;color:var(--text2);border-bottom:1px solid rgba(30,45,74,.5);}
+tr:last-child td{border:none;}
+td:first-child{color:var(--text);font-weight:600;}
+
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .tab-panel{padding:24px 16px 48px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">
+    <div class="nav-logo"><img src="./assets/edurena_logo_64.png" alt="Edurena logo"></div>
+    <span class="nav-wordmark">Edu<span>rena</span></span>
+  </a>
+  <a class="nav-back" href="index.html">← Back to Home</a>
+</nav>
+
+<div class="hero">
+  <h1>Edurena <span>Help Centre</span></h1>
+  <p>Complete guide for students, teachers, and school administrators.</p>
+</div>
+
+<div class="tab-bar" role="tablist">
+  <button class="tab-btn active" onclick="switchTab('students')" role="tab">👤 Students</button>
+  <button class="tab-btn" onclick="switchTab('teachers')" role="tab">📚 Teachers</button>
+  <button class="tab-btn" onclick="switchTab('admins')" role="tab">🏫 Admins</button>
+  <button class="tab-btn" onclick="switchTab('modes')" role="tab">🎮 Game Modes</button>
+  <button class="tab-btn" onclick="switchTab('faq')" role="tab">❓ FAQ</button>
+</div>
+
+<!-- ═══════════════════════ STUDENTS ═══════════════════════ -->
+<div id="panel-students" class="tab-panel active">
+
+  <div class="section">
+    <h2><span class="icon">📝</span>Taking an Exam</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><p>Open the exam link your teacher shared, or go to <strong>Edurena</strong> and enter your exam code.</p></div>
+      <div class="step"><div class="step-num">2</div><p>Enter your <strong>email address</strong> and your unique <strong>exam code</strong>. Both are provided by your teacher.</p></div>
+      <div class="step"><div class="step-num">3</div><p>Read the instructions on the pre-exam screen. The system will check your <strong>camera</strong>, <strong>microphone</strong>, and internet connection.</p></div>
+      <div class="step"><div class="step-num">4</div><p>Accept the <strong>proctoring consent</strong>. Edurena captures snapshots during the exam to confirm your identity.</p></div>
+      <div class="step"><div class="step-num">5</div><p>Click <strong>Start Exam</strong>. Answer all questions before the timer runs out and click <strong>Submit Exam</strong>.</p></div>
+    </div>
+    <div class="tip"><strong>Tip:</strong> You can flag questions for review using the 🚩 button and return to them before submitting.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📋</span>Multi-Subject (JAMB) Mode</h2>
+    <div class="card"><p>When your exam covers multiple subjects (e.g. English, Maths, Physics), a <strong>subject tab bar</strong> appears at the top of the exam screen. Each tab shows the subject name and the number of questions. Click any tab to jump directly to the first question of that subject. The current question's subject is also shown as a small badge on every question card.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🔊</span>Text-to-Speech (TTS)</h2>
+    <div class="card"><p>If your teacher enables TTS, a control bar appears during the exam. Use <strong>Read Question</strong> to hear the question read aloud, <strong>Read Options</strong> for MCQ choices, and <strong>Stop</strong> to silence it. Adjust reading speed with the speed selector (0.7× – 1.5×).</p></div>
+    <div class="tip"><strong>Tip:</strong> TTS is especially useful for English/Diction questions. The voice and language are detected automatically from your device.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📡</span>Offline Submission Safety Net</h2>
+    <div class="card"><p>Your completed exam is saved locally in your browser the moment you click <strong>Submit</strong>. If your internet drops at that exact moment, Edurena will automatically retry up to 5 times over ~100 seconds. You will see a progress bar and a reference code (e.g. <code style="font-family:monospace;font-size:12px;color:var(--accent2)">EDU-ABCD12</code>). Keep the page open until submission succeeds. If all retries fail, you will see a recovery card — contact your teacher with your reference code.</p></div>
+    <div class="warn"><strong>Important:</strong> Do not refresh or close the browser while the submission progress bar is showing.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🎮</span>Live &amp; Challenge Modes</h2>
+    <div class="card"><p>In <strong>Live Quiz</strong> and <strong>Challenge Mode</strong>, you compete in real time against classmates. Questions are timed — answer quickly for a streak bonus 🔥. The leaderboard updates after each question with rank movement arrows (▲▼) and score deltas.</p></div>
+    <div class="card"><p><strong>Competition Mode</strong> is a paid, structured tournament. Register with your school email, pay the entry fee if applicable, and wait in the lobby. Once the host starts, questions are broadcast simultaneously to all participants.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">⚠️</span>Proctoring &amp; Violations</h2>
+    <table>
+      <tr><th>Violation</th><th>Trigger</th><th>Limit</th></tr>
+      <tr><td>Tab / window switch</td><td>Leaving the exam window</td><td>Set by teacher</td></tr>
+      <tr><td>No face detected</td><td>Camera cannot find your face</td><td>Set by teacher</td></tr>
+      <tr><td>Multiple faces</td><td>More than one face in camera</td><td>Set by teacher</td></tr>
+      <tr><td>Fullscreen exit</td><td>Exiting fullscreen mode</td><td>Warning only</td></tr>
+    </table>
+    <div class="tip"><strong>Tip:</strong> Sit in a well-lit area, look straight at the camera, and keep your exam window in the foreground at all times.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TEACHERS ═══════════════════════ -->
+<div id="panel-teachers" class="tab-panel">
+
+  <div class="section">
+    <h2><span class="icon">🔐</span>Teacher Login</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><p>Go to <strong>TeacherLogin.html</strong> and enter your registered teacher email and password.</p></div>
+      <div class="step"><div class="step-num">2</div><p>You'll land on your <strong>Teacher Dashboard</strong>. Your assigned classes and question bank are loaded automatically.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📖</span>Question Bank</h2>
+    <div class="card"><p>The <strong>Question Bank</strong> tab lets you create, edit, and delete questions. Supported question types:</p>
+      <div class="badge-row">
+        <span class="bdg bdg-blue">MCQ (Multiple Choice)</span>
+        <span class="bdg bdg-green">True / False</span>
+        <span class="bdg bdg-amber">Short Answer (AI-graded)</span>
+      </div>
+    </div>
+
+    <h3>Creating Questions</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><p>Click <strong>+ Add Question</strong> in the Question Bank tab.</p></div>
+      <div class="step"><div class="step-num">2</div><p>Select the question <strong>Type</strong>, <strong>Subject</strong>, and <strong>Week</strong>. These fields power filtering and JAMB-mode grouping.</p></div>
+      <div class="step"><div class="step-num">3</div><p>Enter the question text, options (for MCQ), and the <strong>correct answer</strong>. Optionally add an explanation shown after the exam.</p></div>
+      <div class="step"><div class="step-num">4</div><p>Click <strong>Save</strong>. The question is immediately available for new exams.</p></div>
+    </div>
+
+    <h3>Bulk Import via CSV</h3>
+    <div class="card"><p>Click <strong>⬆ Import CSV</strong> to upload a spreadsheet. A preview table will show before anything is saved. Required columns: <code style="font-family:monospace;font-size:12px">subject, week, type, question, option_a, option_b, option_c, option_d, correct_answer, points</code>. Optional: <code style="font-family:monospace;font-size:12px">explanation, instruction_text, passage_id</code>.</p></div>
+    <div class="tip"><strong>Tip:</strong> Download the sample CSV from the import dialog to see the correct column order.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📄</span>Creating an Exam</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><p>Go to <strong>Exams</strong> tab → <strong>Create Exam</strong>.</p></div>
+      <div class="step"><div class="step-num">2</div><p>Fill in the exam title, select classes, set a time window (start / end date-time), and a duration in minutes.</p></div>
+      <div class="step"><div class="step-num">3</div><p>Set question count per subject if you want a multi-subject (JAMB-style) exam — Edurena will auto-group questions by subject for students.</p></div>
+      <div class="step"><div class="step-num">4</div><p>Enable optional proctoring settings: <strong>Face Detection</strong>, <strong>TTS</strong>, max violation strikes, and show/hide correct answers after submission.</p></div>
+      <div class="step"><div class="step-num">5</div><p>Click <strong>Publish</strong>. Share the generated <strong>Exam Code</strong> and the exam link with students.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📊</span>Grades &amp; Results</h2>
+    <div class="card"><p>The <strong>Results</strong> tab shows all submissions for your exams. You can view individual scores, time spent, violation counts, and proctoring photos. Use the <strong>🖨 Print</strong> button on the broadsheet to generate a print-ready class report.</p></div>
+    <div class="card"><p><strong>Short Answer (AI Grading)</strong> — AI-graded responses show a score and confidence level. A <strong>⚠️ Review</strong> badge flags low-confidence grades. Click <strong>Override</strong> on any answer to change the score manually. All overrides are logged.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">👥</span>Student Management</h2>
+    <div class="card"><p>Under <strong>Students</strong>, you can register students individually or import a CSV. Required CSV columns: <code style="font-family:monospace;font-size:12px">name, email, class</code>. A preview is shown before bulk registration runs.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ADMINS ═══════════════════════ -->
+<div id="panel-admins" class="tab-panel">
+
+  <div class="section">
+    <h2><span class="icon">🏫</span>School Admin Dashboard</h2>
+    <div class="card"><p>The School Admin Dashboard (<strong>SchoolAdminDashboard.html</strong>) gives you oversight of all teachers and classes in your school. You must be registered with the <code style="font-family:monospace;font-size:12px">admin</code> role to access it.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">👩‍🏫</span>Teacher Management</h2>
+    <h3>Approving Pending Teachers</h3>
+    <div class="card"><p>New teacher registrations appear in <strong>Pending Approvals</strong>. Review and click <strong>Approve</strong> or <strong>Reject</strong>. Approved teachers immediately gain access to the Teacher Dashboard.</p></div>
+    <h3>Assigning Classes</h3>
+    <div class="card"><p>Click the <strong>Classes</strong> button on any teacher card to open the class assignment modal. Check the classes you want to assign and click Save. The teacher's dashboard updates instantly.</p></div>
+    <h3>Transferring a Class</h3>
+    <div class="card"><p>Click <strong>Transfer</strong> on a teacher card. Select which class to transfer and which teacher to transfer it to. The source teacher immediately loses access to the class; the target teacher gains it. This action logs an audit event.</p></div>
+    <div class="warn"><strong>Note:</strong> A confirmation dialog appears before any transfer is executed. This action cannot be undone from the UI — contact your Super Admin if you need to reverse it.</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🎮</span>Competition Mode</h2>
+    <div class="card"><p>Admins can configure Competition Mode sessions from the admin panel. Set question sets, entry fees (via Paystack), and time limits. Bot players are automatically added to lobbies that have fewer than the minimum number of human participants, ensuring the competition always has engaging opposition.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📧</span>Challenge Mode Notifications</h2>
+    <div class="card"><p>When a new Challenge Mode session is created, Edurena automatically emails all registered students a notification with a join link. Notifications are throttled to once every 4 hours to prevent inbox flooding. The email is sent via BCC in batches of 50.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ GAME MODES ═══════════════════════ -->
+<div id="panel-modes" class="tab-panel">
+
+  <div class="section">
+    <h2><span class="icon">📝</span>Proctored Exam</h2>
+    <div class="card"><p>The standard exam mode with AI face detection, violation tracking, offline submission safety net, TTS support, and real-time proctoring logs. Used for formal assessments.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">⚡</span>Live Quiz</h2>
+    <div class="card"><p>Teacher hosts a real-time quiz session. Students join with a room code. Questions are broadcast one at a time with a countdown timer. Leaderboard updates after each question — rank arrows (▲▼), score delta, and streak bonus 🔥 make it competitive.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🏆</span>Challenge Mode</h2>
+    <div class="card"><p>An open, always-available competitive mode. Students can join whenever a session is active. No teacher needed to host — questions are drawn from the shared question bank. Real-time leaderboard with medals 🥇🥈🥉, rank arrows, and animated score deltas.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🏟️</span>Competition Mode</h2>
+    <div class="card"><p>Structured paid tournament with registration, optional entry fee (Paystack), and an admin-managed question set. Real-time leaderboard, FLIP animations, bot players to fill low-attendance sessions.</p></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🎲</span>Puzzle, Race, Whack-A-Mole, Penalty Shootout, Tower Defense</h2>
+    <div class="card"><p>Gamified learning activities. Hosted by a teacher via the corresponding Host page. Students join with a shared room link. These modes are designed to reinforce curriculum content through play.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ FAQ ═══════════════════════ -->
+<div id="panel-faq" class="tab-panel">
+
+  <div class="section">
+    <h2><span class="icon">❓</span>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">I can't find my exam code. What do I do? <span class="chevron">▼</span></div>
+      <div class="faq-a">Your exam code is provided by your teacher. It is typically 5–8 characters (e.g. <code style="font-family:monospace">ENG401</code>). Check your class WhatsApp group, notice board, or ask your teacher directly.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">My camera isn't working during the exam. <span class="chevron">▼</span></div>
+      <div class="faq-a">Make sure your browser has camera permission for this site. On Chrome: click the camera icon in the address bar → Allow. On mobile, go to Settings → Browser → Camera → Allow. Refresh the page after granting permission. If the issue persists, use a different browser (Chrome or Edge recommended).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">My exam submitted but I didn't see a result. <span class="chevron">▼</span></div>
+      <div class="faq-a">If you see a reference code (EDU-XXXXXX), your submission was saved locally and is being retried automatically. Keep the page open. If you closed the page, contact your teacher with your reference code — the submission can be recovered manually.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">I got a violation warning but I wasn't cheating. <span class="chevron">▼</span></div>
+      <div class="faq-a">Violations are triggered automatically by camera detection and window-focus monitoring. Common false triggers include: poor lighting, wearing glasses that reflect light, or the exam window losing focus due to a system notification. Face the camera directly and dismiss all notifications before starting. Your teacher can review the proctoring log and photos and adjust your record if needed.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Can I retake an exam? <span class="chevron">▼</span></div>
+      <div class="faq-a">Only if your teacher enables the Allow Retakes option when creating the exam. If retakes are disabled, you will see "Already submitted" when you try to enter the exam code a second time.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">The exam is showing "Exam has not started yet". <span class="chevron">▼</span></div>
+      <div class="faq-a">Your teacher has set a specific start time. Check the time shown and wait until the exam opens. Also verify your device clock is set to the correct time — an incorrect clock can cause this error.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">I'm a teacher. How do I approve a new student registration? <span class="chevron">▼</span></div>
+      <div class="faq-a">Student accounts are auto-approved on first submission (no separate approval step). If a student can't log in to a live quiz, confirm their email matches what's registered in your class roster under the Students tab.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How do I change the AI grading score for a short answer? <span class="chevron">▼</span></div>
+      <div class="faq-a">In the Results tab, find the student's submission and click the short answer cell. Click <strong>Override</strong>, enter the correct score, and confirm. The override is recorded in the audit log.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Does Edurena work on mobile? <span class="chevron">▼</span></div>
+      <div class="faq-a">Yes. Exams and game modes are fully responsive. For proctored exams, use Chrome on Android or Safari on iOS. Make sure fullscreen mode is available on your device. Some anti-cheat features (fullscreen enforcement) behave slightly differently on mobile browsers due to platform restrictions.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Who do I contact for support? <span class="chevron">▼</span></div>
+      <div class="faq-a">Contact your school admin or teacher first. For platform-level issues, email the Edurena team via the contact form on the homepage.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toggleFaq(el) {
+  el.closest('.faq-item').classList.toggle('open');
+}
+</script>
+</body>
+</html>
