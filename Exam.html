@@ -2312,6 +2312,10 @@ var _sectionLockedBoundary      = -1;   // subject-adaptive: can't navigate back
 function _initAdaptiveEngine(){
   if(!quizMeta||quizMeta.quizType!=='adaptive') return true;
   _adaptivePool = questions.slice();
+  // _pickAdaptiveQuestion treats every id currently in `questions` as
+  // "already served" — must be empty BEFORE the first pick, or the entire
+  // freshly-fetched pool looks served on question 1 and every pick fails.
+  questions = [];
   var first;
   if(quizMeta.adaptiveMode==='subject'){
     var seen={}, subjs=[];
