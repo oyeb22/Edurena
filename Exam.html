@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -120,7 +120,20 @@
     .progress-strip{height:3px;background:var(--surface3);position:relative;}
     .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
     .monitor{position:fixed;top:120px;right:12px;z-index:200;width:176px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);}
-    @media(max-width:768px){.monitor{top:auto;bottom:calc(60px + env(safe-area-inset-bottom,0px));right:10px;width:110px;padding:6px;}.monitor-title{display:none;}.monitor-badges{display:none;}}
+    /* Mobile: consolidate proctoring (title + video + status) into one
+       floating top-right widget instead of splitting video (bottom-right)
+       from status badges (header strip) — status badges already update
+       both #b-* and #sb-* in parallel, so this is CSS-only, no JS change. */
+    @media(max-width:768px){
+      .monitor{top:100px;bottom:auto;right:10px;width:132px;padding:7px;}
+      .monitor-title{font-size:8px;}
+      .mbadge{font-size:8px;padding:2px 5px;}
+      .exam-candidate-card{margin-right:144px;}
+      #statusStrip .sbadge:not(#sb-vio){display:none;}
+      .sym-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+      .sym-bar::-webkit-scrollbar{display:none;}
+      .sym-bar button{flex-shrink:0;}
+    }
     .monitor-title{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:5px;margin-bottom:8px;}
     .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite;}
     .monitor-video{border-radius:8px;overflow:hidden;aspect-ratio:4/3;position:relative;margin-bottom:8px;border:1px solid var(--border);}
