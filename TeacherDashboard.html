@@ -670,6 +670,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <button class="ni"            onclick="nav('questions',this);closeSidebar()"><span class="ico">?</span>Question Bank</button>
       <button class="ni"            onclick="nav('passages',this);closeSidebar()"><span class="ico">📖</span>Passages</button>
       <button class="ni"            onclick="nav('students',this);closeSidebar()"><span class="ico">◉</span>Students<span class="nbadge" id="pend-badge">0</span></button>
+      <button class="ni"            onclick="openRecoverModal();closeSidebar()"><span class="ico">📥</span>Recover Submission</button>
       <div class="nsec admin-only">Admin</div>
       <button class="ni admin-only" onclick="nav('teachers',this);closeSidebar()"><span class="ico">♟</span>Teachers</button>
       <button class="ni admin-only" onclick="nav('classes',this);closeSidebar()"><span class="ico">▣</span>Classes</button>
@@ -1583,6 +1584,28 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
   </div>
 </div>
 
+<div class="mo" id="recover-mo">
+  <div class="mbox" style="width:560px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Recover Submission</span>
+      <button class="mc" onclick="closeMo('recover-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+        For a student whose exam couldn't reach the server (they saw "Submission needs help").
+        Ask them to tap <strong>Copy Recovery Data for Teacher</strong> on that screen and send you the
+        text — paste it below exactly as sent.
+      </p>
+      <textarea id="recover-input" rows="6" placeholder="Paste the EDURENA-RECOVERY:... text here…"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;resize:vertical;outline:none"></textarea>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-p" onclick="doRecoverSubmission()">Recover Submission</button>
+      </div>
+      <div id="recover-status" style="margin-top:12px;font-size:13px"></div>
+    </div>
+  </div>
+</div>
+
 <div class="mo" id="live-mo">
   <div class="mbox" style="width:500px;max-width:96vw">
     <div class="mh">
@@ -2369,6 +2392,24 @@ function bulkDeleteSelected(){
   call('deleteQuestion',{bulkIds:ids},function(){ toast('success',ids.length+' question(s) deleted'); _selectedQBIds={}; updateBulkSelCount(); loadQB(); });
 }
 function openBulkDeleteModal(){ document.getElementById('bulk-delete-mo').classList.add('on'); }
+function openRecoverModal(){
+  var ta=document.getElementById('recover-input'); if(ta) ta.value='';
+  var st=document.getElementById('recover-status'); if(st) st.textContent='';
+  document.getElementById('recover-mo').classList.add('on');
+}
+function doRecoverSubmission(){
+  var raw=(document.getElementById('recover-input')||{}).value||'';
+  var st=document.getElementById('recover-status');
+  if(!raw.trim()){ if(st){st.textContent='Paste the recovery text first.';st.style.color='var(--danger)';} return; }
+  if(st){st.textContent='Recovering…';st.style.color='var(--text2)';}
+  call('recoverSubmission',{recoveryBlob:raw.trim()},function(d){
+    if(st){st.textContent='✓ Recovered — scored '+d.percentage+'% ('+d.score+'/'+d.totalPoints+' points).';st.style.color='var(--success)';}
+    toast('success','Submission recovered');
+    loadQuizzes();
+  },function(e){
+    if(st){st.textContent='✗ '+e;st.style.color='var(--danger)';}
+  });
+}
 function doBulkWipe(){
   var cls=(document.getElementById('bd-class').value||'').trim();
   var subj=(document.getElementById('bd-subject').value||'').trim();
@@ -3013,7 +3054,7 @@ function saveSchool(){ var targetName=_editingSchoolIdx>=0?_schoolsList[_editing
 function quickToggleSchoolAi(idx,enable){ var s=_schoolsList[idx]; if(!s) return; call('upsertSchool',{schoolName:s.schoolName,aiEnabled:enable},function(){ toast('success','AI '+(enable?'enabled':'disabled')+' for '+s.schoolName); loadSchools(); }); }
 
 /* ── Modal backdrop close ── */
-window.onclick=function(e){ ['details-mo','approve-mo','assign-mo','school-mo','broadsheet-mo','schedule-mo','student-mo','live-mo'].forEach(function(id){ var el=document.getElementById(id); if(e.target===el) closeMo(id); }); };
+window.onclick=function(e){ ['details-mo','approve-mo','assign-mo','school-mo','broadsheet-mo','schedule-mo','student-mo','live-mo','recover-mo'].forEach(function(id){ var el=document.getElementById(id); if(e.target===el) closeMo(id); }); };
 
 /* ── Close sidebar on ESC ── */
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSidebar(); });
