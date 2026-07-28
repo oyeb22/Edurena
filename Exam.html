@@ -432,8 +432,13 @@
       </button>
       <div id="subSendStatus" style="margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center"></div>
       <p style="font-size:11px;color:#7c85a2;margin-top:14px;line-height:1.6;border-top:1px solid #2e3248;padding-top:12px;">
-        If the button doesn't work, screenshot this screen and contact your teacher with the reference code above.
+        If the button above keeps failing (e.g. no internet on this device), tap below to copy your saved answers as text — send that to your teacher (WhatsApp, email, etc.) and they can recover it from their dashboard.
       </p>
+      <button id="subCopyDataBtn" onclick="copyRecoveryData()"
+              style="width:100%;padding:11px;background:transparent;color:#94a3b8;border:1px solid #2e3248;border-radius:10px;
+                     font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;">
+        📋 Copy Recovery Data for Teacher
+      </button>
     </div>
   </div>
 </div>
@@ -1482,6 +1487,22 @@ function sendToTeacher(){
   }, { recovery: true });
 }
 
+// Exports the queued submission as a compact copyable blob — the ONLY copy
+// of the answers when the network truly can't reach the server, so it has
+// to leave the device some other way. TeacherDashboard's "Recover
+// Submission" tool pastes this back in and calls the same submitExam logic.
+function copyRecoveryData(){
+  var entry = subqueue.get();
+  var btn = document.getElementById('subCopyDataBtn');
+  if (!entry) { if (btn) btn.textContent = 'No saved submission found'; return; }
+  var blob = 'EDURENA-RECOVERY:' + JSON.stringify({ ref: entry.ref, payload: entry.payload });
+  function done(){ if (btn) { btn.textContent = '✓ Copied — paste to your teacher'; setTimeout(function(){ btn.textContent='📋 Copy Recovery Data for Teacher'; },3000); } }
+  navigator.clipboard.writeText(blob).then(done).catch(function(){
+    var ta=document.createElement('textarea'); ta.value=blob; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); done();
+  });
+}
+
 // ── Page-load resume hook (runs from DOMContentLoaded boot) ────
 function checkPendingSubmission(){
   var entry = subqueue.get();
@@ -1914,10 +1935,18 @@ function startExam(){
     if (!qs || !qs.length) { alert('Failed to load questions. Please contact your teacher.'); return; }
     questions = qs;
     _initSubjectTabs(); // sort by subject if Subject-Sectioned exam
-    _initAdaptiveEngine(); // set up question/subject-adaptive branching if adaptive quiz type
+    // set up question/subject-adaptive branching if adaptive quiz type —
+    // on failure (thin/mismatched pool), stop cold here rather than fall
+    // through to rendering/timer-start against a half-initialized state,
+    // which previously led to an unexpected auto-submit after question 1.
+    if (!_initAdaptiveEngine()) return;
     examStart = Date.now();
     requestWakeLock();
     timeLeft  = _sectionDurationSec();
+    // Diagnostic only (no behavior change) — if the exam ends instantly,
+    // this line in the console tells us whether timeLeft was computed
+    // wrong or the quiz was just configured with a very short duration.
+    console.log('[exam] quizType='+(quizMeta&&quizMeta.quizType)+' timerMode='+(quizMeta&&quizMeta.timerMode)+' duration='+(quizMeta&&quizMeta.duration)+' timeLeft='+timeLeft+'s questions='+questions.length);
     safeText('examTitleBar', quizMeta.title);
     updateCandidateDisplays(null); // ponytail: show email-derived fallback immediately; API overwrites below
     renderDots();
@@ -2271,8 +2300,11 @@ var _adaptiveSubjectPointsEarned = 0;
 var _adaptiveSubjectTrendHard    = true; // first subject starts medium/trending
 var _sectionLockedBoundary      = -1;   // subject-adaptive: can't navigate back past this qIndex
 
+// Returns true if the exam can proceed, false if it can't and the caller
+// (startExam) must stop cold rather than fall through to rendering/timer
+// start with a half-initialized adaptive state.
 function _initAdaptiveEngine(){
-  if(!quizMeta||quizMeta.quizType!=='adaptive') return;
+  if(!quizMeta||quizMeta.quizType!=='adaptive') return true;
   _adaptivePool = questions.slice();
   var first;
   if(quizMeta.adaptiveMode==='subject'){
@@ -2290,25 +2322,38 @@ function _initAdaptiveEngine(){
   } else {
     first=_pickAdaptiveQuestion('medium',null);
   }
-  if(!first){ alert('No questions available to start this adaptive exam. Please contact your teacher.'); return; }
+  if(!first){
+    alert('No questions available to start this adaptive exam. Please contact your teacher.');
+    return false;
+  }
   questions=[first];
   qIndex=0;
+  return true;
 }
 
 // Picks an unserved question matching the target tier (and subject, if
 // given) from the pool. Falls back to the nearest available tier rather
-// than aborting the exam early over a thin question bank.
+// than aborting the exam early over a thin question bank, and — if a
+// subject was requested but has nothing left at any tier — falls back to
+// ignoring the subject filter too, rather than declaring the exam dead
+// over what the pool overall can still cover.
 function _pickAdaptiveQuestion(tier,subject){
   var servedIds={}; questions.forEach(function(q){servedIds[q.id]=true;});
-  function match(t){
+  function match(t,useSubject){
     return _adaptivePool.filter(function(q){
-      return !servedIds[q.id] && q.difficulty===t && (!subject||(q.subject||'').trim()===subject);
+      return !servedIds[q.id] && q.difficulty===t && (!useSubject||!subject||(q.subject||'').trim()===subject);
     });
   }
   var tryOrder = tier==='hard' ? ['hard','medium','easy'] : tier==='easy' ? ['easy','medium','hard'] : ['medium','hard','easy'];
   for(var i=0;i<tryOrder.length;i++){
-    var pool=match(tryOrder[i]);
+    var pool=match(tryOrder[i],true);
     if(pool.length) return pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(subject){
+    for(var j=0;j<tryOrder.length;j++){
+      var pool2=match(tryOrder[j],false);
+      if(pool2.length) return pool2[Math.floor(Math.random()*pool2.length)];
+    }
   }
   return null;
 }
@@ -2610,6 +2655,10 @@ function confirmSubmit(){
 
 function doSubmit(forced){
   if(examSubmitted)return;
+  // Diagnostic only — logs exactly what triggered submission and how far
+  // into the exam it happened, so a report of "submitted too early" can be
+  // matched to a specific cause instead of guessed at.
+  console.log('[exam] doSubmit called. forced='+forced+' timeLeft='+timeLeft+'s violations='+violations+' answered='+Object.keys(answers||{}).length+'/'+questions.length, new Error('doSubmit call stack').stack);
   examSubmitted=true;
   ttsStop();
   clearInterval(timerHandle);
