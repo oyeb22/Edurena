@@ -794,6 +794,21 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <div class="tp" id="tp-create">
         <div class="sh"><h2>Create New Quiz</h2></div>
         <div class="card">
+          <div class="ct">Quiz Type</div>
+          <div class="fgrid" style="margin-bottom:0">
+            <div class="fg"><label>Type *</label>
+              <select id="c-quiz-type" onchange="onQuizTypeChange()">
+                <option value="standard">Standard Proctored Exam</option>
+                <option value="jamb">Subject-Sectioned Exam</option>
+                <option value="adaptive">Adaptive Difficulty Exam</option>
+              </select>
+            </div>
+            <div class="fg" id="c-type-desc-wrap" style="display:flex;align-items:flex-end;padding-bottom:2px">
+              <p id="c-type-desc" style="font-size:12px;color:var(--text2);line-height:1.5">Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
           <div class="ct">Basic Info</div>
           <div class="fgrid" style="margin-bottom:10px">
             <div class="fg"><label>Quiz Title *</label><input type="text" id="c-title" placeholder="e.g. Week 1 Maths Exam"></div>
@@ -805,6 +820,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
           <div class="fgrid" style="margin-top:10px">
+            <div class="fg"><label>Topic (optional)</label><input type="text" id="c-topic" list="topic-list" placeholder="e.g. Algebra, Photosynthesis…" oninput="onWeekChange()"><datalist id="topic-list"></datalist></div>
             <div class="fg"><label>Session (optional)</label><input type="text" id="c-session" list="session-list" placeholder="e.g. 2024/2025"><datalist id="session-list"><option value="2024/2025"><option value="2025/2026"></datalist></div>
             <div class="fg"><label>Term (optional)</label><input type="text" id="c-term" list="term-list" placeholder="e.g. First Term"><datalist id="term-list"><option value="First Term"><option value="Second Term"><option value="Third Term"></datalist></div>
           </div>
@@ -864,6 +880,33 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
     style="width:56px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;outline:none">
 </div>
         </div>
+        <div class="card hidden" id="adaptive-card">
+          <div class="ct">Adaptive Difficulty Settings</div>
+          <div class="fg" style="margin-bottom:10px">
+            <label>Adaptive Mode</label>
+            <select id="ad-mode" onchange="onAdaptiveModeChange()">
+              <option value="question">Question-Adaptive — each question gets easier/harder based on the last answer (forward-only, no going back)</option>
+              <option value="subject">Subject-Adaptive — each subject's questions get easier/harder based on performance in that subject (free navigation within a subject, locked once you move on)</option>
+            </select>
+          </div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Difficulty levels eligible for this quiz. The engine starts every student at Medium and adjusts from there.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="easy" checked><span>Easy</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="medium" checked><span>Medium</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="hard" checked><span>Hard</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value=""><span>Unset (include questions with no difficulty tag)</span></label>
+          </div>
+          <p style="font-size:11px;color:var(--text2);margin-bottom:14px">Questions with no difficulty tag are treated as "unset". Enable that checkbox to include them.</p>
+          <div class="fgrid">
+            <div class="fg"><label>Points — Easy</label><input type="number" id="ad-pts-easy" value="1" min="1"></div>
+            <div class="fg"><label>Points — Medium</label><input type="number" id="ad-pts-medium" value="2" min="1"></div>
+            <div class="fg"><label>Points — Hard</label><input type="number" id="ad-pts-hard" value="3" min="1"></div>
+            <div class="fg"><label>Total Points (quiz target)</label><input type="number" id="ad-total-points" value="100" min="1"></div>
+            <div class="fg"><label>Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Safety limit — stops the exam even if a student keeps missing questions"></div>
+            <div class="fg" id="ad-threshold-row"><label>Promotion Threshold (%)</label><input type="number" id="ad-threshold" value="50" min="1" max="100" title="Subject-Adaptive only: score at least this % of a subject's points to get trending-harder questions next subject"></div>
+          </div>
+          <p style="font-size:11px;color:var(--text2);margin-top:8px">Question Cap is a safety limit — it stops the exam even if a student keeps missing questions and would otherwise never reach the Total Points target. Promotion Threshold only applies to Subject-Adaptive mode.</p>
+        </div>
         <div class="card">
           <div class="ct">Exam Instructions <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— optional</span></div>
           <div class="fg">
@@ -889,6 +932,18 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="MCQ" checked onchange="onTypeChange()"><span>Multiple Choice</span></label>
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="TF"  checked onchange="onTypeChange()"><span>True / False</span></label>
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="SHORT" checked onchange="onTypeChange()"><span>Short Answer</span></label>
+          </div>
+          <div class="div" style="margin:0 0 12px"></div>
+          <div class="hidden" id="section-timer-block">
+            <div class="ct">Section Timer <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— Subject-Sectioned / Subject-Adaptive only</span></div>
+            <div class="fg" style="margin-bottom:10px;max-width:280px">
+              <label>Timer Mode</label>
+              <select id="c-timer-mode">
+                <option value="overall">One overall timer for the whole exam</option>
+                <option value="per_subject">Separate timer per subject</option>
+              </select>
+            </div>
+            <p style="font-size:11px;color:var(--text2)">Set the "Order" for each subject below to control which comes first. When using a per-subject timer, also set each subject's own duration.</p>
           </div>
           <div class="div" style="margin:0 0 12px"></div>
           <div class="ct">Question Allocation <span id="type-hint" style="color:var(--warn);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px"></span></div>
@@ -959,6 +1014,31 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
               <button class="btn btn-sm" onclick="addInlineRow()">+ Row</button>
               <button class="btn btn-sm" onclick="clearInlineTable()">Clear</button>
               <button class="btn btn-p btn-sm" onclick="importInlineTable()">Import →</button>
+              <span style="margin-left:4px;display:flex;gap:3px;flex-wrap:wrap" title="Click a symbol to insert it into the focused cell">
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('%')">%</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('°')">°</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('²')">²</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('³')">³</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('√')">√</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('π')">π</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('×')">×</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('÷')">÷</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('≤')">≤</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('≥')">≥</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('≠')">≠</button>
+                <button class="btn btn-sm" style="padding:2px 7px;font-size:13px" onclick="insertQBSym('±')">±</button>
+                <span style="width:1px;background:var(--border);align-self:stretch"></span>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₀')">₀</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₁')">₁</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₂')">₂</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₃')">₃</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₄')">₄</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₅')">₅</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₆')">₆</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₇')">₇</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₈')">₈</button>
+                <button class="btn btn-sm" style="padding:2px 6px;font-size:13px" onclick="insertQBSym('₉')">₉</button>
+              </span>
               <button class="btn btn-sm" id="qb-img-toggle" onclick="toggleQBImgCols()" title="Show/hide image URL columns" style="font-size:10.5px">⊞ Show Image Cols</button>
             </div>
           </div>
@@ -969,6 +1049,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:30px">#</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:110px">Subject *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:55px">Week *</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Topic</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:75px">Type *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:220px">Question *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:90px">Option A</th>
@@ -982,6 +1063,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                   <th class="qb-ext-col" style="display:none;padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--accent-text);font-weight:500;font-size:10.5px;min-width:80px;max-width:80px;overflow:hidden">Q Img URL</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:130px">Correct Answer *</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:45px">Pts</th>
+                  <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:75px">Difficulty</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:140px">Explanation</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:100px">Session</th>
                   <th style="padding:7px 8px;border:1px solid var(--border);text-align:left;color:var(--text2);font-weight:500;font-size:10.5px;min-width:100px">Term</th>
@@ -995,7 +1077,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text2)">
             <span>Type: MCQ · TF · SHORT</span>
             <span>Correct Answer: full text matching an option · True/False for TF · text for SHORT · <strong>A / B / C / D</strong> for image-only options</span>
-            <span>SHORT variants/list points: separate with a comma e.g. <code>Agbada, Iro and Buba, Babban riga</code> (| and ; also work)</span>
+            <span>SHORT variants: separate with | or ; e.g. <code>Agbada | Iro and Buba | Babban riga</code></span>
           </div>
         </div>
 
@@ -1008,8 +1090,9 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                 <span style="font-size:11px;color:var(--text3);margin-left:6px">— all columns</span>
               </div>
               <button class="btn btn-sm" onclick="copyCSVFormat()">Copy Headers</button>
+              <button class="btn btn-sm" onclick="downloadCSVTemplate()">⬇ Download CSV Template</button>
             </div>
-            <code id="csv-format-display" style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all;cursor:pointer" onclick="copyCSVFormat()" title="Click to copy">subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id</code>
+            <code id="csv-format-display" style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all;cursor:pointer" onclick="copyCSVFormat()" title="Click to copy">subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id</code>
           </div>
 
           <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;margin-bottom:12px">
@@ -1077,12 +1160,35 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
     <button class="btn btn-sm" id="qb-select-all-btn" onclick="toggleSelectAllQB()" style="display:none">☐ Select All</button>
     <button class="btn btn-d btn-sm" id="qb-bulk-delete-btn" onclick="bulkDeleteSelected()" style="display:none">🗑 Delete Selected (<span id="qb-sel-count">0</span>)</button>
     <button class="btn btn-d btn-sm" onclick="openBulkDeleteModal()">🗑 Bulk Wipe</button>
+    <button class="btn btn-sm" onclick="downloadQBCSV()">⬇ CSV</button>
   </div>
 </div>
           <div id="qb-list"><p style="text-align:center;color:var(--text2);padding:22px;font-size:13px">Select a class above to browse questions.</p></div>
           <div id="qb-pagination" style="display:flex;gap:5px;justify-content:center;align-items:center;margin-top:10px;flex-wrap:wrap"></div>
         </div>
-        <div class="mo" id="bulk-delete-mo">
+        <!-- CSV question import preview modal -->
+        <div class="mo" id="csv-prev-mo">
+          <div class="mbox" style="width:560px;max-width:96vw">
+            <div class="mh"><span class="mh-title">CSV Preview</span><button class="mc" onclick="closeMo('csv-prev-mo')">✕</button></div>
+            <div class="mb">
+              <div id="csv-prev-errors"></div>
+              <div style="font-weight:600;font-size:13px;margin-bottom:10px" id="csv-prev-count"></div>
+              <div style="overflow-x:auto;max-height:260px;overflow-y:auto">
+                <table style="border-collapse:collapse;width:100%"><thead><tr style="background:var(--surface2)">
+                  <th style="padding:5px 7px;border:1px solid var(--border);font-size:11px">#</th>
+                  <th style="padding:5px 7px;border:1px solid var(--border);font-size:11px">Question</th>
+                  <th style="padding:5px 7px;border:1px solid var(--border);font-size:11px">Type</th>
+                  <th style="padding:5px 7px;border:1px solid var(--border);font-size:11px">Answer</th>
+                </tr></thead><tbody id="csv-prev-body"></tbody></table>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+                <button class="btn" onclick="closeMo('csv-prev-mo')">Cancel</button>
+                <button class="btn btn-p" onclick="confirmCSVImport()">Import →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+<div class="mo" id="bulk-delete-mo">
   <div class="mbox" style="width:420px;max-width:96vw">
     <div class="mh"><span class="mh-title">Bulk Delete Questions</span><button class="mc" onclick="closeMo('bulk-delete-mo')">✕</button></div>
     <div class="mb">
@@ -1188,6 +1294,8 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
               <option value="">All Classes</option>
             </select>
             <button class="btn btn-sm" onclick="downloadStudentCSV()">⬇ Export CSV</button>
+            <button class="btn btn-sm" onclick="document.getElementById('student-csv-file').click()">⬆ Import CSV</button>
+            <input type="file" id="student-csv-file" accept=".csv" style="display:none" onchange="doStudentCSVImport(event)">
           </div>
         </div>
         <div class="card" style="padding:0">
@@ -1466,6 +1574,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
     <div class="mh">
       <span class="mh-title" id="bs-title">Class Broadsheet</span>
       <div style="display:flex;gap:7px;align-items:center">
+        <button class="btn btn-sm" onclick="printBroadsheet()">🖨 Print</button>
         <button class="btn btn-sm" onclick="downloadBroadsheet()">⬇ CSV</button>
         <button class="mc" onclick="closeMo('broadsheet-mo')">✕</button>
       </div>
@@ -1532,7 +1641,7 @@ var _selectedPassageId='';
 var _currentCode='', _currentResponses=[];
 var _qbPage=0, _qbPageSize=30;
 var _schoolsList=[], _editingSchoolIdx=-1;
-var _broadsheetData=null, _broadsheetClass='';
+var _broadsheetData=null, _broadsheetClass='', _bsSortIdx=-1, _bsSortDir=1;
 var _scheduleTarget='', _liveExamCode='';
 var _allStudents=[], _editingStudentEmail=null;
 var SUPERADMIN_EMAIL = '';
@@ -2190,6 +2299,7 @@ function loadQBTab() {
       allClasses.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.id+(c.description?' — '+c.description:''); inlineSel.appendChild(o); });
     }
     if(!document.getElementById('inline-qb-body').children.length){ addInlineRow(); addInlineRow(); addInlineRow(); }
+    _qbTrackFocus();
     var fc=document.getElementById('fil-class');
     if(fc&&fc.value) loadQB();
     var jpArea=document.getElementById('json-paste'), jpCount=document.getElementById('json-paste-count');
@@ -2230,6 +2340,16 @@ function hideBulkQBControls(){
 function showBulkQBControls(){
   var b1=document.getElementById('qb-select-all-btn'), b2=document.getElementById('qb-bulk-delete-btn');
   if(b1) b1.style.display='inline-flex'; if(b2) b2.style.display='inline-flex';
+}
+function downloadQBCSV(){
+  if(!allQuestions.length){ toast('error','Load a class first'); return; }
+  var cols=['subject','week','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','session','term','instruction_group','instruction_text','image_url','passage_id'];
+  function csvCell(v){ var s=String(v==null?'':v); return s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0?'"'+s.replace(/"/g,'""')+'"':s; }
+  var rows=[cols.join(',')];
+  allQuestions.forEach(function(q){ rows.push(cols.map(function(c){ return csvCell(q[c]); }).join(',')); });
+  var blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='questions_'+(new Date().toISOString().substring(0,10))+'.csv'; a.click();
+  toast('success',allQuestions.length+' question(s) exported');
 }
 function updateBulkSelCount(){
   var count=Object.keys(_selectedQBIds).filter(function(k){ return _selectedQBIds[k]; }).length;
@@ -2308,6 +2428,14 @@ function buildInlineCell(type,value,placeholder,extraStyle){
   if(type==='select-type') return '<select onchange="onInlineTypeChange(this)" style="'+base+'cursor:pointer"><option value="MCQ">MCQ</option><option value="TF">TF</option><option value="SHORT">SHORT</option></select>';
   return '<textarea rows="1" placeholder="'+placeholder+'" style="'+base+'" oninput="this.style.height=\'auto\';this.style.height=Math.max(28,this.scrollHeight)+\'px\'" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){var tbody=document.getElementById(\'inline-qb-body\');var rows=tbody.querySelectorAll(\'tr\');var myRow=this.closest(\'tr\');if(myRow===rows[rows.length-1]){event.preventDefault();addInlineRow();}}">'+(value||'')+'</textarea>';
 }
+function onInlineTypeChange(sel){
+  var tr=sel.closest('tr'),opts=tr.querySelectorAll('.opt-cell'),type=sel.value;
+  opts.forEach(function(td,i){
+    if(type==='SHORT'){td.style.display='none';return;}
+    if(type==='TF'){td.style.display=i<2?'':'none';var ta=td.querySelector('textarea');if(ta&&!ta.value)ta.placeholder=i===0?'True':'False';return;}
+    td.style.display='';var ta=td.querySelector('textarea');if(ta&&!ta.value)ta.placeholder='Option '+['A','B','C','D'][i];
+  });
+}
 function buildImgUrlCell(value){
   /* Fixed-width URL input — never expands the column regardless of URL length.
      Full URL shown in tooltip on hover. */
@@ -2323,6 +2451,7 @@ function addInlineRow(){
   tr.innerHTML='<td style="padding:4px 6px;border:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;vertical-align:top;padding-top:9px">'+idx+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','e.g. Mathematics')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:48px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','e.g. Algebra')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('select-type','','')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Question text here')+'</td>'+
     '<td class="opt-cell" style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Option A')+'</td>'+
@@ -2336,6 +2465,7 @@ function addInlineRow(){
     '<td class="qb-ext-col" style="display:'+(document.getElementById('inline-qb-table').querySelector('.qb-ext-col').style.display||'none')+';padding:2px;border:1px solid var(--border);vertical-align:top;max-width:80px;overflow:hidden">'+buildImgUrlCell('')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Full text of correct option')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','1','width:38px')+'</td>'+
+    '<td style="padding:2px;border:1px solid var(--border);vertical-align:top"><select style="background:transparent;border:none;outline:none;width:100%;color:var(--text);font-family:var(--font);font-size:12px;padding:5px 4px;cursor:pointer"><option value="">—</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','Why this is correct')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','2025/2026')+'</td>'+
     '<td style="padding:2px;border:1px solid var(--border);vertical-align:top">'+buildInlineCell('text','','First Term')+'</td>'+
@@ -2351,7 +2481,9 @@ function toggleQBImgCols(){
   cols.forEach(function(el){ el.style.display=showing?'none':''; });
   if(btn) btn.textContent=showing?'⊞ Show Image Cols':'⊟ Hide Image Cols';
 }
-function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var inp=td.querySelector('input[type="text"]'); if(inp) return inp.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; } return { subject:cv(1),week:cv(2),type:cv(3),question:cv(4),option_A:cv(5),option_B:cv(6),option_C:cv(7),option_D:cv(8),option_A_image:cv(9),option_B_image:cv(10),option_C_image:cv(11),option_D_image:cv(12),image_url:cv(13),correct_answer:cv(14),points:cv(15)||'1',explanation:cv(16),session:cv(17),term:cv(18) }; }
+function getInlineRowData(tr){ var cells=tr.querySelectorAll('td'); function cv(idx){ var td=cells[idx]; if(!td) return ''; var ta=td.querySelector('textarea'); if(ta) return ta.value.trim(); var inp=td.querySelector('input[type="text"]'); if(inp) return inp.value.trim(); var sel=td.querySelector('select'); if(sel) return sel.value.trim(); return ''; }
+// Columns: 0=# 1=subject 2=week 3=topic 4=type 5=question 6=optA 7=optB 8=optC 9=optD 10=imgA 11=imgB 12=imgC 13=imgD 14=imgQ 15=correct 16=pts 17=difficulty 18=explanation 19=session 20=term 21=del
+return { subject:cv(1),week:cv(2),topic:cv(3),type:cv(4),question:cv(5),option_A:cv(6),option_B:cv(7),option_C:cv(8),option_D:cv(9),option_A_image:cv(10),option_B_image:cv(11),option_C_image:cv(12),option_D_image:cv(13),image_url:cv(14),correct_answer:cv(15),points:cv(16)||'1',difficulty:cv(17),explanation:cv(18),session:cv(19),term:cv(20) }; }
 function importInlineTable(){
   var cid=(document.getElementById('inline-class')||{}).value||'';
   if(!cid){ toast('error','Select a class first'); return; }
@@ -2366,21 +2498,86 @@ function importInlineTable(){
 function showInlineStatus(msg,type){ var el=document.getElementById('inline-import-status'); if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color=type==='success'?'var(--success)':type==='error'?'var(--danger)':type==='warn'?'var(--warn)':'var(--text2)'; if(type==='success') setTimeout(function(){ el.style.display='none'; },5000); }
 
 /* ── Import ── */
+// ponytail: clicking a toolbar button moves focus to the button itself, so
+// document.activeElement at click time is never the question field the user
+// was just typing in. Track the last-focused field instead via a delegated
+// focusin listener (bound once, lazily, on first use).
+var _qbLastField=null;
+function _qbTrackFocus(){
+  var tbl=document.getElementById('inline-qb-table');
+  if(tbl&&!tbl._focusTracked){
+    tbl._focusTracked=true;
+    tbl.addEventListener('focusin',function(e){
+      if(e.target&&'selectionStart' in e.target) _qbLastField=e.target;
+    });
+  }
+}
+function insertQBSym(s){
+  _qbTrackFocus();
+  var el=_qbLastField;
+  if(!el||!('selectionStart' in el)||!document.contains(el)){ toast('error','Click into a question field first'); return; }
+  var p=el.selectionStart||0, end=el.selectionEnd||p;
+  el.value=el.value.slice(0,p)+s+el.value.slice(end);
+  el.selectionStart=el.selectionEnd=p+s.length;
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  el.focus();
+}
+function downloadCSVTemplate() {
+  var cols=['subject','week','topic','difficulty','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','session','term','instruction_group','instruction_text','image_url','passage_id'];
+  // ponytail: quote every header token so long/comma-containing question text
+  // pasted into any column later can never look like it bled into the next
+  // one when opened in Excel/Sheets/Numbers.
+  var header=cols.map(function(c){ return '"'+c+'"'; }).join(',');
+  var blob=new Blob([header+'\n'],{type:'text/csv'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='edurena_question_template.csv'; a.click();
+  toast('success','Template downloaded');
+}
 function copyCSVFormat() {
-  var h='subject,week,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
+  var h='subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
   navigator.clipboard.writeText(h).then(function(){ toast('success','CSV headers copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=h; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','CSV headers copied'); });
 }
 function copyJSONFormat() {
-  var schema=JSON.stringify([{subject:"Mathematics",week:1,type:"MCQ",question:"Question text here?",option_A:"Option A",option_B:"Option B",option_C:"Option C",option_D:"Option D",option_A_image:"",option_B_image:"",option_C_image:"",option_D_image:"",correct_answer:"Option B",points:1,explanation:"Why this answer is correct",session:"2025/2026",term:"First Term",image_url:"",passage_id:""}],null,2);
+  var schema=JSON.stringify([{subject:"Mathematics",week:1,topic:"Algebra",difficulty:"medium",type:"MCQ",question:"Question text here?",option_A:"Option A",option_B:"Option B",option_C:"Option C",option_D:"Option D",option_A_image:"",option_B_image:"",option_C_image:"",option_D_image:"",correct_answer:"Option B",points:1,explanation:"Why this answer is correct",session:"2025/2026",term:"First Term",image_url:"",passage_id:""}],null,2);
   navigator.clipboard.writeText(schema).then(function(){ toast('success','JSON schema copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=schema; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','JSON schema copied'); });
 }
-function doImportCSV(event){ var file=event.target.files[0]; if(!file) return; var cid=(document.getElementById('imp-class')||{}).value||''; if(!cid){ toast('error','Select a class first'); event.target.value=''; return; } showImportStatus('Reading CSV…','info'); var reader=new FileReader(); reader.onload=function(e){ call('importCSV',{classId:cid,csvData:e.target.result},function(d){ showImportStatus(d.message,d.skipped>0?'warn':'success'); loadQB(); },function(err){ showImportStatus('Import failed: '+err,'error'); }); }; reader.readAsText(file); event.target.value=''; }
+function _parseCSVLine(line){var res=[],cur='',inQ=false;for(var i=0;i<line.length;i++){var c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(c===','&&!inQ){res.push(cur);cur='';}else cur+=c;}res.push(cur);return res;}
+function doImportCSV(event){var file=event.target.files[0];if(!file)return;var cid=(document.getElementById('imp-class')||{}).value||'';if(!cid){toast('error','Select a class first');event.target.value='';return;}var reader=new FileReader();reader.onload=function(e){previewCSVImport(e.target.result,cid);};reader.readAsText(file);event.target.value='';}
+function previewCSVImport(csv,classId){var lines=csv.split(/\r?\n/).filter(function(l){return l.trim();});if(!lines.length){showImportStatus('CSV is empty','error');return;}var headers=_parseCSVLine(lines[0]).map(function(h){return h.trim().toLowerCase();});var miss=['question','correct_answer'].filter(function(r){return headers.indexOf(r)===-1;});if(miss.length){showImportStatus('CSV missing required columns: '+miss.join(', '),'error');return;}var valid=[],errs=[];for(var i=1;i<lines.length;i++){var cols=_parseCSVLine(lines[i]);var row={};headers.forEach(function(h,hi){row[h]=(cols[hi]||'').trim();});if(!row.question){errs.push('Row '+(i+1)+': missing question');continue;}if(!row.correct_answer){errs.push('Row '+(i+1)+': missing correct_answer');continue;}if(!row.type)row.type='MCQ';valid.push(row);}document.getElementById('csv-prev-errors').innerHTML=errs.length?'<div style="color:var(--warn);font-size:11.5px;margin-bottom:8px">'+errs.slice(0,4).map(esc).join('<br>')+(errs.length>4?'… and '+(errs.length-4)+' more':'')+'</div>':'';document.getElementById('csv-prev-count').textContent=valid.length+' question(s) ready'+(errs.length?' · '+errs.length+' skipped':'');document.getElementById('csv-prev-body').innerHTML=valid.slice(0,6).map(function(r,i){return '<tr><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+(i+1)+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.question)+'">'+esc(r.question.substring(0,60))+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+esc(r.type)+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+esc(r.correct_answer)+'</td></tr>';}).join('')+(valid.length>6?'<tr><td colspan="4" style="padding:5px 7px;text-align:center;color:var(--text2);font-size:11px">…and '+(valid.length-6)+' more</td></tr>':'');window._pendingCSV={questions:valid,classId:classId};document.getElementById('csv-prev-mo').classList.add('on');}
+function confirmCSVImport(){var p=window._pendingCSV;if(!p)return;closeMo('csv-prev-mo');showImportStatus('Importing '+p.questions.length+' question(s)…','info');call('importJSON',{classId:p.classId,questions:p.questions},function(d){showImportStatus(d.message||'Imported '+p.questions.length,'success');toast('success',d.message||'Import complete');loadQB();},function(er){showImportStatus('Import failed: '+er,'error');});window._pendingCSV=null;}
+function doStudentCSVImport(event){var file=event.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){previewStudentCSV(e.target.result);};reader.readAsText(file);event.target.value='';}
+function previewStudentCSV(csv){var lines=csv.split(/\r?\n/).filter(function(l){return l.trim();});if(!lines.length){toast('error','CSV is empty');return;}var headers=_parseCSVLine(lines[0]).map(function(h){return h.trim().toLowerCase();});var miss=['name','email'].filter(function(r){return headers.indexOf(r)===-1;});if(miss.length){toast('error','CSV missing columns: '+miss.join(', '));return;}var ovSchool=(document.getElementById('bulk-school')||{}).value||'',ovClass=(document.getElementById('bulk-class')||{}).value||'',existing=_allStudents.map(function(s){return s.email.toLowerCase();});var valid=[],errs=[];for(var i=1;i<lines.length;i++){var cols=_parseCSVLine(lines[i]);var row={};headers.forEach(function(h,hi){row[h]=(cols[hi]||'').trim();});var name=row.name||row['full name']||'',email=(row.email||row.admission||'').toLowerCase(),cls=ovClass||row.class||row.classname||'',school=ovSchool||row.school||'';if(!name){errs.push('Row '+(i+1)+': missing name');continue;}if(!email||email.length<2){errs.push('Row '+(i+1)+': missing email/ID');continue;}if(!cls){errs.push('Row '+(i+1)+': missing class');continue;}if(!school){errs.push('Row '+(i+1)+': missing school');continue;}valid.push({name:name,email:email,className:cls,school:school});}window._pendingStudentCSV=valid;var tbody=document.querySelector('#t-bulk-preview tbody');tbody.innerHTML=(errs.length?'<tr><td colspan="6" style="color:var(--warn);font-size:11.5px;padding:6px 9px">'+errs.slice(0,3).map(esc).join(' · ')+(errs.length>3?' … and '+(errs.length-3)+' more':'')+'</td></tr>':'')+valid.map(function(s,i){var isNew=existing.indexOf(s.email)===-1;return '<tr><td>'+(i+1)+'</td><td>'+esc(s.name)+'</td><td style="font-size:11.5px">'+esc(s.email)+'</td><td>'+esc(s.className)+'</td><td>'+esc(s.school)+'</td><td><span class="bdg '+(isNew?'bg':'by')+'">'+(isNew?'New':'Update')+'</span></td></tr>';}).join('');document.getElementById('bulk-preview').style.display='block';setText('bulk-preview-n','('+valid.length+' from CSV)');setText('bulk-preview-count',valid.length+' student(s) — click Register All to import');if(errs.length) toast('warn',errs.length+' row(s) skipped');}
 function doImportJSON(event){ var file=event.target.files[0]; if(!file) return; var cid=(document.getElementById('imp-class')||{}).value||''; if(!cid){ toast('error','Select a class first'); event.target.value=''; return; } showImportStatus('Reading JSON…','info'); var reader=new FileReader(); reader.onload=function(e){ importFromJSON(e.target.result,cid); }; reader.readAsText(file); event.target.value=''; }
 function importJSONFromPaste(){ var raw=(document.getElementById('json-paste')||{}).value||''; if(!raw.trim()){ toast('error','Paste some JSON first'); return; } var cid=(document.getElementById('imp-class')||{}).value||''; if(!cid){ toast('error','Select a class first'); return; } importFromJSON(raw,cid); var el=document.getElementById('json-paste'); if(el) el.value=''; }
 function importFromJSON(jsonData,classId){ var parsed; try{ parsed=JSON.parse(jsonData); if(!Array.isArray(parsed)&&parsed.questions) parsed=parsed.questions; if(!Array.isArray(parsed)) throw new Error('Expected an array'); }catch(e){ showImportStatus('Invalid JSON: '+e.message,'error'); toast('error','Invalid JSON'); return; } call('importJSON',{classId:classId,questions:parsed},function(d){ showImportStatus(d.message||'Imported '+parsed.length+' questions','success'); toast('success',d.message||'Import complete'); loadQB(); },function(err){ showImportStatus('Import failed: '+err,'error'); }); }
 function showImportStatus(msg,type){ var el=document.getElementById('import-status'); if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color=type==='success'?'var(--success)':type==='error'?'var(--danger)':type==='warn'?'var(--warn)':'var(--text2)'; if(type==='success') setTimeout(function(){ el.style.display='none'; },5000); }
 
 /* ── Create Quiz ── */
+var _QUIZ_TYPE_DESC = {
+  standard: 'Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.',
+  jamb:     'Subject-Sectioned Exam. Questions are grouped by subject in a teacher-chosen order — students see a subject tab bar and can navigate between sections.',
+  adaptive: 'Difficulty-aware exam. Questions are sorted Easy → Medium → Hard. Filter by difficulty level below.'
+};
+function onQuizTypeChange(){
+  var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
+  var desc = document.getElementById('c-type-desc');
+  if (desc) desc.textContent = _QUIZ_TYPE_DESC[t] || '';
+  var adaptiveCard = document.getElementById('adaptive-card');
+  if (adaptiveCard) adaptiveCard.classList.toggle('hidden', t !== 'adaptive');
+  updateSectionTimerVisibility();
+}
+function onAdaptiveModeChange(){ updateSectionTimerVisibility(); }
+// Section-timer (order + per-subject duration) block is only meaningful for
+// Subject-Sectioned exams and Subject-Adaptive quizzes — Question-Adaptive
+// and Standard exams never use it.
+function updateSectionTimerVisibility(){
+  var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
+  var adMode = (document.getElementById('ad-mode')||{}).value || 'question';
+  var showTimer = (t === 'jamb') || (t === 'adaptive' && adMode === 'subject');
+  var block = document.getElementById('section-timer-block');
+  if (block) block.classList.toggle('hidden', !showTimer);
+  var thresholdRow = document.getElementById('ad-threshold-row');
+  if (thresholdRow) thresholdRow.style.display = (t === 'adaptive' && adMode === 'subject') ? '' : 'none';
+}
 function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); },100); }); }
 function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
@@ -2432,10 +2629,20 @@ function updateExclWeeksSummary(){
   else { summary.innerHTML='<strong style="color:var(--warn)">Excluding:</strong> '+excl.map(function(w){return 'Week '+w;}).join(', '); }
 }
 function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
-function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); }
+function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); var filterTopic=(document.getElementById('c-topic')||{}).value||''; call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks,topic:filterTopic},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); loadTopicOptions(cid,wk,weekMode); }
+// Populates the #c-topic datalist. Empty result (no topics tagged yet) just
+// leaves the datalist empty — the field keeps working as plain free-text.
+function loadTopicOptions(cid,wk,weekMode){
+  var dl=document.getElementById('topic-list'); if(!dl) return;
+  call('getTopicsForSubject',{classId:cid,week:wk,weekMode:weekMode},function(topics){
+    dl.innerHTML=(topics||[]).map(function(t){ return '<option value="'+esc(t)+'">'; }).join('');
+  },function(){ /* silent — free-text still works */ });
+}
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
-function renderSubjAlloc(subjs,wk,weekMode){ if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode(); var tot=0,types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):''; var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk; document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e){ var subjectName=e[0],available=e[1],suggested=Math.min(available,20); tot+=suggested; var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5); return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+'</div></div><input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjectName.replace(/"/g,'&quot;')+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()"></div>'; }).join(''); setText('tot-q',tot); }
+function renderSubjAlloc(subjs,wk,weekMode){ if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode(); var tot=0,types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):''; var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk; document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){ var subjectName=e[0],available=e[1],suggested=Math.min(available,20); tot+=suggested; var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5); var subjAttr=subjectName.replace(/"/g,'&quot;'); return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+'</div></div><input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjAttr+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()">'+'<span style="font-size:10px;color:var(--text3);margin-left:8px">Order</span><input type="number" class="sorder" data-subject="'+subjAttr+'" value="'+(i+1)+'" min="1" title="Order this subject appears in (Subject-Sectioned / Subject-Adaptive only)" style="width:40px;margin-left:4px">'+'<span style="font-size:10px;color:var(--text3);margin-left:8px">Min</span><input type="number" class="sduration" data-subject="'+subjAttr+'" value="15" min="1" title="This subject\'s duration in minutes (only used with a per-subject timer)" style="width:44px;margin-left:4px">'+'</div>'; }).join(''); setText('tot-q',tot); }
+function getSubjectOrder(){ var pairs=[]; document.querySelectorAll('.sorder').forEach(function(el){ pairs.push({subject:el.getAttribute('data-subject'),order:parseInt(el.value)||0}); }); pairs.sort(function(a,b){ return a.order-b.order; }); return pairs.map(function(p){ return p.subject; }); }
+function getPerSubjectDuration(){ var m={}; document.querySelectorAll('.sduration').forEach(function(el){ var s=el.getAttribute('data-subject'); if(s) m[s]=parseInt(el.value)||15; }); return m; }
 function updateTot(){ var t=0; document.querySelectorAll('.sinput').forEach(function(el){ t+=parseInt(el.value)||0; }); setText('tot-q',t); }
 function doCreate(){
   var title=(document.getElementById('c-title').value||'').trim(), code=(document.getElementById('c-code').value||'').trim().toUpperCase(), cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, dur=document.getElementById('c-dur').value, st=document.getElementById('c-start').value, en=document.getElementById('c-end').value;
@@ -2443,6 +2650,9 @@ function doCreate(){
   var sc={}; document.querySelectorAll('.sinput').forEach(function(el){ var s=el.getAttribute('data-subject'),c=parseInt(el.value)||0; if(s&&c>0) sc[s]=c; });
   if(!Object.keys(sc).length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
   var rubric=collectRubricData(); if(!rubric){ return; }
+  var quizType=(document.getElementById('c-quiz-type')||{}).value||'standard';
+  var diffLevels=[];
+  if(quizType==='adaptive'){ document.querySelectorAll('.diff-chk:checked').forEach(function(cb){ diffLevels.push(cb.value); }); }
   spin(true,'Creating quiz…');
   function localToISO(v){ if(!v) return ''; return new Date(v).toISOString(); }
   call('createQuiz', {
@@ -2451,14 +2661,18 @@ function doCreate(){
     classId:             cid,
     week:                wk,
     subjectCounts:       sc,
+    subjectOrder:        getSubjectOrder(),
     duration:            dur,
     startTime:           localToISO(st),
     endTime:             localToISO(en),
     questionTypes:       getSelectedTypes(),
     weekMode:            getWeekMode(),
-    excludedWeeks:       getExcludedWeeks(),  // v5.3: cumulative mode only — empty if single or all weeks included
+    excludedWeeks:       getExcludedWeeks(),
     session:             document.getElementById('c-session').value,
     term:                document.getElementById('c-term').value,
+    topic:               (document.getElementById('c-topic')||{}).value||'',
+    quizType:            quizType,
+    difficultyLevels:    diffLevels.length ? diffLevels : null,
     faceDetection:       document.getElementById('tog-face').classList.contains('on'),
     showCorrectAnswers:  document.getElementById('tog-ans').classList.contains('on'),
     allowRetakes:        document.getElementById('tog-retakes').classList.contains('on'),
@@ -2466,7 +2680,16 @@ function doCreate(){
     gradingRubric:       rubric ? JSON.stringify(rubric) : null,
     passageId:           _selectedPassageId || '',
     maxViolations:       parseInt(document.getElementById('c-max-violations').value) || 3,
-    examInstruction:     (document.getElementById('c-instruction').value||'').trim()
+    examInstruction:     (document.getElementById('c-instruction').value||'').trim(),
+    timerMode:           (document.getElementById('c-timer-mode')||{}).value||'overall',
+    perSubjectDuration:  getPerSubjectDuration(),
+    adaptiveMode:        (document.getElementById('ad-mode')||{}).value||'question',
+    adaptivePointsEasy:      parseInt((document.getElementById('ad-pts-easy')||{}).value)||1,
+    adaptivePointsMedium:    parseInt((document.getElementById('ad-pts-medium')||{}).value)||2,
+    adaptivePointsHard:      parseInt((document.getElementById('ad-pts-hard')||{}).value)||3,
+    adaptiveTotalPoints:     parseInt((document.getElementById('ad-total-points')||{}).value)||100,
+    adaptiveQuestionCap:     parseInt((document.getElementById('ad-question-cap')||{}).value)||20,
+    adaptivePromotionThreshold: parseInt((document.getElementById('ad-threshold')||{}).value)||50
   }, function(d) {
     toast('success', 'Quiz created — ' + d.count + ' questions — Code: ' + d.examCode);
     resetCreate();
@@ -2493,6 +2716,18 @@ function resetCreate(){
   var ps=document.getElementById('passage-select'); if(ps){ ps.innerHTML='<option value="">— Select class & week first —</option>'; ps.disabled=true; }
   var pp=document.getElementById('passage-preview'); if(pp) pp.style.display='none';
   _selectedPassageId=''; resetRubricRanges();
+  var qt=document.getElementById('c-quiz-type'); if(qt) qt.value='standard';
+  var tp=document.getElementById('c-topic'); if(tp) tp.value='';
+  document.querySelectorAll('.diff-chk').forEach(function(cb){ cb.checked=true; });
+  var ac=document.getElementById('adaptive-card'); if(ac) ac.classList.add('hidden');
+  var td=document.getElementById('c-type-desc'); if(td) td.textContent=_QUIZ_TYPE_DESC['standard']||'';
+  var am=document.getElementById('ad-mode'); if(am) am.value='question';
+  ['ad-pts-easy','ad-pts-medium','ad-pts-hard'].forEach(function(id,i){ var e=document.getElementById(id); if(e) e.value=[1,2,3][i]; });
+  var atp=document.getElementById('ad-total-points'); if(atp) atp.value='100';
+  var aqc=document.getElementById('ad-question-cap'); if(aqc) aqc.value='20';
+  var ath=document.getElementById('ad-threshold'); if(ath) ath.value='50';
+  var tm=document.getElementById('c-timer-mode'); if(tm) tm.value='overall';
+  updateSectionTimerVisibility();
 }
 
 /* ── Grading Rubric ── */
@@ -2678,12 +2913,12 @@ function openAddStudentModal(){
   });
   document.getElementById('student-mo').classList.add('on');
 }
-function openEditStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!s) return; _editingStudentEmail=email; setText('student-mo-title',s.locked?'View Student (Locked)':'Edit Student'); document.getElementById('st-name').value=s.name||''; document.getElementById('st-email').value=s.email||''; document.getElementById('st-email').disabled=true; document.getElementById('st-class').value=s.className||''; document.getElementById('st-school').value=s.school||''; ['st-name','st-class','st-school'].forEach(function(id){ var el=document.getElementById(id); if(el) el.disabled=!!s.locked; }); document.getElementById('student-mo').classList.add('on'); }
+function openEditStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!s) return; _editingStudentEmail=email; setText('student-mo-title',s.locked?'View Student (Locked)':'Edit Student'); document.getElementById('st-name').value=s.name||''; document.getElementById('st-email').value=s.email||''; document.getElementById('st-email').disabled=true; document.getElementById('st-class').value=s.className||''; var _ssel=document.getElementById('st-school'); if(_ssel&&s.school){ if(!Array.from(_ssel.options).some(function(o){return o.value===s.school;})){var _sopt=document.createElement('option');_sopt.value=s.school;_sopt.textContent=s.school;_ssel.appendChild(_sopt);} _ssel.value=s.school; } ['st-name','st-class','st-school'].forEach(function(id){ var el=document.getElementById(id); if(el) el.disabled=!!s.locked; }); document.getElementById('student-mo').classList.add('on'); }
 function saveStudent(){ var name=(document.getElementById('st-name').value||'').trim(), email=(document.getElementById('st-email').value||'').trim(), cls=(document.getElementById('st-class').value||'').trim(), school=(document.getElementById('st-school').value||'').trim(); if(!name){ toast('error','Name is required'); return; } if(!email||email.length<2){ toast('error','Email or Student ID is required'); return; } if(!cls){ toast('error','Class is required'); return; } if(!school){ toast('error','School is required'); return; } call('upsertStudent',{name:name,email:email,className:cls,school:school},function(){ toast('success',(_editingStudentEmail?'Student updated':'Student added')+' — '+name); closeMo('student-mo'); loadStudents(); }); }
 function doDeleteStudent(email){ var s=_allStudents.find(function(x){ return x.email===email; }); if(!confirm('Remove student "'+(s?s.name:email)+'"?\n\nExam results are kept.')) return; call('deleteStudent',{email:email},function(){ toast('success','Student removed'); loadStudents(); }); }
 function parseBulkJSON(){ var raw=(document.getElementById('bulk-json').value||'').trim(); if(!raw){ toast('error','Paste JSON data first'); return null; } var parsed; try{ parsed=JSON.parse(raw); }catch(e){ toast('error','Invalid JSON: '+e.message); return null; } if(!Array.isArray(parsed)){ toast('error','JSON must be an array [ ... ]'); return null; } var overrideSchool=(document.getElementById('bulk-school').value||'').trim(), overrideClass=(document.getElementById('bulk-class').value||'').trim(); var valid=[],errors=[]; parsed.forEach(function(row,i){ var name=String(row.name||row.Name||'').trim(), email=String(row.email||row.Email||'').trim().toLowerCase(), cls=overrideClass||String(row.class||row.Class||row.className||'').trim(), school=overrideSchool||String(row.school||row.School||'').trim(); if(!name){ errors.push('Row '+(i+1)+': missing name'); return; } if(!email||email.length<2){ errors.push('Row '+(i+1)+': missing email/ID'); return; } if(!cls){ errors.push('Row '+(i+1)+': missing class'); return; } if(!school){ errors.push('Row '+(i+1)+': missing school'); return; } valid.push({name:name,email:email,className:cls,school:school}); }); if(errors.length){ toast('error',errors.slice(0,4).join('\n')); if(!valid.length) return null; } return valid; }
 function previewBulkJSON(){ var students=parseBulkJSON(); if(!students) return; var preview=document.getElementById('bulk-preview'), tb=document.querySelector('#t-bulk-preview tbody'); var existingEmails=_allStudents.map(function(s){ return s.email.toLowerCase(); }); tb.innerHTML=students.map(function(s,i){ var isNew=existingEmails.indexOf(s.email.toLowerCase())===-1; return '<tr><td>'+(i+1)+'</td><td>'+esc(s.name)+'</td><td style="font-size:11.5px">'+esc(s.email)+'</td><td>'+esc(s.className)+'</td><td>'+esc(s.school)+'</td><td><span class="bdg '+(isNew?'bg':'by')+'">'+(isNew?'New':'Update')+'</span></td></tr>'; }).join(''); setText('bulk-preview-n','('+students.length+' students)'); setText('bulk-preview-count',students.length+' student(s) ready'); if(preview) preview.style.display='block'; }
-function doBulkRegister(){ var students=parseBulkJSON(); if(!students) return; if(!confirm('Register / update '+students.length+' student(s)?')) return; call('bulkUpsertStudents',{students:students},function(result){ toast('success',(result.added||0)+' added, '+(result.updated||0)+' updated'+(result.skipped?', '+result.skipped+' skipped':'')); document.getElementById('bulk-json').value=''; var preview=document.getElementById('bulk-preview'); if(preview) preview.style.display='none'; setText('bulk-preview-count',''); loadStudents(); }); }
+function doBulkRegister(){ var students=window._pendingStudentCSV||parseBulkJSON(); window._pendingStudentCSV=null; if(!students) return; if(!confirm('Register / update '+students.length+' student(s)?')) return; call('bulkUpsertStudents',{students:students},function(result){ toast('success',(result.added||0)+' added, '+(result.updated||0)+' updated'+(result.skipped?', '+result.skipped+' skipped':'')); document.getElementById('bulk-json').value=''; var preview=document.getElementById('bulk-preview'); if(preview) preview.style.display='none'; setText('bulk-preview-count',''); loadStudents(); }); }
 function downloadStudentCSV(){ if(!_allStudents.length){ toast('error','No students to export'); return; } var lines=[['Name','Email','Class','School','Locked'].join(',')]; _allStudents.forEach(function(s){ lines.push(['"'+(s.name||'').replace(/"/g,'""')+'"','"'+(s.email||'')+'"','"'+(s.className||'')+'"','"'+(s.school||'')+'"',s.locked?'Yes':'No'].join(',')); }); var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='students_'+new Date().toISOString().substring(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url); toast('success','Student list exported'); }
 
 /* ── Profile ── */
@@ -2699,7 +2934,9 @@ function runInit(){ if(!confirm('Initialize / repair system?')) return; call('in
 /* ── Broadsheet ── */
 function openBroadsheet(){ var classes=allQuizzes.map(function(q){ return q.classId; }).filter(function(v,i,a){ return a.indexOf(v)===i; }); if(!classes.length){ toast('error','No quizzes to build broadsheet from.'); return; } if(classes.length===1){ _broadsheetClass=classes[0]; loadBroadsheet(classes[0]); } else{ var cls=prompt('Enter class ID:\n\nAvailable: '+classes.join(', ')); if(!cls) return; _broadsheetClass=cls.trim(); loadBroadsheet(cls.trim()); } }
 function loadBroadsheet(classId){ document.getElementById('bs-title').textContent='Broadsheet — '+classId; document.getElementById('bs-body').innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">Loading…</p>'; document.getElementById('broadsheet-mo').classList.add('on'); call('getBroadsheet',{classId:classId},function(d){ _broadsheetData=d; renderBroadsheet(d); }); }
-function renderBroadsheet(d){ var body=document.getElementById('bs-body'); if(!d||!d.quizzes||!d.quizzes.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No quizzes found.</p>'; return; } if(!d.rows||!d.rows.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No student submissions yet.</p>'; return; } var html='<table style="border-collapse:collapse;width:100%;font-size:12px;min-width:600px"><thead><tr style="background:var(--surface2)"><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);min-width:130px;position:sticky;left:0;background:var(--surface2);z-index:2">Student</th><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);white-space:nowrap">Class</th>'+d.quizzes.map(function(q){ return '<th style="padding:7px 9px;text-align:center;border:1px solid var(--border);min-width:90px;color:var(--accent-text)" colspan="3">'+esc(q.title)+'</th>'; }).join('')+'<th style="padding:7px 9px;text-align:center;border:1px solid var(--border)">Avg</th></tr><tr style="background:var(--surface)"><th style="padding:5px 9px;border:1px solid var(--border);position:sticky;left:0;background:var(--surface);z-index:2"></th><th style="padding:5px 9px;border:1px solid var(--border)"></th>'+d.quizzes.map(function(){ return '<th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Score</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">%</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Status</th>'; }).join('')+'<th style="padding:5px 9px;border:1px solid var(--border)"></th></tr></thead><tbody>'; d.rows.forEach(function(row){ var s=row.student,pcts=[]; var cells=d.quizzes.map(function(q,qi){ var r=row.results[qi]; if(!r) return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:var(--text2)" colspan="3">—</td>'; var pct=parseFloat(r.percentage)||0; pcts.push(pct); var stCol=r.status==='Pass'?'var(--success)':'var(--danger)'; return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+pct.toFixed(1)+'%</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:'+stCol+';font-weight:600">'+esc(r.status)+'</td>'; }).join(''); var avg=pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':'—'; html+='<tr><td style="padding:7px 9px;border:1px solid var(--border);font-weight:600;position:sticky;left:0;background:var(--surface2);z-index:1">'+esc(s.name)+'</td><td style="padding:7px 9px;border:1px solid var(--border);color:var(--text2)">'+esc(s.className||'—')+'</td>'+cells+'<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono);font-weight:600;color:var(--accent-text)">'+avg+'</td></tr>'; }); html+='</tbody></table>'; body.innerHTML=html; }
+function renderBroadsheet(d){ var body=document.getElementById('bs-body'); if(!d||!d.quizzes||!d.quizzes.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No quizzes found.</p>'; return; } if(!d.rows||!d.rows.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:28px">No student submissions yet.</p>'; return; } var html='<table style="border-collapse:collapse;width:100%;font-size:12px;min-width:600px"><thead><tr style="background:var(--surface2)"><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);min-width:130px;position:sticky;left:0;background:var(--surface2);z-index:2">Student</th><th style="padding:7px 9px;text-align:left;border:1px solid var(--border);white-space:nowrap">Class</th>'+d.quizzes.map(function(q,qi){ var arrow=qi===_bsSortIdx?(_bsSortDir===1?' ↑':' ↓'):''; return '<th style="padding:7px 9px;text-align:center;border:1px solid var(--border);min-width:90px;color:var(--accent-text);cursor:pointer" colspan="3" onclick="sortBroadsheet('+qi+')" title="Sort by this exam">'+esc(q.title)+arrow+'</th>'; }).join('')+'<th style="padding:7px 9px;text-align:center;border:1px solid var(--border)">Avg</th></tr><tr style="background:var(--surface)"><th style="padding:5px 9px;border:1px solid var(--border);position:sticky;left:0;background:var(--surface);z-index:2"></th><th style="padding:5px 9px;border:1px solid var(--border)"></th>'+d.quizzes.map(function(){ return '<th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Score</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">%</th><th style="padding:5px 9px;border:1px solid var(--border);color:var(--text2);font-weight:500">Status</th>'; }).join('')+'<th style="padding:5px 9px;border:1px solid var(--border)"></th></tr></thead><tbody>'; var sortedRows=d.rows.slice(); if(_bsSortIdx>=0){ sortedRows.sort(function(a,b){ var pa=a.results[_bsSortIdx]?parseFloat(a.results[_bsSortIdx].percentage)||0:0; var pb=b.results[_bsSortIdx]?parseFloat(b.results[_bsSortIdx].percentage)||0:0; return _bsSortDir*(pb-pa); }); } sortedRows.forEach(function(row){ var s=row.student,pcts=[]; var cells=d.quizzes.map(function(q,qi){ var r=row.results[qi]; if(!r) return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:var(--text2)" colspan="3">—</td>'; var pct=parseFloat(r.percentage)||0; pcts.push(pct); var stCol=r.status==='Pass'?'var(--success)':'var(--danger)'; return '<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono)">'+pct.toFixed(1)+'%</td><td style="padding:7px 9px;border:1px solid var(--border);text-align:center;color:'+stCol+';font-weight:600">'+esc(r.status)+'</td>'; }).join(''); var avg=pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':'—'; html+='<tr><td style="padding:7px 9px;border:1px solid var(--border);font-weight:600;position:sticky;left:0;background:var(--surface2);z-index:1">'+esc(s.name)+'</td><td style="padding:7px 9px;border:1px solid var(--border);color:var(--text2)">'+esc(s.className||'—')+'</td>'+cells+'<td style="padding:7px 9px;border:1px solid var(--border);text-align:center;font-family:var(--mono);font-weight:600;color:var(--accent-text)">'+avg+'</td></tr>'; }); html+='</tbody></table>'; body.innerHTML=html; }
+function sortBroadsheet(qi){ if(_bsSortIdx===qi){_bsSortDir*=-1;}else{_bsSortIdx=qi;_bsSortDir=1;} if(_broadsheetData) renderBroadsheet(_broadsheetData); }
+function printBroadsheet(){ var body=document.getElementById('bs-body'); if(!body||!_broadsheetData){ toast('error','Load broadsheet first'); return; } var w=window.open('','_blank','width=900,height=700'); w.document.write('<!DOCTYPE html><html><head><title>Broadsheet — '+esc(_broadsheetClass)+'</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:16px}h2{margin:0 0 12px;font-size:14px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:5px 7px;text-align:left}thead th{background:#f0f0f0;font-size:10px}@media print{button{display:none}}</style></head><body><h2>Broadsheet — '+esc(_broadsheetClass)+'</h2>'+body.innerHTML+'<br><button onclick="window.print()">🖨 Print</button></body></html>'); w.document.close(); }
 function downloadBroadsheet(){ if(!_broadsheetData){ toast('error','Load broadsheet first'); return; } var d=_broadsheetData,lines=[]; var header=['Student','Email','Class','School']; d.quizzes.forEach(function(q){ header.push(q.title+' Score',q.title+' %',q.title+' Status'); }); header.push('Average %'); lines.push(header.map(function(h){ return '"'+String(h).replace(/"/g,'""')+'"'; }).join(',')); d.rows.forEach(function(row){ var s=row.student,pcts=[],cells=['"'+(s.name||'')+'"','"'+(s.email||'')+'"','"'+(s.className||'')+'"','"'+(s.school||'')+'"']; d.quizzes.forEach(function(q,qi){ var r=row.results[qi]; if(r){ var pct=parseFloat(r.percentage)||0; pcts.push(pct); cells.push(r.score+'/'+r.totalPoints,r.percentage,r.status); }else cells.push('','',''); }); cells.push(pcts.length?(pcts.reduce(function(a,b){ return a+b; },0)/pcts.length).toFixed(1)+'%':''); lines.push(cells.join(',')); }); var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='broadsheet_'+_broadsheetClass+'_'+new Date().toISOString().substring(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url); toast('success','Broadsheet downloaded'); }
 
 /* ── Schedule Live ── */

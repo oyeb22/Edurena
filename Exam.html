@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -631,6 +631,25 @@
     <button class="nav-btn nav-prev" id="prevBtn" onclick="prevQ()" disabled>← Prev</button>
     <button class="nav-btn nav-submit hidden" id="submitBtn" onclick="confirmSubmit()">Submit Exam ✓</button>
     <button class="nav-btn nav-next" id="nextBtn" onclick="nextQ()">Next →</button>
+  </div>
+</div>
+
+<!-- SUBJECT TRANSITION SCREEN (Subject-Sectioned per-subject timer + Subject-Adaptive) -->
+<div id="preSubject" class="screen">
+  <div class="candidate-banner" style="max-width:520px;margin:40px auto 0">
+    <div class="cb-info" style="text-align:center;width:100%">
+      <div class="cb-name">Next up: <span id="preSubjSubject">Subject</span></div>
+      <div class="cb-meta" id="preSubjDuration" style="display:none">Duration: <span id="preSubjMinutes">0</span> minutes</div>
+    </div>
+  </div>
+  <div id="preSubject-instruction-box" style="display:none;max-width:520px;margin:16px auto 0;padding:0 16px">
+    <div style="background:rgba(79,120,255,.07);border:1px solid rgba(79,120,255,.3);border-radius:var(--radius-sm);padding:14px 16px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📋 Exam Instructions</div>
+      <div id="preSubject-instruction-text" style="font-size:13px;color:var(--text);line-height:1.8;white-space:pre-wrap"></div>
+    </div>
+  </div>
+  <div style="text-align:center;margin:28px 0">
+    <button class="start-btn" id="startSubjectBtn">Start Section →</button>
   </div>
 </div>
 
@@ -1520,7 +1539,7 @@ function checkPendingSubmission(){
 }
 
 function showScreen(id){
-  ['preExam','examScreen','resultsScreen'].forEach(function(s){
+  ['preExam','examScreen','resultsScreen','preSubject'].forEach(function(s){
     var el=document.getElementById(s); if(!el)return;
     el.classList.remove('active'); el.style.display='none';
   });
@@ -1881,11 +1900,11 @@ function startExam(){
     hideLoading();
     if (!qs || !qs.length) { alert('Failed to load questions. Please contact your teacher.'); return; }
     questions = qs;
-    _initSubjectTabs(); // sort by subject if multi-subject (JAMB mode)
-    _initAdaptiveSort(); // sort Easy→Medium→Hard if adaptive quiz type
+    _initSubjectTabs(); // sort by subject if Subject-Sectioned exam
+    _initAdaptiveEngine(); // set up question/subject-adaptive branching if adaptive quiz type
     examStart = Date.now();
     requestWakeLock();
-    timeLeft  = (quizMeta.duration||30) * 60;
+    timeLeft  = _sectionDurationSec();
     safeText('examTitleBar', quizMeta.title);
     updateCandidateDisplays(null); // ponytail: show email-derived fallback immediately; API overwrites below
     renderDots();
@@ -1918,8 +1937,44 @@ function startTimer(){
   updateTimer();
   timerHandle=setInterval(function(){
     timeLeft--; updateTimer();
-    if(timeLeft<=0){clearInterval(timerHandle);doSubmit(true);}
+    if(timeLeft<=0){clearInterval(timerHandle);_sectionTimeUp();}
   },1000);
+}
+// Fires when the running timer hits 0. For per-subject timing, that only
+// ends the CURRENT section (moving to the next subject), not the whole
+// exam — unless this was the last subject. Every other case (overall
+// timer, question-adaptive, standard/any other quiz type) submits the
+// whole exam immediately, exactly as before.
+function _sectionTimeUp(){
+  if(!quizMeta||quizMeta.timerMode!=='per_subject'){ doSubmit(true); return; }
+
+  if(quizMeta.quizType==='jamb'){
+    var curSubj=(questions[qIndex]&&questions[qIndex].subject||'').trim()||'General';
+    var curPos=_subjectOrder.indexOf(curSubj);
+    var nextSubj=curPos>=0?_subjectOrder[curPos+1]:undefined;
+    if(!nextSubj){ doSubmit(true); return; }
+    _sectionLockedBoundary=questions.length-1;
+    _showSubjectTransition(nextSubj,null,function(){ qIndex=_subjectFirst[nextSubj]; renderQuestion(); });
+    return;
+  }
+
+  if(quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode==='subject'){
+    var subjectTarget=(parseInt(quizMeta.adaptiveTotalPoints)||100)/(_adaptiveSubjects.length||1);
+    var promoted=subjectTarget>0&&(_adaptiveSubjectPointsEarned/subjectTarget*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
+    _adaptiveSubjectIdx++;
+    if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(true); return; }
+    _adaptiveSubjectPointsServed=0; _adaptiveSubjectPointsEarned=0;
+    _adaptiveSubjectTrendHard=promoted;
+    _sectionLockedBoundary=questions.length-1;
+    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],promoted,function(){
+      var next=_pickAdaptiveQuestion(promoted?'medium':'easy',_adaptiveSubjects[_adaptiveSubjectIdx]);
+      if(!next){ doSubmit(true); return; }
+      questions.push(next); qIndex++; renderDots(); renderQuestion();
+    });
+    return;
+  }
+
+  doSubmit(true);
 }
 function updateTimer(){
   var m=Math.floor(timeLeft/60),s=timeLeft%60;
@@ -1970,8 +2025,13 @@ function renderQuestion(){
   if(!questions.length)return;
   ttsStop();
   var q=questions[qIndex];
-  var pct=((qIndex+1)/questions.length)*100;
-  safeText('progressText','Question '+(qIndex+1)+' of '+questions.length);
+  var isAdaptive=quizMeta&&quizMeta.quizType==='adaptive';
+  // Adaptive quizzes don't know their final length in advance — show
+  // progress against the teacher-set question cap as an approximate ceiling
+  // (the exam may end sooner, e.g. once the points target is reached).
+  var displayTotal=isAdaptive?(parseInt(quizMeta.adaptiveQuestionCap)||questions.length):questions.length;
+  var pct=((qIndex+1)/displayTotal)*100;
+  safeText('progressText','Question '+(qIndex+1)+(isAdaptive?' (up to '+displayTotal+')':' of '+displayTotal));
   var answered=Object.keys(answers).filter(function(k){return answers[k]!==undefined&&answers[k]!=='';}).length;
   safeText('answeredCount',answered+' answered');
   var pb=document.getElementById('progressBar'); if(pb)pb.style.width=pct+'%';
@@ -2068,10 +2128,19 @@ function renderQuestion(){
   var prev=document.getElementById('prevBtn');
   var next=document.getElementById('nextBtn');
   var submit=document.getElementById('submitBtn');
-  var isLast=(qIndex===questions.length-1);
-  if(prev)prev.disabled=(qIndex===0);
-  if(next){if(isLast)next.classList.add('hidden');else{next.classList.remove('hidden');next.textContent='Next →';}}
-  if(submit){if(isLast)submit.classList.remove('hidden');else submit.classList.add('hidden');}
+  if(quizMeta&&quizMeta.quizType==='adaptive'){
+    // Adaptive quizzes end themselves (via doSubmit() inside the engine)
+    // once the cap/points target or last subject is reached — there's no
+    // user-facing Submit button, Next always drives the engine forward.
+    if(prev) prev.disabled=(quizMeta.adaptiveMode!=='subject')||(qIndex-1<=_sectionLockedBoundary);
+    if(next){next.classList.remove('hidden');next.textContent='Next →';}
+    if(submit) submit.classList.add('hidden');
+  } else {
+    var isLast=(qIndex===questions.length-1);
+    if(prev)prev.disabled=(qIndex===0)||(qIndex-1<=_sectionLockedBoundary);
+    if(next){if(isLast)next.classList.add('hidden');else{next.classList.remove('hidden');next.textContent='Next →';}}
+    if(submit){if(isLast)submit.classList.remove('hidden');else submit.classList.add('hidden');}
+  }
   updateDots();
   updateVioDisplay();
 
@@ -2108,17 +2177,54 @@ function insertSym(s){
   el.focus();
   answers[el.dataset.qid]=el.value.trim(); updateDots();
 }
-function prevQ(){ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}}
-function nextQ(){ttsStop();saveShort();if(qIndex<questions.length-1){qIndex++;renderQuestion();}}
-function goToQ(i){ttsStop();saveShort();qIndex=i;renderQuestion();}
+function prevQ(){
+  if(quizMeta&&quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode!=='subject') return; // question-adaptive: forward-only
+  if(qIndex-1<=_sectionLockedBoundary) return; // can't step back into a completed/locked section
+  ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}
+}
+function nextQ(){
+  ttsStop();saveShort();
+  if(quizMeta&&quizMeta.quizType==='adaptive'){ _adaptiveAdvance(); return; }
+  if(quizMeta&&quizMeta.quizType==='jamb'&&quizMeta.timerMode==='per_subject'&&questions[qIndex+1]){
+    var curSubj=(questions[qIndex].subject||'').trim()||'General';
+    var nxtSubj=(questions[qIndex+1].subject||'').trim()||'General';
+    if(nxtSubj!==curSubj){
+      _sectionLockedBoundary=qIndex;
+      _showSubjectTransition(nxtSubj,null,function(){ qIndex++; renderQuestion(); });
+      return;
+    }
+  }
+  if(qIndex<questions.length-1){qIndex++;renderQuestion();}
+}
+function goToQ(i){
+  if(quizMeta&&quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode!=='subject') return; // question-adaptive: no jumping at all
+  if(i<=_sectionLockedBoundary) return; // can't jump back into a completed/locked section
+  if(quizMeta&&quizMeta.quizType==='jamb'&&quizMeta.timerMode==='per_subject'){
+    var curSubj=(questions[qIndex]&&questions[qIndex].subject||'').trim()||'General';
+    var tgtSubj=(questions[i]&&questions[i].subject||'').trim()||'General';
+    if(tgtSubj!==curSubj) return; // must advance via Next to trigger the section-timer transition
+  }
+  ttsStop();saveShort();qIndex=i;renderQuestion();
+}
 
 function _initSubjectTabs(){
+  // Adaptive quizzes manage their own subject flow (see _initAdaptiveEngine)
+  // — this whole-array-reordering tab builder doesn't apply to them.
+  if(quizMeta&&quizMeta.quizType==='adaptive') return;
   var bySubj={}, order=[];
   questions.forEach(function(q){
     var s=(q.subject||'').trim()||'General';
     if(!bySubj[s]){bySubj[s]=[];order.push(s);}
     bySubj[s].push(q);
   });
+  // Teacher-chosen subject order, when set — falls back to first-encountered
+  // order (today's behavior) for older quizzes with no subject_order saved.
+  var savedOrder=quizMeta&&quizMeta.subjectOrder;
+  if(Array.isArray(savedOrder)&&savedOrder.length){
+    var ranked=savedOrder.filter(function(s){ return bySubj[s]; });
+    order.forEach(function(s){ if(ranked.indexOf(s)===-1) ranked.push(s); });
+    order=ranked;
+  }
   _subjectOrder=order;
   var tabEl=document.getElementById('subjectTabs');
   if(order.length<2){tabEl.style.display='none';return;}
@@ -2133,14 +2239,187 @@ function _initSubjectTabs(){
     return '<button class="stab" data-subj="'+esc(s)+'" onclick="goToQ('+_subjectFirst[s]+')">'+esc(s)+' <span style="opacity:.65">('+cnt+')</span></button>';
   }).join('');
 }
-function _initAdaptiveSort(){
+// ================================================================
+// ADAPTIVE ENGINE — question-adaptive (1-up-1-down ladder) and
+// subject-adaptive (per-subject point-allotment blocks with a trending
+// difficulty bias). Both modes fetch the FULL tagged pool up front via the
+// normal getQuizData call (no answer key included, same as every other
+// quiz type) but only ever show one question at a time, growing the live
+// `questions` array as the engine decides each next question — the
+// existing renderQuestion()/nextQ() machinery needs no other changes.
+// ================================================================
+var _adaptivePool               = [];   // full fetched pool, hidden from direct navigation
+var _adaptiveBusy               = false;
+var _adaptiveTotalPointsServed  = 0;    // question-adaptive stopping condition
+var _adaptiveSubjects           = [];
+var _adaptiveSubjectIdx         = 0;
+var _adaptiveSubjectPointsServed = 0;
+var _adaptiveSubjectPointsEarned = 0;
+var _adaptiveSubjectTrendHard    = true; // first subject starts medium/trending
+var _sectionLockedBoundary      = -1;   // subject-adaptive: can't navigate back past this qIndex
+
+function _initAdaptiveEngine(){
   if(!quizMeta||quizMeta.quizType!=='adaptive') return;
-  var rank={easy:0,medium:1,hard:2};
-  questions.sort(function(a,b){
-    var da=rank[normD(a.difficulty)]||0, db=rank[normD(b.difficulty)]||0;
-    return da-db;
+  _adaptivePool = questions.slice();
+  var first;
+  if(quizMeta.adaptiveMode==='subject'){
+    var seen={}, subjs=[];
+    _adaptivePool.forEach(function(q){ var s=(q.subject||'').trim()||'General'; if(!seen[s]){seen[s]=true;subjs.push(s);} });
+    var order=quizMeta.subjectOrder;
+    if(Array.isArray(order)&&order.length){
+      var ranked=order.filter(function(s){return seen[s];});
+      subjs.forEach(function(s){ if(ranked.indexOf(s)===-1) ranked.push(s); });
+      subjs=ranked;
+    }
+    _adaptiveSubjects=subjs;
+    _adaptiveSubjectIdx=0;
+    first=_pickAdaptiveQuestion('medium',_adaptiveSubjects[0]);
+  } else {
+    first=_pickAdaptiveQuestion('medium',null);
+  }
+  if(!first){ alert('No questions available to start this adaptive exam. Please contact your teacher.'); return; }
+  questions=[first];
+  qIndex=0;
+}
+
+// Picks an unserved question matching the target tier (and subject, if
+// given) from the pool. Falls back to the nearest available tier rather
+// than aborting the exam early over a thin question bank.
+function _pickAdaptiveQuestion(tier,subject){
+  var servedIds={}; questions.forEach(function(q){servedIds[q.id]=true;});
+  function match(t){
+    return _adaptivePool.filter(function(q){
+      return !servedIds[q.id] && q.difficulty===t && (!subject||(q.subject||'').trim()===subject);
+    });
+  }
+  var tryOrder = tier==='hard' ? ['hard','medium','easy'] : tier==='easy' ? ['easy','medium','hard'] : ['medium','hard','easy'];
+  for(var i=0;i<tryOrder.length;i++){
+    var pool=match(tryOrder[i]);
+    if(pool.length) return pool[Math.floor(Math.random()*pool.length)];
+  }
+  return null;
+}
+
+// Subject-adaptive draws a WEIGHTED tier (trending harder/easier), not a
+// strict per-question ladder — distinct from question-adaptive's 1-up-1-down.
+function _adaptiveWeightedTier(trendHard){
+  var r=Math.random();
+  if(trendHard) return r<0.40?'hard':r<0.85?'medium':'easy';
+  return r<0.55?'easy':r<0.90?'medium':'hard';
+}
+
+// Called instead of a plain array-advance when quizMeta.quizType==='adaptive'
+// (see nextQ()). Validates the current answer server-side (never exposes the
+// key), then branches to the question- or subject-adaptive advance logic.
+function _adaptiveAdvance(){
+  if(_adaptiveBusy) return;
+  var q=questions[qIndex]; if(!q) return;
+  var ans=String(answers[q.id]||'').trim();
+  _adaptiveBusy=true;
+  var nextBtn=document.getElementById('nextBtn'); if(nextBtn) nextBtn.disabled=true;
+  post('validateAdaptiveAnswer',{
+    examCode:student.examCode, studentEmail:student.email, examSessionToken:examSessionToken,
+    questionId:q.id, answer:ans, subject:q.subject||'', difficulty:q.difficulty||'medium',
+    points:q.points||1, orderIndex:qIndex
+  },function(err,res){
+    _adaptiveBusy=false;
+    if(nextBtn) nextBtn.disabled=false;
+    var isCorrect = !err && res && res.status==='success' && res.data && res.data.isCorrect===true;
+    if(quizMeta.adaptiveMode==='subject') _adaptiveSubjectAdvance(q,isCorrect);
+    else _adaptiveQuestionAdvance(q,isCorrect);
   });
-  function normD(d){ var s=String(d||'').toLowerCase().trim(); if(s==='easy'||s==='simple'||s==='low') return 'easy'; if(s==='hard'||s==='difficult'||s==='high') return 'hard'; if(s) return 'medium'; return 'easy'; }
+}
+
+function _adaptiveQuestionAdvance(q,isCorrect){
+  var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
+  var cur=rank[q.difficulty]!==undefined?rank[q.difficulty]:1;
+  var nextRank=isCorrect?Math.min(2,cur+1):Math.max(0,cur-1);
+  _adaptiveTotalPointsServed+=(q.points||0);
+  var cap=parseInt(quizMeta.adaptiveQuestionCap)||20;
+  var targetPoints=parseInt(quizMeta.adaptiveTotalPoints)||100;
+  if(questions.length>=cap||_adaptiveTotalPointsServed>=targetPoints){ doSubmit(false); return; }
+  var next=_pickAdaptiveQuestion(tiers[nextRank],null);
+  if(!next){ doSubmit(false); return; }
+  questions.push(next); qIndex++; renderDots(); renderQuestion();
+}
+
+function _adaptiveSubjectAdvance(q,isCorrect){
+  _adaptiveSubjectPointsServed+=(q.points||0);
+  if(isCorrect) _adaptiveSubjectPointsEarned+=(q.points||0);
+  var numSubjects=_adaptiveSubjects.length||1;
+  var subjectTarget=(parseInt(quizMeta.adaptiveTotalPoints)||100)/numSubjects;
+  var overallCap=parseInt(quizMeta.adaptiveQuestionCap)||20;
+
+  if(questions.length>=overallCap){ doSubmit(false); return; }
+
+  if(_adaptiveSubjectPointsServed>=subjectTarget){
+    var promoted=subjectTarget>0 && (_adaptiveSubjectPointsEarned/subjectTarget*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
+    _adaptiveSubjectIdx++;
+    if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(false); return; }
+    _adaptiveSubjectPointsServed=0; _adaptiveSubjectPointsEarned=0;
+    _adaptiveSubjectTrendHard=promoted;
+    _sectionLockedBoundary=questions.length-1;
+    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],promoted,function(){
+      var next=_pickAdaptiveQuestion(promoted?'medium':'easy',_adaptiveSubjects[_adaptiveSubjectIdx]);
+      if(!next){ doSubmit(false); return; }
+      questions.push(next); qIndex++; renderDots(); renderQuestion();
+    });
+    return;
+  }
+
+  var subject=_adaptiveSubjects[_adaptiveSubjectIdx];
+  var next=_pickAdaptiveQuestion(_adaptiveWeightedTier(_adaptiveSubjectTrendHard),subject);
+  if(!next){ // pool exhausted for this subject — end the block early, same as reaching the point target
+    _adaptiveSubjectIdx++;
+    if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(false); return; }
+    _adaptiveSubjectPointsServed=0; _adaptiveSubjectPointsEarned=0;
+    _sectionLockedBoundary=questions.length-1;
+    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],_adaptiveSubjectTrendHard,function(){
+      var n2=_pickAdaptiveQuestion('medium',_adaptiveSubjects[_adaptiveSubjectIdx]);
+      if(!n2){ doSubmit(false); return; }
+      questions.push(n2); qIndex++; renderDots(); renderQuestion();
+    });
+    return;
+  }
+  questions.push(next); qIndex++; renderDots(); renderQuestion();
+}
+
+// ── Section timer (shared by Subject-Sectioned exams and Subject-Adaptive) ──
+function _currentSectionSubject(){
+  if(!quizMeta) return '';
+  if(quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode==='subject') return _adaptiveSubjects[_adaptiveSubjectIdx]||'';
+  var q=questions[qIndex]; return q?((q.subject||'').trim()||'General'):'';
+}
+function _sectionDurationSec(){
+  var fallback=((quizMeta&&quizMeta.duration)||30)*60;
+  if(!quizMeta||quizMeta.timerMode!=='per_subject') return fallback;
+  var subject=_currentSectionSubject(); if(!subject) return fallback;
+  var perSubj=quizMeta.perSubjectDuration||{};
+  return (parseInt(perSubj[subject])||quizMeta.duration||30)*60;
+}
+// Shows the "next up: Subject X" screen, pausing question rendering until
+// the student clicks Start — resetting the timer first if this quiz uses
+// per-subject timing. `onStart` performs the actual question-advance.
+function _showSubjectTransition(subjectName,promotedOrNull,onStart){
+  safeText('preSubjSubject',subjectName||'Next Subject');
+  var durEl=document.getElementById('preSubjDuration');
+  if(quizMeta.timerMode==='per_subject'){
+    var perSubj=quizMeta.perSubjectDuration||{};
+    var mins=parseInt(perSubj[subjectName])||quizMeta.duration||30;
+    safeText('preSubjMinutes',mins);
+    if(durEl) durEl.style.display='';
+  } else if(durEl) durEl.style.display='none';
+  var instrBox=document.getElementById('preSubject-instruction-box');
+  var instrTxt=document.getElementById('preSubject-instruction-text');
+  if(instrBox&&instrTxt&&quizMeta.examInstruction){ instrTxt.textContent=quizMeta.examInstruction; instrBox.style.display='block'; }
+  else if(instrBox) instrBox.style.display='none';
+  showScreen('preSubject');
+  var btn=document.getElementById('startSubjectBtn');
+  btn.onclick=function(){
+    if(quizMeta.timerMode==='per_subject'){ timeLeft=_sectionDurationSec(); clearInterval(timerHandle); startTimer(); }
+    showScreen('examScreen');
+    onStart();
+  };
 }
 function _updateSubjectTab(){
   if(_subjectOrder.length<2)return;

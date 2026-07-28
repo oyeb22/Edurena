@@ -419,18 +419,45 @@ function openChallengeMode() {
 // test-status competitions never appear here (getPublishedCompetitions
 // only returns status='published'), so this stays harmlessly empty until
 // the admin actually publishes one.
+// ponytail: direct-to-Supabase read for this one public, read-only list,
+// bypassing the GAS round trip. Falls back to the old GAS action on any
+// error (e.g. RLS not open for anon), so behavior never regresses.
+var COMP_SB_URL  = 'https://hrslazwxaciooqowvzcy.supabase.co';
+var COMP_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyc2xhend4YWNpb29xb3d2emN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDk3NzksImV4cCI6MjA5MzM4NTc3OX0.UbEko3d0zyHguOq9w5Zy-_89OhAbQaV7Z6uBw_nS_yk';
+
+function fetchPublishedCompetitionsDirect() {
+  var t0 = performance.now();
+  var cols = 'id,title,description,theme,competition_date,lobby_open_at,price_per_ticket_ngn,prize_pool_ngn,prize_split_json,total_question_count';
+  var url = COMP_SB_URL + '/rest/v1/competitions?select=' + cols + '&status=eq.published&order=competition_date.asc';
+  return fetch(url, { headers: { apikey: COMP_SB_ANON, Authorization: 'Bearer ' + COMP_SB_ANON } })
+    .then(function(r){ if (!r.ok) throw new Error('Supabase ' + r.status); return r.json(); })
+    .then(function(rows){ console.log('[perf] competitions via Supabase direct:', Math.round(performance.now() - t0) + 'ms'); return rows; });
+}
+
+function fetchPublishedCompetitionsViaGAS() {
+  var t0 = performance.now();
+  return fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'getPublishedCompetitions' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(result) {
+    console.log('[perf] competitions via GAS:', Math.round(performance.now() - t0) + 'ms');
+    return (result && result.status === 'success') ? (result.data || []) : [];
+  });
+}
+
 function openCompetitionMode() {
   var box = document.getElementById('competition-picker');
   if (box) { box.parentNode.removeChild(box); return; }
 
   whenReady(function(){
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'getPublishedCompetitions' })
+    fetchPublishedCompetitionsDirect()
+    .catch(function(e){
+      console.warn('[perf] Supabase direct read failed, falling back to GAS:', e.message);
+      return fetchPublishedCompetitionsViaGAS();
     })
-    .then(function(r){ return r.json(); })
-    .then(function(result) {
-      var rows = (result && result.status === 'success') ? (result.data || []) : [];
+    .then(function(rows) {
       var picker = document.createElement('div');
       picker.id = 'competition-picker';
       picker.style.cssText = 'margin-top:12px;border:1px solid #2e3248;border-radius:12px;overflow:hidden';
