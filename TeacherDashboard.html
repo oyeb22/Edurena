@@ -895,9 +895,9 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="easy" checked><span>Easy</span></label>
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="medium" checked><span>Medium</span></label>
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="hard" checked><span>Hard</span></label>
-            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value=""><span>Unset (include questions with no difficulty tag)</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="" checked><span>Unset (include questions with no difficulty tag)</span></label>
           </div>
-          <p style="font-size:11px;color:var(--text2);margin-bottom:14px">Questions with no difficulty tag are treated as "unset". Enable that checkbox to include them.</p>
+          <p style="font-size:11px;color:var(--text2);margin-bottom:14px">Questions with no difficulty tag are treated as "unset" and are included by default — if your question bank isn't fully tagged yet, unchecking this would silently leave the adaptive pool empty.</p>
           <div class="fgrid">
             <div class="fg"><label>Points — Easy</label><input type="number" id="ad-pts-easy" value="1" min="1"></div>
             <div class="fg"><label>Points — Medium</label><input type="number" id="ad-pts-medium" value="2" min="1"></div>
