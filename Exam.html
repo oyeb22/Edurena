@@ -24,8 +24,14 @@
   <meta charset="UTF-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Exam page must never be served stale from a browser cache after a
+       fix ships — bump the ?v= below on every deploy that touches this
+       file so edurena-dash.js is re-fetched too, not just this page. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Edurena — Secure Exam</title>
-  <script src="edurena-dash.js"></script>
+  <script src="edurena-dash.js?v=20260729"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -789,10 +795,10 @@ async function supabaseGet(table, filters, select) {
   if (!resp.ok) throw new Error('Supabase error: ' + resp.status);
   return resp.json();
 }
+var student    = { email: PARAMS.email || '', examCode: (PARAMS.code || '').toUpperCase() };
 console.log('[DEBUG] PARAMS:', JSON.stringify(PARAMS));
 console.log('[DEBUG] SCRIPT_URL:', SCRIPT_URL);
 console.log('[DEBUG] student:', JSON.stringify(student));
-var student    = { email: PARAMS.email || '', examCode: (PARAMS.code || '').toUpperCase() };
 
 var quizMeta      = null;
 var questions     = [];
