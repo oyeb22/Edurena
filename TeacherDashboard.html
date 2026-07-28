@@ -1,4 +1,4 @@
-﻿<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
+<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
      RESTORED: per-week exclude checkboxes (excluded-weeks-block, renderExcludedWeeksUI, getExcludedWeeks)
      KEPT:     M-gamepad logo, sidebar mini-stats (Active quizzes / Today's attempts / Avg score), densified tables
      API:      sends excludedWeeks[] to getSubjectsForWeek + createQuiz (backend v5.5 code.gs handles this) -->
@@ -817,7 +817,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           <div class="fgrid c3">
             <div class="fg"><label>Class *</label><select id="c-class" onchange="onClassChange()"><option value="">— Select —</option></select></div>
             <div class="fg"><label>Week *</label><select id="c-week" onchange="onWeekChange()" disabled><option value="">— Select —</option></select></div>
-            <div class="fg"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
+            <div class="fg" id="overall-duration-row"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
           <div class="fgrid" style="margin-top:10px">
             <div class="fg"><label>Topic (optional)</label><input type="text" id="c-topic" list="topic-list" placeholder="e.g. Algebra, Photosynthesis…" oninput="onWeekChange()"><datalist id="topic-list"></datalist></div>
@@ -902,7 +902,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg"><label>Points — Medium</label><input type="number" id="ad-pts-medium" value="2" min="1"></div>
             <div class="fg"><label>Points — Hard</label><input type="number" id="ad-pts-hard" value="3" min="1"></div>
             <div class="fg"><label>Total Points (quiz target)</label><input type="number" id="ad-total-points" value="100" min="1"></div>
-            <div class="fg"><label>Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Safety limit — stops the exam even if a student keeps missing questions"></div>
+            <div class="fg"><label>Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Safety limit — stops the exam even if a student keeps missing questions" onchange="onAdaptiveModeChange()"></div>
             <div class="fg" id="ad-threshold-row"><label>Promotion Threshold (%)</label><input type="number" id="ad-threshold" value="50" min="1" max="100" title="Subject-Adaptive only: score at least this % of a subject's points to get trending-harder questions next subject"></div>
           </div>
           <p style="font-size:11px;color:var(--text2);margin-top:8px">Question Cap is a safety limit — it stops the exam even if a student keeps missing questions and would otherwise never reach the Total Points target. Promotion Threshold only applies to Subject-Adaptive mode.</p>
@@ -938,7 +938,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="ct">Section Timer <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— Subject-Sectioned / Subject-Adaptive only</span></div>
             <div class="fg" style="margin-bottom:10px;max-width:280px">
               <label>Timer Mode</label>
-              <select id="c-timer-mode">
+              <select id="c-timer-mode" onchange="updateDurationVisibility()">
                 <option value="overall">One overall timer for the whole exam</option>
                 <option value="per_subject">Separate timer per subject</option>
               </select>
@@ -2564,8 +2564,13 @@ function onQuizTypeChange(){
   var adaptiveCard = document.getElementById('adaptive-card');
   if (adaptiveCard) adaptiveCard.classList.toggle('hidden', t !== 'adaptive');
   updateSectionTimerVisibility();
+  // Subject allocation rows render differently for adaptive (checkbox +
+  // readiness) vs standard/jamb (count input) — re-fetch so the switch
+  // takes effect immediately if a class/week was already picked.
+  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
+  if (cid && wk) onWeekChange();
 }
-function onAdaptiveModeChange(){ updateSectionTimerVisibility(); }
+function onAdaptiveModeChange(){ updateSectionTimerVisibility(); var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if (cid && wk) onWeekChange(); }
 // Section-timer (order + per-subject duration) block is only meaningful for
 // Subject-Sectioned exams and Subject-Adaptive quizzes — Question-Adaptive
 // and Standard exams never use it.
@@ -2577,6 +2582,17 @@ function updateSectionTimerVisibility(){
   if (block) block.classList.toggle('hidden', !showTimer);
   var thresholdRow = document.getElementById('ad-threshold-row');
   if (thresholdRow) thresholdRow.style.display = (t === 'adaptive' && adMode === 'subject') ? '' : 'none';
+  updateDurationVisibility();
+}
+// Duration (min) only means anything under an overall timer — with a
+// per-subject timer, each subject's own "Min" field (in Question Allocation)
+// is what's actually used, so hide the single overall field to avoid confusion.
+function updateDurationVisibility(){
+  var block = document.getElementById('section-timer-block');
+  var timerMode = (document.getElementById('c-timer-mode')||{}).value || 'overall';
+  var perSubject = block && !block.classList.contains('hidden') && timerMode === 'per_subject';
+  var row = document.getElementById('overall-duration-row');
+  if (row) row.classList.toggle('hidden', !!perSubject);
 }
 function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); },100); }); }
 function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
@@ -2640,17 +2656,59 @@ function loadTopicOptions(cid,wk,weekMode){
 }
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
-function renderSubjAlloc(subjs,wk,weekMode){ if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode(); var tot=0,types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):''; var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk; document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){ var subjectName=e[0],available=e[1],suggested=Math.min(available,20); tot+=suggested; var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5); var subjAttr=subjectName.replace(/"/g,'&quot;'); return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+'</div></div><input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjAttr+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()">'+'<span style="font-size:10px;color:var(--text3);margin-left:8px">Order</span><input type="number" class="sorder" data-subject="'+subjAttr+'" value="'+(i+1)+'" min="1" title="Order this subject appears in (Subject-Sectioned / Subject-Adaptive only)" style="width:40px;margin-left:4px">'+'<span style="font-size:10px;color:var(--text3);margin-left:8px">Min</span><input type="number" class="sduration" data-subject="'+subjAttr+'" value="15" min="1" title="This subject\'s duration in minutes (only used with a per-subject timer)" style="width:44px;margin-left:4px">'+'</div>'; }).join(''); setText('tot-q',tot); }
+function renderSubjAlloc(subjs,wk,weekMode){
+  if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode();
+  var types=getSelectedTypes(); var typeLabel=types.length<3?' · '+types.join('+'):'';
+  var weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk;
+  var quizType=(document.getElementById('c-quiz-type')||{}).value||'standard';
+  var isAdaptive=quizType==='adaptive';
+  var adaptiveMode=(document.getElementById('ad-mode')||{}).value||'question';
+  var cap=parseInt((document.getElementById('ad-question-cap')||{}).value)||20;
+  var numSubjects=Object.keys(subjs).length||1;
+  var perSubjectMin=adaptiveMode==='subject'?Math.ceil(cap/numSubjects):cap;
+  var tot=0;
+  document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){
+    var subjectName=e[0], counts=e[1]||{available:0,easy:0,medium:0,hard:0};
+    var available=counts.available||0, suggested=Math.min(available,20);
+    var subjAttr=subjectName.replace(/"/g,'&quot;');
+    var breakdown='E:'+(counts.easy||0)+' M:'+(counts.medium||0)+' H:'+(counts.hard||0);
+    var orderDurationHtml='<span style="font-size:10px;color:var(--text3);margin-left:8px">Order</span>'
+      +'<input type="number" class="sorder" data-subject="'+subjAttr+'" value="'+(i+1)+'" min="1" title="Order this subject appears in (Subject-Sectioned / Subject-Adaptive only)" style="width:40px;margin-left:4px">'
+      +'<span style="font-size:10px;color:var(--text3);margin-left:8px">Min</span>'
+      +'<input type="number" class="sduration" data-subject="'+subjAttr+'" value="15" min="1" title="This subject\'s duration in minutes (only used with a per-subject timer)" style="width:44px;margin-left:4px">';
+    if(isAdaptive){
+      var ready=available>=perSubjectMin;
+      var readyBadge=ready
+        ? '<span style="color:var(--success)">&#10003; '+available+'/'+perSubjectMin+' needed</span>'
+        : '<span style="color:var(--danger)">&#10007; only '+available+' — needs '+perSubjectMin+'</span>';
+      return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+' · '+readyBadge+'</div></div>'
+        +'<label class="type-chk-label"><input type="checkbox" class="sadapt" data-subject="'+subjAttr+'" checked><span>Include</span></label>'
+        +orderDurationHtml+'</div>';
+    }
+    tot+=suggested;
+    var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5);
+    return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+'</div></div>'
+      +'<input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjAttr+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()">'
+      +orderDurationHtml+'</div>';
+  }).join('');
+  setText('tot-q', isAdaptive?'varies per student (adaptive)':tot);
+}
 function getSubjectOrder(){ var pairs=[]; document.querySelectorAll('.sorder').forEach(function(el){ pairs.push({subject:el.getAttribute('data-subject'),order:parseInt(el.value)||0}); }); pairs.sort(function(a,b){ return a.order-b.order; }); return pairs.map(function(p){ return p.subject; }); }
 function getPerSubjectDuration(){ var m={}; document.querySelectorAll('.sduration').forEach(function(el){ var s=el.getAttribute('data-subject'); if(s) m[s]=parseInt(el.value)||15; }); return m; }
 function updateTot(){ var t=0; document.querySelectorAll('.sinput').forEach(function(el){ t+=parseInt(el.value)||0; }); setText('tot-q',t); }
 function doCreate(){
   var title=(document.getElementById('c-title').value||'').trim(), code=(document.getElementById('c-code').value||'').trim().toUpperCase(), cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, dur=document.getElementById('c-dur').value, st=document.getElementById('c-start').value, en=document.getElementById('c-end').value;
   if(!title||!code||!cid||!wk||!st||!en){ toast('error','Fill all required fields'); return; }
-  var sc={}; document.querySelectorAll('.sinput').forEach(function(el){ var s=el.getAttribute('data-subject'),c=parseInt(el.value)||0; if(s&&c>0) sc[s]=c; });
-  if(!Object.keys(sc).length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
-  var rubric=collectRubricData(); if(!rubric){ return; }
   var quizType=(document.getElementById('c-quiz-type')||{}).value||'standard';
+  var sc={};
+  if(quizType==='adaptive'){
+    document.querySelectorAll('.sadapt:checked').forEach(function(el){ var s=el.getAttribute('data-subject'); if(s) sc[s]=1; });
+    if(!Object.keys(sc).length){ toast('error','Include at least 1 subject'); return; }
+  } else {
+    document.querySelectorAll('.sinput').forEach(function(el){ var s=el.getAttribute('data-subject'),c=parseInt(el.value)||0; if(s&&c>0) sc[s]=c; });
+    if(!Object.keys(sc).length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
+  }
+  var rubric=collectRubricData(); if(!rubric){ return; }
   var diffLevels=[];
   if(quizType==='adaptive'){ document.querySelectorAll('.diff-chk:checked').forEach(function(cb){ diffLevels.push(cb.value); }); }
   spin(true,'Creating quiz…');
