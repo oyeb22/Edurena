@@ -1,4 +1,4 @@
-<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
+﻿<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
      RESTORED: per-week exclude checkboxes (excluded-weeks-block, renderExcludedWeeksUI, getExcludedWeeks)
      KEPT:     M-gamepad logo, sidebar mini-stats (Active quizzes / Today's attempts / Avg score), densified tables
      API:      sends excludedWeeks[] to getSubjectsForWeek + createQuiz (backend v5.5 code.gs handles this) -->
@@ -248,9 +248,11 @@ body:not(.dark) .mob-av { color: #ffc144; background: rgba(245,166,35,0.2); bord
 .content { padding: 18px 20px; flex: 1; width: 100%; }
 .tp { display: none; } .tp.on { display: block; }
 
-/* CARDS */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
-.ct { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; font-family: var(--font-head); }
+/* CARDS — v5.8: real depth (soft shadow, not just a border) + more breathing
+   room, so a page of stacked cards reads as designed rather than templated. */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(113,74,35,0.05), 0 1px 2px rgba(113,74,35,0.04); transition: box-shadow .2s ease; }
+body.dark .card { box-shadow: 0 2px 10px rgba(0,0,0,0.18), 0 1px 2px rgba(0,0,0,0.12); }
+.ct { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 14px; font-family: var(--font-head); }
 
 /* STATS */
 .sgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -281,10 +283,10 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .bb  { background: var(--accent-bg);  color: var(--accent-text); }
 
 /* BUTTONS */
-.btn { padding: 5px 11px; border: 1px solid var(--border2); border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 500; font-family: var(--font); transition: all .12s; white-space: nowrap; background: var(--surface); color: var(--text); touch-action: manipulation; }
-.btn:hover { background: var(--surface2); }
-.btn-p { background: var(--text); color: var(--bg); border-color: var(--text); }
-.btn-p:hover { opacity: .85; background: var(--text); }
+.btn { padding: 6px 12px; border: 1px solid var(--border2); border-radius: var(--r-sm); cursor: pointer; font-size: 12px; font-weight: 600; font-family: var(--font); transition: all .15s ease; white-space: nowrap; background: var(--surface); color: var(--text); touch-action: manipulation; }
+.btn:hover { background: var(--surface2); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(113,74,35,0.10); }
+.btn-p { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 8px rgba(113,74,35,0.25); }
+.btn-p:hover { opacity: .92; background: var(--accent); box-shadow: 0 6px 16px rgba(113,74,35,0.32); }
 .btn-d { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
 .btn-d:hover { background: #fee2e2; }
 .btn-ok { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
@@ -629,8 +631,8 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
 .t-act-group { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
 
 /* ── Button quick create (topbar) ── */
-.btn-qc { display: flex; align-items: center; gap: 5px; padding: 5px 11px; background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: var(--r-sm); cursor: pointer; font-size: 11.5px; font-weight: 500; font-family: var(--font); transition: opacity .12s; white-space: nowrap; }
-.btn-qc:hover { opacity: .82; }
+.btn-qc { display: flex; align-items: center; gap: 5px; padding: 6px 13px; background: var(--accent); color: #fff; border: 1px solid var(--accent); border-radius: var(--r-sm); cursor: pointer; font-size: 11.5px; font-weight: 600; font-family: var(--font); transition: all .15s ease; white-space: nowrap; box-shadow: 0 2px 8px rgba(113,74,35,0.25); }
+.btn-qc:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(113,74,35,0.3); }
   </style>
 </head>
 <body>
@@ -910,23 +912,21 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
               <option value="subject">Subject-Adaptive — each subject's questions get easier/harder based on performance in that subject (free navigation within a subject, locked once you move on)</option>
             </select>
           </div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Difficulty levels eligible for this quiz. The engine starts every student at Medium and adjusts from there.</p>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Every student starts at Medium and moves up or down from there.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px">
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="easy" checked><span>Easy</span></label>
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="medium" checked><span>Medium</span></label>
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="hard" checked><span>Hard</span></label>
-            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="" checked><span>Unset (include questions with no difficulty tag)</span></label>
+            <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="" checked><span>Untagged</span></label>
           </div>
-          <p style="font-size:11px;color:var(--text2);margin-bottom:14px">Questions with no difficulty tag are treated as "unset" and are included by default — if your question bank isn't fully tagged yet, unchecking this would silently leave the adaptive pool empty.</p>
           <div class="fgrid">
             <div class="fg"><label>Points — Easy</label><input type="number" id="ad-pts-easy" value="1" min="1"></div>
             <div class="fg"><label>Points — Medium</label><input type="number" id="ad-pts-medium" value="2" min="1"></div>
             <div class="fg"><label>Points — Hard</label><input type="number" id="ad-pts-hard" value="3" min="1"></div>
-            <div class="fg"><label>Total Points (quiz target)</label><input type="number" id="ad-total-points" value="100" min="1"></div>
-            <div class="fg"><label>Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Safety limit — stops the exam even if a student keeps missing questions" onchange="onAdaptiveModeChange()"></div>
-            <div class="fg" id="ad-threshold-row"><label>Promotion Threshold (%)</label><input type="number" id="ad-threshold" value="50" min="1" max="100" title="Subject-Adaptive only: score at least this % of a subject's points to get trending-harder questions next subject"></div>
+            <div class="fg"><label>Total Points</label><input type="number" id="ad-total-points" value="100" min="1"></div>
+            <div class="fg"><label>Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Stops the exam once this many questions have been asked" onchange="onAdaptiveModeChange()"></div>
+            <div class="fg" id="ad-threshold-row"><label>Promotion Threshold %</label><input type="number" id="ad-threshold" value="50" min="1" max="100" title="Score above this to get harder questions in the next subject"></div>
           </div>
-          <p style="font-size:11px;color:var(--text2);margin-top:8px">Question Cap is a safety limit — it stops the exam even if a student keeps missing questions and would otherwise never reach the Total Points target. Promotion Threshold only applies to Subject-Adaptive mode.</p>
         </div>
         <div class="card">
           <div class="ct">Exam Instructions <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— optional</span></div>

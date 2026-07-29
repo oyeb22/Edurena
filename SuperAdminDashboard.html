@@ -28,19 +28,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Super Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#080c14; --surf:#0e1321; --surf2:#161c2d; --surf3:#1c2338;
-      --bdr:#242b3d; --bdr2:#2c3550;
-      --acc:#f5a623; --acc2:#ffc144; --acc-glow:rgba(245,166,35,0.18);
-      --grn:#29c98a; --grn-glow:rgba(41,201,138,0.14);
-      --red:#f0645a; --red-glow:rgba(240,100,90,0.14);
-      --yel:#f5c026; --yel-glow:rgba(245,192,38,0.14);
-      --pur:#a78bfa; --pur-glow:rgba(167,139,250,0.14);
-      --txt:#edf0f7; --txt2:#8b93ad; --muted:#4d566e;
-      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
-      --r:12px; --rs:8px;
+      /* v5.8: cream/amber palette — matches TeacherDashboard/SchoolAdminDashboard,
+         so the whole admin suite reads as one product. */
+      --bg:#fff8f6; --surf:#ffffff; --surf2:#faebe4; --surf3:#f4e5df;
+      --bdr:rgba(113,74,35,0.10); --bdr2:rgba(113,74,35,0.20);
+      --acc:#714a23; --acc2:#8a6236; --acc-glow:rgba(113,74,35,0.12);
+      --grn:#166534; --grn-glow:#f0fdf4;
+      --red:#991b1b; --red-glow:#fef2f2;
+      --yel:#92400e; --yel-glow:#fffbeb;
+      --pur:#4c1d95; --pur-glow:#f5f3ff;
+      --txt:#211a16; --txt2:#50453b; --muted:#82756a;
+      --font:'Hanken Grotesk',system-ui,sans-serif; --font-head:'Manrope','Hanken Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+      --r:14px; --rs:10px;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;}
@@ -97,8 +99,8 @@
     .content{padding:20px 22px;flex:1;}
     .tp{display:none;} .tp.on{display:block;}
 
-    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:12px;}
-    .ct{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;}
+    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(113,74,35,0.05),0 1px 2px rgba(113,74,35,0.04);}
+    .ct{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;font-family:var(--font-head);}
     .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
     .sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;cursor:default;transition:border-color .15s;}
     .sc.clickable{cursor:pointer;}
@@ -139,8 +141,9 @@
     .tog::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;}
     .tog.on::after{left:18px;}
 
-    .btn{padding:7px 13px;border:none;border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);transition:all .15s;white-space:nowrap;}
-    .btn-p{background:var(--acc);color:#fff;} .btn-p:hover{background:#2d5fe0;}
+    .btn{padding:7px 13px;border:none;border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);transition:all .15s ease;white-space:nowrap;}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(113,74,35,0.10);}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 8px rgba(113,74,35,0.25);} .btn-p:hover{background:var(--acc);opacity:.92;box-shadow:0 6px 16px rgba(113,74,35,0.32);}
     .btn-d{background:var(--red-glow);color:var(--red);border:1px solid rgba(240,100,90,.25);} .btn-d:hover{background:rgba(240,100,90,.24);}
     .btn-g{background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);} .btn-g:hover{border-color:var(--acc);color:var(--acc2);}
     .btn-ok{background:var(--grn-glow);color:var(--grn);border:1px solid rgba(41,201,138,.25);} .btn-ok:hover{background:rgba(41,201,138,.22);}
@@ -1338,7 +1341,7 @@ function renderPlanChart() {
         borderColor: '#161c2d', borderWidth: 2
       }]
     },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ color:'#8b93ad', font:{size:11} } } } }
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ color:'#50453b', font:{size:11} } } } }
   });
 }
 
