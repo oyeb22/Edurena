@@ -1,4 +1,4 @@
-﻿<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
+<!-- Edurena TeacherDashboard v5.5 — 2026-06-10
      RESTORED: per-week exclude checkboxes (excluded-weeks-block, renderExcludedWeeksUI, getExcludedWeeks)
      KEPT:     M-gamepad logo, sidebar mini-stats (Active quizzes / Today's attempts / Avg score), densified tables
      API:      sends excludedWeeks[] to getSubjectsForWeek + createQuiz (backend v5.5 code.gs handles this) -->
@@ -29,6 +29,10 @@
   <meta charset="UTF-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <script src="edurena-dash.js"></script>
+  <!-- SheetJS — writes a real .xlsx with column widths, so the question
+       template can't visually run one column into the next regardless of
+       content length. Plain .csv has no way to carry column width at all. -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Teacher Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -1111,7 +1115,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                 <span style="font-size:11px;color:var(--text3);margin-left:6px">— all columns</span>
               </div>
               <button class="btn btn-sm" onclick="copyCSVFormat()">Copy Headers</button>
-              <button class="btn btn-sm" onclick="downloadCSVTemplate()">⬇ Download CSV Template</button>
+              <button class="btn btn-sm" onclick="downloadCSVTemplate()">⬇ Download Template (.xlsx)</button>
             </div>
             <code id="csv-format-display" style="display:block;font-size:10.5px;line-height:1.7;white-space:pre-wrap;word-break:break-all;cursor:pointer" onclick="copyCSVFormat()" title="Click to copy">subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id</code>
           </div>
@@ -1131,10 +1135,10 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           <div style="display:flex;gap:9px;flex-wrap:wrap">
             <div class="dz" onclick="document.getElementById('csv-file').click()" style="flex:1;min-width:140px">
               <div class="di">📄</div>
-              <div style="font-weight:500">Import CSV</div>
-              <div style="font-size:12px;color:var(--text2);margin-top:2px">Click or drag .csv file</div>
+              <div style="font-weight:500">Import CSV / Excel</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px">Click or drag a .csv or .xlsx file</div>
             </div>
-            <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="doImportCSV(event)">
+            <input type="file" id="csv-file" accept=".csv,.xlsx,.xls" style="display:none" onchange="doImportCSV(event)">
             <div class="dz" onclick="document.getElementById('json-file').click()" style="flex:1;min-width:140px">
               <div class="di">📦</div>
               <div style="font-weight:500">Import JSON File</div>
@@ -2585,12 +2589,22 @@ function insertQBSym(s){
 }
 function downloadCSVTemplate() {
   var cols=['subject','week','topic','difficulty','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','session','term','instruction_group','instruction_text','image_url','passage_id'];
-  // ponytail: quote every header token so long/comma-containing question text
-  // pasted into any column later can never look like it bled into the next
-  // one when opened in Excel/Sheets/Numbers.
-  var header=cols.map(function(c){ return '"'+c+'"'; }).join(',');
-  var blob=new Blob([header+'\n'],{type:'text/csv'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='edurena_question_template.csv'; a.click();
+  // A plain .csv has no way to carry column width, so long text in a cell
+  // always visually spills into the next column when it's empty — that's a
+  // spreadsheet-viewer behavior no amount of quoting can prevent. A real
+  // .xlsx with fixed widths + wrapped text is the only actual fix.
+  var ws = XLSX.utils.aoa_to_sheet([cols]);
+  var widths = { question:50, explanation:34, instruction_text:34 };
+  ws['!cols'] = cols.map(function(c){
+    if (widths[c]) return { wch: widths[c] };
+    if (c.indexOf('option_')===0) return { wch: c.indexOf('image')!==-1 ? 26 : 22 };
+    return { wch: 14 };
+  });
+  var wrap = { alignment: { wrapText: true, vertical: 'top' } };
+  Object.keys(ws).forEach(function(addr){ if(addr[0]!=='!') ws[addr].s = wrap; });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+  XLSX.writeFile(wb, 'edurena_question_template.xlsx', { cellStyles: true });
   toast('success','Template downloaded');
 }
 function copyCSVFormat() {
@@ -2602,8 +2616,47 @@ function copyJSONFormat() {
   navigator.clipboard.writeText(schema).then(function(){ toast('success','JSON schema copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=schema; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','JSON schema copied'); });
 }
 function _parseCSVLine(line){var res=[],cur='',inQ=false;for(var i=0;i<line.length;i++){var c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(c===','&&!inQ){res.push(cur);cur='';}else cur+=c;}res.push(cur);return res;}
-function doImportCSV(event){var file=event.target.files[0];if(!file)return;var cid=(document.getElementById('imp-class')||{}).value||'';if(!cid){toast('error','Select a class first');event.target.value='';return;}var reader=new FileReader();reader.onload=function(e){previewCSVImport(e.target.result,cid);};reader.readAsText(file);event.target.value='';}
-function previewCSVImport(csv,classId){var lines=csv.split(/\r?\n/).filter(function(l){return l.trim();});if(!lines.length){showImportStatus('CSV is empty','error');return;}var headers=_parseCSVLine(lines[0]).map(function(h){return h.trim().toLowerCase();});var miss=['question','correct_answer'].filter(function(r){return headers.indexOf(r)===-1;});if(miss.length){showImportStatus('CSV missing required columns: '+miss.join(', '),'error');return;}var valid=[],errs=[];for(var i=1;i<lines.length;i++){var cols=_parseCSVLine(lines[i]);var row={};headers.forEach(function(h,hi){row[h]=(cols[hi]||'').trim();});if(!row.question){errs.push('Row '+(i+1)+': missing question');continue;}if(!row.correct_answer){errs.push('Row '+(i+1)+': missing correct_answer');continue;}if(!row.type)row.type='MCQ';valid.push(row);}document.getElementById('csv-prev-errors').innerHTML=errs.length?'<div style="color:var(--warn);font-size:11.5px;margin-bottom:8px">'+errs.slice(0,4).map(esc).join('<br>')+(errs.length>4?'… and '+(errs.length-4)+' more':'')+'</div>':'';document.getElementById('csv-prev-count').textContent=valid.length+' question(s) ready'+(errs.length?' · '+errs.length+' skipped':'');document.getElementById('csv-prev-body').innerHTML=valid.slice(0,6).map(function(r,i){return '<tr><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+(i+1)+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.question)+'">'+esc(r.question.substring(0,60))+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+esc(r.type)+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+esc(r.correct_answer)+'</td></tr>';}).join('')+(valid.length>6?'<tr><td colspan="4" style="padding:5px 7px;text-align:center;color:var(--text2);font-size:11px">…and '+(valid.length-6)+' more</td></tr>':'');window._pendingCSV={questions:valid,classId:classId};document.getElementById('csv-prev-mo').classList.add('on');}
+function doImportCSV(event){
+  var file=event.target.files[0];if(!file)return;
+  var cid=(document.getElementById('imp-class')||{}).value||'';if(!cid){toast('error','Select a class first');event.target.value='';return;}
+  var isExcel=/\.xlsx?$/i.test(file.name);
+  var reader=new FileReader();
+  reader.onload=function(e){
+    if(isExcel){
+      var wb=XLSX.read(e.target.result,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(function(r){ return r.some(function(v){ return String(v||'').trim(); }); });
+      previewImportRowArrays(rows,cid);
+    } else {
+      var lines=e.target.result.split(/\r?\n/).filter(function(l){return l.trim();});
+      previewImportRowArrays(lines.map(_parseCSVLine),cid);
+    }
+  };
+  if(isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file);
+  event.target.value='';
+}
+// Shared by both the .csv and .xlsx import paths — rows[0] is the header
+// row, rows[1..] are data rows, both as plain arrays of cell values.
+function previewImportRowArrays(rows,classId){
+  if(!rows.length){showImportStatus('File is empty','error');return;}
+  var headers=rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+  var miss=['question','correct_answer'].filter(function(r){return headers.indexOf(r)===-1;});
+  if(miss.length){showImportStatus('File missing required columns: '+miss.join(', '),'error');return;}
+  var valid=[],errs=[];
+  for(var i=1;i<rows.length;i++){
+    var cols=rows[i];var row={};
+    headers.forEach(function(h,hi){row[h]=String(cols[hi]==null?'':cols[hi]).trim();});
+    if(!row.question){errs.push('Row '+(i+1)+': missing question');continue;}
+    if(!row.correct_answer){errs.push('Row '+(i+1)+': missing correct_answer');continue;}
+    if(!row.type)row.type='MCQ';
+    valid.push(row);
+  }
+  document.getElementById('csv-prev-errors').innerHTML=errs.length?'<div style="color:var(--warn);font-size:11.5px;margin-bottom:8px">'+errs.slice(0,4).map(esc).join('<br>')+(errs.length>4?'… and '+(errs.length-4)+' more':'')+'</div>':'';
+  document.getElementById('csv-prev-count').textContent=valid.length+' question(s) ready'+(errs.length?' · '+errs.length+' skipped':'');
+  document.getElementById('csv-prev-body').innerHTML=valid.slice(0,6).map(function(r,i){return '<tr><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+(i+1)+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.question)+'">'+esc(r.question.substring(0,60))+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+esc(r.type)+'</td><td style="padding:5px 7px;border:1px solid var(--border);font-size:11px">'+esc(r.correct_answer)+'</td></tr>';}).join('')+(valid.length>6?'<tr><td colspan="4" style="padding:5px 7px;text-align:center;color:var(--text2);font-size:11px">…and '+(valid.length-6)+' more</td></tr>':'');
+  window._pendingCSV={questions:valid,classId:classId};
+  document.getElementById('csv-prev-mo').classList.add('on');
+}
 function confirmCSVImport(){var p=window._pendingCSV;if(!p)return;closeMo('csv-prev-mo');showImportStatus('Importing '+p.questions.length+' question(s)…','info');call('importJSON',{classId:p.classId,questions:p.questions},function(d){showImportStatus(d.message||'Imported '+p.questions.length,'success');toast('success',d.message||'Import complete');loadQB();},function(er){showImportStatus('Import failed: '+er,'error');});window._pendingCSV=null;}
 function doStudentCSVImport(event){var file=event.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){previewStudentCSV(e.target.result);};reader.readAsText(file);event.target.value='';}
 function previewStudentCSV(csv){var lines=csv.split(/\r?\n/).filter(function(l){return l.trim();});if(!lines.length){toast('error','CSV is empty');return;}var headers=_parseCSVLine(lines[0]).map(function(h){return h.trim().toLowerCase();});var miss=['name','email'].filter(function(r){return headers.indexOf(r)===-1;});if(miss.length){toast('error','CSV missing columns: '+miss.join(', '));return;}var ovSchool=(document.getElementById('bulk-school')||{}).value||'',ovClass=(document.getElementById('bulk-class')||{}).value||'',existing=_allStudents.map(function(s){return s.email.toLowerCase();});var valid=[],errs=[];for(var i=1;i<lines.length;i++){var cols=_parseCSVLine(lines[i]);var row={};headers.forEach(function(h,hi){row[h]=(cols[hi]||'').trim();});var name=row.name||row['full name']||'',email=(row.email||row.admission||'').toLowerCase(),cls=ovClass||row.class||row.classname||'',school=ovSchool||row.school||'';if(!name){errs.push('Row '+(i+1)+': missing name');continue;}if(!email||email.length<2){errs.push('Row '+(i+1)+': missing email/ID');continue;}if(!cls){errs.push('Row '+(i+1)+': missing class');continue;}if(!school){errs.push('Row '+(i+1)+': missing school');continue;}valid.push({name:name,email:email,className:cls,school:school});}window._pendingStudentCSV=valid;var tbody=document.querySelector('#t-bulk-preview tbody');tbody.innerHTML=(errs.length?'<tr><td colspan="6" style="color:var(--warn);font-size:11.5px;padding:6px 9px">'+errs.slice(0,3).map(esc).join(' · ')+(errs.length>3?' … and '+(errs.length-3)+' more':'')+'</td></tr>':'')+valid.map(function(s,i){var isNew=existing.indexOf(s.email)===-1;return '<tr><td>'+(i+1)+'</td><td>'+esc(s.name)+'</td><td style="font-size:11.5px">'+esc(s.email)+'</td><td>'+esc(s.className)+'</td><td>'+esc(s.school)+'</td><td><span class="bdg '+(isNew?'bg':'by')+'">'+(isNew?'New':'Update')+'</span></td></tr>';}).join('');document.getElementById('bulk-preview').style.display='block';setText('bulk-preview-n','('+valid.length+' from CSV)');setText('bulk-preview-count',valid.length+' student(s) — click Register All to import');if(errs.length) toast('warn',errs.length+' row(s) skipped');}
@@ -2654,6 +2707,9 @@ function updateDurationVisibility(){
   var perSubject = block && !block.classList.contains('hidden') && timerMode === 'per_subject';
   var row = document.getElementById('overall-duration-row');
   if (row) row.classList.toggle('hidden', !!perSubject);
+  // Per-subject "Min" duration fields are the exact opposite of the overall
+  // duration row — only relevant with a per-subject timer, never both at once.
+  document.querySelectorAll('.sdur-wrap').forEach(function(el){ el.style.display = perSubject ? '' : 'none'; });
 }
 function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); },100); }); }
 function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
@@ -2772,10 +2828,13 @@ function renderSubjAlloc(subjs,wk,weekMode){
     var available=counts.available||0, suggested=Math.min(available,20);
     var subjAttr=subjectName.replace(/"/g,'&quot;');
     var breakdown='E:'+(counts.easy||0)+' M:'+(counts.medium||0)+' H:'+(counts.hard||0);
+    var durHidden=(document.getElementById('c-timer-mode')||{}).value!=='per_subject';
     var orderDurationHtml='<span style="font-size:10px;color:var(--text3);margin-left:8px">Order</span>'
       +'<input type="number" class="sorder" data-subject="'+subjAttr+'" value="'+(i+1)+'" min="1" title="Order this subject appears in (Subject-Sectioned / Subject-Adaptive only)" style="width:40px;margin-left:4px">'
+      +'<span class="sdur-wrap"'+(durHidden?' style="display:none"':'')+'>'
       +'<span style="font-size:10px;color:var(--text3);margin-left:8px">Min</span>'
-      +'<input type="number" class="sduration" data-subject="'+subjAttr+'" value="15" min="1" title="This subject\'s duration in minutes (only used with a per-subject timer)" style="width:44px;margin-left:4px">';
+      +'<input type="number" class="sduration" data-subject="'+subjAttr+'" value="15" min="1" title="This subject\'s duration in minutes — only used with a per-subject timer" style="width:44px;margin-left:4px">'
+      +'</span>';
     if(isAdaptive){
       var ready=available>=perSubjectMin;
       var readyBadge=ready
