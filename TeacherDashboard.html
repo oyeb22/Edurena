@@ -33,22 +33,22 @@
   <title>Edurena — Teacher Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
 :root {
-  --bg: #f5edd8;
-  --surface: #fdfaf2;
-  --surface2: #f0e4ca;
-  --surface3: #e5d4b0;
-  --border: rgba(160,100,20,0.13);
-  --border2: rgba(160,100,20,0.26);
-  --text: #1e0d00;
-  --text2: #7a4820;
-  --text3: #b08848;
-  --accent: #c97d00;
-  --accent-bg: rgba(245,166,35,0.13);
-  --accent-border: rgba(245,166,35,0.44);
-  --accent-text: #6b3200;
+  --bg: #fff8f6;
+  --surface: #ffffff;
+  --surface2: #faebe4;
+  --surface3: #f4e5df;
+  --border: rgba(113,74,35,0.10);
+  --border2: rgba(113,74,35,0.20);
+  --text: #211a16;
+  --text2: #50453b;
+  --text3: #82756a;
+  --accent: #714a23;
+  --accent-bg: rgba(113,74,35,0.10);
+  --accent-border: rgba(113,74,35,0.35);
+  --accent-text: #633f19;
   --success: #166534;
   --success-bg: #f0fdf4;
   --success-border: #86efac;
@@ -61,10 +61,11 @@
   --purple: #4c1d95;
   --purple-bg: #f5f3ff;
   --purple-border: #ddd6fe;
-  --font: 'Geist', system-ui, sans-serif;
+  --font: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-head: 'Manrope', 'Hanken Grotesk', system-ui, sans-serif;
   --mono: 'Geist Mono', monospace;
-  --r: 10px;
-  --r-sm: 7px;
+  --r: 14px;
+  --r-sm: 10px;
   --sb-w: 220px;
 }
 body.dark {
@@ -242,14 +243,14 @@ body:not(.dark) .mob-av { color: #ffc144; background: rgba(245,166,35,0.2); bord
 /* ── MAIN CONTENT ── */
 .main { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .topbar { padding: 11px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface); position: sticky; top: 0; z-index: 10; }
-.tb-title { font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+.tb-title { font-size: 14px; font-weight: 700; letter-spacing: -0.2px; font-family: var(--font-head); }
 .tb-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
 .content { padding: 18px 20px; flex: 1; width: 100%; }
 .tp { display: none; } .tp.on { display: block; }
 
 /* CARDS */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
-.ct { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; }
+.ct { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; font-family: var(--font-head); }
 
 /* STATS */
 .sgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -536,45 +537,46 @@ body.dark .inline-select { background: var(--surface2); border-color: var(--bord
    DASHBOARD ENHANCEMENTS v5.6
 ═══════════════════════════════════════════════════════════ */
 
-/* ── Enhanced stat cards ── */
+/* ── Enhanced stat cards (v5.7 — matches the Stitch cream/amber dashboard) ── */
 .sc {
   position: relative; overflow: hidden;
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s;
+  display: flex; flex-direction: column; gap: 14px;
+  border-radius: 22px !important; padding: 20px !important;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .15s;
   cursor: default;
 }
-.sc::before {
-  content: '';
-  position: absolute; top: 0; left: 0;
-  width: 3px; height: 100%;
-  background: var(--accent);
-  border-radius: 2px 0 0 2px;
-}
-.sc:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.07); border-color: var(--border2); }
-body.dark .sc:hover { box-shadow: 0 6px 20px rgba(0,0,0,.22); }
-.sc.sc-g::before { background: var(--success); }
-.sc.sc-p::before { background: var(--purple); }
-.sc.sc-b::before { background: #3b82f6; }
-.sc-ico { position: absolute; top: 10px; right: 11px; font-size: 17px; opacity: .18; user-select: none; }
+.sc::before { content: none; } /* replaced by .sc-ico-box below */
+.sc:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(113,74,35,.10); border-color: var(--border2); }
+body.dark .sc:hover { box-shadow: 0 12px 28px rgba(0,0,0,.25); }
+.sc-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.sc-ico-box { width: 42px; height: 42px; border-radius: 14px; background: var(--accent-bg); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 19px; }
+.sc.sc-g .sc-ico-box { background: var(--success-bg); color: var(--success); }
+.sc.sc-p .sc-ico-box { background: var(--purple-bg); color: var(--purple); }
+.sc.sc-b .sc-ico-box { background: rgba(59,130,246,.12); color: #3b82f6; }
+.sc .sv { font-size: 26px; font-weight: 800; font-family: var(--font-head); line-height: 1; }
+.sc .sl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); }
+.sc-ico { display: none; } /* legacy corner icon, superseded by .sc-ico-box */
 .sc-delta { font-size: 9.5px; font-family: var(--mono); color: var(--text3); margin-top: 3px; }
 
-/* ── Welcome banner ── */
+/* ── Welcome banner — big gradient hero, matches the mockup's greeting card ── */
 .ovw-banner {
+  position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  background: linear-gradient(120deg, var(--surface) 50%, var(--accent-bg) 100%);
-  border: 1px solid var(--accent-border); border-radius: var(--r);
-  padding: 14px 18px; margin-bottom: 10px;
+  background: linear-gradient(120deg, var(--accent) 0%, #8a6236 100%);
+  border: none; border-radius: 28px;
+  padding: 28px 32px; margin-bottom: 10px;
+  box-shadow: 0 16px 36px rgba(113,74,35,.22);
 }
-.ovw-greeting { font-size: 14.5px; font-weight: 600; letter-spacing: -0.2px; }
-.ovw-sub { font-size: 11.5px; color: var(--text2); margin-top: 2px; }
-.ovw-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
-body:not(.dark) .ovw-banner { background: linear-gradient(120deg, #fff9ef 40%, rgba(245,166,35,.07) 100%); }
-body.dark .ovw-badge { background: rgba(35,209,139,.12); border-color: rgba(35,209,139,.25); color: #23d18b; }
+.ovw-greeting { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; color: #fff; font-family: var(--font-head); }
+.ovw-sub { font-size: 12.5px; color: rgba(255,255,255,.82); margin-top: 4px; }
+.ovw-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3); color: #fff; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.ovw-banner::after { content:''; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.08); pointer-events:none; }
 
 /* ── Quick actions ── */
 .qact-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 10px; }
 .qact-btn {
-  display: flex; align-items: center; gap: 9px; padding: 10px 13px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  display: flex; align-items: center; gap: 9px; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
   cursor: pointer; font-family: var(--font); text-align: left;
   transition: all .15s ease; color: var(--text2);
 }
@@ -751,10 +753,10 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
 
         <!-- Stat cards -->
         <div class="sgrid">
-          <div class="sc sc-b"><span class="sc-ico">📋</span><div class="sv" id="s-tot">—</div><div class="sl">Total Quizzes</div></div>
-          <div class="sc sc-g"><span class="sc-ico">⚡</span><div class="sv" id="s-act">—</div><div class="sl">Active Now</div></div>
-          <div class="sc sc-p"><span class="sc-ico">🏫</span><div class="sv" id="s-cls">—</div><div class="sl">My Classes</div></div>
-          <div class="sc">    <span class="sc-ico">❓</span><div class="sv" id="s-qs">—</div><div class="sl">Questions</div></div>
+          <div class="sc sc-b"><div class="sc-top"><span class="sc-ico-box">📋</span></div><div class="sv" id="s-tot">—</div><div class="sl">Total Quizzes</div></div>
+          <div class="sc sc-g"><div class="sc-top"><span class="sc-ico-box">⚡</span></div><div class="sv" id="s-act">—</div><div class="sl">Active Now</div></div>
+          <div class="sc sc-p"><div class="sc-top"><span class="sc-ico-box">🏫</span></div><div class="sv" id="s-cls">—</div><div class="sl">My Classes</div></div>
+          <div class="sc"><div class="sc-top"><span class="sc-ico-box">❓</span></div><div class="sv" id="s-qs">—</div><div class="sl">Questions</div></div>
         </div>
 
         <!-- Quick actions -->
@@ -821,9 +823,27 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg" id="overall-duration-row"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
           <div class="fgrid" style="margin-top:10px">
-            <div class="fg"><label>Topic (optional)</label><input type="text" id="c-topic" list="topic-list" placeholder="e.g. Algebra, Photosynthesis…" oninput="onWeekChange()"><datalist id="topic-list"></datalist></div>
+            <div class="fg"><label>Topics</label><div class="td" style="font-size:11.5px;margin-top:6px;color:var(--text2)">Pick a class &amp; week to list topics available in that range, below.</div></div>
             <div class="fg"><label>Session (optional)</label><input type="text" id="c-session" list="session-list" placeholder="e.g. 2024/2025"><datalist id="session-list"><option value="2024/2025"><option value="2025/2026"></datalist></div>
             <div class="fg"><label>Term (optional)</label><input type="text" id="c-term" list="term-list" placeholder="e.g. First Term"><datalist id="term-list"><option value="First Term"><option value="Second Term"><option value="Third Term"></datalist></div>
+          </div>
+          <!-- Topics available for the picked class + week range — load up
+               like the excluded-weeks checkboxes below; all included by
+               default, uncheck to exclude. Empty (no topics tagged yet)
+               just stays hidden, nothing breaks. -->
+          <div id="topic-checks-block" style="display:none;margin-top:10px;padding:12px;background:var(--surface2);border-radius:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+              <div>
+                <div class="tl" style="font-size:13px">Include / exclude topics</div>
+                <div class="td" style="font-size:11.5px;margin-top:2px">Uncheck topics you want to leave out of this quiz</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button type="button" class="btn btn-sm" onclick="topicChecksAll(true)">All</button>
+                <button type="button" class="btn btn-sm" onclick="topicChecksAll(false)">None</button>
+              </div>
+            </div>
+            <div id="topic-checks-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow-y:auto"></div>
+            <div id="topic-checks-summary" style="font-size:11px;color:var(--text2);margin-top:8px"></div>
           </div>
           <div id="week-mode-row" style="display:none;margin-top:10px">
             <div class="tr-row">
@@ -2686,14 +2706,53 @@ function updateExclWeeksSummary(){
   else { summary.innerHTML='<strong style="color:var(--warn)">Excluding:</strong> '+excl.map(function(w){return 'Week '+w;}).join(', '); }
 }
 function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
-function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); var filterTopic=(document.getElementById('c-topic')||{}).value||''; call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks,topic:filterTopic},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); loadTopicOptions(cid,wk,weekMode); }
-// Populates the #c-topic datalist. Empty result (no topics tagged yet) just
-// leaves the datalist empty — the field keeps working as plain free-text.
+function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); var excludedTopics=getExcludedTopics(); call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks,excludedTopics:excludedTopics},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); loadTopicOptions(cid,wk,weekMode); }
+// Populates the topic include/exclude checkboxes. Empty result (no topics
+// tagged yet) just hides the block — nothing breaks, no filter applied.
 function loadTopicOptions(cid,wk,weekMode){
-  var dl=document.getElementById('topic-list'); if(!dl) return;
   call('getTopicsForSubject',{classId:cid,week:wk,weekMode:weekMode},function(topics){
-    dl.innerHTML=(topics||[]).map(function(t){ return '<option value="'+esc(t)+'">'; }).join('');
-  },function(){ /* silent — free-text still works */ });
+    renderTopicChecksUI(topics||[]);
+  },function(){ renderTopicChecksUI([]); /* silent — quiz creation just proceeds with no topic filter */ });
+}
+// Topics available for the picked class+week range, checkbox-per-topic —
+// same include/exclude-by-unchecking pattern as excluded-weeks. Preserves
+// checked state across re-renders (e.g. week/subject change) same as weeks.
+function renderTopicChecksUI(topics){
+  var block=document.getElementById('topic-checks-block'); if(!block) return;
+  if(!topics.length){ block.style.display='none'; return; }
+  var list=document.getElementById('topic-checks-list');
+  var existing={};
+  list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ existing[cb.value]=cb.checked; });
+  list.innerHTML=topics.map(function(t){
+    var checked=(existing[t]!==false); // default checked
+    return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;user-select:none">'
+      +'<input type="checkbox" value="'+esc(t)+'" '+(checked?'checked':'')+' onchange="topicCheckToggle()" style="margin:0;cursor:pointer;accent-color:var(--accent)">'
+      +esc(t)+'</label>';
+  }).join('');
+  block.style.display='block';
+  updateTopicChecksSummary();
+}
+function getExcludedTopics(){
+  var out=[];
+  document.querySelectorAll('#topic-checks-list input[type="checkbox"]').forEach(function(cb){ if(!cb.checked) out.push(cb.value); });
+  return out;
+}
+function topicChecksAll(checked){
+  document.querySelectorAll('#topic-checks-list input[type="checkbox"]').forEach(function(cb){ cb.checked=!!checked; });
+  topicCheckToggle();
+}
+function updateTopicChecksSummary(){
+  var summary=document.getElementById('topic-checks-summary'); if(!summary) return;
+  var excl=getExcludedTopics();
+  if(!excl.length){ summary.textContent='All topics included.'; summary.style.color='var(--text2)'; }
+  else { summary.innerHTML='<strong style="color:var(--warn)">Excluding:</strong> '+excl.map(esc).join(', '); }
+}
+// Re-fetches the subject/count preview so excluding a topic is reflected
+// immediately in each subject's available count — same as toggling a week.
+function topicCheckToggle(){
+  updateTopicChecksSummary();
+  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
+  if(cid&&wk) onWeekChange();
 }
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
@@ -2769,7 +2828,7 @@ function doCreate(){
     excludedWeeks:       getExcludedWeeks(),
     session:             document.getElementById('c-session').value,
     term:                document.getElementById('c-term').value,
-    topic:               (document.getElementById('c-topic')||{}).value||'',
+    excludedTopics:      getExcludedTopics(),
     quizType:            quizType,
     difficultyLevels:    diffLevels.length ? diffLevels : null,
     faceDetection:       document.getElementById('tog-face').classList.contains('on'),
@@ -2816,7 +2875,8 @@ function resetCreate(){
   var pp=document.getElementById('passage-preview'); if(pp) pp.style.display='none';
   _selectedPassageId=''; resetRubricRanges();
   var qt=document.getElementById('c-quiz-type'); if(qt) qt.value='standard';
-  var tp=document.getElementById('c-topic'); if(tp) tp.value='';
+  var tcb=document.getElementById('topic-checks-block'); if(tcb) tcb.style.display='none';
+  var tcl=document.getElementById('topic-checks-list'); if(tcl) tcl.innerHTML='';
   document.querySelectorAll('.diff-chk').forEach(function(cb){ cb.checked=true; });
   var ac=document.getElementById('adaptive-card'); if(ac) ac.classList.add('hidden');
   var td=document.getElementById('c-type-desc'); if(td) td.textContent=_QUIZ_TYPE_DESC['standard']||'';
