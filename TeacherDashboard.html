@@ -2616,7 +2616,7 @@ function insertQBSym(s){
   el.focus();
 }
 function downloadCSVTemplate() {
-  var cols=['subject','week','topic','difficulty','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','session','term','instruction_group','instruction_text','image_url','passage_id'];
+  var cols=['subject','week','topic','difficulty','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','expected_items','explanation','session','term','instruction_group','instruction_text','image_url','passage_id'];
   // A plain .csv has no way to carry column width, so long text in a cell
   // always visually spills into the next column when it's empty — that's a
   // spreadsheet-viewer behavior no amount of quoting can prevent. A real
@@ -2636,7 +2636,7 @@ function downloadCSVTemplate() {
   toast('success','Template downloaded');
 }
 function copyCSVFormat() {
-  var h='subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
+  var h='subject,week,topic,difficulty,type,question,option_A,option_B,option_C,option_D,option_A_image,option_B_image,option_C_image,option_D_image,correct_answer,points,expected_items,explanation,session,term,instruction_group,instruction_text,image_url,passage_id';
   navigator.clipboard.writeText(h).then(function(){ toast('success','CSV headers copied'); }).catch(function(){ var ta=document.createElement('textarea'); ta.value=h; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('success','CSV headers copied'); });
 }
 function copyJSONFormat() {
