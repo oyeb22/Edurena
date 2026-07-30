@@ -819,7 +819,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         </div>
         <div class="card hidden" id="question-source-card">
           <div class="ct">Question Source</div>
-          <div class="fgrid c3" style="margin-bottom:0">
+          <div class="fgrid" style="margin-bottom:0">
             <div class="fg"><label>Source</label>
               <select id="c-question-source" onchange="onQuestionSourceChange()">
                 <option value="school">My School's Bank</option>
@@ -835,15 +835,6 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                 <option value="Basic5">Basic 5</option><option value="Basic6">Basic 6</option>
                 <option value="JSS1">JSS 1</option><option value="JSS2">JSS 2</option><option value="JSS3">JSS 3</option>
                 <option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option>
-              </select>
-            </div>
-            <div class="fg" id="edu-exam-board-wrap" style="display:none">
-              <label>Exam Board (optional)</label>
-              <select id="c-exam-board" onchange="onEduBankChange()">
-                <option value="">Any</option>
-                <option value="JAMB">JAMB</option><option value="WAEC">WAEC</option>
-                <option value="NECO">NECO</option><option value="SAT">SAT</option>
-                <option value="General">General</option>
               </select>
             </div>
           </div>
@@ -2801,12 +2792,12 @@ function updateExclWeeksSummary(){
 function toggleWeekMode(){ var tog=document.getElementById('tog-week-mode'); if(tog) tog.classList.toggle('on'); var desc=document.getElementById('week-mode-desc'); var isCum=tog&&tog.classList.contains('on'); if(desc) desc.textContent=isCum?'Include questions from all weeks up to and including the selected week':'Only include questions from the selected week'; var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display=isCum?'block':'none'; var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
 function onWeekChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, types=getSelectedTypes(), weekMode=getWeekMode(); document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); var modeRow=document.getElementById('week-mode-row'); if(modeRow) modeRow.style.display=wk?'block':'none'; if(!cid||!wk) return; document.getElementById('subj-card').classList.remove('hidden'); if(S.role==='admin'||S.role==='superadmin') document.getElementById('passage-card').classList.remove('hidden'); document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>'; var hint=document.getElementById('type-hint'); if(hint) hint.textContent=types.length<3?'(filtered: '+types.join(', ')+')':''; /* v5.3: rebuild excluded-weeks checkboxes for the new target week */ if(weekMode==='cumulative'){ renderExcludedWeeksUI(wk); var exclBlk=document.getElementById('excluded-weeks-block'); if(exclBlk) exclBlk.style.display='block'; } else { var exclBlk2=document.getElementById('excluded-weeks-block'); if(exclBlk2) exclBlk2.style.display='none'; } var excludedWeeks=getExcludedWeeks(); var excludedTopics=getExcludedTopics(); call('getSubjectsForWeek',{classId:cid,week:wk,questionTypes:types,weekMode:weekMode,excludedWeeks:excludedWeeks,excludedTopics:excludedTopics},function(subjs){ if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No questions found with selected filters.</p>'; setText('tot-q',0); return; } renderSubjAlloc(subjs,wk,weekMode); }); if(S.role==='admin'||S.role==='superadmin') loadAvailablePassages(cid,wk); loadTopicOptions(cid,wk,weekMode); }
 // Switches Basic Info between the school's own week-paced bank and the
-// Edurena Question Bank (class-level + exam-board, no week concept).
+// Edurena Question Bank (class-level only — curriculum topics are
+// determined by class level, not by exam board, so no week concept here).
 function onQuestionSourceChange(){
   var isEdu=(document.getElementById('c-question-source')||{}).value==='edurena';
   var weekWrap=document.getElementById('c-week-wrap'); if(weekWrap) weekWrap.style.display=isEdu?'none':'';
   document.getElementById('edu-class-level-wrap').style.display=isEdu?'':'none';
-  document.getElementById('edu-exam-board-wrap').style.display=isEdu?'':'none';
   document.getElementById('subj-card').classList.add('hidden');
   document.getElementById('passage-card').classList.add('hidden');
   var tcb=document.getElementById('topic-checks-block'); if(tcb) tcb.style.display='none';
@@ -2814,20 +2805,21 @@ function onQuestionSourceChange(){
   else { var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
 }
 // Edurena Question Bank equivalent of onWeekChange() — same subj-list/topic
-// UI, fed by class-level+exam-board instead of class-id+week.
+// UI, fed by class-level instead of class-id+week (topics/curriculum are
+// determined by class level, not by exam board — see the Question Source
+// card, exam board was dropped as a dimension for this reason).
 function onEduBankChange(){
   var classLevel=(document.getElementById('c-class-level')||{}).value||'';
-  var examBoard=(document.getElementById('c-exam-board')||{}).value||'';
   document.getElementById('passage-card').classList.add('hidden'); // passages are school-authored only
   if(!classLevel){ document.getElementById('subj-card').classList.add('hidden'); return; }
   document.getElementById('subj-card').classList.remove('hidden');
   document.getElementById('subj-list').innerHTML='<p style="color:var(--text2);font-size:13px;padding:12px 0;text-align:center">Loading…</p>';
   var types=getSelectedTypes();
-  call('getSubjectsForClassLevel',{classLevel:classLevel,examBoard:examBoard,questionTypes:types},function(subjs){
+  call('getSubjectsForClassLevel',{classLevel:classLevel,questionTypes:types},function(subjs){
     if(!subjs||!Object.keys(subjs).length){ document.getElementById('subj-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:12px 0">No Edurena Question Bank questions found for this class level yet.</p>'; setText('tot-q',0); return; }
     renderSubjAlloc(subjs,'','single');
   });
-  call('getTopicsForClassLevel',{classLevel:classLevel,examBoard:examBoard},function(topics){ renderTopicChecksUI(topics||[]); },function(){ renderTopicChecksUI([]); });
+  call('getTopicsForClassLevel',{classLevel:classLevel},function(topics){ renderTopicChecksUI(topics||[]); },function(){ renderTopicChecksUI([]); });
 }
 // Populates the topic include/exclude checkboxes. Empty result (no topics
 // tagged yet) just hides the block — nothing breaks, no filter applied.
@@ -2884,8 +2876,7 @@ function renderSubjAlloc(subjs,wk,weekMode){
   var weekLabel;
   if(isEduSource){
     var cl=(document.getElementById('c-class-level')||{}).value||'';
-    var eb=(document.getElementById('c-exam-board')||{}).value||'';
-    weekLabel='Edurena Question Bank'+(cl?' · '+cl:'')+(eb?' · '+eb:'');
+    weekLabel='Edurena Question Bank'+(cl?' · '+cl:'');
   } else {
     if(!wk) wk=document.getElementById('c-week').value; if(!weekMode) weekMode=getWeekMode();
     weekLabel=weekMode==='single'?'Week '+wk+' only':'Weeks 1–'+wk;
@@ -2933,7 +2924,6 @@ function doCreate(){
   var title=(document.getElementById('c-title').value||'').trim(), code=(document.getElementById('c-code').value||'').trim().toUpperCase(), cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, dur=document.getElementById('c-dur').value, st=document.getElementById('c-start').value, en=document.getElementById('c-end').value;
   var questionSource=(document.getElementById('c-question-source')||{}).value||'school';
   var classLevel=(document.getElementById('c-class-level')||{}).value||'';
-  var examBoard=(document.getElementById('c-exam-board')||{}).value||'';
   if(!title||!code||!cid||!st||!en){ toast('error','Fill all required fields'); return; }
   if(questionSource==='edurena'){ if(!classLevel){ toast('error','Select a class level'); return; } }
   else if(!wk){ toast('error','Fill all required fields'); return; }
@@ -2958,7 +2948,6 @@ function doCreate(){
     week:                wk,
     questionSource:      questionSource,
     classLevel:          classLevel,
-    examBoard:           examBoard,
     subjectCounts:       sc,
     subjectOrder:        getSubjectOrder(),
     duration:            dur,
@@ -3018,9 +3007,7 @@ function resetCreate(){
   var qt=document.getElementById('c-quiz-type'); if(qt) qt.value='standard';
   var qs=document.getElementById('c-question-source'); if(qs) qs.value='school';
   var ecl=document.getElementById('c-class-level'); if(ecl) ecl.value='';
-  var eeb=document.getElementById('c-exam-board'); if(eeb) eeb.value='';
   var eclw=document.getElementById('edu-class-level-wrap'); if(eclw) eclw.style.display='none';
-  var eebw=document.getElementById('edu-exam-board-wrap'); if(eebw) eebw.style.display='none';
   var weekWrap=document.getElementById('c-week-wrap'); if(weekWrap) weekWrap.style.display='';
   var tcb=document.getElementById('topic-checks-block'); if(tcb) tcb.style.display='none';
   var tcl=document.getElementById('topic-checks-list'); if(tcl) tcl.innerHTML='';

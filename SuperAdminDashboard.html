@@ -564,17 +564,8 @@
                 <option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option>
               </select>
             </div>
-            <div style="flex:1;min-width:140px">
-              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Exam Board (optional)</label>
-              <select id="eb-exam-board" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none">
-                <option value="">Any</option>
-                <option value="JAMB">JAMB</option><option value="WAEC">WAEC</option>
-                <option value="NECO">NECO</option><option value="SAT">SAT</option>
-                <option value="General">General</option>
-              </select>
-            </div>
           </div>
-          <p style="font-size:11px;color:var(--txt2);margin-top:8px">Applies to the whole batch below — paste one class level/exam board at a time.</p>
+          <p style="font-size:11px;color:var(--txt2);margin-top:8px">Applies to the whole batch below — paste one class level at a time.</p>
         </div>
 
         <div class="card">
@@ -1893,8 +1884,7 @@ function ebValidate() {
       '</tr>';
   }).join('');
   document.getElementById('eb-preview-summary').textContent =
-    parsed.length + ' question(s), all tagged ' + classLevel +
-    (document.getElementById('eb-exam-board').value ? ' · ' + document.getElementById('eb-exam-board').value : '') + '.';
+    parsed.length + ' question(s), all tagged ' + classLevel + '.';
   previewCard.style.display = 'block';
 
   ebValidatedData = parsed;
@@ -1911,7 +1901,6 @@ function ebCommit() {
   call('importJSON', {
     scope: 'global',
     classLevel: document.getElementById('eb-class-level').value,
-    examBoard:  document.getElementById('eb-exam-board').value,
     questions:  ebValidatedData
   }, function(d) {
     commitBtn.textContent = '✅ Commit to Database';
