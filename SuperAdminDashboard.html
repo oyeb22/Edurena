@@ -256,6 +256,7 @@
       <button class="ni"    onclick="navTo('pricing',this)"><span class="ico">₦</span>Pricing</button>
       <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
       <button class="ni"    onclick="navTo('questionbank',this)"><span class="ico">📚</span>Question Bank</button>
+      <button class="ni"    onclick="navTo('edurenabank',this)"><span class="ico">🎓</span>Edurena Bank</button>
       <button class="ni"    onclick="navTo('competitions',this)"><span class="ico">🏆</span>Competitions</button>
       <div class="nsec">Account</div>
       <button class="ni"    onclick="navTo('security',this)"><span class="ico">🔒</span>Security</button>
@@ -536,6 +537,83 @@
             <table id="cal-table">
               <thead><tr><th>Date</th><th>Day</th><th>Theme</th></tr></thead>
               <tbody><tr class="er"><td colspan="3">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDURENA QUESTION BANK (global, syllabus-aligned — separate from
+           the Challenge Mode bank above, different schema entirely) -->
+      <div class="tp" id="tp-edurenabank">
+        <div class="sh"><h2>Edurena Question Bank</h2></div>
+        <div class="info-box">
+          <strong>How this works:</strong> Questions here are shared across every school, tagged by class level and (optionally) exam board. Hidden from Create Quiz until you flip <code>EDURENA_BANK_ENABLED</code> on in the Apps Script editor. Paste a JSON batch, validate, then commit — same flow as the Challenge Mode bank above.
+        </div>
+
+        <div class="card">
+          <div class="ct">Batch Settings</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Class Level *</label>
+              <select id="eb-class-level" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none">
+                <option value="">— Select —</option>
+                <option value="Basic1">Basic 1</option><option value="Basic2">Basic 2</option>
+                <option value="Basic3">Basic 3</option><option value="Basic4">Basic 4</option>
+                <option value="Basic5">Basic 5</option><option value="Basic6">Basic 6</option>
+                <option value="JSS1">JSS 1</option><option value="JSS2">JSS 2</option><option value="JSS3">JSS 3</option>
+                <option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:140px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Exam Board (optional)</label>
+              <select id="eb-exam-board" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none">
+                <option value="">Any</option>
+                <option value="JAMB">JAMB</option><option value="WAEC">WAEC</option>
+                <option value="NECO">NECO</option><option value="SAT">SAT</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--txt2);margin-top:8px">Applies to the whole batch below — paste one class level/exam board at a time.</p>
+        </div>
+
+        <div class="card">
+          <div class="ct">Paste Questions (JSON)</div>
+          <textarea id="eb-paste"
+            style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
+                   background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
+                   border-radius:8px;padding:12px;resize:vertical"
+            placeholder='[ { "subject": "Mathematics", "topic": "Algebra", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "Option B", "points": 1, "explanation": "..." } ]'></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-g btn-sm" onclick="ebValidate()">🔍 Validate &amp; Preview</button>
+            <button class="btn btn-p btn-sm" id="eb-commit-btn" onclick="ebCommit()" disabled>✅ Commit to Database</button>
+            <button class="btn btn-g btn-sm" onclick="ebClear()">🗑 Clear</button>
+          </div>
+        </div>
+
+        <div class="card" id="eb-preview-card" style="display:none">
+          <div class="ct">Preview</div>
+          <div id="eb-preview-summary" style="margin-bottom:12px;font-size:13px;color:var(--txt2)"></div>
+          <div class="tw">
+            <table id="eb-preview-table">
+              <thead><tr><th>#</th><th>Subject</th><th>Topic</th><th>Difficulty</th><th>Question</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="eb-result-card" style="display:none">
+          <div class="ct">Import Result</div>
+          <div id="eb-result-summary" style="font-size:13px;color:var(--txt2)"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Flagged Questions</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 12px;line-height:1.6">Questions a student flagged as wrong while taking an Edurena-Bank-sourced quiz. Resolve once fixed (or dismissed).</p>
+          <div class="tw">
+            <table id="eb-flags-table">
+              <thead><tr><th>Question ID</th><th>Exam Code</th><th>Reason</th><th>Flagged</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1046,6 +1124,7 @@ var tabTitles = {
   pricing:  ['Pricing', 'Per-student pricing — changes apply immediately'],
   settings: ['Global Settings', 'Platform configuration'],
   questionbank: ['Question Bank', 'Import drafted questions into the parent/child question bank'],
+  edurenabank: ['Edurena Question Bank', 'Curated academic bank — Basic1 to SS3, JAMB/WAEC/NECO/SAT — hidden from schools until enabled'],
   security: ['Account Security', 'Change your password']
 };
 
@@ -1063,6 +1142,7 @@ function navTo(name, el) {
   if (name === 'security')     loadSecurity();
   if (name === 'questionbank') loadThemes();
   if (name === 'competitions') loadCompetitions();
+  if (name === 'edurenabank')  loadFlaggedQuestions();
 }
 
 // ── OVERVIEW ────────────────────────────────────────────────────
@@ -1765,6 +1845,119 @@ function qbClear() {
   document.getElementById('qb-result-card').style.display = 'none';
   qbValidatedData = null;
   document.getElementById('qb-commit-btn').disabled = true;
+}
+
+// ── EDURENA QUESTION BANK (global, syllabus-aligned) ───────────
+var ebValidatedData = null;
+function ebValidate() {
+  var raw = document.getElementById('eb-paste').value.trim();
+  var classLevel = document.getElementById('eb-class-level').value;
+  var previewCard = document.getElementById('eb-preview-card');
+  var resultCard  = document.getElementById('eb-result-card');
+  var commitBtn   = document.getElementById('eb-commit-btn');
+
+  resultCard.style.display = 'none';
+  ebValidatedData = null;
+  commitBtn.disabled = true;
+
+  if (!classLevel) { alert('Select a class level first.'); return; }
+  if (!raw) { alert('Paste a JSON batch first.'); return; }
+
+  var parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) { alert('Invalid JSON: ' + e.message); return; }
+  if (!Array.isArray(parsed)) { alert('Expected a JSON array of question objects.'); return; }
+
+  var requiredFields = ['subject', 'question', 'correct_answer'];
+  var errors = [];
+  parsed.forEach(function(q, i) {
+    requiredFields.forEach(function(field) {
+      if (!q[field]) errors.push('Row ' + (i + 1) + ': missing "' + field + '"');
+    });
+  });
+  if (errors.length) {
+    alert('Validation errors found:\n\n' + errors.slice(0, 10).join('\n') +
+          (errors.length > 10 ? '\n...and ' + (errors.length - 10) + ' more' : ''));
+    return;
+  }
+
+  var tbody = document.querySelector('#eb-preview-table tbody');
+  tbody.innerHTML = parsed.map(function(q, i) {
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escH(q.subject || '') + '</td>' +
+      '<td>' + escH(q.topic || '—') + '</td>' +
+      '<td>' + escH(q.difficulty || '—') + '</td>' +
+      '<td style="max-width:280px">' + escH(q.question) + '</td>' +
+      '<td><span style="color:var(--grn)">✓ Ready</span></td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('eb-preview-summary').textContent =
+    parsed.length + ' question(s), all tagged ' + classLevel +
+    (document.getElementById('eb-exam-board').value ? ' · ' + document.getElementById('eb-exam-board').value : '') + '.';
+  previewCard.style.display = 'block';
+
+  ebValidatedData = parsed;
+  commitBtn.disabled = false;
+}
+function ebCommit() {
+  if (!ebValidatedData || !ebValidatedData.length) { alert('Validate a batch first.'); return; }
+  if (!confirm('Insert ' + ebValidatedData.length + ' questions into the Edurena Question Bank?')) return;
+
+  var commitBtn = document.getElementById('eb-commit-btn');
+  commitBtn.disabled = true;
+  commitBtn.textContent = 'Importing…';
+
+  call('importJSON', {
+    scope: 'global',
+    classLevel: document.getElementById('eb-class-level').value,
+    examBoard:  document.getElementById('eb-exam-board').value,
+    questions:  ebValidatedData
+  }, function(d) {
+    commitBtn.textContent = '✅ Commit to Database';
+    var resultCard = document.getElementById('eb-result-card');
+    var resultSummary = document.getElementById('eb-result-summary');
+    resultSummary.innerHTML = '<strong style="color:var(--grn)">' + (d.message || 'Import complete.') + '</strong>';
+    ebValidatedData = null;
+    document.getElementById('eb-paste').value = '';
+    document.getElementById('eb-preview-card').style.display = 'none';
+    resultCard.style.display = 'block';
+  }, function(er) {
+    commitBtn.textContent = '✅ Commit to Database';
+    commitBtn.disabled = false;
+  });
+}
+function ebClear() {
+  document.getElementById('eb-paste').value = '';
+  document.getElementById('eb-preview-card').style.display = 'none';
+  document.getElementById('eb-result-card').style.display = 'none';
+  ebValidatedData = null;
+  document.getElementById('eb-commit-btn').disabled = true;
+}
+
+// ── FLAGGED QUESTIONS ───────────────────────────────────────────
+function loadFlaggedQuestions() {
+  var tb = document.querySelector('#eb-flags-table tbody'); if (!tb) return;
+  call('getFlaggedQuestions', {}, function(rows) {
+    if (!rows || !rows.length) {
+      tb.innerHTML = '<tr class="er"><td colspan="5">No flagged questions — nothing to review.</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function(r) {
+      return '<tr>' +
+        '<td style="font-family:var(--mono);font-size:11.5px">' + escH(r.question_id) + '</td>' +
+        '<td style="font-family:var(--mono);font-size:11.5px">' + escH(r.exam_code) + '</td>' +
+        '<td style="max-width:260px">' + escH(r.reason || '—') + '</td>' +
+        '<td style="font-size:11.5px;color:var(--txt2)">' + new Date(r.created_at).toLocaleDateString() + '</td>' +
+        '<td><button class="btn btn-g btn-sm" onclick="resolveFlag(' + r.id + ')">Resolve</button></td>' +
+        '</tr>';
+    }).join('');
+  }, function() {
+    tb.innerHTML = '<tr class="er"><td colspan="5">Failed to load flagged questions.</td></tr>';
+  });
+}
+function resolveFlag(flagId) {
+  call('resolveQuestionFlag', { flagId: flagId }, function() { loadFlaggedQuestions(); });
 }
 
 // ── CHALLENGE MODE THEMES ──────────────────────────────────────

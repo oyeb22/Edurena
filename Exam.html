@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -628,6 +628,7 @@
       <span id="progressText">Question 0 of 0</span>
       <div class="q-count-right">
         <button class="flag-btn" id="flagBtn" onclick="toggleFlag()" title="Flag this question for review">🚩 Flag</button>
+        <button class="flag-btn hidden" id="reportBtn" onclick="reportQuestion()" title="Report a problem with this question">⚠ Report Issue</button>
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="answeredCount">0 answered</span>
       </div>
     </div>
@@ -2045,6 +2046,24 @@ function updateFlagBtn(){
   var isFlagged=!!flagged[q.id];
   btn.textContent=isFlagged?'🚩 Flagged':'🚩 Flag';
   btn.classList.toggle('flagged',isFlagged);
+  var reportBtn=document.getElementById('reportBtn');
+  if(reportBtn) reportBtn.classList.toggle('hidden', !(quizMeta&&quizMeta.questionSource==='edurena'));
+}
+// Reports a bad Edurena-Question-Bank question for superadmin review — a
+// content-quality flag, distinct from the personal "revisit later" flag above.
+function reportQuestion(){
+  var q=questions[qIndex]; if(!q)return;
+  var reason=prompt('What\'s wrong with this question? (optional)')||'';
+  post('flagQuestion',{
+    questionId:       q.id,
+    examCode:         student.examCode,
+    studentEmail:     student.email,
+    reason:           reason,
+    examSessionToken: examSessionToken
+  }, function(e,r){
+    if(!e&&r&&r.status==='success') alert('Reported — thank you.');
+    else alert('Could not report right now.');
+  });
 }
 
 // ================================================================

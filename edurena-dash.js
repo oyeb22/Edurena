@@ -76,6 +76,7 @@
   var _examPageUrl     = '';
   var _kahootPageUrl   = '';
   var _racePageUrl     = '';
+  var _edurenaBankEnabled = false;
   var _resolveReady;
   var _ready = new Promise(function(res) { _resolveReady = res; });
 
@@ -96,13 +97,15 @@
         if (d.examPageUrl)      _examPageUrl     = d.examPageUrl;
         if (d.kahootPageUrl)    _kahootPageUrl   = d.kahootPageUrl;
         if (d.racePageUrl)      _racePageUrl     = d.racePageUrl;
+        _edurenaBankEnabled = !!d.edurenaBankEnabled;
         _resolveReady({
           scriptUrl:       _scriptUrl,
           superadminEmail: _superadminEmail,
           supportEmail:    _supportEmail,
           examPageUrl:     _examPageUrl,
           kahootPageUrl:   _kahootPageUrl,
-          racePageUrl:     _racePageUrl
+          racePageUrl:     _racePageUrl,
+          edurenaBankEnabled: _edurenaBankEnabled
         });
       })
       .catch(function() {
@@ -196,6 +199,7 @@
     get examPageUrl()     { return _examPageUrl; },
     get kahootPageUrl()   { return _kahootPageUrl; },
     get racePageUrl()     { return _racePageUrl; },
+    get edurenaBankEnabled() { return _edurenaBankEnabled; },
     get params()          { return _params; },
     ready:    _ready,
     post:     _post,
