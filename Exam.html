@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -446,6 +446,11 @@
               style="width:100%;padding:11px;background:transparent;color:#94a3b8;border:1px solid #2e3248;border-radius:10px;
                      font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;">
         📋 Copy Recovery Data for Teacher
+      </button>
+      <button id="subDismissBtn" onclick="dismissStuckSubmission()"
+              style="width:100%;padding:9px;background:transparent;color:#7c85a2;border:none;
+                     font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:10px;text-decoration:underline;">
+        Discard this and start a new exam
       </button>
     </div>
   </div>
@@ -1512,10 +1517,48 @@ function copyRecoveryData(){
   });
 }
 
+// Manual escape hatch on the recovery card — a student should never be
+// permanently stuck behind a submission that won't deliver (e.g. for an
+// exam that's since expired). Discards the queued entry and returns to
+// the normal pre-exam screen underneath, same as if nothing was pending.
+function dismissStuckSubmission(){
+  subqueue.clear();
+  var banner = document.getElementById('subResumeBanner'); if (banner) banner.classList.remove('on');
+  hideSubmitProgress();
+}
+
 // ── Page-load resume hook (runs from DOMContentLoaded boot) ────
 function checkPendingSubmission(){
   var entry = subqueue.get();
   if (!entry) return false;
+
+  // A submission that failed to deliver used to sit in localStorage forever
+  // (only the success path cleared it) — meaning ONE bad submission would
+  // block every future exam attempt on this device/browser indefinitely,
+  // since this function runs on every page load. Anything old enough that
+  // it can't plausibly still be a legitimate in-progress recovery (24h) is
+  // auto-cleared instead of blocking a brand new, unrelated exam attempt.
+  var STALE_MS = 24 * 60 * 60 * 1000;
+  if (!entry.savedAt || (Date.now() - entry.savedAt) > STALE_MS) {
+    subqueue.clear();
+    return false;
+  }
+
+  // Shared-device / CBT-lab safeguard: only show the resume takeover if
+  // THIS page load's ?email=&code= (set by WebApp.html's launch link, or a
+  // returning student re-opening the same link) actually matches whose
+  // submission this is. A different student sitting down at the same
+  // browser for a different exam must never see — or be blocked by —
+  // someone else's stuck data. Not cleared in this case (just not shown):
+  // the original student can still recover it by reopening their own link,
+  // and it still expires naturally via the 24h check above.
+  var urlEmail = String(PARAMS.email || '').trim().toLowerCase();
+  var urlCode  = String(PARAMS.code  || '').trim().toUpperCase();
+  var entryEmail = String(entry.studentEmail || '').trim().toLowerCase();
+  var entryCode  = String(entry.examCode || '').trim().toUpperCase();
+  if ((urlEmail && urlEmail !== entryEmail) || (urlCode && urlCode !== entryCode)) {
+    return false;
+  }
 
   // There's an orphaned submission from a previous session.
   // Show the banner + overlay immediately so the user knows we're working.
