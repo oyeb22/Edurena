@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /Pricing.html
+Allow: /Help.html
+Allow: /legal/
+
+# Nothing below here has any value being indexed — these are all
+# authenticated dashboards, exam-code-gated pages, or live-game sessions
+# that only make sense with a specific link/session, not as a search result.
+Disallow: /TeacherLogin.html
+Disallow: /TeacherDashboard.html
+Disallow: /SchoolAdminDashboard.html
+Disallow: /SuperAdminDashboard.html
+Disallow: /WebApp.html
+Disallow: /Exam.html
+Disallow: /LiveHost.html
+Disallow: /LiveQuiz.html
+Disallow: /Kahoot.html
+Disallow: /Race.html
+Disallow: /RaceHost.html
+Disallow: /Puzzle.html
+Disallow: /PuzzleHost.html
+Disallow: /WhackAMole.html
+Disallow: /TowerDefense.html
+Disallow: /TowerDefenseHost.html
+Disallow: /PenaltyShootout.html
+Disallow: /PenaltyShootoutHost.html
+Disallow: /ChallengeMode.html
+Disallow: /CompetitionMode.html
+
+Sitemap: https://edurena.online/sitemap.xml

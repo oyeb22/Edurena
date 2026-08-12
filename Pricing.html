@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -26,6 +26,14 @@
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Plans & Pricing</title>
+  <meta name="description" content="One price per student, every feature included — AI-proctored exams, live quiz games, and adaptive testing. See Edurena's pricing for schools.">
+  <link rel="canonical" href="https://edurena.online/Pricing.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Edurena">
+  <meta property="og:title" content="Edurena — Plans & Pricing">
+  <meta property="og:description" content="One price per student, every feature included — AI-proctored exams, live quiz games, and adaptive testing.">
+  <meta property="og:url" content="https://edurena.online/Pricing.html">
+  <meta property="og:image" content="https://edurena.online/assets/edurena_logo_512.png">
   <script src="edurena-dash.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -297,7 +305,7 @@ Object.defineProperty(window, 'SCRIPT_URL', { get: function() { return DASH.scri
 Object.defineProperty(window, 'GS_URL',     { get: function() { return DASH.scriptUrl; } });
 
 /* ── PAYSTACK ── replace with your live key when going live ── */
-var PAYSTACK_PK = 'pk_live_64238bbebfdb5267005c96b667af3cbce68be87a';
+var PAYSTACK_PK = 'pk_test_REPLACE_WITH_YOUR_TEST_PUBLIC_KEY';
 
 /* ── Handle Paystack redirect-back (new checkout UI redirects to callback URL) ──
    Paystack appends ?reference=XXX&trxref=XXX after payment.
@@ -625,6 +633,10 @@ function doCheckout() {
     } catch(_) {}
 
     // 2. Open Paystack inline popup — charges the server-calculated amount
+    if (typeof PaystackPop === 'undefined') {
+      errEl.textContent = 'Payment processor failed to load. Please disable any ad blocker and refresh the page, then try again.';
+      return;
+    }
     var handler = PaystackPop.setup({
       key:      PAYSTACK_PK,
       email:    email,
@@ -654,10 +666,17 @@ function doCheckout() {
     });
     handler.openIframe();
   })
-  .catch(function() {
+  .catch(function(e) {
     btn.disabled = false;
     btn.innerHTML = '🔒 Pay with Paystack';
-    errEl.textContent = 'Network error. Please try again.';
+    var msg = (e && e.message) || '';
+    if (msg.toLowerCase().indexOf('failed to fetch') !== -1 || msg.toLowerCase().indexOf('networkerror') !== -1) {
+      errEl.textContent = 'Could not reach the server. Check your internet connection and try again.';
+    } else if (msg.toLowerCase().indexOf('paystackpop') !== -1) {
+      errEl.textContent = 'Payment processor failed to load. Disable any ad blocker, refresh the page, and try again.';
+    } else {
+      errEl.textContent = 'Something went wrong. Please refresh the page and try again.';
+    }
   });
 }
 
