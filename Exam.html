@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -894,24 +894,30 @@ function stopNoSleepFallback() {
     _noSleepVideo = null;
   }
 }
+function _sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 async function getQuizDataDirect(examCode) {
-  try {
-    // Fetch from GAS (which now caches in CacheService — still fast)
-    // Direct Supabase read of quiz questions isn't done here because
-    // the QuizData sheet holds the shuffled/finalised question set.
-    // GAS caches it so only the first student triggers a sheet read.
-    var result = await new Promise(function(resolve, reject) {
-      post('getQuizData', { examCode: examCode, shuffle: true }, function(e, r) {
-        if (e) return reject(e);
-        if (!r || r.status !== 'success') return reject(new Error((r && r.message) || 'Failed'));
-        resolve(r.data.questions || []);
+  // A single transient hiccup (GAS returning a non-JSON error page under
+  // load, a dropped connection) used to end the exam before it started —
+  // "Failed to load questions: Unexpected token..." with no way forward.
+  // Retries a couple of times before actually giving up.
+  var lastErr = null;
+  for (var attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) { console.warn('[getQuizDataDirect] retry '+attempt, lastErr && lastErr.message); await _sleep(1500); }
+    try {
+      var result = await new Promise(function(resolve, reject) {
+        post('getQuizData', { examCode: examCode, shuffle: true }, function(e, r) {
+          if (e) return reject(e);
+          if (!r || r.status !== 'success') return reject(new Error((r && r.message) || 'Failed'));
+          resolve(r.data.questions || []);
+        });
       });
-    });
-    return result;
-  } catch(e) {
-    console.error('[getQuizDataDirect]', e.message);
-    throw e;
+      return result;
+    } catch(e) {
+      lastErr = e;
+      console.error('[getQuizDataDirect] attempt '+(attempt+1)+' failed:', e.message);
+    }
   }
+  throw lastErr;
 }
 async function validateExamDirect(examCode, studentEmail) {
   try {
@@ -2020,7 +2026,9 @@ function startExam(){
     waitForVideoAndSnap();
     }).catch(function(e) {
     hideLoading();
-    alert('Failed to load questions: ' + e.message);
+    if (confirm('Failed to load questions after several tries: ' + e.message + '\n\nTry again?')) {
+      startExam();
+    }
   });
 }
 
@@ -2487,14 +2495,30 @@ function _adaptiveAdvance(){
   var q=questions[qIndex]; if(!q) return;
   var ans=String(answers[q.id]||'').trim();
   _adaptiveBusy=true;
-  var nextBtn=document.getElementById('nextBtn'); if(nextBtn) nextBtn.disabled=true;
+  var nextBtn=document.getElementById('nextBtn');
+  var origLabel=nextBtn?nextBtn.textContent:'';
+  // Disabling the button alone was correct but invisible — a slow (not
+  // stuck) request looked identical to a click that didn't register, so
+  // students clicked again. The text change makes "it's working" visible;
+  // the timeout is a real safety net so a truly hung request can't leave
+  // the button disabled forever with no way forward.
+  if(nextBtn){ nextBtn.disabled=true; nextBtn.textContent='Checking…'; }
+  var settled=false;
+  var timeoutId=setTimeout(function(){
+    if(settled) return; settled=true;
+    _adaptiveBusy=false;
+    if(nextBtn){ nextBtn.disabled=false; nextBtn.textContent=origLabel; }
+    alert('That took longer than expected. Please check your connection and try Next again.');
+  },15000);
   post('validateAdaptiveAnswer',{
     examCode:student.examCode, studentEmail:student.email, examSessionToken:examSessionToken,
     questionId:q.id, answer:ans, subject:q.subject||'', difficulty:q.difficulty||'medium',
     points:q.points||1, orderIndex:qIndex
   },function(err,res){
+    if(settled) return; // the 15s timeout already gave control back — ignore this late arrival
+    settled=true; clearTimeout(timeoutId);
     _adaptiveBusy=false;
-    if(nextBtn) nextBtn.disabled=false;
+    if(nextBtn){ nextBtn.disabled=false; nextBtn.textContent=origLabel; }
     var isCorrect = !err && res && res.status==='success' && res.data && res.data.isCorrect===true;
     if(quizMeta.adaptiveMode==='subject') _adaptiveSubjectAdvance(q,isCorrect);
     else _adaptiveQuestionAdvance(q,isCorrect);
@@ -2634,7 +2658,14 @@ function updateVioDisplay(){
 // ================================================================
 // SECURITY
 // ================================================================
+var _securitySetUp=false;
 function setupSecurity(){
+  // startExam() can now retry itself after a failed question-load (see the
+  // getQuizDataDirect retry/confirm above) — without this guard, a retry
+  // would attach every one of these listeners a second time, silently
+  // double-counting every future violation.
+  if(_securitySetUp) return;
+  _securitySetUp=true;
   document.addEventListener('visibilitychange',function(){
     if(examSubmitted)return;
     if(document.hidden){
