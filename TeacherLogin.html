@@ -8,19 +8,22 @@
   <title>Edurena — Sign In</title>
   <script src="edurena-dash.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5edd8;
-      --surface: #fdfaf2;
-      --border: rgba(160,100,20,0.14);
-      --border-focus: rgba(160,100,20,0.42);
-      --text: #1e0d00;
-      --text2: #7a4820;
-      --text3: #b08848;
-      --accent: #c97d00;
-      --accent-bg: rgba(245,166,35,0.12);
-      --accent-border: rgba(245,166,35,0.44);
+      /* v5.8: matches the TeacherDashboard/SchoolAdmin/SuperAdmin palette —
+         this is the first page a teacher sees, so it should look like the
+         same product as the dashboard behind it, not a different one. */
+      --bg: #fff8f6;
+      --surface: #ffffff;
+      --border: rgba(113,74,35,0.10);
+      --border-focus: rgba(113,74,35,0.35);
+      --text: #211a16;
+      --text2: #50453b;
+      --text3: #82756a;
+      --accent: #714a23;
+      --accent-bg: rgba(113,74,35,0.10);
+      --accent-border: rgba(113,74,35,0.35);
       --success: #166534;
       --success-bg: #f0fdf4;
       --success-border: #bbf7d0;
@@ -30,10 +33,11 @@
       --warn-bg: #fffbeb;
       --warn-border: #fde68a;
       --warn: #92400e;
-      --font: 'Geist', system-ui, sans-serif;
+      --font: 'Hanken Grotesk', system-ui, sans-serif;
+      --font-head: 'Manrope', 'Hanken Grotesk', system-ui, sans-serif;
       --mono: 'Geist Mono', monospace;
-      --r: 10px;
-      --r-sm: 7px;
+      --r: 14px;
+      --r-sm: 10px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -62,9 +66,10 @@
       margin-bottom: 14px;
     }
     .brand h1 {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.4px;
+      font-family: var(--font-head);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
       color: var(--text);
     }
     .brand p {
@@ -113,10 +118,11 @@
     .panel { display: none; padding: 24px; }
     .panel.on { display: block; }
     .panel-title {
-      font-size: 17px;
-      font-weight: 600;
+      font-family: var(--font-head);
+      font-size: 21px;
+      font-weight: 800;
       letter-spacing: -0.3px;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
     .panel-sub {
       font-size: 13px;
@@ -372,7 +378,7 @@
   </div>
 
   <div class="sa-link hidden" id="sa-link" style="margin-top:8px">
-    <a onclick="goSuperadmin()">👑 Founder Dashboard</a>
+    <a onclick="goSuperadmin()">Continue to Admin Console →</a>
   </div>
 </div>
 
@@ -402,9 +408,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   try {
     var stored = JSON.parse(localStorage.getItem('qf_teacher') || '{}');
-    if (stored.role === 'admin' || stored.role === 'superadmin') {
-      document.getElementById('sa-link').classList.remove('hidden');
-    }
+    // Only the superadmin's own email gets this shortcut — was previously
+    // any admin-tier account, which meant a hired staff member with plain
+    // "admin" access would see a link labeled "Founder Dashboard" pointing
+    // at the superadmin panel. This waits for DASH.ready so SUPERADMIN_EMAIL
+    // has the real value, not just its seeded default.
+    (window.DASH && DASH.ready ? DASH.ready : Promise.resolve()).then(function(){
+      var storedEmail = String(stored.email || '').trim().toLowerCase();
+      var saEmail = String(SUPERADMIN_EMAIL || '').trim().toLowerCase();
+      if (storedEmail && saEmail && storedEmail === saEmail) {
+        document.getElementById('sa-link').classList.remove('hidden');
+      }
+    });
   } catch(_) {}
 });
 
