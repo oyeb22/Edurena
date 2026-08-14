@@ -2061,15 +2061,43 @@ function _sectionTimeUp(){
   }
 
   if(quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode==='subject'){
-    var subjectTarget=(parseInt(quizMeta.adaptiveTotalPoints)||100)/(_adaptiveSubjects.length||1);
-    var promoted=subjectTarget>0&&(_adaptiveSubjectPointsEarned/subjectTarget*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
+    // A per-subject timer running out cuts the current block short (fewer
+    // than its full cap answered) — same block-conclusion logic as
+    // _adaptiveSubjectAdvance, just triggered by the clock instead of
+    // reaching the cap. Judged against the block's own achievable max, so
+    // an incomplete block is scored on what was actually earned, not
+    // artificially padded.
+    var tierPoints={
+      easy:   parseInt(quizMeta.adaptivePointsEasy)  ||1,
+      medium: parseInt(quizMeta.adaptivePointsMedium)||2,
+      hard:   parseInt(quizMeta.adaptivePointsHard)  ||3
+    };
+    var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
+    var cap=_adaptiveSubjectCaps[_adaptiveSubjectIdx]||1;
+    var blockMax=cap*tierPoints[_adaptiveSubjectTier];
+    var passed=blockMax>0 && (_adaptiveSubjectPointsEarned/blockMax*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
+    var curRank=rank[_adaptiveSubjectTier]!==undefined?rank[_adaptiveSubjectTier]:1;
+    var nextRank=passed?Math.min(2,curRank+1):Math.max(0,curRank-1);
+
     _adaptiveSubjectIdx++;
     if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(true); return; }
-    _adaptiveSubjectPointsServed=0; _adaptiveSubjectPointsEarned=0;
-    _adaptiveSubjectTrendHard=promoted;
+
+    var bestCaseRemaining=0;
+    for(var i=_adaptiveSubjectIdx;i<_adaptiveSubjects.length;i++){
+      bestCaseRemaining += (_adaptiveSubjectCaps[i]||0) * tierPoints.hard;
+    }
+    if(_adaptiveGrandTotalEarned+bestCaseRemaining < 0.5*_adaptiveSubjectTrueMax){
+      alert('Based on your answers so far, a passing score is no longer reachable — this exam has ended.');
+      doSubmit(true);
+      return;
+    }
+
+    _adaptiveSubjectTier=tiers[nextRank];
+    _adaptiveSubjectQServed=0;
+    _adaptiveSubjectPointsEarned=0;
     _sectionLockedBoundary=questions.length-1;
-    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],promoted,function(){
-      var next=_pickAdaptiveQuestion(promoted?'medium':'easy',_adaptiveSubjects[_adaptiveSubjectIdx]);
+    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],_adaptiveSubjectTier,function(){
+      var next=_pickAdaptiveQuestion(_adaptiveSubjectTier,_adaptiveSubjects[_adaptiveSubjectIdx]);
       if(!next){ doSubmit(true); return; }
       questions.push(next); qIndex++; renderDots(); renderQuestion();
     });
@@ -2412,9 +2440,12 @@ var _adaptiveBusy               = false;
 var _adaptiveTotalPointsServed  = 0;    // question-adaptive stopping condition
 var _adaptiveSubjects           = [];
 var _adaptiveSubjectIdx         = 0;
-var _adaptiveSubjectPointsServed = 0;
-var _adaptiveSubjectPointsEarned = 0;
-var _adaptiveSubjectTrendHard    = true; // first subject starts medium/trending
+var _adaptiveSubjectCaps        = [];   // fixed question cap per subject index, computed once in _initAdaptiveEngine
+var _adaptiveSubjectTier        = 'medium'; // current subject's single fixed difficulty tier
+var _adaptiveSubjectQServed     = 0;    // questions served so far within the current subject block
+var _adaptiveSubjectPointsEarned = 0;   // points earned so far within the current subject block (pass/fail %)
+var _adaptiveGrandTotalEarned    = 0;   // points earned across ALL subjects so far (early-termination check)
+var _adaptiveSubjectTrueMax      = 0;   // computed true max for this exam, for the early-termination check
 var _sectionLockedBoundary      = -1;   // subject-adaptive: can't navigate back past this qIndex
 
 // Returns true if the exam can proceed, false if it can't and the caller
@@ -2439,6 +2470,30 @@ function _initAdaptiveEngine(){
     }
     _adaptiveSubjects=subjs;
     _adaptiveSubjectIdx=0;
+
+    // Fixed per-subject question caps: every subject after the first is
+    // sized off the hard tier, so its cap never changes regardless of which
+    // tier it's actually served at — that's what differentiates a strong vs
+    // weak student (same question count everywhere, different point
+    // values), not question count. Subject 1 always starts medium, so it
+    // gets extra questions to close the gap that tier difference would
+    // otherwise leave, landing the derived true max at/near the configured
+    // adaptiveTotalPoints instead of falling short.
+    var pointsMedium=parseInt(quizMeta.adaptivePointsMedium)||2;
+    var pointsHard=parseInt(quizMeta.adaptivePointsHard)||3;
+    var totalPoints=parseInt(quizMeta.adaptiveTotalPoints)||100;
+    var numSubjects=_adaptiveSubjects.length||1;
+    var subjectBudget=totalPoints/numSubjects;
+    var otherCap=Math.max(1,Math.floor(subjectBudget/pointsHard));
+    var othersTotal=(numSubjects-1)*otherCap*pointsHard;
+    var subject1Cap=Math.max(1,Math.ceil((totalPoints-othersTotal)/pointsMedium));
+    _adaptiveSubjectCaps=_adaptiveSubjects.map(function(_,i){ return i===0?subject1Cap:otherCap; });
+    _adaptiveSubjectTrueMax=subject1Cap*pointsMedium+othersTotal;
+
+    _adaptiveSubjectTier='medium';
+    _adaptiveSubjectQServed=0;
+    _adaptiveSubjectPointsEarned=0;
+    _adaptiveGrandTotalEarned=0;
     first=_pickAdaptiveQuestion('medium',_adaptiveSubjects[0]);
   } else {
     first=_pickAdaptiveQuestion('medium',null);
@@ -2479,14 +2534,6 @@ function _pickAdaptiveQuestion(tier,subject){
   return null;
 }
 
-// Subject-adaptive draws a WEIGHTED tier (trending harder/easier), not a
-// strict per-question ladder — distinct from question-adaptive's 1-up-1-down.
-function _adaptiveWeightedTier(trendHard){
-  var r=Math.random();
-  if(trendHard) return r<0.40?'hard':r<0.85?'medium':'easy';
-  return r<0.55?'easy':r<0.90?'medium':'hard';
-}
-
 // Called instead of a plain array-advance when quizMeta.quizType==='adaptive'
 // (see nextQ()). Validates the current answer server-side (never exposes the
 // key), then branches to the question- or subject-adaptive advance logic.
@@ -2520,6 +2567,12 @@ function _adaptiveAdvance(){
     _adaptiveBusy=false;
     if(nextBtn){ nextBtn.disabled=false; nextBtn.textContent=origLabel; }
     var isCorrect = !err && res && res.status==='success' && res.data && res.data.isCorrect===true;
+    var mustEnd   = !err && res && res.data && res.data.mustEnd===true;
+    if(mustEnd){
+      alert('Based on your answers so far, a passing score is no longer reachable — this exam has ended.');
+      doSubmit(false);
+      return;
+    }
     if(quizMeta.adaptiveMode==='subject') _adaptiveSubjectAdvance(q,isCorrect);
     else _adaptiveQuestionAdvance(q,isCorrect);
   });
@@ -2539,44 +2592,61 @@ function _adaptiveQuestionAdvance(q,isCorrect){
 }
 
 function _adaptiveSubjectAdvance(q,isCorrect){
-  _adaptiveSubjectPointsServed+=(q.points||0);
-  if(isCorrect) _adaptiveSubjectPointsEarned+=(q.points||0);
-  var numSubjects=_adaptiveSubjects.length||1;
-  var subjectTarget=(parseInt(quizMeta.adaptiveTotalPoints)||100)/numSubjects;
-  var overallCap=parseInt(quizMeta.adaptiveQuestionCap)||20;
+  var tierPoints={
+    easy:   parseInt(quizMeta.adaptivePointsEasy)  ||1,
+    medium: parseInt(quizMeta.adaptivePointsMedium)||2,
+    hard:   parseInt(quizMeta.adaptivePointsHard)  ||3
+  };
+  _adaptiveSubjectQServed++;
+  if(isCorrect){
+    _adaptiveSubjectPointsEarned+=(q.points||0);
+    _adaptiveGrandTotalEarned+=(q.points||0);
+  }
 
-  if(questions.length>=overallCap){ doSubmit(false); return; }
-
-  if(_adaptiveSubjectPointsServed>=subjectTarget){
-    var promoted=subjectTarget>0 && (_adaptiveSubjectPointsEarned/subjectTarget*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
-    _adaptiveSubjectIdx++;
-    if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(false); return; }
-    _adaptiveSubjectPointsServed=0; _adaptiveSubjectPointsEarned=0;
-    _adaptiveSubjectTrendHard=promoted;
-    _sectionLockedBoundary=questions.length-1;
-    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],promoted,function(){
-      var next=_pickAdaptiveQuestion(promoted?'medium':'easy',_adaptiveSubjects[_adaptiveSubjectIdx]);
-      if(!next){ doSubmit(false); return; }
-      questions.push(next); qIndex++; renderDots(); renderQuestion();
-    });
+  var cap=_adaptiveSubjectCaps[_adaptiveSubjectIdx]||1;
+  if(_adaptiveSubjectQServed<cap){
+    // Still mid-block — next question at the same fixed tier.
+    var mid=_pickAdaptiveQuestion(_adaptiveSubjectTier,_adaptiveSubjects[_adaptiveSubjectIdx]);
+    if(!mid){ doSubmit(false); return; }
+    questions.push(mid); qIndex++; renderDots(); renderQuestion();
     return;
   }
 
-  var subject=_adaptiveSubjects[_adaptiveSubjectIdx];
-  var next=_pickAdaptiveQuestion(_adaptiveWeightedTier(_adaptiveSubjectTrendHard),subject);
-  if(!next){ // pool exhausted for this subject — end the block early, same as reaching the point target
-    _adaptiveSubjectIdx++;
-    if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(false); return; }
-    _adaptiveSubjectPointsServed=0; _adaptiveSubjectPointsEarned=0;
-    _sectionLockedBoundary=questions.length-1;
-    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],_adaptiveSubjectTrendHard,function(){
-      var n2=_pickAdaptiveQuestion('medium',_adaptiveSubjects[_adaptiveSubjectIdx]);
-      if(!n2){ doSubmit(false); return; }
-      questions.push(n2); qIndex++; renderDots(); renderQuestion();
-    });
+  // Block finished — pass/fail is judged against THIS block's own
+  // achievable max (not the fixed fair-share budget), so a student who
+  // dropped to easy can still climb back up rather than being permanently
+  // locked out.
+  var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
+  var blockMax=cap*tierPoints[_adaptiveSubjectTier];
+  var passed=blockMax>0 && (_adaptiveSubjectPointsEarned/blockMax*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
+  var curRank=rank[_adaptiveSubjectTier]!==undefined?rank[_adaptiveSubjectTier]:1;
+  var nextRank=passed?Math.min(2,curRank+1):Math.max(0,curRank-1);
+
+  _adaptiveSubjectIdx++;
+  if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(false); return; }
+
+  // Early termination: even if every remaining subject is passed and stays
+  // at hard from here on, can a passing score (50% of true max) still be
+  // reached? If not, end the exam now instead of grinding through the rest.
+  var bestCaseRemaining=0;
+  for(var i=_adaptiveSubjectIdx;i<_adaptiveSubjects.length;i++){
+    bestCaseRemaining += (_adaptiveSubjectCaps[i]||0) * tierPoints.hard;
+  }
+  if(_adaptiveGrandTotalEarned+bestCaseRemaining < 0.5*_adaptiveSubjectTrueMax){
+    alert('Based on your answers so far, a passing score is no longer reachable — this exam has ended.');
+    doSubmit(false);
     return;
   }
-  questions.push(next); qIndex++; renderDots(); renderQuestion();
+
+  _adaptiveSubjectTier=tiers[nextRank];
+  _adaptiveSubjectQServed=0;
+  _adaptiveSubjectPointsEarned=0;
+  _sectionLockedBoundary=questions.length-1;
+  _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],_adaptiveSubjectTier,function(){
+    var next=_pickAdaptiveQuestion(_adaptiveSubjectTier,_adaptiveSubjects[_adaptiveSubjectIdx]);
+    if(!next){ doSubmit(false); return; }
+    questions.push(next); qIndex++; renderDots(); renderQuestion();
+  });
 }
 
 // ── Section timer (shared by Subject-Sectioned exams and Subject-Adaptive) ──
