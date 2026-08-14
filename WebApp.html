@@ -254,12 +254,14 @@ var SHOOTOUT_URL  = 'https://edurena.online/PenaltyShootout.html';
 var TOWER_URL     = 'https://edurena.online/TowerDefense.html';
 var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
+var RACE_URL      = 'https://edurena.online/Race.html';
 
 function refreshFromDash() {
   if (!window.DASH) return;
   if (DASH.scriptUrl)     SCRIPT_URL    = DASH.scriptUrl;
   if (DASH.examPageUrl)   EXAM_PAGE_URL = DASH.examPageUrl;
   if (DASH.kahootPageUrl) LIVEQUIZ_URL  = DASH.kahootPageUrl;
+  if (DASH.racePageUrl)   RACE_URL      = DASH.racePageUrl;
 }
 // Apply immediately (in case DASH is already initialised) and again on .ready
 refreshFromDash();
@@ -360,7 +362,9 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
     {mode:'shootout', icon:'⚽',       glow:'46,204,113',  title:'Penalty Shootout',
      desc:'Random kicker/keeper pairs · fastest correct answer wins the duel'},
     {mode:'tower',    icon:'🏰', glow:'0,212,255',   title:'Tower Defense',
-     desc:'4 teams · defend your side · everyone shares one tower'}
+     desc:'4 teams · defend your side · everyone shares one tower'},
+    {mode:'race',     icon:'🏎️', glow:'255,51,85',   title:'Kart Race',
+     desc:'Self-paced · correct answers boost your kart · first past the line wins'}
   ];
 
   picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
@@ -394,7 +398,8 @@ function openGame(mode) {
       puzzle:   PUZZLE_URL,
       whack:    WHACK_URL,
       shootout: SHOOTOUT_URL,
-      tower:    TOWER_URL
+      tower:    TOWER_URL,
+      race:     RACE_URL
     };
     var base = GAME_URLS[mode] || LIVEQUIZ_URL;
     var url  = base + (base.indexOf('?') === -1 ? '?' : '&')

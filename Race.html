@@ -1,0 +1,1188 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kart Race — Edurena Racing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#050810; --panel:#0d1117; --bdr:#1a2035;
+      --txt:#e8edf5; --muted:#5a6a8a;
+      --acc:#00d4ff; --grn:#00ff88; --red:#ff3355;
+      --yel:#ffcc00; --pur:#bf5fff;
+      --f:'Plus Jakarta Sans',system-ui,sans-serif;
+      --display:'Orbitron',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{
+      position:fixed;inset:0;width:100%;height:100vh;height:100dvh;
+      background:var(--bg);color:var(--txt);font-family:var(--f);
+      overflow:hidden;touch-action:none;overscroll-behavior:none;
+    }
+
+    /* ── SCREENS ── */
+    .screen{display:none;position:fixed;inset:0;z-index:100}
+    .screen.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
+    #s-fatal{background:var(--bg);z-index:9999}
+    #s-fatal h2{color:var(--red);font-family:var(--display);font-size:22px;margin-bottom:12px}
+    #s-fatal p{color:var(--muted);font-size:14px;line-height:1.8;max-width:420px;text-align:center}
+
+    /* ── JOIN ── */
+    #s-join{background:var(--bg);position:relative;overflow:hidden}
+    #s-join::before,#s-lobby::before{
+      content:'';position:absolute;inset:-80px;z-index:0;pointer-events:none;
+      background:repeating-linear-gradient(-45deg,transparent 0,transparent 14px,rgba(0,212,255,0.04) 14px,rgba(0,212,255,0.04) 16px);
+      animation:bgDrift 10s linear infinite
+    }
+    #s-lobby::before{background:repeating-linear-gradient(-45deg,transparent 0,transparent 14px,rgba(0,255,136,0.03) 14px,rgba(0,255,136,0.03) 16px)}
+    @keyframes bgDrift{from{transform:translate(0,0)}to{transform:translate(32px,32px)}}
+    .brand-title{font-family:var(--display);font-size:clamp(18px,5vw,32px);font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,var(--acc),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;position:relative;z-index:1}
+    .brand-sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;text-align:center;position:relative;z-index:1}
+    .join-card{max-width:340px;width:100%;background:rgba(13,17,23,.95);border:1px solid var(--bdr);border-radius:16px;padding:24px;position:relative;z-index:1;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .field-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .inp{display:block;width:100%;padding:12px 14px;min-height:48px;background:#0a0e1a;border:1.5px solid var(--bdr);border-radius:10px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none;transition:border-color .15s;margin-bottom:14px;-webkit-appearance:none;touch-action:manipulation}
+    .inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
+    .inp-code{text-transform:uppercase;letter-spacing:4px;font-family:var(--display);font-size:16px;text-align:center}
+    .join-btn{width:100%;padding:14px;min-height:52px;background:linear-gradient(135deg,#0055aa,#5500cc);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--display);letter-spacing:1px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;touch-action:manipulation;box-shadow:0 4px 24px rgba(0,100,220,0.35)}
+    .join-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,120,255,0.5)}
+    .join-btn:active:not(:disabled){transform:translateY(0) scale(0.98)}
+    .join-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .join-err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+
+    /* ── LOBBY ── */
+    #s-lobby{background:var(--bg);gap:0;position:relative;overflow:hidden}
+    .lobby-code{font-family:var(--display);font-size:clamp(32px,8vw,56px);font-weight:900;letter-spacing:8px;color:var(--acc);margin:8px 0;text-shadow:0 0 30px rgba(0,212,255,0.5);position:relative;z-index:1}
+    .lobby-count{font-family:var(--display);font-size:44px;font-weight:900;color:var(--grn);margin-top:14px;text-shadow:0 0 20px rgba(0,255,136,0.4)}
+    .lobby-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:0 auto 16px;min-height:32px}
+    .chip{padding:4px 12px;background:#0d1525;border:1px solid #1e2d4a;border-radius:20px;font-size:12px;font-weight:600;animation:chipPop .3s ease;color:var(--acc);box-shadow:0 0 10px rgba(0,212,255,0.1)}
+    @keyframes chipPop{from{transform:scale(.6) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+    .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:7px;animation:pulseDot 1.4s ease-in-out infinite;vertical-align:middle;box-shadow:0 0 8px var(--acc)}
+    @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+    .lobby-wait{font-size:13px;color:var(--muted);letter-spacing:1px}
+
+    /* ── CANVAS ── */
+    #game-canvas{position:fixed;top:0;left:0;right:0;width:100%;display:none;z-index:1;touch-action:none}
+    #game-hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
+    #game-hud.on{display:block}
+
+    /* ── COUNTDOWN ── */
+    #countdown-overlay{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      z-index:40;background:rgba(5,8,16,.55);backdrop-filter:blur(3px);
+      opacity:0;pointer-events:none;transition:opacity .4s
+    }
+    #countdown-overlay.show{opacity:1}
+    .countdown-num{
+      font-family:var(--display);font-size:clamp(100px,22vw,180px);font-weight:900;
+      color:#fff;text-shadow:0 0 60px var(--acc),0 0 120px var(--pur);
+      animation:countPulse .85s cubic-bezier(.22,1,.36,1)
+    }
+    @keyframes countPulse{0%{transform:scale(2.5);opacity:0}60%{transform:scale(.95);opacity:1}100%{transform:scale(1);opacity:1}}
+
+    /* ── HUD ELEMENTS ── */
+    .hud-tl{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;pointer-events:none}
+    .live-pill{background:var(--red);color:#fff;font-family:var(--display);font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:2px;animation:livePulse 1.2s ease-in-out infinite;box-shadow:0 0 15px rgba(255,51,85,0.5)}
+    @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .hud-race-code{background:rgba(5,8,16,.85);color:var(--acc);font-family:var(--display);font-size:10px;padding:3px 10px;border-radius:5px;letter-spacing:1px;border:1px solid rgba(0,212,255,.3);backdrop-filter:blur(5px)}
+    .hud-tr{position:absolute;top:12px;right:12px;text-align:right;pointer-events:none}
+    .hud-speed-wrap{background:rgba(5,8,16,.85);padding:8px 16px;border-radius:10px;border:1px solid rgba(255,204,0,.2);backdrop-filter:blur(5px)}
+    .hud-speed{font-family:var(--display);font-size:clamp(28px,5vw,42px);font-weight:900;color:var(--yel);line-height:1;text-shadow:0 0 15px rgba(255,204,0,0.4)}
+    .hud-speed-lbl{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+    .hud-gear{font-family:var(--display);font-size:11px;color:var(--acc);margin-top:2px}
+    .hud-pos{position:absolute;top:50%;left:8px;transform:translateY(-50%);font-family:var(--display);font-size:clamp(28px,5vw,44px);font-weight:900;color:rgba(255,255,255,0.2);pointer-events:none;writing-mode:vertical-rl;text-orientation:mixed;text-shadow:0 0 24px rgba(0,212,255,0.35),0 0 8px rgba(0,212,255,0.2)}
+
+    /* ── BANNERS ── */
+    .nitro-banner{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%) scale(0.8);font-family:var(--display);font-size:clamp(18px,4vw,32px);font-weight:900;color:#fff;letter-spacing:4px;pointer-events:none;z-index:20;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);text-shadow:0 0 30px #ffcc00,0 0 60px #ff8800;white-space:nowrap}
+    .nitro-banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    .wrong-banner{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:var(--display);font-size:clamp(14px,3vw,24px);font-weight:900;color:var(--red);letter-spacing:3px;pointer-events:none;z-index:20;opacity:0;transition:opacity .15s;white-space:nowrap;text-shadow:0 0 20px rgba(255,51,85,0.6)}
+    .wrong-banner.show{opacity:1}
+    .screen-flash{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0;transition:opacity .1s}
+    .screen-flash.correct{background:rgba(0,255,136,.12)}
+    .screen-flash.wrong{background:rgba(255,51,85,.15)}
+    .screen-flash.nitro{background:rgba(255,204,0,.18)}
+    .screen-flash.show{opacity:1}
+
+    /* ── BOTTOM PANEL ── */
+    .bottom-panel{
+      position:fixed;bottom:0;left:0;right:0;z-index:9999;
+      background:linear-gradient(to top,rgba(5,8,16,.98),rgba(5,8,16,.88));
+      border-top:2px solid rgba(0,212,255,0.6);
+      padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      pointer-events:auto;backdrop-filter:blur(16px);
+      min-height:84px;max-height:30vh;overflow-y:auto;
+      -webkit-overflow-scrolling:touch;touch-action:pan-y;
+      box-shadow:0 -8px 32px rgba(0,0,0,0.6),0 -1px 0 rgba(0,212,255,0.12);
+      visibility:visible!important;
+      overscroll-behavior:contain;
+    }
+    .bottom-panel.hidden{display:none}
+    @media(max-width:768px){
+      .bottom-panel{
+        max-height:48dvh!important;min-height:130px!important;
+        z-index:9999!important;padding:5px 8px calc(6px + env(safe-area-inset-bottom,0px))!important
+      }
+      #q-txt{font-size:15px!important;line-height:1.4!important}
+      .opt-btn{min-height:52px!important;font-size:14px!important;padding:11px 10px!important}
+      .opts-grid{gap:7px!important}
+      .q-card{padding:6px 8px!important}
+      .opt-key{width:20px;height:20px;font-size:9px}
+      .timing-strip{margin-bottom:4px!important}
+      .ts-item{min-width:40px!important;padding:2px 5px!important}
+    }
+    @media(max-width:420px){
+      .bottom-panel{max-height:52dvh!important}
+      .opt-btn{min-height:56px!important;font-size:15px!important;border-radius:10px!important}
+      .opts-grid{gap:8px!important}
+      .hud-speed{font-size:28px!important}
+      .hud-speed-wrap{padding:5px 10px!important}
+    }
+    .timing-strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;flex-shrink:0;margin-bottom:3px}
+    .timing-strip::-webkit-scrollbar{display:none}
+    .ts-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 6px;background:rgba(10,14,26,.8);border:1px solid var(--bdr);border-radius:5px;min-width:44px;transition:all .2s}
+    .ts-item.me{border-color:rgba(0,212,255,.5);background:rgba(0,212,255,.08);box-shadow:0 0 8px rgba(0,212,255,0.12)}
+    .ts-item.leader{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.08)}
+    .ts-pos{font-family:var(--display);font-size:9px;font-weight:700;color:var(--muted)}
+    .ts-pos.p1{color:var(--yel);text-shadow:0 0 6px rgba(255,204,0,0.5)}
+    .ts-name{font-size:9px;font-weight:600;white-space:nowrap;max-width:50px;overflow:hidden;text-overflow:ellipsis}
+    .ts-pct{font-family:var(--display);font-size:8px;color:var(--muted)}
+    .q-card{background:var(--panel);border:1px solid var(--bdr);border-left:3px solid rgba(0,212,255,0.55);border-radius:8px;padding:6px 10px}
+    .q-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+    .q-num{font-family:var(--display);font-size:10px;color:var(--muted);letter-spacing:1px}
+    .streak-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);border-radius:14px;padding:2px 8px;font-family:var(--display);font-size:9px;font-weight:700;color:var(--yel);box-shadow:0 0 6px rgba(255,204,0,0.1)}
+    .streak-badge.nitro{background:rgba(255,100,0,.2);border-color:rgba(255,100,0,.5);color:#ff6400;animation:nitroPulse .8s ease-in-out infinite}
+    @keyframes nitroPulse{0%,100%{box-shadow:0 0 10px rgba(255,100,0,0.3)}50%{box-shadow:0 0 20px rgba(255,100,0,0.6)}}
+    .q-txt{font-size:clamp(12px,2vw,15px);font-weight:600;color:var(--txt);line-height:1.35;margin-bottom:6px}
+    .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    @media(max-width:380px){.opts-grid{grid-template-columns:1fr}}
+    .opt-btn{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:8px;background:#0a0e1a;border:1.5px solid #1a2035;color:var(--txt);font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;text-align:left;transition:all .12s;width:100%;-webkit-tap-highlight-color:transparent;min-height:44px;position:relative;overflow:hidden;touch-action:manipulation}
+    .opt-btn:not(:disabled):active{transform:scale(.97)}
+    .opt-btn:disabled{cursor:not-allowed;opacity:.6}
+    .opt-btn.correct{border-color:var(--grn);background:rgba(0,255,136,.1);color:var(--grn);box-shadow:0 0 15px rgba(0,255,136,0.2)}
+    .opt-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.08);color:var(--red);box-shadow:0 0 15px rgba(255,51,85,0.2)}
+    .opt-btn.selected{border-color:var(--acc);background:rgba(0,212,255,.12);color:var(--acc);box-shadow:0 0 12px rgba(0,212,255,0.35);transform:scale(.98)}
+    .opt-key{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;font-weight:700;background:#1a2035;color:var(--muted);transition:all .2s}
+    .opt-btn.correct .opt-key{background:rgba(0,255,136,.2);color:var(--grn)}
+    .opt-btn.wrong .opt-key{background:rgba(255,51,85,.15);color:var(--red)}
+    .short-area{display:flex;gap:6px}
+    .short-inp{flex:1;padding:8px 12px;min-height:44px;background:#0a0e1a;border:1.5px solid #1a2035;border-radius:8px;color:var(--txt);font-size:16px;font-family:var(--f);outline:none;-webkit-appearance:none;transition:border-color .15s;touch-action:manipulation}
+    .short-inp:focus{border-color:var(--acc)}
+    .sub-btn{padding:8px 16px;background:linear-gradient(135deg,var(--acc),#0088ff);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--display);cursor:pointer;letter-spacing:1px;min-height:44px;transition:all .2s;touch-action:manipulation}
+    .answered-msg{text-align:center;padding:14px;font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:1px}
+    .opt-img{max-width:100%;max-height:60px;border-radius:6px;margin-top:4px;object-fit:contain;display:block}
+    /* ── QUESTION BODY IMAGE ── */
+    .q-img-wrap{margin:4px 0 6px;text-align:center}
+    .q-img-wrap img{max-width:100%;max-height:140px;border-radius:8px;object-fit:contain;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03)}
+    /* ── IMAGE-ONLY OPTIONS ── */
+    .opts-grid.img-grid{grid-template-columns:1fr 1fr;gap:8px}
+    .opt-btn.img-only{flex-direction:column;align-items:center;min-height:90px;padding:6px 8px;gap:4px}
+    .opt-btn.img-only .opt-img{max-height:72px;width:100%;margin-top:0}
+
+    /* ── FINISH ── */
+    .finish-overlay{position:fixed;inset:0;background:rgba(5,8,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .8s;backdrop-filter:blur(10px)}
+    .finish-overlay.show{opacity:1;pointer-events:auto}
+    .finish-title{font-family:var(--display);font-size:clamp(28px,7vw,52px);font-weight:900;background:linear-gradient(135deg,var(--yel),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:6px;animation:finishGlow 2s ease-in-out infinite}
+    @keyframes finishGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
+    .finish-sub{font-size:14px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:8px}
+    .finish-rank{font-family:var(--display);font-size:clamp(48px,10vw,80px);font-weight:900;color:var(--yel);margin:20px 0;text-shadow:0 0 40px rgba(255,204,0,0.5)}
+    .finish-stats{display:flex;gap:30px;margin-top:20px}
+    .finish-stat{text-align:center}
+    .finish-stat-val{font-family:var(--display);font-size:28px;font-weight:900;color:var(--acc)}
+    .finish-stat-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+
+    /* ── OVERTAKE NOTIFS ── */
+    .overtake-notif{position:absolute;top:25%;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(12px,2.5vw,18px);font-weight:900;color:var(--yel);letter-spacing:3px;z-index:20;opacity:0;transition:all .4s;white-space:nowrap}
+    .overtake-notif.show{opacity:1;animation:overtakeSlide .8s ease-out}
+    @keyframes overtakeSlide{0%{transform:translateX(-50%) translateY(20px)}100%{transform:translateX(-50%) translateY(0)}}
+    .pos-change{position:absolute;top:60%;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(24px,5vw,40px);font-weight:900;z-index:20;opacity:0;transition:all .5s}
+    .pos-change.up{color:var(--grn);animation:posUp .6s ease-out}
+    .pos-change.down{color:var(--red);animation:posDown .6s ease-out}
+    @keyframes posUp{0%{transform:translateX(-50%) scale(0.5);opacity:0}50%{transform:translateX(-50%) scale(1.3);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:0}}
+    @keyframes posDown{0%{transform:translateX(-50%) scale(0.5);opacity:0}50%{transform:translateX(-50%) scale(1.3);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:0}}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
+    }
+  }
+  </script>
+  <base target="_blank">
+</head>
+<body>
+
+<!-- SCREENS -->
+<div class="screen on" id="s-fatal">
+  <h2>CANNOT LOAD</h2>
+  <p id="fatal-msg">Open this from the Edurena student portal.</p>
+</div>
+
+<div class="screen" id="s-join">
+  <div class="brand-title">KART RACE</div>
+  <div class="brand-sub">Edurena Racing &nbsp;&#x25BA;&nbsp; Answer Fast. Drive Faster.</div>
+  <div class="join-card">
+    <div class="field-lbl">Race Code</div>
+    <input class="inp inp-code" id="inp-code" type="text" placeholder="ABCDEF" maxlength="10" autocomplete="off" spellcheck="false" inputmode="text">
+    <div class="field-lbl">Driver Name</div>
+    <input class="inp" id="inp-name" type="text" placeholder="Your name" maxlength="20" autocomplete="given-name" inputmode="text">
+    <button class="join-btn" id="joinBtn">&#x25B6;&nbsp; ENTER RACE</button>
+    <div class="join-err" id="joinErr"></div>
+  </div>
+</div>
+
+<div class="screen" id="s-lobby">
+  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:3px;position:relative;z-index:1">KART RACE</div>
+  <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;position:relative;z-index:1">STARTING GRID</div>
+  <div style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;position:relative;z-index:1">RACE CODE</div>
+  <div class="lobby-code" id="lby-code">------</div>
+  <div class="lobby-count" id="lby-count">0</div>
+  <div class="lobby-lbl">drivers on grid</div>
+  <div class="chips" id="lby-chips" style="position:relative;z-index:1"></div>
+  <div class="lobby-wait" style="position:relative;z-index:1"><span class="pulse-dot"></span>Waiting for race director to start&hellip;</div>
+</div>
+
+<!-- 2D CANVAS -->
+<canvas id="game-canvas"></canvas>
+
+<!-- COUNTDOWN OVERLAY -->
+<div id="countdown-overlay">
+  <div class="countdown-num" id="countdown-num">3</div>
+</div>
+
+<!-- GAME HUD -->
+<div id="game-hud">
+  <div class="hud-tl">
+    <div class="live-pill">LIVE</div>
+    <div class="hud-race-code" id="hud-race-code">---</div>
+  </div>
+  <div class="hud-tr">
+    <div class="hud-speed-wrap">
+      <div class="hud-speed" id="hud-speed">0</div>
+      <div class="hud-speed-lbl">KM/H</div>
+      <div class="hud-gear" id="hud-gear">NEUTRAL</div>
+    </div>
+  </div>
+  <div class="hud-pos" id="hud-pos">P1</div>
+  <div class="nitro-banner" id="nitro-banner">&#x26A1; NITRO BOOST &#x26A1;</div>
+  <div class="wrong-banner" id="wrong-banner">&#x1F6D1; BRAKE!</div>
+  <div class="overtake-notif" id="overtake-notif"></div>
+  <div class="pos-change" id="pos-change"></div>
+
+  <!-- FINISH -->
+  <div class="finish-overlay" id="finish-overlay">
+    <div class="finish-title">RACE COMPLETE!</div>
+    <div class="finish-sub">FINAL RESULTS</div>
+    <div class="finish-rank" id="finish-rank-num">P1</div>
+    <div class="finish-stats">
+      <div class="finish-stat">
+        <div class="finish-stat-val" id="finish-streak">0</div>
+        <div class="finish-stat-lbl">Best Streak</div>
+      </div>
+      <div class="finish-stat">
+        <div class="finish-stat-val" id="finish-correct">0</div>
+        <div class="finish-stat-lbl">Correct</div>
+      </div>
+      <div class="finish-stat">
+        <div class="finish-stat-val" id="finish-total">0</div>
+        <div class="finish-stat-lbl">Total Q</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION PANEL -->
+  <div class="bottom-panel hidden" id="bottom-panel">
+    <div class="timing-strip" id="timing-strip"></div>
+    <div class="q-card">
+      <div class="q-meta-row">
+        <div class="q-num" id="q-num">Q 1 / 1</div>
+        <div class="streak-badge" id="streak-badge">&#x1F525; STREAK: 0</div>
+      </div>
+      <div class="q-txt" id="q-txt">Loading&hellip;</div>
+      <div id="q-img-area"></div>
+      <div id="q-area"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen-flash" id="screen-flash"></div>
+
+<!-- ================================================================
+     MAIN SCRIPT
+================================================================ -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+(function(){
+'use strict';
+
+/* ════════════════ MOBILE ZOOM LOCK ════════════════
+   Some mobile browsers (notably iOS Safari) ignore the viewport meta's
+   user-scalable=no for accessibility reasons, which can leave the page
+   pinch-zoomed out right when the canvas appears. Block the gestures
+   outright and force the browser to recompute layout scale=1. */
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturechange', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', function(e){ if(e.touches&&e.touches.length>1) e.preventDefault(); }, {passive:false});
+var _lastTapTs=0;
+document.addEventListener('touchend', function(e){
+  var now=Date.now();
+  if(now-_lastTapTs<300) e.preventDefault();
+  _lastTapTs=now;
+}, {passive:false});
+
+function lockMobileZoom(){
+  var vp=document.querySelector('meta[name=viewport]');
+  if(vp){
+    var content=vp.getAttribute('content');
+    vp.setAttribute('content', content+', shrink-to-fit=no');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ vp.setAttribute('content', content); });
+    });
+  }
+  if(window.scrollTo) window.scrollTo(0,0);
+}
+window.addEventListener('load', lockMobileZoom);
+
+/* ════════════════ URL PARAMS ════════════════ */
+var P = new URLSearchParams(window.location.search);
+var GAS_URL = (P.get('script') || '').trim();
+var preCode  = (P.get('room')   || '').trim().toUpperCase();
+
+if (!GAS_URL) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Missing backend URL.'; return; }
+showScreen('s-join');
+
+/* ════════════════ FIREBASE ════════════════ */
+var db;
+try {
+  var cfg = {
+    apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc',
+    authDomain:'kahoot-24063.firebaseapp.com',
+    databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com',
+    projectId:'kahoot-24063',
+    storageBucket:'kahoot-24063.firebasestorage.app',
+    messagingSenderId:'962917873467',
+    appId:'1:962917873467:web:a6b526aee30cd15c92291e'
+  };
+  var existingApp = null;
+  if (firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='race') existingApp=a; });
+  db = firebase.database(existingApp || firebase.initializeApp(cfg,'race'));
+} catch(e) {
+  showScreen('s-fatal');
+  el('fatal-msg').textContent = 'Firebase error: ' + e.message;
+  return;
+}
+
+/* ════════════════ HELPERS ════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+  var t = document.getElementById(id);
+  if (t) t.classList.add('on');
+}
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function gasPost(body, cb) {
+  fetch(GAS_URL, { method:'POST', body:JSON.stringify(body) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ cb(null,d); })
+    .catch(function(e){ cb(e,null); });
+}
+
+/* ════════════════ COLOR PALETTE ════════════════ */
+var NEON_HEX = [
+  '#d62828','#1a4ea8','#f6c200','#ff7a1a',
+  '#2a8c4a','#7a3a99','#ff5599','#118ab2',
+  '#c0c0c0','#eeeeee','#111111','#6a4f30'
+];
+
+/* ════════════════ GAME STATE ════════════════ */
+var IS_MOBILE = (function(){
+  try {
+    var ua=(navigator.userAgent||'').toLowerCase();
+    return /android|iphone|ipad|ipod|mobile/i.test(ua)||
+      (window.matchMedia&&window.matchMedia('(pointer:coarse)').matches&&window.innerWidth<900);
+  } catch(_){return false;}
+})();
+
+var raceId='', playerId='', playerName='', playerColorHex='';
+var questions=[], currentQ=0, totalQ=0;
+var streak=0, bestStreak=0;
+var myProgress=0, myProgress_t=0, myFinished=false, answering=false;
+var allPlayers={};
+var lobbyPRef=null, phaseRef=null, gameRef=null;
+var gameRunning=false, rafId=null, lastTime=0;
+
+/* ════════════════ PHYSICS ════════════════ */
+// Speed in track-laps per second (1.0 = one full lap per second)
+// Calibrated so base = ~12s/lap, nitro = ~2.2s/lap
+var baseSpeed   = 0.084;
+var boostSpeed  = 0.266;
+var nitroSpeed  = 0.455;
+var wrongSpeed  = 0.017;
+var currentSpeed = 0;
+var targetSpeed  = baseSpeed;
+var boostUntil=0, nitroUntil=0, wrongUntil=0;
+
+/* ════════════════════════════════════════════════
+   AUDIO — full procedural synth + MP3 SFX
+════════════════════════════════════════════════ */
+var AudioCtx = window.AudioContext || window.webkitAudioContext;
+var audioCtx=null, engineGain=null, engineOsc=null, engineOsc2=null;
+var musicNodes=[], audioReady=false, sfxBuffers={};
+
+function initAudio() {
+  if (audioReady) return;
+  try {
+    audioCtx = new AudioCtx(); audioReady=true;
+    var master=audioCtx.createGain(); master.gain.value=0.7; master.connect(audioCtx.destination);
+    engineGain=audioCtx.createGain(); engineGain.gain.value=0; engineGain.connect(master);
+    var filt=audioCtx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=1200; filt.Q.value=1.5; filt.connect(engineGain);
+    engineOsc=audioCtx.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value=80; engineOsc.connect(filt); engineOsc.start();
+    engineOsc2=audioCtx.createOscillator(); engineOsc2.type='sawtooth'; engineOsc2.frequency.value=82; engineOsc2.connect(filt); engineOsc2.start();
+    startBgMusic(master);
+    ['start_beep','nitro_whoosh','crash_thud','tire_screech','crowd'].forEach(function(n){
+      loadSfx(n,'/Edurena/assets/race/sounds/'+n+'.mp3');
+    });
+  } catch(e){ audioReady=false; }
+}
+function loadSfx(name,url){
+  if(!audioCtx) return;
+  fetch(url).then(function(r){return r.arrayBuffer();})
+    .then(function(buf){return audioCtx.decodeAudioData(buf);})
+    .then(function(d){sfxBuffers[name]=d;}).catch(function(){});
+}
+function sfx(name,gain){
+  if(!audioReady||!sfxBuffers[name]) return;
+  var src=audioCtx.createBufferSource(); src.buffer=sfxBuffers[name];
+  var g=audioCtx.createGain(); g.gain.value=gain||0.7;
+  src.connect(g); g.connect(audioCtx.destination); src.start();
+}
+function muteEngine(){ if(engineGain) engineGain.gain.setTargetAtTime(0,audioCtx.currentTime,0.1); }
+function updateEngineSound(kmh){
+  if(!audioReady||!engineGain) return;
+  var vol=Math.min(0.55,0.05+kmh/600);
+  var freq=80+kmh*1.8;
+  engineGain.gain.setTargetAtTime(vol,audioCtx.currentTime,0.05);
+  if(engineOsc) engineOsc.frequency.setTargetAtTime(freq,audioCtx.currentTime,0.05);
+  if(engineOsc2) engineOsc2.frequency.setTargetAtTime(freq+2,audioCtx.currentTime,0.05);
+}
+function playCorrect(){
+  if(!audioReady) return;
+  [523.25,659.25,783.99].forEach(function(f,i){
+    var t=audioCtx.currentTime+i*.07;
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.4,t+.03); g.gain.exponentialRampToValueAtTime(0.001,t+.3);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+.35);
+  });
+}
+function playWrong(){
+  if(!audioReady) return;
+  [220,180].forEach(function(f,i){
+    var t=audioCtx.currentTime+i*.08;
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sawtooth'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+.35);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+.4);
+  });
+  sfx('crash_thud',0.5); sfx('tire_screech',0.4);
+}
+function playNitro(){
+  if(!audioReady) return;
+  sfx('nitro_whoosh',0.8);
+  [880,1108,1320].forEach(function(f,i){
+    var t=audioCtx.currentTime+i*.05;
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.6,t+.04); g.gain.exponentialRampToValueAtTime(0.001,t+.8);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+.85);
+  });
+}
+function playFinish(){
+  if(!audioReady) return;
+  sfx('crowd',0.7);
+  [523,659,784,1047].forEach(function(f,i){
+    var t=audioCtx.currentTime+i*.12;
+    var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.5,t+.05); g.gain.exponentialRampToValueAtTime(0.001,t+1);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+1.1);
+  });
+}
+function playStreakMilestone(s){
+  if(!audioReady||s<3) return;
+  var f=440+s*80;
+  var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=f;
+  g.gain.setValueAtTime(0.4,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+.6);
+  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.65);
+}
+function startBgMusic(masterNode){
+  var bpm=128, beat=60/bpm, step=0;
+  var bassLine=[55,55,69,55,58,55,62,55];
+  var si=setInterval(function(){
+    if(!audioReady){clearInterval(si);return;}
+    var s=step%8;
+    if(s===0||s===4) kick(); if(s%2===0) hat(s===2||s===6?0.1:0.15); if(s%2===0) bass(bassLine[Math.floor(step/2)%bassLine.length]);
+    step++;
+  },beat*500);
+  function kick(){ var o=audioCtx.createOscillator(); var g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(180,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(35,audioCtx.currentTime+.14); g.gain.setValueAtTime(0.55,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+.22); o.connect(g); g.connect(masterNode); o.start(); o.stop(audioCtx.currentTime+.25); }
+  function hat(vol){ var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.06,audioCtx.sampleRate); var d=buf.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1); var s=audioCtx.createBufferSource(); s.buffer=buf; var f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=9000; var g=audioCtx.createGain(); g.gain.value=vol||.15; s.connect(f); f.connect(g); g.connect(masterNode); s.start(); }
+  function bass(freq){ var o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=freq; var f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=320; var g=audioCtx.createGain(); g.gain.setValueAtTime(0.25,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+beat*.85); o.connect(f); f.connect(g); g.connect(masterNode); o.start(); o.stop(audioCtx.currentTime+beat); }
+  musicNodes.push({stop:function(){clearInterval(si);}});
+}
+function stopAllMusic(){ musicNodes.forEach(function(n){try{n.stop();}catch(_){}});  musicNodes=[]; muteEngine(); }
+
+/* ════════════════════════════════════════════════
+   3D TRACK — Three.js, built from the same RAW_WP
+   waypoints the old 2D renderer used
+════════════════════════════════════════════════ */
+var RAW_WP = [
+  [0.44,0.08],[0.60,0.08],[0.72,0.09],[0.80,0.18],[0.82,0.30],
+  [0.82,0.50],[0.82,0.70],[0.80,0.82],[0.72,0.91],[0.56,0.92],
+  [0.44,0.92],[0.30,0.92],[0.16,0.91],[0.08,0.82],[0.06,0.70],
+  [0.06,0.50],[0.06,0.30],[0.08,0.18],[0.16,0.09],[0.30,0.08]
+];
+var WORLD_SCALE = 220;   // world units spanned by the 0-1 normalized waypoints
+var ROAD_HW     = 9;     // road half-width, world units
+var ASSET_BASE  = '/Edurena/assets/race/Models/GLB%20format/';
+var KART_VARIANTS = ['kart-oobi','kart-oodi','kart-ooli','kart-oopi','kart-oozi'];
+
+var trackCurve   = null;
+var renderer3d, scene3d, camera3d;
+var kartModels   = {};      // variant name -> loaded+normalized GLTF scene template
+var kartObjects  = {};      // pid -> per-kart Three.js state
+var modelsReady  = false;
+var sceneReady   = false;
+
+function wpToWorld(nx,ny){ return new THREE.Vector3((nx-0.5)*WORLD_SCALE,0,(ny-0.5)*WORLD_SCALE); }
+function buildTrackCurve(){
+  var pts=RAW_WP.map(function(p){ return wpToWorld(p[0],p[1]); });
+  trackCurve=new THREE.CatmullRomCurve3(pts,true,'catmullrom',0.5);
+  trackCurve.arcLengthDivisions=2000;
+}
+function pidVariant(pid){
+  var h=0; for(var i=0;i<pid.length;i++) h=(h*31+pid.charCodeAt(i))&0xffff;
+  return KART_VARIANTS[h%KART_VARIANTS.length];
+}
+function laneOffsetFor(player){ return ((player&&player.laneX)||0)*1.3; }
+
+/* Normalize a loaded GLTF root to a known size and sit it flush on y=0 —
+   the Kenney kit's native scale/pivot per model isn't something we can
+   read without opening each file, so measure and fix it up at runtime. */
+function normalizeToGround(root,targetSize){
+  var box=new THREE.Box3().setFromObject(root);
+  var size=new THREE.Vector3(); box.getSize(size);
+  var maxDim=Math.max(size.x,size.y,size.z)||1;
+  root.scale.setScalar(targetSize/maxDim);
+  var box2=new THREE.Box3().setFromObject(root);
+  root.position.y-=box2.min.y;
+}
+
+function makeRoadTexture(){
+  var c=document.createElement('canvas'); c.width=128; c.height=256;
+  var x=c.getContext('2d');
+  x.fillStyle='#26262c'; x.fillRect(0,0,128,256);
+  x.strokeStyle='rgba(255,255,255,0.6)'; x.setLineDash([20,16]); x.lineWidth=4;
+  x.beginPath(); x.moveTo(64,0); x.lineTo(64,256); x.stroke();
+  x.setLineDash([]); x.lineWidth=3; x.strokeStyle='rgba(255,204,0,0.85)';
+  x.beginPath(); x.moveTo(4,0); x.lineTo(4,256); x.stroke();
+  x.beginPath(); x.moveTo(124,0); x.lineTo(124,256); x.stroke();
+  var tex=new THREE.CanvasTexture(c);
+  tex.wrapS=THREE.ClampToEdgeWrapping; tex.wrapT=THREE.RepeatWrapping;
+  return tex;
+}
+function buildRoadRibbon(){
+  var N=360, pos=[], nor=[], uvs=[], idx=[];
+  var p=new THREE.Vector3(), t=new THREE.Vector3();
+  for(var i=0;i<=N;i++){
+    var u=i/N; trackCurve.getPointAt(u,p); trackCurve.getTangentAt(u,t); t.normalize();
+    var rx=t.z, rz=-t.x;
+    pos.push(p.x-rx*ROAD_HW,0.03,p.z-rz*ROAD_HW); nor.push(0,1,0); uvs.push(0,u*24);
+    pos.push(p.x+rx*ROAD_HW,0.03,p.z+rz*ROAD_HW); nor.push(0,1,0); uvs.push(1,u*24);
+  }
+  for(var i=0;i<N;i++){ var a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,c,b,b,c,d); }
+  var geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geo.setIndex(idx);
+  return new THREE.Mesh(geo,new THREE.MeshStandardMaterial({map:makeRoadTexture(),roughness:0.92,side:THREE.DoubleSide}));
+}
+function buildGround(){
+  var g=new THREE.Mesh(
+    new THREE.PlaneGeometry(WORLD_SCALE*3,WORLD_SCALE*3),
+    new THREE.MeshLambertMaterial({color:0x0e2416})
+  );
+  g.rotation.x=-Math.PI/2; g.position.y=-0.02;
+  return g;
+}
+function decorateTrack(){
+  var loader=new GLTFLoader();
+  loader.load(ASSET_BASE+'cone.glb',function(gltf){
+    var proto=gltf.scene; normalizeToGround(proto,1.4);
+    var STEPS=90, p=new THREE.Vector3(), tan=new THREE.Vector3();
+    for(var i=0;i<STEPS;i++){
+      var u=i/STEPS;
+      trackCurve.getPointAt(u,p); trackCurve.getTangentAt(u,tan); tan.normalize();
+      var rx=tan.z, rz=-tan.x;
+      [-1,1].forEach(function(side){
+        var c=proto.clone(true);
+        c.position.set(p.x+rx*ROAD_HW*1.1*side,0,p.z+rz*ROAD_HW*1.1*side);
+        c.rotation.y=Math.random()*Math.PI*2;
+        scene3d.add(c);
+      });
+    }
+  },undefined,function(){ /* decoration is optional polish — ignore load failure */ });
+}
+
+/* ════════════════ SCENE INIT ════════════════ */
+var gCanvas=el('game-canvas');
+function initScene3D(){
+  scene3d=new THREE.Scene();
+  scene3d.background=new THREE.Color(0x050814);
+  scene3d.fog=new THREE.Fog(0x050814,90,340);
+
+  camera3d=new THREE.PerspectiveCamera(58,1,0.5,600);
+
+  renderer3d=new THREE.WebGLRenderer({canvas:gCanvas,antialias:true});
+  renderer3d.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer3d.outputColorSpace=THREE.SRGBColorSpace;
+  renderer3d.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer3d.toneMappingExposure=1.15;
+
+  scene3d.add(new THREE.HemisphereLight(0x2a3a66,0x0a0f1a,0.65));
+  var moon=new THREE.DirectionalLight(0x9fb8ff,0.9);
+  moon.position.set(-60,140,90);
+  scene3d.add(moon);
+  scene3d.add(new THREE.AmbientLight(0x223055,0.35));
+
+  buildTrackCurve();
+  scene3d.add(buildRoadRibbon());
+  scene3d.add(buildGround());
+  decorateTrack();
+
+  sceneReady=true;
+  resizeCanvas();
+}
+function loadKartModels(){
+  var loader=new GLTFLoader(), loaded=0, total=KART_VARIANTS.length;
+  function done(){ loaded++; if(loaded>=total) modelsReady=true; }
+  KART_VARIANTS.forEach(function(name){
+    loader.load(ASSET_BASE+name+'.glb',function(gltf){
+      normalizeToGround(gltf.scene,2.6);
+      kartModels[name]=gltf.scene;
+      done();
+    },undefined,done);
+  });
+}
+initScene3D();
+loadKartModels();
+
+/* ════════════════ RESIZE ════════════════ */
+function resizeCanvas(){
+  if(!renderer3d) return;
+  var bp=el('bottom-panel');
+  var panH=(!bp||bp.classList.contains('hidden'))?0:bp.getBoundingClientRect().height;
+  var vv=window.visualViewport;
+  var w=vv?vv.width:window.innerWidth;
+  var vh=vv?vv.height:window.innerHeight;
+  var h=Math.max(120,vh-panH);
+  gCanvas.style.bottom=panH+'px';
+  var cs=renderer3d.getSize(new THREE.Vector2());
+  if(Math.round(cs.x)!==Math.round(w)||Math.round(cs.y)!==Math.round(h)){
+    renderer3d.setSize(w,h);
+    camera3d.aspect=w/h; camera3d.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize',function(){ if(gameRunning) resizeCanvas(); });
+if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){ if(gameRunning) resizeCanvas(); });
+
+/* ════════════════ KART OBJECTS ════════════════ */
+function makeNameSprite(name,color){
+  var c=document.createElement('canvas'); c.width=220; c.height=56;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='rgba(5,8,20,0.82)'; ctx.fillRect(0,0,220,56);
+  ctx.fillStyle=color; ctx.fillRect(0,44,220,12);
+  ctx.fillStyle='#fff'; ctx.font='bold 22px Orbitron,monospace';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(name).slice(0,10),110,24);
+  return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));
+}
+function createKart3D(pid,player){
+  if(kartObjects[pid]||!modelsReady) return;
+  var proto=kartModels[pidVariant(pid)]||kartModels[KART_VARIANTS[0]];
+  if(!proto) return;
+  var group=new THREE.Group();
+  group.add(proto.clone(true));
+
+  var sprite=makeNameSprite(player.name||'?',player.color||'#00d4ff');
+  sprite.position.set(0,3.4,0); sprite.scale.set(6.5,1.6,1);
+  group.add(sprite);
+
+  var glow=new THREE.PointLight(new THREE.Color(player.color||'#00d4ff'),0,16,2.0);
+  glow.position.set(0,0.8,-1.6);
+  group.add(glow);
+
+  scene3d.add(group);
+  kartObjects[pid]={
+    group:group, boostLight:glow, color:player.color||'#00d4ff',
+    smoothProg:player.progress||0, lastCorrect:player.correct||0
+  };
+}
+
+var _kP=new THREE.Vector3(), _kT=new THREE.Vector3();
+function updateKart3D(pid,player,dt,isLocal){
+  var ko=kartObjects[pid]; if(!ko) return;
+
+  if(isLocal){
+    ko.smoothProg=myProgress;
+  } else {
+    var raw=player.progress||0;
+    if(ko.lastRaw===undefined){ ko.lastRaw=raw; ko.lastRawTime=Date.now(); }
+    else if(raw!==ko.lastRaw){
+      var dtSec=(Date.now()-ko.lastRawTime)/1000;
+      if(dtSec>0.02){
+        var draw=raw-ko.lastRaw; if(draw<-0.5)draw+=1; if(draw>0.5)draw-=1;
+        var instVel=draw/dtSec;
+        ko.vel=(ko.vel===undefined)?instVel:ko.vel*0.35+instVel*0.65;
+        ko.vel=Math.max(0,Math.min(ko.vel,0.3));
+      }
+      ko.lastRaw=raw; ko.lastRawTime=Date.now();
+    }
+    var since=ko.lastRawTime?Math.min((Date.now()-ko.lastRawTime)/1000,1.2):0;
+    var predicted=(((ko.lastRaw!==undefined?ko.lastRaw:raw)+(ko.vel||0)*since)%1+1)%1;
+    var cur_t=((ko.smoothProg%1)+1)%1;
+    var diff=predicted-cur_t;
+    if(diff<-0.5) diff+=1; if(diff>0.5) diff-=1;
+    ko.smoothProg+=diff*Math.min(1,dt*7.0);
+  }
+
+  var t=((ko.smoothProg%1)+1)%1;
+  trackCurve.getPointAt(t,_kP); trackCurve.getTangentAt(t,_kT); _kT.normalize();
+  var rx=_kT.z, rz=-_kT.x, lane=laneOffsetFor(player);
+  ko.group.position.set(_kP.x+rx*lane,0.15+Math.sin(ko.smoothProg*240)*0.04,_kP.z+rz*lane);
+  ko.group.rotation.y=Math.atan2(_kT.x,_kT.z);
+
+  var nitroAmt=0, boostAmt=0, now=Date.now();
+  if(isLocal){
+    nitroAmt=now<nitroUntil?Math.min(1,(nitroUntil-now)/2000):0;
+    boostAmt=now<boostUntil?Math.min(1,(boostUntil-now)/800):0;
+  } else {
+    var prevC=ko.lastCorrect||0, currC=player.correct||0;
+    if(currC>prevC){
+      if((player.streak||0)>=3) ko.fxNitroUntil=now+2200; else ko.fxBoostUntil=now+900;
+    }
+    ko.lastCorrect=currC;
+    if(ko.fxNitroUntil&&now<ko.fxNitroUntil) nitroAmt=Math.min(1,(ko.fxNitroUntil-now)/2200);
+    else if(ko.fxBoostUntil&&now<ko.fxBoostUntil) boostAmt=Math.min(1,(ko.fxBoostUntil-now)/900);
+  }
+  if(nitroAmt>0){ ko.boostLight.intensity=380*nitroAmt; ko.boostLight.color.set(0x33aaff); }
+  else if(boostAmt>0){ ko.boostLight.intensity=180*boostAmt; ko.boostLight.color.set(ko.color); }
+  else ko.boostLight.intensity=0;
+}
+
+/* ════════════════ CHASE CAMERA ════════════════ */
+var _camPos=new THREE.Vector3(), _camLook=new THREE.Vector3(), _camInit=false;
+function updateCamera3D(dt){
+  var ko=kartObjects[playerId]; if(!ko) return;
+  var t=((ko.smoothProg%1)+1)%1, p=new THREE.Vector3(), tan=new THREE.Vector3();
+  trackCurve.getPointAt(t,p); trackCurve.getTangentAt(t,tan); tan.normalize();
+  var behind=p.clone().addScaledVector(tan,-13); behind.y+=6;
+  var ahead=p.clone().addScaledVector(tan,10); ahead.y+=1.6;
+  if(!_camInit){ _camPos.copy(behind); _camLook.copy(ahead); _camInit=true; }
+  var lk=Math.min(1,dt*5.5);
+  _camPos.lerp(behind,lk); _camLook.lerp(ahead,lk);
+  camera3d.position.copy(_camPos); camera3d.lookAt(_camLook);
+}
+
+/* ════════════════ MAIN 3D RENDER ════════════════ */
+function renderScene3D(dt){
+  if(!sceneReady||!modelsReady) return;
+  Object.values(allPlayers).forEach(function(p){ if(!kartObjects[p.pid]) createKart3D(p.pid,p); });
+  Object.keys(kartObjects).forEach(function(pid){
+    var p=allPlayers[pid]; if(!p) return;
+    updateKart3D(pid,p,dt,pid===playerId);
+  });
+  updateCamera3D(dt);
+  renderer3d.render(scene3d,camera3d);
+}
+
+/* ════════════════════════════════════════════════
+   2D RENDER LOOP
+════════════════════════════════════════════════ */
+function renderLoop(ts){
+  if(!gameRunning){rafId=null;return;}
+  rafId=requestAnimationFrame(renderLoop);
+  var dt=Math.min(.05,(ts-(lastTime||ts))/1000); lastTime=ts;
+
+  // Speed update
+  var now=Date.now();
+  if(now<nitroUntil)      targetSpeed=nitroSpeed;
+  else if(now<boostUntil) targetSpeed=boostSpeed;
+  else if(now<wrongUntil) targetSpeed=wrongSpeed;
+  else                    targetSpeed=baseSpeed;
+  currentSpeed+=(targetSpeed-currentSpeed)*Math.min(1,dt*5);
+
+  // Advance my position
+  if(!myFinished){
+    myProgress+=currentSpeed*dt;
+    myProgress_t=myProgress%1;
+  }
+
+  // 3D scene render
+  resizeCanvas();
+  renderScene3D(dt);
+
+  // Firebase sync (~10% of frames)
+  if(!myFinished&&Math.random()<0.10){
+    db.ref('race/'+raceId+'/players/'+playerId).update({
+      progress:myProgress_t,
+      updatedAt:firebase.database.ServerValue.TIMESTAMP
+    });
+  }
+
+  // HUD
+  var kmh=Math.round(currentSpeed*1400);
+  el('hud-speed').textContent=Math.min(kmh,699);
+  var gear=kmh<60?1:kmh<100?2:kmh<160?3:kmh<220?4:kmh<300?5:6;
+  el('hud-gear').textContent='GEAR '+gear;
+  updateEngineSound(kmh);
+  updateTimingStrip();
+  checkOvertakes();
+}
+
+/* ════════════════ COUNTDOWN / PRE-RACE ════════════════ */
+function runPreRaceCinematic(startedAt){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  gCanvas.style.display='block';
+  lockMobileZoom();
+  resizeCanvas();
+  requestAnimationFrame(function(){ resizeCanvas(); });
+  // Sync countdown to server time
+  var now=Date.now(), elapsed=(now-startedAt)/1000;
+  var remaining=3-elapsed;
+  var overlay=el('countdown-overlay'), numEl=el('countdown-num');
+  if(remaining<=0){
+    startRaceGameplay(); return;
+  }
+  overlay.classList.add('show');
+  var startCount=Math.ceil(remaining);
+  function tick(){
+    var now2=Date.now(), el2=(now2-startedAt)/1000;
+    var cnt=Math.max(0,Math.ceil(3-el2));
+    numEl.className='countdown-num'; void numEl.offsetWidth;
+    numEl.className='countdown-num';
+    if(cnt===0){
+      numEl.textContent='GO!';
+      setTimeout(function(){overlay.classList.remove('show'); startRaceGameplay();},750);
+    } else {
+      numEl.textContent=String(cnt);
+      setTimeout(tick,1000);
+    }
+  }
+  // Start from the right count
+  numEl.textContent=String(startCount);
+  setTimeout(tick,1000);
+}
+
+/* ════════════════════════════════════════════════
+   OVERTAKE SYSTEM
+════════════════════════════════════════════════ */
+var lastOvertakeTime=0, lastPositions={};
+function checkOvertakes(){
+  var now=Date.now(); if(now-lastOvertakeTime<3000) return;
+  var myRank=getMyRank();
+  Object.values(allPlayers).forEach(function(p){
+    if(p.pid===playerId) return;
+    var lastPos=lastPositions[p.pid], currentPos=getPlayerRank(p.pid);
+    if(lastPos!==undefined){
+      if(lastPos<myRank&&currentPos>myRank){ showOvertakeNotif('YOU OVERTOOK '+(p.name||'?').toUpperCase()); lastOvertakeTime=now; }
+      else if(lastPos>myRank&&currentPos<myRank){ showPosChange('down','P'+currentPos); lastOvertakeTime=now; }
+    }
+    lastPositions[p.pid]=currentPos;
+  });
+  var myLastRank=lastPositions['me'];
+  if(myLastRank!==undefined&&myLastRank!==myRank){ if(myRank<myLastRank) showPosChange('up','P'+myRank); }
+  lastPositions['me']=myRank;
+}
+function showOvertakeNotif(text){ var e=el('overtake-notif'); e.textContent=text; e.classList.add('show'); setTimeout(function(){e.classList.remove('show');},2500); }
+function showPosChange(dir,text){ var e=el('pos-change'); e.textContent=text; e.className='pos-change '+dir; setTimeout(function(){e.className='pos-change';},1500); }
+function getMyRank(){
+  var ps=Object.values(allPlayers).sort(function(a,b){ if(!!b.finished!==!!a.finished) return b.finished?1:-1; return (b.progress||0)-(a.progress||0); });
+  var idx=ps.findIndex(function(p){return p.pid===playerId;}); return idx>=0?idx+1:ps.length+1;
+}
+function getPlayerRank(pid){
+  var ps=Object.values(allPlayers).sort(function(a,b){ if(!!b.finished!==!!a.finished) return b.finished?1:-1; return (b.progress||0)-(a.progress||0); });
+  var idx=ps.findIndex(function(p){return p.pid===pid;}); return idx>=0?idx+1:ps.length+1;
+}
+
+/* ════════════════ START GAMEPLAY ════════════════ */
+function startRaceGameplay(){
+  el('hud-race-code').textContent=raceId;
+  gameRunning=true;
+  el('game-hud').classList.add('on');
+  var bp=el('bottom-panel');
+  bp.classList.remove('hidden'); bp.style.display='block';
+  bp.style.visibility='visible'; bp.style.opacity='1'; bp.style.zIndex='9999';
+
+  // Place my kart at starting grid position
+  var playerList=Object.values(allPlayers);
+  var myIdx=playerList.findIndex(function(p){return p.pid===playerId;}); if(myIdx<0) myIdx=0;
+  myProgress=0.01+myIdx*0.004; // stagger start positions
+  myProgress_t=myProgress%1;
+
+  // Watch all players
+  gameRef=db.ref('race/'+raceId+'/players');
+  gameRef.on('value',function(snap){
+    var players=(snap&&snap.val())||{};
+    Object.entries(players).forEach(function(e){ allPlayers[e[0]]=Object.assign({pid:e[0]},e[1]); });
+    updateTimingStrip();
+  });
+  // Watch for race end
+  db.ref('race/'+raceId+'/state/phase').on('value',function(snap){
+    if(snap&&snap.val()==='ended') endRace();
+  });
+  // Periodic strong sync
+  setInterval(function(){
+    if(!myFinished&&gameRunning){
+      db.ref('race/'+raceId+'/players/'+playerId).update({
+        progress:myProgress_t, updatedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+  },1500);
+  lastTime=performance.now();
+  rafId=requestAnimationFrame(renderLoop);
+  loadQ();
+}
+
+/* ════════════════ QUESTIONS ════════════════ */
+function loadQ(){
+  if(currentQ>=totalQ){
+    if(!myFinished){
+      myFinished=true;
+      db.ref('race/'+raceId+'/players/'+playerId).update({
+        finished:true, progress:1, updatedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+      nitroUntil=Date.now()+4000; // victory boost!
+      playFinish();
+      setTimeout(function(){
+        el('finish-overlay').classList.add('show');
+        el('finish-rank-num').textContent='P'+getMyRank();
+        el('finish-streak').textContent=bestStreak;
+        el('finish-correct').textContent=allPlayers[playerId]?(allPlayers[playerId].correct||0):0;
+        el('finish-total').textContent=totalQ;
+      },3500);
+    }
+    return;
+  }
+  var q=questions[currentQ];
+  el('q-num').textContent='Q '+(currentQ+1)+' / '+totalQ;
+  el('q-txt').textContent=q.question||'';
+  // Question body image
+  var qia=el('q-img-area'); qia.innerHTML='';
+  if(q.image_url&&q.image_url.trim()){
+    var qw=document.createElement('div'); qw.className='q-img-wrap';
+    var qi=document.createElement('img'); qi.src=q.image_url; qi.alt='Question image';
+    qi.onerror=function(){qw.remove();};
+    qw.appendChild(qi); qia.appendChild(qw);
+  }
+  el('q-area').innerHTML='';
+  answering=false;
+  if(q.type==='MCQ'||q.type==='TF'){
+    var labels=['A','B','C','D'];
+    var imgs=q.option_images||[];
+    // Detect image-only options (no text for any option that has an image)
+    var anyImgOnly=(q.options||[]).some(function(o,i){ return imgs[i]&&!o; });
+    var grid=document.createElement('div');
+    grid.className=anyImgOnly?'opts-grid img-grid':'opts-grid';
+    (q.options||[]).forEach(function(opt,i){
+      var btn=document.createElement('button'); btn.className='opt-btn';
+      var imgSrc=imgs[i]||'';
+      var isImgOnly=imgSrc&&!opt;
+      if(isImgOnly) btn.classList.add('img-only');
+      var txtPart=opt?'<span>'+esc(opt)+'</span>':'';
+      var imgPart=imgSrc?'<img class="opt-img" src="'+esc(imgSrc)+'" alt="option '+(i+1)+'" loading="lazy" onerror="this.remove()">':'';
+      btn.innerHTML='<div class="opt-key">'+(labels[i]||i+1)+'</div><div style="flex:1">'+txtPart+imgPart+'</div>';
+      btn.addEventListener('click',(function(o,b){return function(){submitAns(o,b);};})(opt||labels[i],btn));
+      grid.appendChild(btn);
+    });
+    el('q-area').appendChild(grid);
+  } else {
+    var area=document.createElement('div'); area.className='short-area';
+    var inp=document.createElement('input'); inp.className='short-inp'; inp.type='text'; inp.placeholder='Type answer…'; inp.maxLength=120;
+    var sbtn=document.createElement('button'); sbtn.className='sub-btn'; sbtn.textContent='GO';
+    sbtn.addEventListener('click',function(){if(!inp.disabled&&inp.value.trim()) submitAns(inp.value.trim(),null);});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter') sbtn.click();});
+    area.appendChild(inp); area.appendChild(sbtn);
+    el('q-area').appendChild(area);
+    setTimeout(function(){inp.focus();},60);
+  }
+  setTimeout(resizeCanvas,30);
+}
+
+function submitAns(answer,btnEl){
+  if(answering) return;
+  answering=true;
+  el('q-area').querySelectorAll('button,input').forEach(function(b){b.disabled=true;});
+  if(btnEl) btnEl.classList.add('selected');
+  var q=questions[currentQ], capturedQIndex=currentQ;
+  gasPost({action:'validateRaceAnswer',raceId:raceId,playerId:playerId,questionId:q.id,answer:answer},
+  function(err,res){
+    var correct=false;
+    if(!err&&res&&res.status==='success'&&res.data) correct=res.data.isCorrect===true;
+    var stillOn=(capturedQIndex===currentQ);
+    if(correct){
+      streak++; if(streak>bestStreak) bestStreak=streak;
+      if(stillOn&&btnEl){btnEl.classList.remove('selected');btnEl.classList.add('correct');}
+      flashScreen('correct'); playCorrect();
+      var sb=el('streak-badge');
+      if(streak>=3){
+        nitroUntil=Date.now()+4000;
+        sb.className='streak-badge nitro'; sb.textContent='⚡ STREAK: '+streak;
+        showBanner('nitro'); playNitro(); playStreakMilestone(streak);
+      } else {
+        boostUntil=Date.now()+1500;
+        sb.className='streak-badge'; sb.textContent='🔥 STREAK: '+streak;
+      }
+      var prev=(allPlayers[playerId]&&allPlayers[playerId].correct)||0;
+      db.ref('race/'+raceId+'/players/'+playerId).update({correct:prev+1,streak:streak});
+    } else {
+      streak=0;
+      if(stillOn&&btnEl){btnEl.classList.remove('selected');btnEl.classList.add('wrong');}
+      flashScreen('wrong'); playWrong();
+      wrongUntil=Date.now()+2000;
+      var sb2=el('streak-badge'); sb2.className='streak-badge'; sb2.textContent='🔥 STREAK: 0';
+      showBanner('wrong');
+      db.ref('race/'+raceId+'/players/'+playerId).update({streak:0});
+    }
+  });
+  setTimeout(function(){currentQ++; loadQ();},600);
+}
+
+/* ════════════════ EFFECTS ════════════════ */
+var nitroTimer=null,wrongTimer=null,flashTimer=null;
+function showBanner(type){
+  if(type==='nitro'){
+    var b=el('nitro-banner'); b.classList.add('show');
+    clearTimeout(nitroTimer); nitroTimer=setTimeout(function(){b.classList.remove('show');},2000);
+  } else {
+    var w=el('wrong-banner'); w.classList.add('show');
+    clearTimeout(wrongTimer); wrongTimer=setTimeout(function(){w.classList.remove('show');},1000);
+  }
+}
+function flashScreen(type){
+  var f=el('screen-flash'); f.className='screen-flash '+type+' show';
+  clearTimeout(flashTimer); flashTimer=setTimeout(function(){f.className='screen-flash '+type;},200);
+}
+
+/* ════════════════ TIMING STRIP ════════════════ */
+function updateTimingStrip(){
+  var players=Object.values(allPlayers).sort(function(a,b){
+    if(!!b.finished!==!!a.finished) return b.finished?1:-1;
+    return (b.progress||0)-(a.progress||0);
+  });
+  var medals=['🥇','🥈','🥉'], html='';
+  players.forEach(function(p,i){
+    var isMe=p.pid===playerId;
+    var cls=isMe?' me':i===0?' leader':'';
+    var pct=p.finished?'DONE':Math.round((p.progress||0)*100)+'%';
+    html+='<div class="ts-item'+cls+'">'
+      +'<div class="ts-pos'+(i===0?' p1':'')+'">'+(medals[i]||(i+1))+'</div>'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+esc(p.color||'#888')+'"></div>'
+      +'<div class="ts-name">'+esc((p.name||'?').slice(0,8))+(isMe?' ★':'')+'</div>'
+      +(p.finished?'<div class="ts-pct" style="color:var(--grn)">DONE</div>':'<div class="ts-pct">'+pct+'</div>')
+      +'</div>';
+  });
+  el('hud-pos').textContent='P'+getMyRank();
+  el('timing-strip').innerHTML=html;
+}
+
+/* ════════════════ END RACE ════════════════ */
+function endRace(){
+  gameRunning=false;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  stopAllMusic();
+  if(gameRef){try{gameRef.off('value');}catch(_){}gameRef=null;}
+}
+
+/* ════════════════ JOIN FLOW ════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  if(preCode) el('inp-code').value=preCode;
+  el('inp-code').addEventListener('keydown',function(e){if(e.key==='Enter') el('inp-name').focus();});
+  el('inp-name').addEventListener('keydown',function(e){if(e.key==='Enter') doJoin();});
+  el('joinBtn').addEventListener('click',doJoin);
+});
+
+function doJoin(){
+  var btn=el('joinBtn'), errE=el('joinErr');
+  raceId=(el('inp-code').value||'').trim().toUpperCase();
+  playerName=(el('inp-name').value||'').trim();
+  errE.textContent='';
+  if(raceId.length<4){errE.textContent='Enter a valid race code';return;}
+  if(playerName.length<2){errE.textContent='Enter driver name (min 2 chars)';return;}
+  btn.disabled=true; btn.textContent='ENTERING GRID…';
+  playerId='p_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  initAudio();
+  var cIdx=Math.floor(Math.random()*NEON_HEX.length);
+  playerColorHex=NEON_HEX[cIdx];
+  var laneOffsets=[-3.5,-1.2,1.2,3.5];
+  var laneX=laneOffsets[Math.floor(Math.random()*laneOffsets.length)];
+  gasPost({action:'getRaceQuestions',raceId:raceId},function(err,res){
+    if(err||!res||res.status!=='success'){
+      errE.textContent=(res&&res.message)||'Race not found. Check your code.';
+      btn.disabled=false; btn.textContent='▶ ENTER RACE'; return;
+    }
+    questions=res.data||[]; totalQ=questions.length;
+    db.ref('race/'+raceId+'/players/'+playerId).set({
+      name:playerName, color:playerColorHex, laneX:laneX,
+      progress:0, correct:0, streak:0, finished:false,
+      joinedAt:firebase.database.ServerValue.TIMESTAMP
+    });
+    allPlayers[playerId]={pid:playerId,name:playerName,color:playerColorHex,
+      laneX:laneX,progress:0,correct:0,streak:0,finished:false};
+    el('lby-code').textContent=raceId;
+    showScreen('s-lobby');
+    watchLobby();
+    btn.disabled=false; btn.textContent='▶ ENTER RACE';
+  });
+}
+
+/* ════════════════ LOBBY WATCHING ════════════════ */
+function watchLobby(){
+  lobbyPRef=db.ref('race/'+raceId+'/players');
+  lobbyPRef.on('value',function(snap){
+    var players=(snap&&snap.val())||{};
+    var names=Object.values(players).map(function(p){return p.name||'?';});
+    el('lby-count').textContent=names.length;
+    el('lby-chips').innerHTML=names.map(function(n){return '<div class="chip">'+esc(n)+'</div>';}).join('');
+    Object.entries(players).forEach(function(e){allPlayers[e[0]]=Object.assign({pid:e[0]},e[1]);});
+  });
+  phaseRef=db.ref('race/'+raceId+'/state');
+  phaseRef.on('value',function(snap){
+    if(!snap||!snap.val()) return;
+    var state=snap.val(), phase=state.phase;
+    if(phase==='started'){
+      detachLobby();
+      var startedAt=state.startedAt||Date.now();
+      runPreRaceCinematic(startedAt);
+    } else if(phase==='ended'){
+      endRace();
+    }
+  });
+}
+function detachLobby(){
+  if(lobbyPRef){try{lobbyPRef.off('value');}catch(_){}lobbyPRef=null;}
+  if(phaseRef){try{phaseRef.off('value');}catch(_){}phaseRef=null;}
+}
+
+/* ════════════════ CLEANUP ════════════════ */
+window.addEventListener('beforeunload',function(){
+  if(rafId){cancelAnimationFrame(rafId);}
+  [lobbyPRef,phaseRef,gameRef].forEach(function(r){if(r){try{r.off('value');}catch(_){}}});
+  stopAllMusic();
+});
+
+})();
+</script>
+</body>
+</html>
