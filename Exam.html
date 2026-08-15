@@ -2437,7 +2437,6 @@ function _initSubjectTabs(){
 // ================================================================
 var _adaptivePool               = [];   // full fetched pool, hidden from direct navigation
 var _adaptiveBusy               = false;
-var _adaptiveTotalPointsServed  = 0;    // question-adaptive stopping condition
 var _adaptiveSubjects           = [];
 var _adaptiveSubjectIdx         = 0;
 var _adaptiveSubjectCaps        = [];   // fixed question cap per subject index, computed once in _initAdaptiveEngine
@@ -2471,24 +2470,18 @@ function _initAdaptiveEngine(){
     _adaptiveSubjects=subjs;
     _adaptiveSubjectIdx=0;
 
-    // Fixed per-subject question caps: every subject after the first is
-    // sized off the hard tier, so its cap never changes regardless of which
-    // tier it's actually served at — that's what differentiates a strong vs
-    // weak student (same question count everywhere, different point
-    // values), not question count. Subject 1 always starts medium, so it
-    // gets extra questions to close the gap that tier difference would
-    // otherwise leave, landing the derived true max at/near the configured
-    // adaptiveTotalPoints instead of falling short.
+    // Fixed per-subject question cap: every subject gets the SAME cap
+    // (teacher-set directly as "Questions per Subject"), regardless of
+    // which tier it's actually served at — that's what differentiates a
+    // strong vs weak student (same question count everywhere, different
+    // point values), not question count. Subject 1 always starts medium;
+    // every subject after that reaches/stays at hard in the best case.
     var pointsMedium=parseInt(quizMeta.adaptivePointsMedium)||2;
     var pointsHard=parseInt(quizMeta.adaptivePointsHard)||3;
-    var totalPoints=parseInt(quizMeta.adaptiveTotalPoints)||100;
+    var cap=parseInt(quizMeta.adaptiveQuestionCap)||8;
     var numSubjects=_adaptiveSubjects.length||1;
-    var subjectBudget=totalPoints/numSubjects;
-    var otherCap=Math.max(1,Math.floor(subjectBudget/pointsHard));
-    var othersTotal=(numSubjects-1)*otherCap*pointsHard;
-    var subject1Cap=Math.max(1,Math.ceil((totalPoints-othersTotal)/pointsMedium));
-    _adaptiveSubjectCaps=_adaptiveSubjects.map(function(_,i){ return i===0?subject1Cap:otherCap; });
-    _adaptiveSubjectTrueMax=subject1Cap*pointsMedium+othersTotal;
+    _adaptiveSubjectCaps=_adaptiveSubjects.map(function(){ return cap; });
+    _adaptiveSubjectTrueMax=cap*pointsMedium+cap*pointsHard*(numSubjects-1);
 
     _adaptiveSubjectTier='medium';
     _adaptiveSubjectQServed=0;
@@ -2582,10 +2575,8 @@ function _adaptiveQuestionAdvance(q,isCorrect){
   var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
   var cur=rank[q.difficulty]!==undefined?rank[q.difficulty]:1;
   var nextRank=isCorrect?Math.min(2,cur+1):Math.max(0,cur-1);
-  _adaptiveTotalPointsServed+=(q.points||0);
   var cap=parseInt(quizMeta.adaptiveQuestionCap)||20;
-  var targetPoints=parseInt(quizMeta.adaptiveTotalPoints)||100;
-  if(questions.length>=cap||_adaptiveTotalPointsServed>=targetPoints){ doSubmit(false); return; }
+  if(questions.length>=cap){ doSubmit(false); return; }
   var next=_pickAdaptiveQuestion(tiers[nextRank],null);
   if(!next){ doSubmit(false); return; }
   questions.push(next); qIndex++; renderDots(); renderQuestion();

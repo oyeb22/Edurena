@@ -947,12 +947,12 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           </div>
           <p style="font-size:11px;color:var(--text2)">Only questions explicitly tagged Easy/Medium/Hard are eligible — untagged questions are excluded from adaptive quizzes.</p>
           <div class="fgrid">
-            <div class="fg"><label>Points — Easy</label><input type="number" id="ad-pts-easy" value="1" min="1"></div>
-            <div class="fg"><label>Points — Medium</label><input type="number" id="ad-pts-medium" value="2" min="1"></div>
-            <div class="fg"><label>Points — Hard</label><input type="number" id="ad-pts-hard" value="3" min="1"></div>
-            <div class="fg"><label>Total Points</label><input type="number" id="ad-total-points" value="100" min="1"></div>
-            <div class="fg"><label>Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Stops the exam once this many questions have been asked" onchange="onAdaptiveModeChange()"></div>
+            <div class="fg"><label>Points — Easy</label><input type="number" id="ad-pts-easy" value="1" min="1" oninput="updateAdaptiveMax()"></div>
+            <div class="fg"><label>Points — Medium</label><input type="number" id="ad-pts-medium" value="2" min="1" oninput="updateAdaptiveMax()"></div>
+            <div class="fg"><label>Points — Hard</label><input type="number" id="ad-pts-hard" value="3" min="1" oninput="updateAdaptiveMax()"></div>
+            <div class="fg"><label id="ad-question-cap-label">Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Stops the exam once this many questions have been asked" oninput="updateAdaptiveMax()" onchange="onAdaptiveModeChange()"></div>
             <div class="fg" id="ad-threshold-row"><label>Promotion Threshold %</label><input type="number" id="ad-threshold" value="50" min="1" max="100" title="Score above this to get harder questions in the next subject"></div>
+            <div class="fg"><label>Max Possible Points <span style="font-weight:400;color:var(--text3);text-transform:none">— auto-calculated</span></label><strong id="ad-max-display" style="display:block;font-family:var(--mono);font-size:16px;padding:6px 0">100</strong></div>
           </div>
         </div>
         <div class="card">
@@ -2707,13 +2707,44 @@ function onQuizTypeChange(){
   var adaptiveCard = document.getElementById('adaptive-card');
   if (adaptiveCard) adaptiveCard.classList.toggle('hidden', t !== 'adaptive');
   updateSectionTimerVisibility();
+  if (t === 'adaptive') updateAdaptiveMax();
   // Subject allocation rows render differently for adaptive (checkbox +
   // readiness) vs standard/jamb (count input) — re-fetch so the switch
   // takes effect immediately if a class/week was already picked.
   var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
   if (cid && wk) onWeekChange();
 }
-function onAdaptiveModeChange(){ updateSectionTimerVisibility(); var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if (cid && wk) onWeekChange(); }
+function onAdaptiveModeChange(){
+  var mode=(document.getElementById('ad-mode')||{}).value||'question';
+  var capLabel=document.getElementById('ad-question-cap-label');
+  if(capLabel) capLabel.textContent = mode==='subject' ? 'Questions per Subject' : 'Question Cap';
+  updateSectionTimerVisibility();
+  updateAdaptiveMax();
+  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
+  if (cid && wk) onWeekChange();
+}
+// Live-recalculates the read-only "Max Possible Points" display from
+// points-per-difficulty + cap (+ included-subject count for subject mode) —
+// nothing here is teacher-typed, so an unreachable max can never be set.
+// Question-adaptive: medium + (cap-1)*hard (Q1 is always medium, every
+// question after escalates to and stays at hard in the best case).
+// Subject-adaptive: cap*medium + cap*hard*(numSubjects-1) — every subject
+// gets the same fixed cap, subject 1 contributes at medium, every subject
+// after reaches/stays at hard in the best case.
+function updateAdaptiveMax(){
+  var mode=(document.getElementById('ad-mode')||{}).value||'question';
+  var pMed=parseInt((document.getElementById('ad-pts-medium')||{}).value)||2;
+  var pHard=parseInt((document.getElementById('ad-pts-hard')||{}).value)||3;
+  var cap=parseInt((document.getElementById('ad-question-cap')||{}).value)||1;
+  var max;
+  if(mode==='subject'){
+    var numSubjects=document.querySelectorAll('.sadapt:checked').length||1;
+    max = cap*pMed + cap*pHard*(numSubjects-1);
+  } else {
+    max = pMed + (cap-1)*pHard;
+  }
+  setText('ad-max-display', max);
+}
 // Section-timer (order + per-subject duration) block is only meaningful for
 // Subject-Sectioned exams and Subject-Adaptive quizzes — Question-Adaptive
 // and Standard exams never use it.
@@ -2886,8 +2917,7 @@ function renderSubjAlloc(subjs,wk,weekMode){
   var isAdaptive=quizType==='adaptive';
   var adaptiveMode=(document.getElementById('ad-mode')||{}).value||'question';
   var cap=parseInt((document.getElementById('ad-question-cap')||{}).value)||20;
-  var numSubjects=Object.keys(subjs).length||1;
-  var perSubjectMin=adaptiveMode==='subject'?Math.ceil(cap/numSubjects):cap;
+  var perSubjectMin=cap;
   var tot=0;
   document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){
     var subjectName=e[0], counts=e[1]||{available:0,easy:0,medium:0,hard:0};
@@ -2907,7 +2937,7 @@ function renderSubjAlloc(subjs,wk,weekMode){
         ? '<span style="color:var(--success)">&#10003; '+available+'/'+perSubjectMin+' needed</span>'
         : '<span style="color:var(--danger)">&#10007; only '+available+' — needs '+perSubjectMin+'</span>';
       return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+' · '+readyBadge+'</div></div>'
-        +'<label class="type-chk-label"><input type="checkbox" class="sadapt" data-subject="'+subjAttr+'" checked><span>Include</span></label>'
+        +'<label class="type-chk-label"><input type="checkbox" class="sadapt" data-subject="'+subjAttr+'" checked onchange="updateAdaptiveMax()"><span>Include</span></label>'
         +orderDurationHtml+'</div>';
     }
     tot+=suggested;
@@ -2917,6 +2947,7 @@ function renderSubjAlloc(subjs,wk,weekMode){
       +orderDurationHtml+'</div>';
   }).join('');
   setText('tot-q', isAdaptive?'varies per student (adaptive)':tot);
+  if(isAdaptive) updateAdaptiveMax();
 }
 function getSubjectOrder(){ var pairs=[]; document.querySelectorAll('.sorder').forEach(function(el){ pairs.push({subject:el.getAttribute('data-subject'),order:parseInt(el.value)||0}); }); pairs.sort(function(a,b){ return a.order-b.order; }); return pairs.map(function(p){ return p.subject; }); }
 function getPerSubjectDuration(){ var m={}; document.querySelectorAll('.sduration').forEach(function(el){ var s=el.getAttribute('data-subject'); if(s) m[s]=parseInt(el.value)||15; }); return m; }
@@ -2976,7 +3007,6 @@ function doCreate(){
     adaptivePointsEasy:      parseInt((document.getElementById('ad-pts-easy')||{}).value)||1,
     adaptivePointsMedium:    parseInt((document.getElementById('ad-pts-medium')||{}).value)||2,
     adaptivePointsHard:      parseInt((document.getElementById('ad-pts-hard')||{}).value)||3,
-    adaptiveTotalPoints:     parseInt((document.getElementById('ad-total-points')||{}).value)||100,
     adaptiveQuestionCap:     parseInt((document.getElementById('ad-question-cap')||{}).value)||20,
     adaptivePromotionThreshold: parseInt((document.getElementById('ad-threshold')||{}).value)||50
   }, function(d) {
@@ -3017,11 +3047,12 @@ function resetCreate(){
   var td=document.getElementById('c-type-desc'); if(td) td.textContent=_QUIZ_TYPE_DESC['standard']||'';
   var am=document.getElementById('ad-mode'); if(am) am.value='question';
   ['ad-pts-easy','ad-pts-medium','ad-pts-hard'].forEach(function(id,i){ var e=document.getElementById(id); if(e) e.value=[1,2,3][i]; });
-  var atp=document.getElementById('ad-total-points'); if(atp) atp.value='100';
   var aqc=document.getElementById('ad-question-cap'); if(aqc) aqc.value='20';
   var ath=document.getElementById('ad-threshold'); if(ath) ath.value='50';
+  var capLabel=document.getElementById('ad-question-cap-label'); if(capLabel) capLabel.textContent='Question Cap';
   var tm=document.getElementById('c-timer-mode'); if(tm) tm.value='overall';
   updateSectionTimerVisibility();
+  updateAdaptiveMax();
 }
 
 /* ── Grading Rubric ── */
