@@ -1705,6 +1705,10 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
 /* ── State ── */
 var S = { token:'', email:'', name:'', role:'', classes:[], subjects:[], photoUrl:'', school:'', phone:'' };
 var allQuizzes=[], allClasses=[], allQuestions=[], subjectTags=[];
+// Lightweight per-class question counts from getTeacherStats, keyed by
+// classId — used for the overview chart before/without ever fetching the
+// full question bank content (see loadOverview/renderCharts).
+var questionCountsByClass={};
 var chStatus=null, chCls=null;
 var pendingApproveTarget=null, pendingAssignTarget=null;
 var _selectedPassageId='';
@@ -2027,7 +2031,29 @@ function loadOverview() {
   var today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   setText('ovw-sub', today);
 
-  var done=0; function check(){ done++; if(done===2) { renderCharts(); refreshSidebarStats(); } }
+  // getTeacherStats no longer waits behind getAllQuizzes+getQuestionBank
+  // finishing first (it was gated on both for no reason — it doesn't use
+  // either's result — adding a needless extra sequential GAS round-trip,
+  // ~1.5-3s, to the dashboard's critical path). Its own text updates
+  // (today/avg/question count) fire the moment it returns; renderCharts()
+  // still correctly waits for both this AND getAllQuizzes below, since the
+  // per-class chart needs questionCountsByClass and the status chart needs
+  // allQuizzes.
+  var done=0; function check(){ done++; if(done===2) renderCharts(); }
+  call('getTeacherStats', {}, function(d) {
+    setText('sb-stat-today-val', String(d.todayAttempts || 0));
+    setText('sb-stat-avg-val', d.avgScore !== null && d.avgScore !== undefined
+      ? d.avgScore + '%' : '—');
+    // Also feeds the "questions" stat + per-class chart below, without
+    // ever fetching the full question_bank content just to count it.
+    questionCountsByClass = d.questionCountsByClass || {};
+    if (!allQuestions.length) countUp('s-qs', d.questionTotal || 0);
+    check();
+  }, function() {
+    /* silently leave stat values as — on error */
+    check();
+  });
+
   call('getAllQuizzes',{},function(qs){
     allQuizzes=qs||[];
     var now=new Date();
@@ -2035,17 +2061,17 @@ function loadOverview() {
     countUp('s-tot', allQuizzes.length);
     countUp('s-cls', allClasses.length);
     countUp('s-act', activeCount);
+    setText('sb-stat-active-val', String(activeCount));
     // Update active badge in topbar
     var tbBadge=document.getElementById('tb-active-badge'); if(tbBadge) tbBadge.style.display = activeCount>0?'inline-flex':'none';
     setText('tb-active-count',activeCount);
     renderRecentTable(); check();
   },function(){ check(); });
-  if(allQuestions.length){ countUp('s-qs', allQuestions.length); check(); }
-  else { call('getQuestionBank',{classId:allClasses.length?allClasses[0].id:''}, function(qq){ allQuestions=qq||[]; countUp('s-qs',allQuestions.length); check(); }, function(){ check(); }); }
+  if(allQuestions.length) countUp('s-qs', allQuestions.length);
 }
-
-// Refresh sidebar mini-stats: active quiz count from memory, today's attempts
-// and avg score from the dedicated getTeacherStats GAS endpoint.
+// Standalone sidebar refresh for callers outside loadOverview (e.g. after
+// the quiz list changes elsewhere) — same lightweight getTeacherStats call,
+// no chart-render gating needed here since nothing else is waiting on it.
 function refreshSidebarStats() {
   var now = new Date();
   var active = (allQuizzes || []).filter(function(q) {
@@ -2057,6 +2083,7 @@ function refreshSidebarStats() {
     setText('sb-stat-today-val', String(d.todayAttempts || 0));
     setText('sb-stat-avg-val', d.avgScore !== null && d.avgScore !== undefined
       ? d.avgScore + '%' : '—');
+    questionCountsByClass = d.questionCountsByClass || {};
   }, function() {
     /* silently leave values as — on error */
   });
@@ -2097,8 +2124,16 @@ function renderCharts() {
       }
     }
   });
+  // Prefer allQuestions (real per-question data) if the Question Bank tab
+  // has already been visited this session; otherwise fall back to the
+  // lightweight counts-only breakdown from getTeacherStats, so this chart
+  // never needs the heavy full-content fetch just to populate itself.
   var counts={};
-  allQuestions.forEach(function(q){ counts[q.classId]=(counts[q.classId]||0)+1; });
+  if (allQuestions.length) {
+    allQuestions.forEach(function(q){ counts[q.classId]=(counts[q.classId]||0)+1; });
+  } else {
+    counts = Object.assign({}, questionCountsByClass);
+  }
   var cc=document.getElementById('ch-cls'); if(!cc) return;
   if(chCls) chCls.destroy();
   var barColors = Object.keys(counts).map(function(_,i){

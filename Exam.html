@@ -919,9 +919,17 @@ async function getQuizDataDirect(examCode) {
   }
   throw lastErr;
 }
+// A GAS validateExamCode call is unconditionally needed once an exam is
+// actually open — it alone does the retake check, the subscription check,
+// AND issues the examSessionToken every downstream proctoring call needs,
+// so there is no way to skip it once we get this far, and calling it twice
+// (as this function previously did, once per condition block) only doubled
+// the wait for no benefit. The one genuine win a direct read still buys:
+// when the exam ISN'T currently open (wrong code, not started, expired),
+// that's answered instantly from the fast direct read with NO GAS round
+// trip at all — the single most common reason a validation fails.
 async function validateExamDirect(examCode, studentEmail) {
   try {
-    // Fetch quiz meta directly from Supabase
     var rows = await supabaseGet('quizzes',
       { 'exam_code': 'eq.' + examCode.toUpperCase(),
         'status':    'eq.active' },
@@ -931,7 +939,6 @@ async function validateExamDirect(examCode, studentEmail) {
     if (!rows || !rows.length) return { ok: false, message: 'Exam code not found' };
     var quiz = rows[0];
 
-    // Time window check
     var now   = new Date();
     var start = new Date(quiz.start_time);
     var end   = new Date(quiz.end_time);
@@ -941,109 +948,29 @@ async function validateExamDirect(examCode, studentEmail) {
       return { ok: false, message: 'Exam has not started yet. Starts: ' + start.toLocaleString() };
     if (now > end)
       return { ok: false, message: 'Exam has expired' };
-
-    // Duplicate submission check (only when retakes off)
-    if (!quiz.allow_retakes) {
-      var existing = await supabaseGet('exam_results',
-        { 'exam_code':     'eq.' + examCode,
-          'student_email': 'eq.' + studentEmail.toLowerCase() },
-        'id');
-      // Note: anon key has no SELECT policy on exam_results
-      // so this falls back to GAS for the duplicate check
-      var gasCheck = await new Promise(function(resolve) {
-        post('validateExamCode',
-          { studentEmail: studentEmail, examCode: examCode },
-          function(e, r) { resolve(r); });
-      });
-      if (!gasCheck || gasCheck.status !== 'success') {
-        return { ok: false, message: (gasCheck && gasCheck.message) || 'Validation failed' };
-      }
-      // v5.1: capture examSessionToken for downstream proctoring calls
-      if (gasCheck.data && gasCheck.data.examSessionToken) {
-        examSessionToken = gasCheck.data.examSessionToken;
-      }
-      // v5.2: capture examSignature for offline-recovery auth
-      if (gasCheck.data && gasCheck.data.examSignature) {
-        examSignature    = gasCheck.data.examSignature;
-        examValidUntilMs = gasCheck.data.validUntilMs || 0;
-      }
-    }
-
-    // Subscription check via GAS (school data is protected)
-    if (quiz.school) {
-      var subCheck = await new Promise(function(resolve) {
-        post('validateExamCode',
-          { studentEmail: studentEmail, examCode: examCode },
-          function(e, r) { resolve(r); });
-      });
-      if (!subCheck || subCheck.status !== 'success') {
-        return { ok: false, message: (subCheck && subCheck.message) || 'Access denied' };
-      }
-      // v5.1: capture examSessionToken
-      if (subCheck.data && subCheck.data.examSessionToken) {
-        examSessionToken = subCheck.data.examSessionToken;
-      }
-      // v5.2: capture examSignature for offline-recovery auth
-      if (subCheck.data && subCheck.data.examSignature) {
-        examSignature    = subCheck.data.examSignature;
-        examValidUntilMs = subCheck.data.validUntilMs || 0;
-      }
-      // Trust GAS result fully when subscription or duplicate check is needed
-      return { ok: true, quizData: subCheck.data.quizData };
-    }
-
-    // v5.1: even on the all-clear happy path, we need an examSessionToken so
-    // savePhoto/logViolation/getExplanation will be accepted. The GAS call is
-    // cheap (cached) when both branches above also fired, and necessary when
-    // neither did (no-school + retakes-allowed exams).
-    if (!examSessionToken) {
-      await new Promise(function(resolve) {
-        post('validateExamCode',
-          { studentEmail: studentEmail, examCode: examCode },
-          function(e, r) {
-            if (r && r.status === 'success' && r.data) {
-              if (r.data.examSessionToken) examSessionToken = r.data.examSessionToken;
-              // v5.2: capture examSignature for offline-recovery auth
-              if (r.data.examSignature) {
-                examSignature    = r.data.examSignature;
-                examValidUntilMs = r.data.validUntilMs || 0;
-              }
-            }
-            resolve();
-          });
-      });
-    }
-
-    return {
-      ok: true,
-      quizData: {
-        title:              String(quiz.title || ''),
-        duration:           parseInt(quiz.duration) || 30,
-        faceDetection:      quiz.face_detection !== false,
-        showCorrectAnswers: quiz.show_correct_answers === true,
-        maxViolations:      parseInt(quiz.max_violations) || 3,
-        allowRetakes:       quiz.allow_retakes === true,
-        enableTTS:          quiz.enable_tts === true
-      }
-    };
   } catch(e) {
-    // Fallback to GAS if direct fetch fails
-    return new Promise(function(resolve) {
-      post('validateExamCode',
-        { studentEmail: studentEmail, examCode: examCode },
-        function(err, r) {
-          if (err || !r || r.status !== 'success') {
-            resolve({ ok: false, message: (r && r.message) || 'Validation failed' });
-          } else {
-            // v5.1: capture examSessionToken in fallback path too
-            if (r.data && r.data.examSessionToken) {
-              examSessionToken = r.data.examSessionToken;
-            }
-            resolve({ ok: true, quizData: r.data.quizData });
-          }
-        });
-    });
+    // Direct read failed — fall through to the single GAS call below,
+    // which is the authoritative path anyway.
   }
+
+  // Exam is open (or the direct read above failed) — exactly ONE GAS call
+  // handles retake check, subscription check, and session-token issuance.
+  return new Promise(function(resolve) {
+    post('validateExamCode',
+      { studentEmail: studentEmail, examCode: examCode },
+      function(err, r) {
+        if (err || !r || r.status !== 'success') {
+          resolve({ ok: false, message: (r && r.message) || 'Validation failed' });
+          return;
+        }
+        if (r.data.examSessionToken) examSessionToken = r.data.examSessionToken;
+        if (r.data.examSignature) {
+          examSignature    = r.data.examSignature;
+          examValidUntilMs = r.data.validUntilMs || 0;
+        }
+        resolve({ ok: true, quizData: r.data.quizData });
+      });
+  });
 }
 
 // ================================================================
