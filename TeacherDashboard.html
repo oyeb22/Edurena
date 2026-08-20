@@ -318,6 +318,34 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 .fg select option { background: var(--surface); }
 .fg input[type="datetime-local"] { color-scheme: light; }
 
+/* CREATE QUIZ — grouped layout + live summary (scoped to #tp-create only,
+   deliberately not touching .card/.ct so every other tab is unaffected) */
+.cq-layout { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
+.cq-main { min-width: 0; }
+.cq-group { margin-bottom: 26px; }
+.cq-group-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; padding-left: 2px; }
+.cq-group-num { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--bg,#fff); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: var(--mono); }
+.cq-group-title { font-size: 13px; font-weight: 700; letter-spacing: .2px; }
+.cq-group-desc { font-size: 11.5px; color: var(--text2); margin-top: 1px; }
+.cq-group .card { margin-bottom: 10px; }
+.cq-group .card:last-child { margin-bottom: 0; }
+.ct .cq-ico { margin-right: 6px; }
+.cq-collapsible .ct { cursor: pointer; user-select: none; display: flex; align-items: center; }
+.cq-collapsible .cq-chevron { margin-left: auto; font-size: 11px; color: var(--text3); transition: transform .15s; }
+.cq-collapsible.open .cq-chevron { transform: rotate(180deg); }
+.cq-collapsible-body { display: none; margin-top: 12px; }
+.cq-collapsible.open .cq-collapsible-body { display: block; }
+.cq-summary { position: sticky; top: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+.cq-summary-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text2); margin-bottom: 10px; }
+.cq-summary-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.cq-summary-row:last-child { border-bottom: none; }
+.cq-summary-row span { color: var(--text2); }
+.cq-summary-row strong { font-family: var(--mono); font-weight: 600; text-align: right; word-break: break-word; }
+@media (max-width: 900px) {
+  .cq-layout { grid-template-columns: 1fr; }
+  .cq-summary { position: static; order: -1; }
+}
+
 /* PASSWORD REVEAL */
 .pw-wrap { position: relative; }
 .pw-wrap input { padding-right: 36px; width: 100%; }
@@ -810,8 +838,13 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <!-- CREATE QUIZ -->
       <div class="tp" id="tp-create">
         <div class="sh"><h2>Create New Quiz</h2></div>
+        <div class="cq-layout">
+        <div class="cq-main">
+
+        <div class="cq-group">
+          <div class="cq-group-head"><span class="cq-group-num">1</span><div><div class="cq-group-title">Setup</div><div class="cq-group-desc">What kind of quiz, and which content it draws from</div></div></div>
         <div class="card">
-          <div class="ct">Quiz Type</div>
+          <div class="ct"><span class="cq-ico">🎯</span>Quiz Type</div>
           <div class="fgrid c1" style="margin-bottom:0">
             <div class="fg"><label>Type *
                 <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" id="c-type-desc">Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.</span></span>
@@ -825,7 +858,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           </div>
         </div>
         <div class="card hidden" id="question-source-card">
-          <div class="ct">Question Source</div>
+          <div class="ct"><span class="cq-ico">📚</span>Question Source</div>
           <div class="fgrid" style="margin-bottom:0">
             <div class="fg"><label>Source</label>
               <select id="c-question-source" onchange="onQuestionSourceChange()">
@@ -847,13 +880,13 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           </div>
         </div>
         <div class="card">
-          <div class="ct">Basic Info</div>
+          <div class="ct"><span class="cq-ico">✍️</span>Basic Info</div>
           <div class="fgrid" style="margin-bottom:10px">
-            <div class="fg"><label>Quiz Title *</label><input type="text" id="c-title" placeholder="e.g. Week 1 Maths Exam"></div>
-            <div class="fg"><label>Exam Code *</label><input type="text" id="c-code" placeholder="e.g. MATH7A-W1" style="font-family:var(--mono)"></div>
+            <div class="fg"><label>Quiz Title *</label><input type="text" id="c-title" placeholder="e.g. Week 1 Maths Exam" oninput="updateQuizSummary()"></div>
+            <div class="fg"><label>Exam Code *</label><input type="text" id="c-code" placeholder="e.g. MATH7A-W1" style="font-family:var(--mono)" oninput="updateQuizSummary()"></div>
           </div>
           <div class="fgrid c3">
-            <div class="fg"><label>Class *</label><select id="c-class" onchange="onClassChange()"><option value="">— Select —</option></select></div>
+            <div class="fg"><label>Class *</label><select id="c-class" onchange="onClassChange();updateQuizSummary()"><option value="">— Select —</option></select></div>
             <div class="fg" id="c-week-wrap"><label>Week *</label><select id="c-week" onchange="onWeekChange()" disabled><option value="">— Select —</option></select></div>
             <div class="fg" id="overall-duration-row"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
@@ -902,15 +935,19 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             </div>
           </div>
         </div>
+        </div>
+
+        <div class="cq-group">
+          <div class="cq-group-head"><span class="cq-group-num">2</span><div><div class="cq-group-title">Schedule &amp; Rules</div><div class="cq-group-desc">When it opens, and what students can and can't do</div></div></div>
         <div class="card">
-          <div class="ct">Schedule</div>
+          <div class="ct"><span class="cq-ico">📅</span>Schedule</div>
           <div class="fgrid">
-            <div class="fg"><label>Start Time *</label><input type="datetime-local" id="c-start"></div>
-            <div class="fg"><label>End / Deadline *</label><input type="datetime-local" id="c-end"></div>
+            <div class="fg"><label>Start Time *</label><input type="datetime-local" id="c-start" oninput="updateQuizSummary()"></div>
+            <div class="fg"><label>End / Deadline *</label><input type="datetime-local" id="c-end" oninput="updateQuizSummary()"></div>
           </div>
         </div>
         <div class="card">
-          <div class="ct">Options</div>
+          <div class="ct"><span class="cq-ico">⚙️</span>Options</div>
           <div class="tr-row">
             <div><div class="tl">AI Face Detection Proctoring</div><div class="td">Camera-based absence and multi-person detection</div></div>
             <div class="tog on" id="tog-face" onclick="this.classList.toggle('on')"></div>
@@ -936,8 +973,12 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
     style="width:56px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;outline:none">
 </div>
         </div>
+        </div>
+
+        <div class="cq-group">
+          <div class="cq-group-head"><span class="cq-group-num">3</span><div><div class="cq-group-title">Content</div><div class="cq-group-desc">Adaptive settings, or how many questions come from where</div></div></div>
         <div class="card hidden" id="adaptive-card">
-          <div class="ct">Adaptive Difficulty Settings</div>
+          <div class="ct"><span class="cq-ico">🧠</span>Adaptive Difficulty Settings</div>
           <div class="fg" style="margin-bottom:10px">
             <label>Adaptive Mode
               <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Every student starts at Medium and moves up or down from there.</span></span>
@@ -972,26 +1013,8 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="ct">Exam Instructions <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— optional</span></div>
-          <div class="fg">
-            <label style="display:block;color:var(--text2);font-size:12px;line-height:1.5;margin-bottom:6px">Shown to students on the pre-exam screen before they begin. Leave blank if not needed.</label>
-            <textarea id="c-instruction" rows="3" placeholder="E.g. This exam covers Weeks 1–5. No calculator allowed. Read all questions carefully before answering." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;resize:vertical;outline:none;line-height:1.5;transition:border-color .15s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor=''"></textarea>
-          </div>
-        </div>
-        <div class="card" id="rubric-card">
-          <div class="ct">Grading Rubric <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— define score ranges and comments</span><span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" style="text-transform:none">Set percentage ranges and labels for student results.</span></span></div>
-          <div id="rubric-ranges"></div>
-          <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
-            <button class="btn btn-sm" onclick="addRubricRange()">+ Add Range</button>
-            <button class="btn btn-sm" onclick="resetRubricRanges()">↺ Reset to Default</button>
-          </div>
-          <div style="margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--r-sm);font-size:11.5px;color:var(--text2);line-height:1.7">
-            <strong>Example:</strong> 80–100 = "Excellent" / Pass &nbsp;·&nbsp; 50–79 = "Very Good" / Pass &nbsp;·&nbsp; 0–49 = "Needs Improvement" / Review
-          </div>
-        </div>
         <div class="card hidden" id="subj-card">
-          <div class="ct">Question Type Filter</div>
+          <div class="ct"><span class="cq-ico">🧩</span>Question Type Filter</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="MCQ" checked onchange="onTypeChange()"><span>Multiple Choice</span></label>
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="TF"  checked onchange="onTypeChange()"><span>True / False</span></label>
@@ -1018,7 +1041,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           </div>
         </div>
         <div class="card hidden" id="passage-card">
-          <div class="ct">Comprehension Passages (Optional)<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Bundle a passage and all its linked questions into this quiz.</span></span></div>
+          <div class="ct"><span class="cq-ico">📖</span>Comprehension Passages (Optional)<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Bundle a passage and all its linked questions into this quiz.</span></span></div>
           <div class="fg" style="margin-bottom:10px">
             <label>Available Passages</label>
             <select id="passage-select" onchange="onPassageSelect()" disabled>
@@ -1031,9 +1054,51 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div style="font-size:12px;color:var(--accent-text);font-weight:500">Includes <strong id="passage-qcount">0</strong> linked questions</div>
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:5px;flex-wrap:wrap">
+        </div>
+
+        <div class="cq-group">
+          <div class="cq-group-head"><span class="cq-group-num">4</span><div><div class="cq-group-title">Extras</div><div class="cq-group-desc">Optional — instructions for students and a custom grading scale</div></div></div>
+        <div class="card cq-collapsible" id="instruction-card">
+          <div class="ct" onclick="toggleCqSection(this)"><span class="cq-ico">📝</span>Exam Instructions <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— optional</span><span class="cq-chevron">▾</span></div>
+          <div class="cq-collapsible-body">
+          <div class="fg">
+            <label style="display:block;color:var(--text2);font-size:12px;line-height:1.5;margin-bottom:6px">Shown to students on the pre-exam screen before they begin. Leave blank if not needed.</label>
+            <textarea id="c-instruction" rows="3" placeholder="E.g. This exam covers Weeks 1–5. No calculator allowed. Read all questions carefully before answering." style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;resize:vertical;outline:none;line-height:1.5;transition:border-color .15s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor=''"></textarea>
+          </div>
+          </div>
+        </div>
+        <div class="card cq-collapsible" id="rubric-card">
+          <div class="ct" onclick="toggleCqSection(this)"><span class="cq-ico">📊</span>Grading Rubric <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— define score ranges and comments</span><span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" style="text-transform:none">Set percentage ranges and labels for student results.</span></span><span class="cq-chevron">▾</span></div>
+          <div class="cq-collapsible-body">
+          <div id="rubric-ranges"></div>
+          <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="addRubricRange()">+ Add Range</button>
+            <button class="btn btn-sm" onclick="resetRubricRanges()">↺ Reset to Default</button>
+          </div>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--r-sm);font-size:11.5px;color:var(--text2);line-height:1.7">
+            <strong>Example:</strong> 80–100 = "Excellent" / Pass &nbsp;·&nbsp; 50–79 = "Very Good" / Pass &nbsp;·&nbsp; 0–49 = "Needs Improvement" / Review
+          </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="cq-actions" style="display:flex;justify-content:flex-end;gap:7px;margin-top:5px;flex-wrap:wrap">
           <button class="btn" onclick="resetCreate()">Reset</button>
           <button class="btn btn-p" onclick="doCreate()">Create Quiz →</button>
+        </div>
+        </div>
+
+        <div class="cq-summary" id="cq-summary">
+          <div class="cq-summary-head">Quiz Summary</div>
+          <div class="cq-summary-row"><span>Title</span><strong id="sum-title">—</strong></div>
+          <div class="cq-summary-row"><span>Code</span><strong id="sum-code">—</strong></div>
+          <div class="cq-summary-row"><span>Class</span><strong id="sum-class">—</strong></div>
+          <div class="cq-summary-row"><span>Type</span><strong id="sum-type">Standard</strong></div>
+          <div class="cq-summary-row"><span>Questions</span><strong id="sum-count">—</strong></div>
+          <div class="cq-summary-row"><span>Opens</span><strong id="sum-start">—</strong></div>
+          <div class="cq-summary-row"><span>Closes</span><strong id="sum-end">—</strong></div>
+        </div>
+
         </div>
       </div>
 
@@ -1337,9 +1402,15 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
 
       <!-- PRONUNCIATION PRACTICE -->
       <div class="tp" id="tp-pronunciation">
+        <div class="card hidden" id="pr-lock-wrap" style="margin-bottom:10px;text-align:center;padding:32px 20px">
+          <div style="font-size:32px;margin-bottom:10px">🔒</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px">Pronunciation Practice is a Premium feature</div>
+          <div style="font-size:12.5px;color:var(--text2);max-width:420px;margin:0 auto;line-height:1.6">Your school is on the Standard plan. Upgrade to Premium to create word lists and let students practice pronunciation with instant scoring. Contact your school admin to upgrade.</div>
+        </div>
+        <div id="pr-form-wrap">
         <div class="card" style="margin-bottom:10px;background:var(--accent-bg);border-color:var(--accent-border)">
           <div style="font-size:12.5px;color:var(--accent-text);line-height:1.6">
-            🎤 <strong>Premium feature.</strong> Students open a practice link with no login — say a word into the mic and get an instant pronunciation score. Practice links only work for schools with this feature enabled; ask your school admin if students see a "not enabled" message.
+            🎤 Students open a practice link with no login — say a word into the mic and get an instant pronunciation score.
           </div>
         </div>
         <div class="card" style="margin-bottom:10px">
@@ -1365,6 +1436,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           <div id="pronunciation-list" style="padding:14px">
             <p style="color:var(--text2);font-size:13px;text-align:center;padding:18px">Loading…</p>
           </div>
+        </div>
         </div>
       </div>
 
@@ -2823,6 +2895,7 @@ function onQuizTypeChange(){
   // takes effect immediately if a class/week was already picked.
   var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
   if (cid && wk) onWeekChange();
+  updateQuizSummary();
 }
 function onAdaptiveModeChange(){
   var mode=(document.getElementById('ad-mode')||{}).value||'question';
@@ -2832,6 +2905,7 @@ function onAdaptiveModeChange(){
   updateAdaptiveMax();
   var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
   if (cid && wk) onWeekChange();
+  updateQuizSummary();
 }
 // Live-recalculates the read-only "Max Possible Points" display from
 // points-per-difficulty + cap (+ included-subject count for subject mode) —
@@ -2857,6 +2931,7 @@ function updateAdaptiveMax(){
   var base=parseInt((document.getElementById('ad-report-base')||{}).value)||0;
   var preview=document.getElementById('ad-report-base-preview');
   if(preview) preview.textContent = base ? ('e.g. a student scoring '+max+'/'+max+' shows as '+base+'/'+base+'; scoring half shows as '+Math.round(base/2)+'/'+base) : '';
+  updateQuizSummary();
 }
 // Section-timer (order + per-subject duration) block is only meaningful for
 // Subject-Sectioned exams and Subject-Adaptive quizzes — Question-Adaptive
@@ -2884,7 +2959,7 @@ function updateDurationVisibility(){
   // duration row — only relevant with a per-subject timer, never both at once.
   document.querySelectorAll('.sdur-wrap').forEach(function(el){ el.style.display = perSubject ? '' : 'none'; });
 }
-function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); },100); }); }
+function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); updateQuizSummary(); },100); }); }
 function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
 function onTypeChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
@@ -3068,7 +3143,31 @@ function renderSubjAlloc(subjs,wk,weekMode){
 }
 function getSubjectOrder(){ var pairs=[]; document.querySelectorAll('.sorder').forEach(function(el){ pairs.push({subject:el.getAttribute('data-subject'),order:parseInt(el.value)||0}); }); pairs.sort(function(a,b){ return a.order-b.order; }); return pairs.map(function(p){ return p.subject; }); }
 function getPerSubjectDuration(){ var m={}; document.querySelectorAll('.sduration').forEach(function(el){ var s=el.getAttribute('data-subject'); if(s) m[s]=parseInt(el.value)||15; }); return m; }
-function updateTot(){ var t=0; document.querySelectorAll('.sinput').forEach(function(el){ t+=parseInt(el.value)||0; }); setText('tot-q',t); }
+function updateTot(){ var t=0; document.querySelectorAll('.sinput').forEach(function(el){ t+=parseInt(el.value)||0; }); setText('tot-q',t); updateQuizSummary(); }
+// Live-updates the Create Quiz sticky summary panel from whatever's
+// currently in the form — purely a read of already-computed DOM state
+// (tot-q / ad-max-display), never its own source of truth.
+function updateQuizSummary(){
+  var g=function(id){ return document.getElementById(id); };
+  var t=function(id){ var e=g(id); return e?e.textContent:''; };
+  var v=function(id){ var e=g(id); return e?e.value:''; };
+  setText('sum-title', v('c-title')||'—');
+  setText('sum-code', (v('c-code')||'—').toUpperCase());
+  var clSel=g('c-class'); setText('sum-class', clSel&&clSel.value?clSel.value:'—');
+  var qt=v('c-quiz-type')||'standard';
+  setText('sum-type', qt==='jamb'?'Subject-Sectioned':qt==='adaptive'?'Adaptive':'Standard');
+  if(qt==='adaptive'){ setText('sum-count', 'max '+(t('ad-max-display')||'—')+' pts'); }
+  else { setText('sum-count', (t('tot-q')||'0')+' questions'); }
+  var fmt=function(val){ if(!val) return '—'; var d=new Date(val); return isNaN(d.getTime())?'—':d.toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'}); };
+  setText('sum-start', fmt(v('c-start')));
+  setText('sum-end', fmt(v('c-end')));
+}
+// Click-to-expand for the optional Extras cards (Exam Instructions, Grading
+// Rubric) — same collapsed-by-default idea as .itip, just at card level.
+function toggleCqSection(headEl){
+  var card=headEl.closest('.cq-collapsible');
+  if(card) card.classList.toggle('open');
+}
 function doCreate(){
   var title=(document.getElementById('c-title').value||'').trim(), code=(document.getElementById('c-code').value||'').trim().toUpperCase(), cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, dur=document.getElementById('c-dur').value, st=document.getElementById('c-start').value, en=document.getElementById('c-end').value;
   var questionSource=(document.getElementById('c-question-source')||{}).value||'school';
@@ -3304,6 +3403,11 @@ function doDeletePassage(passageId, title) {
 
 /* ── Pronunciation Practice ── */
 function loadPronunciationTab() {
+  var locked = !S.aiEnabled;
+  var lockWrap=document.getElementById('pr-lock-wrap'), formWrap=document.getElementById('pr-form-wrap');
+  if (lockWrap) lockWrap.classList.toggle('hidden', !locked);
+  if (formWrap) formWrap.classList.toggle('hidden', locked);
+  if (locked) return; // don't bother fetching classes/lists for a school that can't use this
   loadClasses(function(){
     var listEl = document.getElementById('pronunciation-list');
     if (!listEl) return;
