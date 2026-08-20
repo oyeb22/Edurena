@@ -60,6 +60,12 @@
     }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+    /* ── Info tooltip — tap/click to toggle, not hover (works on mobile) ── */
+    .itip{position:relative;display:inline-flex;vertical-align:middle;margin-left:5px;}
+    .itip-btn{width:15px;height:15px;border-radius:50%;background:var(--bdr2);color:var(--txt2);border:none;font-size:10px;font-weight:700;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;flex-shrink:0;}
+    .itip-btn:hover{background:var(--acc);color:#fff;}
+    .itip-pop{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:60;width:230px;max-width:70vw;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:9px 11px;font-size:11.5px;font-weight:400;color:var(--txt2);line-height:1.5;text-transform:none;letter-spacing:normal;box-shadow:0 6px 20px rgba(0,0,0,0.18);}
+    .itip.open .itip-pop{display:block;}
 
     /* GATE */
     #gate{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:14px;}
@@ -676,13 +682,12 @@
           <div class="ct">🤖 AI Features</div>
           <div class="tr-row">
             <div>
-              <div class="tl">AI Answer Explanations</div>
+              <div class="tl">AI Answer Explanations
+                <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" id="ai-note">AI explanations require the Premium plan. Contact your platform administrator to upgrade.</span></span>
+              </div>
               <div class="td-desc">Students get AI-generated explanations for wrong answers. Requires Premium plan.</div>
             </div>
             <div class="tog disabled" id="tog-ai" onclick="toggleSchoolAI()"></div>
-          </div>
-          <div style="margin-top:10px;padding:9px 12px;background:var(--surf2);border-radius:var(--rs);font-size:10.5px;color:var(--txt2);line-height:1.7" id="ai-note">
-            💡 AI explanations require the Premium plan. Contact your platform administrator to upgrade.
           </div>
         </div>
         <div class="card">
@@ -790,12 +795,11 @@
         </select>
       </div>
       <div class="fg" style="margin-bottom:14px">
-        <label>Initial Classes (optional)</label>
+        <label>Initial Classes (optional)
+          <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">The teacher will receive an email with their login URL and a temporary password. They should change it on first sign in.</span></span>
+        </label>
         <div class="cls-grid" id="inv-cls-grid"
           style="max-height:180px;overflow-y:auto;border:1px solid var(--bdr);border-radius:var(--rs);padding:8px"></div>
-      </div>
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:9px 11px;font-size:11px;color:var(--txt2);margin-bottom:14px;line-height:1.5">
-        💡 The teacher will receive an email with their login URL and a temporary password. They should change it on first sign in.
       </div>
       <div class="msg err" id="inv-err" style="margin-bottom:8px"></div>
       <div style="display:flex;justify-content:flex-end;gap:7px">
@@ -851,23 +855,24 @@
     <div class="mb">
       <div class="fg" style="margin-bottom:10px"><label>Full Name *</label><input type="text" id="st-name" placeholder="e.g. Jane Doe"></div>
       <div class="fg" style="margin-bottom:10px">
-        <label>Admission Number *</label>
+        <label>Admission Number *
+          <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Used to log in and take exams. Can't be changed after creation.</span></span>
+        </label>
         <input type="text" id="st-email" placeholder="e.g. ADM/2025/001">
-        <div style="font-size:11px;color:var(--txt2);margin-top:3px">Used to log in and take exams. Can't be changed after creation.</div>
       </div>
       <div class="fg" style="margin-bottom:10px">
-        <label>Email</label>
+        <label>Email
+          <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Optional — required only if this student wants to play Challenge Mode.</span></span>
+        </label>
         <input type="email" id="st-student-email" placeholder="e.g. student@gmail.com">
-        <div style="font-size:11px;color:var(--txt2);margin-top:3px">Optional — required only if this student wants to play Challenge Mode.</div>
       </div>
       <div class="fg" style="margin-bottom:14px">
-        <label>Class *</label>
+        <label>Class *
+          <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">School is set automatically to your school.</span></span>
+        </label>
         <select id="st-class" style="background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12px;outline:none;width:100%">
           <option value="">— Select class —</option>
         </select>
-      </div>
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:9px 11px;font-size:11px;color:var(--txt2);margin-bottom:14px;line-height:1.5">
-        💡 School is set automatically to your school.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:7px">
         <button class="btn btn-g" onclick="closeMo('student-mo')">Cancel</button>
@@ -995,6 +1000,18 @@ function toast(type, msg) {
 }
 function spin(on) { document.getElementById('sp-ov').classList.toggle('on', on); }
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+// Info tooltips — tap the (i) to open, tap anywhere else to close. Only one
+// open at a time.
+function toggleTip(btn, ev) {
+  if (ev) ev.stopPropagation();
+  var wrap = btn.closest('.itip');
+  var wasOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.itip.open').forEach(function(t){ t.classList.remove('open'); });
+  if (!wasOpen) wrap.classList.add('open');
+}
+document.addEventListener('click', function(){
+  document.querySelectorAll('.itip.open').forEach(function(t){ t.classList.remove('open'); });
+});
 function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function togglePw(id, btn) {

@@ -46,6 +46,12 @@
     }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.5;}
+    /* ── Info tooltip — tap/click to toggle, not hover (works on mobile) ── */
+    .itip{position:relative;display:inline-flex;vertical-align:middle;margin-left:5px;}
+    .itip-btn{width:15px;height:15px;border-radius:50%;background:var(--bdr2);color:var(--txt2);border:none;font-size:10px;font-weight:700;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;flex-shrink:0;}
+    .itip-btn:hover{background:var(--acc);color:#fff;}
+    .itip-pop{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:60;width:230px;max-width:70vw;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:9px 11px;font-size:11.5px;font-weight:400;color:var(--txt2);line-height:1.5;text-transform:none;letter-spacing:normal;box-shadow:0 6px 20px rgba(0,0,0,0.18);}
+    .itip.open .itip-pop{display:block;}
 
     #gate{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;}
     #gate.on{display:flex;}
@@ -368,14 +374,12 @@
           <div class="ct">School Details</div>
           <div class="fgrid" style="margin-bottom:12px">
             <div class="fg">
-              <label>School Name *</label>
+              <label>School Name *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Must match exactly if renewing an existing school</span></span></label>
               <input type="text" id="act-school-name" placeholder="e.g. Sunrise Academy">
-              <div class="hint">Must match exactly if renewing an existing school</div>
             </div>
             <div class="fg">
-              <label>Contact / Admin Email *</label>
+              <label>Contact / Admin Email *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">This email becomes the school_admin login account</span></span></label>
               <input type="email" id="act-contact-email" placeholder="admin@school.edu">
-              <div class="hint">This email becomes the school_admin login account</div>
             </div>
           </div>
           <div class="fgrid" style="margin-bottom:12px">
@@ -388,9 +392,8 @@
               </select>
             </div>
             <div class="fg">
-              <label>Duration (months) *</label>
+              <label>Duration (months) *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Stacks on top of existing expiry if school already active</span></span></label>
               <input type="number" id="act-months" value="12" min="1" max="36">
-              <div class="hint">Stacks on top of existing expiry if school already active</div>
             </div>
           </div>
           <div class="fgrid" style="margin-bottom:12px">
@@ -500,10 +503,7 @@
         </div>
 
         <div class="card">
-          <div class="ct">Challenge Mode Themes</div>
-          <p style="font-size:12px;color:var(--txt2);margin:4px 0 12px;line-height:1.6">
-            Each Challenge Mode match draws its questions from one active theme below and uses that theme's own timer for every round. If no themes are active, matches fall back to mixing all approved questions for the tier with a 12s default.
-          </p>
+          <div class="ct">Challenge Mode Themes<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" style="width:260px">Each Challenge Mode match draws its questions from one active theme below and uses that theme's own timer for every round. If no themes are active, matches fall back to mixing all approved questions for the tier with a 12s default.</span></span></div>
           <div class="tw">
             <table id="theme-table">
               <thead><tr><th>Theme</th><th>Label</th><th>Time/Q (s)</th><th>Status</th><th>Actions</th></tr></thead>
@@ -530,10 +530,7 @@
         </div>
 
         <div class="card">
-          <div class="ct">Topic of the Day — Calendar</div>
-          <p style="font-size:12px;color:var(--txt2);margin:4px 0 12px;line-height:1.6">
-            Assign one featured theme per day — every Challenge Mode match that day uses it and its timer. Days left unset pick a random active theme instead.
-          </p>
+          <div class="ct">Topic of the Day — Calendar<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Assign one featured theme per day — every Challenge Mode match that day uses it and its timer. Days left unset pick a random active theme instead.</span></span></div>
           <div class="tw">
             <table id="cal-table">
               <thead><tr><th>Date</th><th>Day</th><th>Theme</th></tr></thead>
@@ -552,7 +549,7 @@
         </div>
 
         <div class="card">
-          <div class="ct">Batch Settings</div>
+          <div class="ct">Batch Settings<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Applies to the whole batch below — paste one class level at a time.</span></span></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <div style="flex:1;min-width:140px">
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Class Level *</label>
@@ -566,7 +563,6 @@
               </select>
             </div>
           </div>
-          <p style="font-size:11px;color:var(--txt2);margin-top:8px">Applies to the whole batch below — paste one class level at a time.</p>
         </div>
 
         <div class="card">
@@ -600,8 +596,7 @@
         </div>
 
         <div class="card">
-          <div class="ct">Flagged Questions</div>
-          <p style="font-size:12px;color:var(--txt2);margin:4px 0 12px;line-height:1.6">Questions a student flagged as wrong while taking an Edurena-Bank-sourced quiz. Resolve once fixed (or dismissed).</p>
+          <div class="ct">Flagged Questions<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Questions a student flagged as wrong while taking an Edurena-Bank-sourced quiz. Resolve once fixed (or dismissed).</span></span></div>
           <div class="tw">
             <table id="eb-flags-table">
               <thead><tr><th>Question ID</th><th>Exam Code</th><th>Reason</th><th>Flagged</th><th>Actions</th></tr></thead>
@@ -734,10 +729,7 @@
       <div class="tp" id="tp-security">
         <div class="sh"><h2>Account Security</h2></div>
         <div class="card">
-          <div class="ct">Change Password</div>
-          <p style="font-size:12px;color:var(--txt2);margin:4px 0 14px;line-height:1.6">
-            Use 12+ characters with a mix of letters, numbers, and symbols. You'll stay signed in on this device after the change.
-          </p>
+          <div class="ct">Change Password<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Use 12+ characters with a mix of letters, numbers, and symbols. You'll stay signed in on this device after the change.</span></span></div>
           <div style="max-width:420px;display:flex;flex-direction:column;gap:10px">
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Current password</label>
@@ -803,17 +795,13 @@
 
       <!-- School name — locked when editing, open when adding -->
       <div class="fg" style="margin-bottom:12px">
-        <label>School Name *</label>
+        <label>School Name *<span id="mo-name-hint" style="display:none"><span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">School name is locked. Use the <strong style="color:var(--yel)">Rename School</strong> section above to change it safely with full data migration.</span></span></span></label>
         <input type="text" id="mo-school-name" placeholder="e.g. Sunrise Academy">
-        <div class="hint" id="mo-name-hint" style="display:none">
-          School name is locked. Use the <strong style="color:var(--yel)">Rename School</strong> section above to change it safely with full data migration.
-        </div>
       </div>
 
       <div class="fg" style="margin-bottom:12px">
-        <label>Contact / Admin Email *</label>
+        <label>Contact / Admin Email *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">This email receives the school admin account and welcome email</span></span></label>
         <input type="email" id="mo-contact-email" placeholder="admin@school.edu">
-        <div class="hint">This email receives the school admin account and welcome email</div>
       </div>
       <div class="fgrid" style="margin-bottom:12px">
         <div class="fg">
@@ -830,9 +818,8 @@
         </div>
       </div>
       <div class="fg" style="margin-bottom:12px">
-        <label>Student Slots (Paid)</label>
+        <label>Student Slots (Paid)<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Caps how many students this school can register. Blank = unlimited (legacy default).</span></span></label>
         <input type="number" id="mo-slots" min="0" placeholder="Leave blank for unlimited">
-        <div class="hint">Caps how many students this school can register. Blank = unlimited (legacy default).</div>
       </div>
       <div class="fg" style="margin-bottom:14px">
         <label>Internal Notes</label>
@@ -869,9 +856,8 @@
     <div class="mb">
       <p style="font-size:12.5px;color:var(--txt2);margin-bottom:14px">Extend access for <strong id="rn-school-name" style="color:var(--txt)"></strong></p>
       <div class="fg" style="margin-bottom:16px">
-        <label>New Expiry Date</label>
+        <label>New Expiry Date<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Subscription will extend to this date. Current expiry is shown below.</span></span></label>
         <input type="date" id="rn-date">
-        <div class="hint">Subscription will extend to this date. Current expiry is shown below.</div>
       </div>
       <div id="rn-current-expiry" style="font-size:11px;color:var(--txt2);margin-bottom:14px"></div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
@@ -1054,6 +1040,18 @@ function toast(type, msg) {
 }
 function spin(on) { document.getElementById('sp-ov').classList.toggle('on', on); }
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+// Info tooltips — tap the (i) to open, tap anywhere else to close. Only one
+// open at a time.
+function toggleTip(btn, ev) {
+  if (ev) ev.stopPropagation();
+  var wrap = btn.closest('.itip');
+  var wasOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.itip.open').forEach(function(t){ t.classList.remove('open'); });
+  if (!wasOpen) wrap.classList.add('open');
+}
+document.addEventListener('click', function(){
+  document.querySelectorAll('.itip.open').forEach(function(t){ t.classList.remove('open'); });
+});
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function togglePw(id, btn) {
