@@ -684,6 +684,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <button class="ni"            onclick="nav('archive',this);closeSidebar()"><span class="ico">◷</span>Archived</button>
       <button class="ni"            onclick="nav('questions',this);closeSidebar()"><span class="ico">?</span>Question Bank</button>
       <button class="ni"            onclick="nav('passages',this);closeSidebar()"><span class="ico">📖</span>Passages</button>
+      <button class="ni"            onclick="nav('pronunciation',this);closeSidebar()"><span class="ico">🎤</span>Pronunciation</button>
       <button class="ni"            onclick="nav('students',this);closeSidebar()"><span class="ico">◉</span>Students<span class="nbadge" id="pend-badge">0</span></button>
       <button class="ni"            onclick="openRecoverModal();closeSidebar()"><span class="ico">📥</span>Recover Submission</button>
       <div class="nsec admin-only">Admin</div>
@@ -1334,6 +1335,39 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         </div>
       </div>
 
+      <!-- PRONUNCIATION PRACTICE -->
+      <div class="tp" id="tp-pronunciation">
+        <div class="card" style="margin-bottom:10px;background:var(--accent-bg);border-color:var(--accent-border)">
+          <div style="font-size:12.5px;color:var(--accent-text);line-height:1.6">
+            🎤 <strong>Premium feature.</strong> Students open a practice link with no login — say a word into the mic and get an instant pronunciation score. Practice links only work for schools with this feature enabled; ask your school admin if students see a "not enabled" message.
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="ct">New Word List<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">One word per line. Students see these one at a time and try to pronounce each.</span></span></div>
+          <div class="fgrid" style="margin-bottom:10px">
+            <div class="fg"><label>List Title *</label><input type="text" id="pr-title" placeholder="e.g. Week 3 Vocabulary"></div>
+            <div class="fg"><label>Class (optional)</label><select id="pr-class"><option value="">— Any class —</option></select></div>
+          </div>
+          <div class="fg" style="margin-bottom:10px">
+            <label>Words *</label>
+            <textarea id="pr-words" rows="6" placeholder="photosynthesis&#10;itinerary&#10;entrepreneur" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.7"></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="btn btn-p" onclick="savePronunciationListUI()">Save List →</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0">
+          <div class="sh" style="padding:12px 14px;border-bottom:1px solid var(--border)">
+            <h2 style="font-size:14px;margin:0">Saved Word Lists</h2>
+            <button class="btn btn-sm" onclick="loadPronunciationTab()">↻ Refresh</button>
+          </div>
+          <div id="pronunciation-list" style="padding:14px">
+            <p style="color:var(--text2);font-size:13px;text-align:center;padding:18px">Loading…</p>
+          </div>
+        </div>
+      </div>
+
       <!-- STUDENTS -->
       <div class="tp" id="tp-students">
         <div class="sh">
@@ -1891,7 +1925,7 @@ function p2(n) { return String(n).padStart(2,'0'); }
 
 var TAB_NAMES = {
   overview:'Overview', create:'Create Quiz', manage:'Manage Quizzes', archive:'Archived Quizzes',
-  questions:'Question Bank', passages:'Comprehension Passages', students:'Student Register', teachers:'Teachers', classes:'Classes',
+  questions:'Question Bank', passages:'Comprehension Passages', pronunciation:'Pronunciation Practice', students:'Student Register', teachers:'Teachers', classes:'Classes',
   profile:'My Profile', settings:'Platform Settings'
 };
 
@@ -1929,6 +1963,7 @@ var TAB_CACHE_TTL = 30000;
 var TAB_LOADERS = {
   overview: loadOverview, manage: loadQuizzes, archive: loadArchived,
   classes: loadClassesTab, questions: loadQBTab, passages: loadPassagesTab,
+  pronunciation: loadPronunciationTab,
   teachers: loadTeachersTab, students: loadStudentsTab, settings: loadSettingsTab
 };
 
@@ -1976,7 +2011,7 @@ function loadClasses(cb) {
   call('getClasses', {}, function(cls){ allClasses=cls||[]; populateClassDropdowns(); if(cb)cb(); }, function(){ allClasses=[]; if(cb)cb(); });
 }
 function populateClassDropdowns() {
-  var ids=['c-class','imp-class','fil-class','st-filter-class','st-class','bulk-class','inline-class'];
+  var ids=['c-class','imp-class','fil-class','st-filter-class','st-class','bulk-class','inline-class','pr-class'];
   ids.forEach(function(id){
     var el=document.getElementById(id); if(!el) return;
     var first=el.options[0];
@@ -3264,6 +3299,66 @@ function doDeletePassage(passageId, title) {
     if (e) { toast('error', e); return; }
     toast('success', 'Passage deleted');
     loadPassagesList();
+  });
+}
+
+/* ── Pronunciation Practice ── */
+function loadPronunciationTab() {
+  loadClasses(function(){
+    var listEl = document.getElementById('pronunciation-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<p style="text-align:center;color:var(--text2);font-size:13px;padding:18px">Loading…</p>';
+    call('getPronunciationLists', {}, function(list) {
+      if (!list || !list.length) {
+        listEl.innerHTML = '<p style="text-align:center;color:var(--text2);font-size:13px;padding:18px">No word lists yet. Create one above.</p>';
+        return;
+      }
+      listEl.innerHTML = list.map(function(p) {
+        var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(p.code) : '';
+        return '<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+          + '<div style="flex:1;min-width:0">'
+            + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+esc(p.title)+(p.isDemo?' <span class="bdg by" style="margin-left:4px">Demo</span>':'')+'</div>'
+            + '<div style="font-size:12px;color:var(--text2);margin-bottom:4px">'+p.wordCount+' word'+(p.wordCount===1?'':'s')+(p.classId?' · '+esc(p.classId):'')+'</div>'
+            + '<div style="font-size:11.5px;color:var(--accent-text);font-weight:500;font-family:var(--mono)">Code: '+esc(p.code)+'</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+            + '<button class="btn btn-sm" onclick="copyPronunciationLink(\''+esc(p.code)+'\')">Copy Link</button>'
+            + '<button class="btn btn-d btn-sm" onclick="doDeletePronunciationList(\''+esc(p.id)+'\',\''+esc(p.title)+'\')">Delete</button>'
+          + '</div>'
+        + '</div>';
+      }).join('');
+    });
+  });
+}
+
+function savePronunciationListUI() {
+  var title = (document.getElementById('pr-title').value || '').trim();
+  var classId = document.getElementById('pr-class').value;
+  var words = (document.getElementById('pr-words').value || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
+  if (!title) { toast('error','List title is required'); return; }
+  if (!words.length) { toast('error','Add at least one word'); return; }
+  call('savePronunciationList', { title:title, classId:classId||null, words:words }, function(d) {
+    toast('success', 'List saved — code: ' + d.code);
+    document.getElementById('pr-title').value = '';
+    document.getElementById('pr-words').value = '';
+    loadPronunciationTab();
+  });
+}
+
+function copyPronunciationLink(code) {
+  var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(code) : code;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function(){ toast('success','Practice link copied'); }, function(){ toast('error','Could not copy — code is '+code); });
+  } else {
+    toast('success', 'Practice code: ' + code);
+  }
+}
+
+function doDeletePronunciationList(id, title) {
+  if (!confirm('Delete word list "'+title+'"? Its practice link will stop working.')) return;
+  call('deletePronunciationList', { id: id }, function() {
+    toast('success', 'List deleted');
+    loadPronunciationTab();
   });
 }
 

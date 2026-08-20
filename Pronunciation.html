@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function(){
+  function _reportErr(d){
+    try{
+      var url=(window.DASH&&DASH.scriptUrl)||'';
+      if(!url)return;
+      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
+      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
+    }catch(_){}
+  }
+  window.onerror=function(msg,src,line,col,err){
+    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
+    return false;
+  };
+})();
+</script>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Edurena — Pronunciation Practice</title>
+  <script src="edurena-dash.js?v=20260820"></script>
+  <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#080b14; --surface:#0e1221; --surface2:#161929; --surface3:#1e2235;
+      --border:#252a42; --border2:#2e3450;
+      --accent:#5b6ef5; --accent2:#818cf8; --accent-glow:rgba(91,110,245,0.25);
+      --green:#2dd4a0; --green-glow:rgba(45,212,160,0.2);
+      --red:#f06b6b; --red-glow:rgba(240,107,107,0.2);
+      --yellow:#f5c842; --yellow-glow:rgba(245,200,66,0.2);
+      --text:#e8eaf4; --text2:#9ba3c0; --muted:#5c6480;
+      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+      --radius:14px; --radius-sm:9px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:440px;text-align:center}
+    h1{font-size:18px;font-weight:700;margin-bottom:6px}
+    p.sub{color:var(--text2);font-size:13px;margin-bottom:20px;line-height:1.5}
+    input[type=text]{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-family:var(--mono);font-size:16px;text-align:center;letter-spacing:2px;text-transform:uppercase;outline:none;margin-bottom:14px}
+    input[type=text]:focus{border-color:var(--accent)}
+    .btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px 20px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;width:100%}
+    .btn:hover{opacity:.9}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+    .err{background:var(--red-glow);color:var(--red);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+    .err.on{display:block}
+    .hidden{display:none !important}
+
+    .progress{font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:14px}
+    .word{font-size:34px;font-weight:800;margin:10px 0 22px;word-break:break-word}
+    .mic-wrap{margin:10px 0 20px}
+    .mic-btn{width:104px;height:104px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:40px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;box-shadow:0 0 0 0 var(--accent-glow)}
+    .mic-btn:hover{transform:scale(1.04)}
+    .mic-btn.listening{animation:pulse 1.1s infinite;background:var(--red)}
+    .mic-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 var(--red-glow)}70%{box-shadow:0 0 0 22px rgba(240,107,107,0)}100%{box-shadow:0 0 0 0 rgba(240,107,107,0)}}
+    .status{font-size:13px;color:var(--text2);min-height:18px;margin-bottom:16px}
+
+    .score-wrap{display:none;margin-bottom:16px}
+    .score-wrap.on{display:block}
+    .score-big{font-size:44px;font-weight:800;font-family:var(--mono)}
+    .score-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+    .subscores{display:flex;justify-content:center;gap:18px;margin-top:12px}
+    .subscore{text-align:center}
+    .subscore .v{font-family:var(--mono);font-weight:700;font-size:16px}
+    .subscore .l{font-size:10.5px;color:var(--text2)}
+    .actions{display:flex;gap:10px;margin-top:16px}
+
+    .loading{color:var(--text2);font-size:13px;padding:20px 0}
+  </style>
+</head>
+<body>
+
+<div class="card" id="joinCard">
+  <h1>🎤 Pronunciation Practice</h1>
+  <p class="sub">Enter the practice code your teacher shared with you.</p>
+  <div class="err" id="joinErr"></div>
+  <input type="text" id="codeInput" placeholder="CODE" maxlength="6">
+  <button class="btn" id="joinBtn" onclick="joinByCode()">Start Practice</button>
+</div>
+
+<div class="card hidden" id="loadingCard">
+  <div class="loading" id="loadingText">Loading…</div>
+</div>
+
+<div class="card hidden" id="practiceCard">
+  <h1 id="listTitle">—</h1>
+  <div class="progress" id="progressText">Word 1 of 1</div>
+  <div class="word" id="wordText">—</div>
+
+  <div class="mic-wrap">
+    <button class="mic-btn" id="micBtn" onclick="startAttempt()">🎤</button>
+  </div>
+  <div class="status" id="statusText"></div>
+
+  <div class="score-wrap" id="scoreWrap">
+    <div class="score-label">Pronunciation Score</div>
+    <div class="score-big" id="scoreBig">—</div>
+    <div class="subscores">
+      <div class="subscore"><div class="v" id="scAccuracy">—</div><div class="l">Accuracy</div></div>
+      <div class="subscore"><div class="v" id="scFluency">—</div><div class="l">Fluency</div></div>
+      <div class="subscore"><div class="v" id="scComplete">—</div><div class="l">Completeness</div></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-ghost" id="retryBtn" onclick="startAttempt()">Try Again</button>
+    <button class="btn" id="nextBtn" onclick="nextWord()">Next Word →</button>
+  </div>
+</div>
+
+<script>
+var PARAMS = (function(){
+  var p={};
+  window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi,function(m,k,v){p[k]=decodeURIComponent(v);});
+  return p;
+})();
+var SCRIPT_URL = PARAMS.script || (window.DASH && DASH.scriptUrl) || '';
+if (window.DASH && DASH.ready) {
+  DASH.ready.then(function(){ if(!SCRIPT_URL && DASH.scriptUrl) SCRIPT_URL = DASH.scriptUrl; });
+}
+
+function post(action,data,cb){
+  function fire(){
+    var url = SCRIPT_URL || (window.DASH && DASH.scriptUrl);
+    fetch(url,{method:'POST',body:JSON.stringify(Object.assign({action:action},data||{}))})
+      .then(function(r){return r.json();}).then(function(r){if(cb)cb(null,r);}).catch(function(e){if(cb)cb(e,null);});
+  }
+  if (SCRIPT_URL || (window.DASH && DASH.scriptUrl)) { fire(); return; }
+  if (window.DASH && DASH.ready) {
+    DASH.ready.then(function(){ if(!SCRIPT_URL) SCRIPT_URL = DASH.scriptUrl; fire(); }).catch(function(e){ if(cb) cb(e,null); });
+  } else { if (cb) cb(new Error('No SCRIPT_URL available'), null); }
+}
+
+function showCard(id){
+  ['joinCard','loadingCard','practiceCard'].forEach(function(c){
+    document.getElementById(c).classList.toggle('hidden', c!==id);
+  });
+}
+
+var words=[], wordIdx=0, listTitle='', azureToken=null, azureRegion=null, recognizer=null;
+
+function joinByCode(){
+  var code=(document.getElementById('codeInput').value||'').trim().toUpperCase();
+  var errEl=document.getElementById('joinErr'); errEl.classList.remove('on');
+  if(!code){ errEl.textContent='Enter a practice code.'; errEl.classList.add('on'); return; }
+  document.getElementById('joinBtn').disabled=true;
+  showCard('loadingCard'); document.getElementById('loadingText').textContent='Loading word list…';
+  post('getPronunciationListByCode',{code:code},function(e,r){
+    document.getElementById('joinBtn').disabled=false;
+    if(e||!r||r.status!=='success'){
+      showCard('joinCard');
+      errEl.textContent=(r&&r.message)||'Could not load that practice code.';
+      errEl.classList.add('on');
+      return;
+    }
+    listTitle=r.data.title; words=r.data.words||[]; wordIdx=0;
+    if(!words.length){ showCard('joinCard'); errEl.textContent='This list has no words yet.'; errEl.classList.add('on'); return; }
+    history.replaceState(null,'',window.location.pathname+'?code='+encodeURIComponent(code)+(PARAMS.script?'&script='+encodeURIComponent(PARAMS.script):''));
+    document.getElementById('listTitle').textContent=listTitle;
+    renderWord();
+    showCard('practiceCard');
+    _pendingCode=code;
+  });
+}
+
+var _pendingCode='';
+
+function renderWord(){
+  document.getElementById('progressText').textContent='Word '+(wordIdx+1)+' of '+words.length;
+  document.getElementById('wordText').textContent=words[wordIdx];
+  document.getElementById('statusText').textContent='Tap the mic and say the word.';
+  document.getElementById('scoreWrap').classList.remove('on');
+  document.getElementById('retryBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('micBtn').disabled=false;
+}
+
+function nextWord(){
+  wordIdx++;
+  if(wordIdx>=words.length){ wordIdx=0; }
+  renderWord();
+}
+
+function ensureAzureToken(cb){
+  if(azureToken){ cb(); return; }
+  post('getAzurePronunciationToken',{code:_pendingCode},function(e,r){
+    if(e||!r||r.status!=='success'){
+      document.getElementById('statusText').textContent=(r&&r.message)||'Could not start the microphone service. Please try again.';
+      return;
+    }
+    azureToken=r.data.token; azureRegion=r.data.region;
+    // Azure tokens are valid ~10 minutes — drop ours a little early so we
+    // never try to use one that just expired mid-attempt.
+    setTimeout(function(){ azureToken=null; }, 9*60*1000);
+    cb();
+  });
+}
+
+function startAttempt(){
+  if(typeof SpeechSDK==='undefined'){
+    document.getElementById('statusText').textContent='Speech service failed to load. Check your connection and reload.';
+    return;
+  }
+  document.getElementById('micBtn').disabled=true;
+  document.getElementById('retryBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('scoreWrap').classList.remove('on');
+  document.getElementById('statusText').textContent='Starting…';
+
+  ensureAzureToken(function(){
+    if(!azureToken) return; // ensureAzureToken already showed an error
+    runRecognition();
+  });
+}
+
+function runRecognition(){
+  var word=words[wordIdx];
+  var micBtn=document.getElementById('micBtn'), statusEl=document.getElementById('statusText');
+  try{
+    var speechConfig=SpeechSDK.SpeechConfig.fromAuthorizationToken(azureToken,azureRegion);
+    speechConfig.speechRecognitionLanguage='en-US';
+    // Tighter-than-default silence timeout: a student tapping the mic and
+    // saying nothing gets a fast "didn't catch that" instead of a long
+    // open mic — Azure bills per second of audio actually processed, so a
+    // fast timeout keeps an idle tap cheap by construction.
+    speechConfig.setProperty('SpeechServiceConnection_InitialSilenceTimeoutMs','3000');
+    var audioConfig=SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    var pronConfig=new SpeechSDK.PronunciationAssessmentConfig(
+      word, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+      SpeechSDK.PronunciationAssessmentGranularity.Word, true
+    );
+    recognizer=new SpeechSDK.SpeechRecognizer(speechConfig,audioConfig);
+    pronConfig.applyTo(recognizer);
+
+    micBtn.classList.add('listening');
+    statusEl.textContent='Listening… say "'+word+'"';
+
+    recognizer.recognizeOnceAsync(function(result){
+      micBtn.classList.remove('listening'); micBtn.disabled=false;
+      if(result.reason===SpeechSDK.ResultReason.RecognizedSpeech){
+        var pr=SpeechSDK.PronunciationAssessmentResult.fromResult(result);
+        showScore(pr);
+      } else if(result.reason===SpeechSDK.ResultReason.NoMatch){
+        statusEl.textContent="Didn't catch that — try again.";
+        document.getElementById('retryBtn').classList.remove('hidden');
+      } else {
+        statusEl.textContent='Something went wrong — try again.';
+        document.getElementById('retryBtn').classList.remove('hidden');
+      }
+      try{ recognizer.close(); }catch(_){}
+      recognizer=null;
+    }, function(err){
+      micBtn.classList.remove('listening'); micBtn.disabled=false;
+      statusEl.textContent='Microphone error — check permissions and try again.';
+      document.getElementById('retryBtn').classList.remove('hidden');
+      try{ recognizer.close(); }catch(_){}
+      recognizer=null;
+    });
+  }catch(ex){
+    micBtn.classList.remove('listening'); micBtn.disabled=false;
+    statusEl.textContent='Could not access the microphone.';
+    document.getElementById('retryBtn').classList.remove('hidden');
+  }
+}
+
+function showScore(pr){
+  var round=function(n){ return Math.round(n||0); };
+  document.getElementById('scoreBig').textContent=round(pr.pronunciationScore);
+  document.getElementById('scAccuracy').textContent=round(pr.accuracyScore);
+  document.getElementById('scFluency').textContent=round(pr.fluencyScore);
+  document.getElementById('scComplete').textContent=round(pr.completenessScore);
+  document.getElementById('scoreWrap').classList.add('on');
+  document.getElementById('statusText').textContent='Nice! Here\'s how you did.';
+  document.getElementById('retryBtn').classList.remove('hidden');
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+document.getElementById('codeInput').addEventListener('keydown',function(e){ if(e.key==='Enter') joinByCode(); });
+if(PARAMS.code){ document.getElementById('codeInput').value=PARAMS.code; joinByCode(); }
+</script>
+</body>
+</html>

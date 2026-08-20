@@ -265,6 +265,7 @@
       <button class="ni"    onclick="navTo('questionbank',this)"><span class="ico">📚</span>Question Bank</button>
       <button class="ni"    onclick="navTo('edurenabank',this)"><span class="ico">🎓</span>Edurena Bank</button>
       <button class="ni"    onclick="navTo('competitions',this)"><span class="ico">🏆</span>Competitions</button>
+      <button class="ni"    onclick="navTo('pronunciation',this)"><span class="ico">🎤</span>Pronunciation Demo</button>
       <div class="nsec">Account</div>
       <button class="ni"    onclick="navTo('security',this)"><span class="ico">🔒</span>Security</button>
     </nav>
@@ -758,6 +759,33 @@
         </div>
       </div>
 
+      <div class="tp" id="tp-pronunciation">
+        <div class="sh"><h2>Pronunciation Demo</h2></div>
+        <div class="card">
+          <div class="ct">New Demo List<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Demo lists bypass the premium gate entirely — the practice link works for anyone, regardless of which school's plan it's opened under. Use these for sales demos.</span></span></div>
+          <div style="max-width:480px;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">List title</label>
+              <input type="text" id="pd-title" placeholder="e.g. Demo — Common English Words" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Words (one per line)</label>
+              <textarea id="pd-words" rows="6" placeholder="photosynthesis&#10;itinerary&#10;entrepreneur" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none;resize:vertical;line-height:1.7"></textarea>
+            </div>
+            <button class="btn btn-p" onclick="saveDemoPronunciationList()" style="align-self:flex-start">Create Demo List →</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="sh" style="padding:12px 14px;border-bottom:1px solid var(--bdr)">
+            <h2 style="font-size:14px;margin:0">Demo Lists</h2>
+            <button class="btn btn-sm" onclick="loadPronunciationDemoTab()">↻ Refresh</button>
+          </div>
+          <div id="pronunciation-demo-list" style="padding:14px">
+            <p style="color:var(--txt2);font-size:13px;text-align:center;padding:18px">Loading…</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1115,6 +1143,7 @@ var tabTitles = {
   settings: ['Global Settings', 'Platform configuration'],
   questionbank: ['Question Bank', 'Import drafted questions into the parent/child question bank'],
   edurenabank: ['Edurena Question Bank', 'Curated academic bank — Basic1 to SS3, JAMB/WAEC/NECO/SAT — hidden from schools until enabled'],
+  pronunciation: ['Pronunciation Demo', 'Demo word lists that work for any school, regardless of plan'],
   security: ['Account Security', 'Change your password']
 };
 
@@ -1133,6 +1162,7 @@ function navTo(name, el) {
   if (name === 'questionbank') loadThemes();
   if (name === 'competitions') loadCompetitions();
   if (name === 'edurenabank')  loadFlaggedQuestions();
+  if (name === 'pronunciation') loadPronunciationDemoTab();
 }
 
 // ── OVERVIEW ────────────────────────────────────────────────────
@@ -1391,6 +1421,64 @@ function savePassword() {
   }, function(errMsg) {
     statusEl.style.color = 'var(--red)';
     statusEl.textContent = '✗ ' + (errMsg || 'Update failed');
+  });
+}
+
+// ── PRONUNCIATION DEMO ────────────────────────────────────────
+function loadPronunciationDemoTab() {
+  var listEl = document.getElementById('pronunciation-demo-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<p style="text-align:center;color:var(--txt2);font-size:13px;padding:18px">Loading…</p>';
+  call('getPronunciationLists', {}, function(list) {
+    var demos = (list||[]).filter(function(p){ return p.isDemo; });
+    if (!demos.length) {
+      listEl.innerHTML = '<p style="text-align:center;color:var(--txt2);font-size:13px;padding:18px">No demo lists yet. Create one above.</p>';
+      return;
+    }
+    listEl.innerHTML = demos.map(function(p) {
+      var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(p.code) : '';
+      return '<div style="padding:12px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+escH(p.title)+'</div>'
+          + '<div style="font-size:12px;color:var(--txt2);margin-bottom:4px">'+p.wordCount+' word'+(p.wordCount===1?'':'s')+'</div>'
+          + '<div style="font-size:11.5px;color:var(--acc);font-weight:500;font-family:var(--mono)">Code: '+escH(p.code)+'</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          + '<button class="btn btn-sm" onclick="copyDemoPronunciationLink(\''+escH(p.code)+'\')">Copy Link</button>'
+          + '<button class="btn btn-d btn-sm" onclick="deleteDemoPronunciationList(\''+escH(p.id)+'\',\''+escH(p.title)+'\')">Delete</button>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+  });
+}
+
+function saveDemoPronunciationList() {
+  var title = (document.getElementById('pd-title').value || '').trim();
+  var words = (document.getElementById('pd-words').value || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
+  if (!title) { toast('error','List title is required'); return; }
+  if (!words.length) { toast('error','Add at least one word'); return; }
+  call('savePronunciationList', { title:title, words:words, isDemo:true }, function(d) {
+    toast('success', 'Demo list created — code: ' + d.code);
+    document.getElementById('pd-title').value = '';
+    document.getElementById('pd-words').value = '';
+    loadPronunciationDemoTab();
+  });
+}
+
+function copyDemoPronunciationLink(code) {
+  var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(code) : code;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function(){ toast('success','Practice link copied'); }, function(){ toast('error','Could not copy — code is '+code); });
+  } else {
+    toast('success', 'Practice code: ' + code);
+  }
+}
+
+function deleteDemoPronunciationList(id, title) {
+  if (!confirm('Delete demo list "'+title+'"? Its practice link will stop working.')) return;
+  call('deletePronunciationList', { id: id }, function() {
+    toast('success', 'Demo list deleted');
+    loadPronunciationDemoTab();
   });
 }
 
