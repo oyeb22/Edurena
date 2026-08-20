@@ -811,7 +811,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         <div class="sh"><h2>Create New Quiz</h2></div>
         <div class="card">
           <div class="ct">Quiz Type</div>
-          <div class="fgrid" style="margin-bottom:0">
+          <div class="fgrid c1" style="margin-bottom:0">
             <div class="fg"><label>Type *
                 <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" id="c-type-desc">Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.</span></span>
               </label>
@@ -959,6 +959,16 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg"><label id="ad-question-cap-label">Question Cap</label><input type="number" id="ad-question-cap" value="20" min="1" title="Stops the exam once this many questions have been asked" oninput="updateAdaptiveMax()" onchange="onAdaptiveModeChange()"></div>
             <div class="fg" id="ad-threshold-row"><label>Promotion Threshold %</label><input type="number" id="ad-threshold" value="50" min="1" max="100" title="Score above this to get harder questions in the next subject"></div>
             <div class="fg"><label>Max Possible Points <span style="font-weight:400;color:var(--text3);text-transform:none">— auto-calculated</span></label><strong id="ad-max-display" style="display:block;font-family:var(--mono);font-size:16px;padding:6px 0">100</strong></div>
+            <div class="fg"><label>Report Score Over <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Optional. Display-only — rescales the result shown to students/teachers (e.g. as if the quiz were out of 100), without changing how it's actually scored.</span></span></label>
+              <select id="ad-report-base" onchange="updateAdaptiveMax()">
+                <option value="">Actual (no rescale)</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="300">300</option>
+                <option value="400">400</option>
+              </select>
+              <div id="ad-report-base-preview" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+            </div>
           </div>
         </div>
         <div class="card">
@@ -998,7 +1008,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             </div>
           </div>
           <div class="div" style="margin:0 0 12px"></div>
-          <div class="ct">Question Allocation <span id="type-hint" style="color:var(--warn);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px"></span></div>
+          <div class="ct"><span id="alloc-header-label">Question Allocation</span> <span id="type-hint" style="color:var(--warn);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px"></span></div>
           <div id="subj-list"><p style="color:var(--text2);font-size:13px;padding:12px 0">Select a week to see available questions.</p></div>
           <div class="div"></div>
           <div class="fx" style="justify-content:flex-end">
@@ -1707,6 +1717,7 @@ var chStatus=null, chCls=null;
 var pendingApproveTarget=null, pendingAssignTarget=null;
 var _selectedPassageId='';
 var _currentCode='', _currentResponses=[];
+var _currentShowBreakdown=false, _currentReportBase=null; // subject breakdown / rescaled-score display for the currently-open results modal
 var _qbPage=0, _qbPageSize=30;
 var _schoolsList=[], _editingSchoolIdx=-1;
 var _broadsheetData=null, _broadsheetClass='', _bsSortIdx=-1, _bsSortDir=1;
@@ -2254,6 +2265,9 @@ function renderDetails(code,d) {
   var an=d.analytics||{}, rs=d.responses||[], qs=d.questionStats||[];
   var rubric=d.rubric||null, allowRetakes=d.allowRetakes||false;
   _currentResponses=rs;
+  var q=allQuizzes.find(function(x){ return x.examCode===code; })||{};
+  _currentShowBreakdown = q.quizType==='jamb' || (q.quizType==='adaptive' && q.adaptiveMode==='subject');
+  _currentReportBase = q.reportBase||null;
 
   var part='<div class="sgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"><div class="sc"><div class="sv">'+esc(an.totalStudents)+'</div><div class="sl">Submissions</div></div><div class="sc"><div class="sv">'+esc(an.averageScore)+'%</div><div class="sl">Avg Score</div></div><div class="sc"><div class="sv">'+esc(an.passRate)+'%</div><div class="sl">Pass Rate</div></div></div>';
   if(allowRetakes) part+='<div style="background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:var(--r-sm);padding:8px 12px;font-size:12px;color:var(--accent-text);margin-bottom:10px">↻ Retakes enabled — all attempts shown.</div>';
@@ -2261,7 +2275,8 @@ function renderDetails(code,d) {
   else {
     part+='<div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Class</th><th>School</th><th>Score</th><th>%</th><th>Grade</th><th>Att</th><th>Strikes</th><th>Actions</th></tr></thead><tbody>'+
       rs.map(function(r,ri){
-        return '<tr><td style="font-weight:500">'+esc(r.name||'—')+'</td><td style="font-size:11px">'+esc(r.email)+'</td><td>'+esc(r.className||'—')+'</td><td>'+esc(r.school||'—')+'</td><td style="font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="font-family:var(--mono)">'+esc(r.percentage)+'</td><td><span class="bdg '+(r.status==='Pass'?'bg':r.status==='Review'?'by':'br')+'">'+esc(r.rubricComment||r.status)+'</span></td><td style="text-align:center;font-family:var(--mono)">#'+esc(r.attemptNumber||1)+'</td><td style="text-align:center">'+esc(r.violations)+'</td><td class="fx"><button class="btn btn-sm" onclick="viewAnswerReview('+ri+')">Answers</button><button class="btn btn-sm" onclick="viewStudentPhotosTab(\''+esc(r.email)+'\',\''+esc(code)+'\')">Photos</button><button class="btn btn-sm" onclick="viewHistory(\''+esc(r.email)+'\')">History</button></td></tr>';
+        var pctCell=esc(r.percentage)+(_currentReportBase?' <span style="color:var(--text2);font-size:10.5px">('+Math.round((parseFloat(r.percentage)||0)/100*_currentReportBase)+'/'+_currentReportBase+')</span>':'');
+        return '<tr><td style="font-weight:500">'+esc(r.name||'—')+'</td><td style="font-size:11px">'+esc(r.email)+'</td><td>'+esc(r.className||'—')+'</td><td>'+esc(r.school||'—')+'</td><td style="font-family:var(--mono)">'+esc(r.score)+'/'+esc(r.totalPoints)+'</td><td style="font-family:var(--mono)">'+pctCell+'</td><td><span class="bdg '+(r.status==='Pass'?'bg':r.status==='Review'?'by':'br')+'">'+esc(r.rubricComment||r.status)+'</span></td><td style="text-align:center;font-family:var(--mono)">#'+esc(r.attemptNumber||1)+'</td><td style="text-align:center">'+esc(r.violations)+'</td><td class="fx"><button class="btn btn-sm" onclick="viewAnswerReview('+ri+')">Answers</button><button class="btn btn-sm" onclick="viewStudentPhotosTab(\''+esc(r.email)+'\',\''+esc(code)+'\')">Photos</button><button class="btn btn-sm" onclick="viewHistory(\''+esc(r.email)+'\')">History</button></td></tr>';
       }).join('')+'</tbody></table></div>';
   }
 
@@ -2300,6 +2315,16 @@ function renderAnswerReviewTab() {
   var answers=r.answers||[];
   if(!answers.length){ body.innerHTML='<p style="text-align:center;color:var(--text2);padding:12px">No answer data stored for this student.</p>'; return; }
   var html='<div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><div style="font-weight:600;font-size:13px">'+esc(r.name||r.email)+'</div><div style="font-size:11px;color:var(--text2);margin-top:2px">'+esc(r.className||'—')+' · '+esc(r.school||'—')+'</div></div><div style="text-align:right"><div style="font-family:var(--mono);font-weight:600;font-size:15px">'+esc(r.score)+'/'+esc(r.totalPoints)+'</div><span class="bdg '+(r.status==='Pass'?'bg':'br')+'" style="margin-top:2px">'+esc(r.status)+'</span></div></div>';
+  if(_currentShowBreakdown){
+    var bySubj={};
+    answers.forEach(function(a){ var s=a.subject||'(no subject)'; if(!bySubj[s]) bySubj[s]={earned:0,max:0}; bySubj[s].earned+=parseInt(a.pointsEarned)||0; bySubj[s].max+=parseInt(a.maxPoints)||0; });
+    var subjNames=Object.keys(bySubj);
+    if(subjNames.length){
+      html+='<div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:12px"><div class="ct" style="margin-bottom:6px">Subject Breakdown</div>'
+        +subjNames.map(function(s){ var b=bySubj[s]; var p=b.max>0?Math.round(b.earned/b.max*100):0; return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12.5px"><span>'+esc(s)+'</span><span style="font-family:var(--mono);color:var(--text2)">'+b.earned+'/'+b.max+' ('+p+'%)</span></div>'; }).join('')
+        +'</div>';
+    }
+  }
   html+=answers.map(function(a,i){
     var skipped=!a.studentAnswer||a.studentAnswer==='(no answer)';
     var cls=skipped?'skipped':(a.isCorrect?'correct':'wrong');
@@ -2740,6 +2765,15 @@ var _QUIZ_TYPE_DESC = {
   jamb:     'Subject-Sectioned Exam. Questions are grouped by subject in a teacher-chosen order — students see a subject tab bar and can navigate between sections.',
   adaptive: 'Difficulty-aware exam. Questions are sorted Easy → Medium → Hard. Filter by difficulty level below.'
 };
+// Adaptive mode picks subjects to include (checkboxes), standard/jamb picks
+// how many questions per subject (count inputs) — same section, different
+// meaning, so the header should say which one is actually happening.
+function updateAllocHeaderLabel(){
+  var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
+  var label = document.getElementById('alloc-header-label');
+  if (!label) return;
+  label.textContent = (t === 'adaptive') ? 'Select Subjects to Include' : 'Question Allocation';
+}
 function onQuizTypeChange(){
   var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
   var desc = document.getElementById('c-type-desc');
@@ -2747,6 +2781,7 @@ function onQuizTypeChange(){
   var adaptiveCard = document.getElementById('adaptive-card');
   if (adaptiveCard) adaptiveCard.classList.toggle('hidden', t !== 'adaptive');
   updateSectionTimerVisibility();
+  updateAllocHeaderLabel();
   if (t === 'adaptive') updateAdaptiveMax();
   // Subject allocation rows render differently for adaptive (checkbox +
   // readiness) vs standard/jamb (count input) — re-fetch so the switch
@@ -2784,6 +2819,9 @@ function updateAdaptiveMax(){
     max = pMed + (cap-1)*pHard;
   }
   setText('ad-max-display', max);
+  var base=parseInt((document.getElementById('ad-report-base')||{}).value)||0;
+  var preview=document.getElementById('ad-report-base-preview');
+  if(preview) preview.textContent = base ? ('e.g. a student scoring '+max+'/'+max+' shows as '+base+'/'+base+'; scoring half shows as '+Math.round(base/2)+'/'+base) : '';
 }
 // Section-timer (order + per-subject duration) block is only meaningful for
 // Subject-Sectioned exams and Subject-Adaptive quizzes — Question-Adaptive
@@ -2958,6 +2996,9 @@ function renderSubjAlloc(subjs,wk,weekMode){
   var adaptiveMode=(document.getElementById('ad-mode')||{}).value||'question';
   var cap=parseInt((document.getElementById('ad-question-cap')||{}).value)||20;
   var perSubjectMin=cap;
+  // Order/duration only mean anything for Subject-Sectioned exams and
+  // Subject-Adaptive quizzes — same condition as updateSectionTimerVisibility().
+  var showOrderDuration = quizType==='jamb' || (isAdaptive && adaptiveMode==='subject');
   var tot=0;
   document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){
     var subjectName=e[0], counts=e[1]||{available:0,easy:0,medium:0,hard:0};
@@ -2978,13 +3019,14 @@ function renderSubjAlloc(subjs,wk,weekMode){
         : '<span style="color:var(--danger)">&#10007; only '+available+' — needs '+perSubjectMin+'</span>';
       return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+' · '+readyBadge+'</div></div>'
         +'<label class="type-chk-label"><input type="checkbox" class="sadapt" data-subject="'+subjAttr+'" checked onchange="updateAdaptiveMax()"><span>Include</span></label>'
-        +orderDurationHtml+'</div>';
+        +(showOrderDuration?orderDurationHtml:'')+'</div>';
     }
     tot+=suggested;
     var safeId='sj_'+subjectName.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Math.random().toString(36).substr(2,5);
     return '<div class="si"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+'</div></div>'
-      +'<input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjAttr+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()">'
-      +orderDurationHtml+'</div>';
+      +'<span style="font-size:10px;color:var(--text3);margin-left:8px">Questions</span>'
+      +'<input type="number" class="sinput" id="'+safeId+'" data-subject="'+subjAttr+'" value="'+suggested+'" min="0" max="'+available+'" onchange="updateTot()" aria-label="Number of questions from '+subjAttr+'">'
+      +(showOrderDuration?orderDurationHtml:'')+'</div>';
   }).join('');
   setText('tot-q', isAdaptive?'varies per student (adaptive)':tot);
   if(isAdaptive) updateAdaptiveMax();
@@ -3048,7 +3090,8 @@ function doCreate(){
     adaptivePointsMedium:    parseInt((document.getElementById('ad-pts-medium')||{}).value)||2,
     adaptivePointsHard:      parseInt((document.getElementById('ad-pts-hard')||{}).value)||3,
     adaptiveQuestionCap:     parseInt((document.getElementById('ad-question-cap')||{}).value)||20,
-    adaptivePromotionThreshold: parseInt((document.getElementById('ad-threshold')||{}).value)||50
+    adaptivePromotionThreshold: parseInt((document.getElementById('ad-threshold')||{}).value)||50,
+    adaptiveReportBase:      parseInt((document.getElementById('ad-report-base')||{}).value)||null
   }, function(d) {
     toast('success', 'Quiz created — ' + d.count + ' questions — Code: ' + d.examCode);
     resetCreate();

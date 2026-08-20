@@ -724,6 +724,7 @@
       <div class="rstat"><div class="rstat-val" id="resViolations">0</div><div class="rstat-label">Violations</div></div>
     </div>
     <div class="flagged-notice" id="flaggedNotice">🚩 You had flagged questions — they are marked below for your reference.</div>
+    <div id="resSubjectBreakdown" style="display:none;margin-bottom:14px"></div>
     <div class="divider"></div>
     <div id="reviewSection">
       <div class="review-section"><h3>📋 Question Review</h3><div id="aiCreditBar" style="display:none;margin-top:8px;font-size:12px;color:rgba(255,255,255,.45);"></div></div>
@@ -2850,7 +2851,9 @@ function showResults(data){
   _explainCache={};
   var pct=parseFloat(data.percentage); var passed=data.status==='Pass';
   safeText('resIcon',passed?'🎉':'📋');
-  safeText('resScore',data.score+' / '+data.totalPoints);
+  var scoreText=data.score+' / '+data.totalPoints;
+  if(data.reportBase){ scoreText+=' ('+Math.round(pct/100*data.reportBase)+' / '+data.reportBase+')'; }
+  safeText('resScore',scoreText);
   safeText('resPct',pct.toFixed(1)+'%');
   var rubricLabel = data.rubricComment || (passed ? 'PASSED' : 'NEEDS REVIEW');
   safeText('resStatus', rubricLabel);
@@ -2870,6 +2873,21 @@ function showResults(data){
   safeText('resWrong',detailedAnswers.length-correct);
   var flaggedCount=Object.values(flagged).filter(Boolean).length;
   var fn=document.getElementById('flaggedNotice'); if(fn)fn.classList.toggle('on',flaggedCount>0);
+  var breakdownEl=document.getElementById('resSubjectBreakdown');
+  var showBreakdown = data.quizType==='jamb' || (data.quizType==='adaptive' && data.adaptiveMode==='subject');
+  if(breakdownEl){
+    if(showBreakdown && detailedAnswers.length){
+      var bySubj={};
+      detailedAnswers.forEach(function(a){ var s=a.subject||'(no subject)'; if(!bySubj[s]) bySubj[s]={earned:0,max:0}; bySubj[s].earned+=parseInt(a.pointsEarned)||0; bySubj[s].max+=parseInt(a.maxPoints)||0; });
+      var subjNames=Object.keys(bySubj);
+      breakdownEl.innerHTML='<div class="result-stats" style="display:block;padding:10px 14px"><div style="font-size:12px;font-weight:600;color:var(--text2,#aaa);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px">Subject Breakdown</div>'
+        +subjNames.map(function(s){ var b=bySubj[s]; var p=b.max>0?Math.round(b.earned/b.max*100):0; return '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span>'+esc(s)+'</span><span>'+b.earned+'/'+b.max+' ('+p+'%)</span></div>'; }).join('')
+        +'</div>';
+      breakdownEl.style.display='block';
+    } else {
+      breakdownEl.style.display='none'; breakdownEl.innerHTML='';
+    }
+  }
   var rn=document.getElementById('retakeNotice');
   if(rn) rn.style.display=(quizMeta&&quizMeta.allowRetakes)?'block':'none';
   window._reviewAnswers=detailedAnswers;
