@@ -56,6 +56,11 @@
       box-shadow:0 0 0 3px rgba(249,115,22,0.15);
     }
     select option { background:#0F1523; }
+    /* Class/School are derived from the validated exam code, not typed —
+       a visibly different (non-editable-looking) state so it reads as
+       intentional rather than a stuck/broken input. */
+    input[readonly] { background:#0F1523; color:#a9b2c9; cursor:default; }
+    input[readonly]:focus { border-color:#2e3248; box-shadow:none; }
 
     .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
@@ -220,6 +225,7 @@
       <div class="form-group">
         <label>Class</label>
         <input type="text" id="studentClass" placeholder="e.g. SS2A" autocomplete="off">
+        <div style="font-size:11px;color:#7c85a2;margin-top:5px" id="classHint"></div>
       </div>
       <div class="form-group">
         <label>School</label>
@@ -271,6 +277,7 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
   var _code          = '';
   var _quizMeta      = null;
   var _quizSchool    = '';
+  var _quizClassId   = '';
   var _prefillName   = '';
   var _prefillClass  = '';
   var _prefillSchool = '';
@@ -281,20 +288,27 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
     var classEl  = document.getElementById('studentClass');
     var schoolEl = document.getElementById('studentSchool');
     if (nameEl)   nameEl.value   = _prefillName;
-    if (classEl)  classEl.value  = _prefillClass;
-    if (schoolEl) schoolEl.value = _prefillSchool;
+
+    // Class and School are never actually ambiguous once the exam code has
+    // been validated — a quiz belongs to exactly one school and one class
+    // (quizSchool/quizClassId), and only students registered under that
+    // same school+class are even allowed to enter (see the enrollment
+    // check in validateExamCode). Letting these be freely typed only
+    // invited typos/autofill glitches that get a legitimate student wrongly
+    // rejected — so they're always derived and locked here, for every
+    // student, not just ones with an existing profile.
+    if (classEl)  { classEl.value  = _quizClassId || _prefillClass;  classEl.readOnly  = !!_quizClassId; }
+    if (schoolEl) { schoolEl.value = _quizSchool  || _prefillSchool; schoolEl.readOnly = !!_quizSchool; }
+    var classHintEl = document.getElementById('classHint');
+    if (classHintEl) classHintEl.textContent = _quizClassId ? 'Set automatically from your exam code' : '';
 
     if (_profileLocked) {
-      // Locked profile: show data, disable editing
-      if (nameEl)   nameEl.readOnly = true;
-      if (classEl)  classEl.readOnly = true;
-      if (schoolEl) schoolEl.readOnly = true;
+      // Returning student with a stored profile: name is known too.
+      if (nameEl) nameEl.readOnly = true;
       var verifiedEl = document.querySelector('#panel2 .verified-badge');
       if (verifiedEl) verifiedEl.innerHTML = '🔒 Profile loaded — fields are locked to your registered details';
     } else {
-      if (nameEl)   nameEl.readOnly = false;
-      if (classEl)  classEl.readOnly = false;
-      if (schoolEl) schoolEl.readOnly = false;
+      if (nameEl) nameEl.readOnly = false;
     }
   }
 
@@ -546,8 +560,9 @@ function openCompetitionById(competitionId) {
         }
         _email      = email;
         _code       = code;
-        _quizMeta   = result.data.quizData;
-        _quizSchool = result.data.quizSchool || '';
+        _quizMeta    = result.data.quizData;
+        _quizSchool  = result.data.quizSchool  || '';
+        _quizClassId = result.data.quizClassId || '';
 
         fetch(SCRIPT_URL, {
           method: 'POST',
