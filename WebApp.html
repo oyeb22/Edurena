@@ -576,6 +576,19 @@ function openCompetitionById(competitionId) {
         .then(function(profileResult) {
           if (profileResult && profileResult.status === 'success' && profileResult.data && profileResult.data.exists) {
             var d = profileResult.data;
+            // This student already has a REAL registered class at this
+            // school — that's ground truth, not the exam's own class. If it
+            // doesn't match the class this quiz is actually for, reject
+            // right here instead of letting registration silently overwrite
+            // their real class to whatever this exam happens to want (which
+            // would defeat the enrollment check in validateExamCode entirely
+            // — self-registration must never be able to rewrite an existing
+            // student's real class just by trying a different exam code).
+            if (_quizClassId && d.className && String(d.className).trim().toLowerCase() !== String(_quizClassId).trim().toLowerCase()) {
+              btn.disabled = false;
+              showErr(1, 'This exam is not available to your class (' + d.className + ').');
+              return;
+            }
             _prefillName   = d.name       || '';
             _prefillClass  = d.className  || '';
             _prefillSchool = d.school     || _quizSchool || '';
