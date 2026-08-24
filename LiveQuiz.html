@@ -23,6 +23,12 @@
 </script>
   <meta charset="UTF-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+  <!-- Live Quiz must never be served stale from a browser cache after a fix
+       ships — this exact gap (no cache headers here, unlike Exam.html)
+       caused an updated deploy to keep showing the old character avatars. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Edurena — Live Quiz</title>
