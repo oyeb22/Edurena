@@ -175,7 +175,14 @@
     /* FINAL */
     #s-final{text-align:center;padding:48px 20px}
     .final-podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:24px auto;max-width:520px}
-    .podium-slot{flex:1;text-align:center}
+    /* Staged reveal (3rd → 2nd → 1st) — matches ChallengeMode.html/
+       CompetitionMode.html's suspense pattern instead of the old instant
+       render. */
+    .podium-slot{flex:1;text-align:center;opacity:0;transform:translateY(26px) scale(.88);transition:opacity .45s ease-out,transform .45s cubic-bezier(.34,1.4,.4,1)}
+    .podium-slot.show{opacity:1;transform:translateY(0) scale(1)}
+    @keyframes podiumPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+    .podium-slot.p1.pulse{animation:podiumPulse .55s ease-out 2}
+    .near-miss{font-size:12.5px;color:#f59e0b;font-weight:600;margin-top:2px;min-height:16px}
     .podium-avatar{width:52px;height:52px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
     .podium-name{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .podium-score{font-size:13px;font-weight:700;color:#4ade80;font-family:monospace;margin-bottom:4px}
@@ -308,6 +315,7 @@
   <div class="screen" id="s-leaderboard">
     <div class="lb-hdr">&#x1F3C6; Leaderboard</div>
     <div class="lb-list" id="lb-list"></div>
+    <div class="near-miss" id="lb-nearmiss" style="text-align:center"></div>
     <div class="lb-next-auto" id="lb-next-auto"></div>
   </div>
 
@@ -317,6 +325,7 @@
     <div class="lb-hdr">Game Over!</div>
     <div class="final-podium" id="final-podium"></div>
     <div style="font-size:14px;color:var(--muted);margin-bottom:6px" id="final-rank-badge"></div>
+    <div class="near-miss" id="final-nearmiss" style="text-align:center;margin-bottom:6px"></div>
     <div class="final-score-big" id="final-score-big">0</div>
     <div class="final-score-lbl">your total score</div>
     <button class="play-again-btn" onclick="location.reload()">Play Again</button>
@@ -412,6 +421,26 @@ function show(id){
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function el(id){return document.getElementById(id);}
 function normAnswer(s){return String(s||'').trim().toLowerCase();}
+
+/* ── Near-miss framing ── the leaderboard-psychology research on this
+   feature (see plan notes): showing HOW CLOSE a player is to the next rank
+   is a stronger motivator than the raw rank alone. Gap is expressed as a
+   ratio of the leader's score (not a fixed point count) since scoring
+   scale varies quiz to quiz. `scores` = array of numbers already sorted
+   descending; `myIdx` = 0-based index of the player to frame. */
+function ordinal(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function nearMissInfo(scores,myIdx){
+  if(myIdx==null||myIdx<0||!scores.length) return null;
+  var leader=scores[0]||0, isFirst=myIdx===0, gap;
+  if(isFirst){ if(scores.length<2) return null; gap=scores[0]-scores[1]; }
+  else{ gap=scores[myIdx-1]-scores[myIdx]; }
+  if(gap==null||isNaN(gap)) return null;
+  var ratio=leader>0?gap/leader:0;
+  var tier = ratio<0.08 ? 'neck' : ratio>0.3 ? (isFirst?'commanding':'big') : (isFirst?'holding':'closing');
+  var copy={neck:'Neck and neck!',commanding:'Commanding lead',big:'Big gap to close',holding:'Holding the lead',closing:'Closing in'}[tier];
+  var gapText=isFirst?('Leading by '+gap):(gap+' pts from '+ordinal(myIdx)+' place');
+  return {gapText:gapText,copy:copy};
+}
 
 /* ── STATE ── */
 var sessionId='', playerId='', playerName='';
@@ -1003,6 +1032,10 @@ function showLeaderboard(autoAdvanceAt){
       }
     });
 
+    var myIdx=sorted.findIndex(function(e){return e[0]===playerId;});
+    var nmi=nearMissInfo(sorted.map(function(e){return e[1].score||0;}),myIdx);
+    el('lb-nearmiss').innerHTML=nmi?(esc(nmi.copy)+' &middot; '+esc(nmi.gapText)):'';
+
     show('s-leaderboard');
 
     if(autoAdvanceAt&&autoAdvanceAt>Date.now()){
@@ -1037,6 +1070,7 @@ function showFinal(){
     podiumOrder.forEach(function(rank,slot){
       var entry=sorted[rank]; if(!entry) return;
       var p=entry[1],div=document.createElement('div');
+      div.id='lq-podium-'+(rank+1);
       div.className='podium-slot '+pClasses[slot];
       var charId='pod-char-'+rank;
       div.innerHTML='<div id="'+charId+'" class="pod-char-avatar"></div>'
@@ -1051,9 +1085,22 @@ function showFinal(){
     var rankStr=myRank===0?'1st':myRank===1?'2nd':myRank===2?'3rd':(myRank>=0?(myRank+1)+'th':'—');
     el('final-rank-badge').textContent='You finished '+rankStr+' of '+sorted.length+' players';
     el('final-score-big').textContent=myFinalScore.toLocaleString();
+    var nmiF=nearMissInfo(sorted.map(function(e){return e[1].score||0;}),myRank);
+    el('final-nearmiss').innerHTML=nmiF?(esc(nmiF.copy)+' &middot; '+esc(nmiF.gapText)):'';
+
+    // Staged suspense reveal — 3rd, then 2nd, then 1st (with a pulse),
+    // matching ChallengeMode.html/CompetitionMode.html's podium pacing.
+    setTimeout(function(){ var s=el('lq-podium-3'); if(s) s.classList.add('show'); },700);
+    setTimeout(function(){ var s=el('lq-podium-2'); if(s) s.classList.add('show'); },1700);
+    setTimeout(function(){
+      var s=el('lq-podium-1'); if(!s) return;
+      s.classList.add('show');
+      setTimeout(function(){ s.classList.add('pulse'); },450);
+    },2700);
+
     show('s-final');
     if(typeof confetti==='function'){
-      setTimeout(function(){confetti({particleCount:180,spread:80,origin:{y:0.55}});},400);
+      setTimeout(function(){confetti({particleCount:180,spread:80,origin:{y:0.55}});},3150);
     }
   });
 }

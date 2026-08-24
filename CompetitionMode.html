@@ -87,6 +87,7 @@
     .reveal-box{margin-top:10px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:8px;font-size:12.5px;color:var(--grn);line-height:1.6}
 
     #s-leaderboard{background:var(--bg);overflow-y:auto}
+    .near-miss{font-size:12.5px;color:#f59e0b;font-weight:600;text-align:center;min-height:16px}
     .lb-title{font-family:var(--display);font-size:18px;color:var(--acc2);letter-spacing:2px;margin-bottom:18px}
     .lb-row{display:flex;align-items:center;gap:10px;width:min(86vw,360px);padding:9px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px;transition:border-color .3s}
     .lb-row.me{border-color:var(--acc2);box-shadow:0 0 10px rgba(0,212,255,.15)}
@@ -226,6 +227,7 @@
 <div class="screen" id="s-leaderboard">
   <div class="lb-title">&#x1F3C6; STANDINGS</div>
   <div id="lb-rows"></div>
+  <div class="near-miss" id="lb-nearmiss"></div>
 </div>
 
 <div class="finish-overlay" id="finish-overlay">
@@ -247,6 +249,7 @@
   </div>
 
   <div class="finish-rank" id="finish-rank-num" style="opacity:0;transition:opacity .5s ease-out">P1</div>
+  <div class="near-miss" id="finish-nearmiss" style="opacity:0;transition:opacity .5s ease-out"></div>
   <div class="finish-stats" id="finish-stats-wrap" style="opacity:0;transition:opacity .5s ease-out">
     <div class="finish-stat"><div class="finish-stat-val" id="finish-correct">0</div><div class="finish-stat-lbl">Correct</div></div>
     <div class="finish-stat"><div class="finish-stat-val" id="finish-score">0</div><div class="finish-stat-lbl">Total Score</div></div>
@@ -868,6 +871,24 @@ function showRevealUI(st){
 }
 
 var _MEDALS=['🥇','🥈','🥉'];
+/* ── Near-miss framing ── gap to the next rank up, expressed as a ratio of
+   the leader's score (not a fixed point count, since scoring scale varies
+   quiz to quiz). `scores` = array of numbers already sorted descending;
+   `myIdx` = 0-based index of the player to frame. */
+function ordinal(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function nearMissInfo(scores,myIdx){
+  if(myIdx==null||myIdx<0||!scores.length) return null;
+  var leader=scores[0]||0, isFirst=myIdx===0, gap;
+  if(isFirst){ if(scores.length<2) return null; gap=scores[0]-scores[1]; }
+  else{ gap=scores[myIdx-1]-scores[myIdx]; }
+  if(gap==null||isNaN(gap)) return null;
+  var ratio=leader>0?gap/leader:0;
+  var tier = ratio<0.08 ? 'neck' : ratio>0.3 ? (isFirst?'commanding':'big') : (isFirst?'holding':'closing');
+  var copy={neck:'Neck and neck!',commanding:'Commanding lead',big:'Big gap to close',holding:'Holding the lead',closing:'Closing in'}[tier];
+  var gapText=isFirst?('Leading by '+gap):(gap+' pts from '+ordinal(myIdx)+' place');
+  return {gapText:gapText,copy:copy};
+}
+
 function renderLeaderboardUI(){
   showScreen('s-leaderboard');
   db.ref('competition/'+sessionId+'/players').once('value', function(snap){
@@ -906,6 +927,10 @@ function renderLeaderboardUI(){
 
     players.forEach(function(p,i){ _lbPrevRank[p.pid]=i+1; _lbPrevScore[p.pid]=p.score||0; });
 
+    var myIdx = players.findIndex(function(p){ return p.pid===playerId; });
+    var nmi = nearMissInfo(players.map(function(p){ return p.score||0; }), myIdx);
+    el('lb-nearmiss').innerHTML = nmi ? (esc(nmi.copy)+' &middot; '+esc(nmi.gapText)) : '';
+
     container.querySelectorAll('.lb-row').forEach(function(row, idx){
       var pid = row.getAttribute('data-pid');
       var oldRect = oldRects[pid];
@@ -942,6 +967,8 @@ function showFinishUI(){
     [1,2,3].forEach(function(rank){ fillPodiumSpot(rank, players[rank-1]); });
 
     el('finish-rank-num').textContent = 'P'+(idx>=0?idx+1:players.length);
+    var nmiF = nearMissInfo(players.map(function(p){ return p.score||0; }), idx);
+    el('finish-nearmiss').innerHTML = nmiF ? (esc(nmiF.copy)+' &middot; '+esc(nmiF.gapText)) : '';
     el('finish-correct').textContent = myCorrect;
     el('finish-score').textContent = myScore;
 
@@ -954,7 +981,7 @@ function showFinishUI(){
       setTimeout(function(){ s.classList.add('pulse'); }, 450);
     }, 2700);
     setTimeout(function(){
-      ['finish-rank-num','finish-stats-wrap','finish-note','finish-play-again-btn'].forEach(function(id){
+      ['finish-rank-num','finish-nearmiss','finish-stats-wrap','finish-note','finish-play-again-btn'].forEach(function(id){
         var e=el(id); if(e) e.style.opacity='1';
       });
     }, 3600);
