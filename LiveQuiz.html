@@ -63,6 +63,16 @@
 
     /* LOBBY */
     #s-lobby{text-align:center;padding:36px 20px}
+    /* Waiting room + final results break out of .wrap's centered-card max-
+       width via position:fixed so the character video can genuinely cover
+       the whole viewport, not just a boxed thumbnail within the card —
+       everything else stays in the normal centered flow. */
+    #s-lobby.on,#s-final.on{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow-y:auto;overflow-x:hidden;padding:0}
+    .screen-video-bg{position:absolute;inset:0;z-index:0;background:var(--bg)}
+    .screen-video-bg video{width:100%;height:100%;object-fit:cover;display:block}
+    .screen-video-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.05) 0%,rgba(15,23,42,.25) 45%,rgba(15,23,42,.95) 100%)}
+    .screen-video-bg.defeat video{filter:grayscale(.4) brightness(.85)}
+    .lby-fg{position:relative;z-index:1;width:100%;max-width:520px;padding:0 20px 40px;text-align:center}
     .lby-badge{display:inline-block;background:#4f78ff22;border:1px solid #4f78ff55;border-radius:20px;padding:4px 16px;font-size:12px;font-weight:600;color:#7fa4ff;margin-bottom:16px}
     .lby-code{font-family:monospace;font-size:clamp(40px,10vw,64px);font-weight:800;letter-spacing:10px;color:#fff;margin-bottom:4px}
     .lby-player-count{font-size:52px;font-weight:900;color:#4ade80;font-family:monospace;margin-top:16px;line-height:1}
@@ -172,27 +182,22 @@
     .lb-arrow.up{color:#4ade80}.lb-arrow.down{color:#f87171}.lb-arrow.same{color:var(--muted)}
     .lb-next-auto{font-size:12px;color:var(--muted);margin-top:8px}
 
-    /* FINAL */
+    /* FINAL — cinematic full-screen reveal: one character takes over the
+       whole screen at a time (3rd, then 2nd, then 1st/winner), instead of
+       three small side-by-side boxes. Only the actual winner gets the
+       celebration clip (spawnCharAvatar); 2nd/3rd reuse their idle "join"
+       clip, grayscaled, so the win pose reads as belonging to the winner
+       alone. */
     #s-final{text-align:center;padding:48px 20px}
-    .final-podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:24px auto;max-width:520px}
-    /* Staged reveal (3rd → 2nd → 1st) — matches ChallengeMode.html/
-       CompetitionMode.html's suspense pattern instead of the old instant
-       render. */
-    .podium-slot{flex:1;text-align:center;opacity:0;transform:translateY(26px) scale(.88);transition:opacity .45s ease-out,transform .45s cubic-bezier(.34,1.4,.4,1)}
-    .podium-slot.show{opacity:1;transform:translateY(0) scale(1)}
-    @keyframes podiumPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-    .podium-slot.p1.pulse{animation:podiumPulse .55s ease-out 2}
+    .final-fg{position:relative;z-index:1;width:100%;text-align:center;padding:0 20px;margin-top:56px;margin-bottom:auto;opacity:0;transform:translateY(-10px);transition:opacity .4s ease-out,transform .4s ease-out}
+    .final-fg.show{opacity:1;transform:translateY(0)}
+    .final-eyebrow{font-size:13px;font-weight:700;letter-spacing:3px;color:#7fa4ff;text-transform:uppercase;margin-bottom:6px}
+    .final-fg.winner .final-eyebrow{color:#f59e0b}
+    .final-reveal-name{font-size:clamp(28px,7vw,44px);font-weight:800;color:#fff;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+    .final-reveal-score{font-family:monospace;font-size:18px;font-weight:700;color:#4ade80;margin-top:6px}
+    .final-summary{position:relative;z-index:1;width:100%;max-width:520px;padding:20px 20px 28px;text-align:center;opacity:0;transition:opacity .5s ease-out}
+    .final-summary.show{opacity:1}
     .near-miss{font-size:12.5px;color:#f59e0b;font-weight:600;margin-top:2px;min-height:16px}
-    .podium-avatar{width:52px;height:52px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
-    .podium-name{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .podium-score{font-size:13px;font-weight:700;color:#4ade80;font-family:monospace;margin-bottom:4px}
-    .podium-bar{border-radius:6px 6px 0 0;width:100%}
-    .p1 .podium-bar{height:90px;background:#b8860b}
-    .p2 .podium-bar{height:60px;background:#64748b}
-    .p3 .podium-bar{height:44px;background:#92400e}
-    .p1 .podium-avatar{background:#b8860b44;color:#f59e0b;border:2px solid #b8860b}
-    .p2 .podium-avatar{background:#64748b44;color:#94a3b8;border:2px solid #64748b}
-    .p3 .podium-avatar{background:#92400e44;color:#d97706;border:2px solid #92400e}
     .final-score-big{font-size:50px;font-weight:900;font-family:monospace;color:#4ade80;line-height:1;margin-bottom:4px}
     .final-score-lbl{font-size:14px;color:var(--muted)}
     .play-again-btn{margin-top:28px;padding:14px 40px;background:#4f78ff;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--f);cursor:pointer;min-height:50px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:opacity .15s,transform .1s}
@@ -200,17 +205,6 @@
 
     .spin-icon{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spinR .7s linear infinite;vertical-align:middle;margin-right:8px}
     @keyframes spinR{to{transform:rotate(360deg)}}
-    /* Character avatars (rendered video clips). Sized with vw+aspect-ratio
-       rather than one fixed px value so they scale properly across phone
-       widths instead of either overflowing narrow screens or staying tiny
-       on wider ones. */
-    .char-avatar{width:min(64vw,280px);aspect-ratio:80/110;height:auto;display:block;margin:0 auto 12px;animation:charIdle 2.4s ease-in-out infinite;user-select:none}
-    .pod-char-avatar{width:min(27vw,130px);aspect-ratio:48/66;height:auto;display:block;margin:0 auto 4px;user-select:none;animation:charIdle 2.4s ease-in-out infinite}
-    .char-avatar.celebrate,.pod-char-avatar.celebrate{animation:charCelebrate .5s ease-in-out infinite alternate}
-    .char-avatar.defeat,.pod-char-avatar.defeat{animation:charDefeat 3s ease-in-out infinite;filter:grayscale(.35)}
-    @keyframes charIdle{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-10px) scale(1.05)}70%{transform:translateY(-6px) scale(1.03)}}
-    @keyframes charCelebrate{0%{transform:translateY(0) rotate(-8deg) scale(1)}100%{transform:translateY(-16px) rotate(8deg) scale(1.12)}}
-    @keyframes charDefeat{0%,100%{transform:translateY(0) rotate(-4deg) scale(.95)}50%{transform:translateY(5px) rotate(4deg) scale(.92)}}
     .q-img-wrap{margin:10px 0 0;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.15)}
     .q-img-wrap img{width:100%;height:auto;max-height:45vh;object-fit:contain;display:block;border-radius:10px}
     .opt-img{width:100%;height:auto;object-fit:contain;display:block;border-radius:8px}
@@ -224,8 +218,6 @@
       body{padding:10px}
       .join-card{padding:22px 18px;border-radius:14px}
       #s-join{padding:32px 16px}
-      .final-podium{gap:6px}
-      .podium-avatar{width:44px;height:44px;font-size:11px}
     }
     @media(max-width:520px){
       .opts-grid,.reveal-opts{grid-template-columns:1fr}
@@ -265,14 +257,16 @@
 
   <!-- LOBBY -->
   <div class="screen" id="s-lobby">
-    <div class="lby-badge">Waiting Room</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Room code</div>
-    <div class="lby-code" id="lby-code">------</div>
-    <div class="lby-player-count" id="lby-count">0</div>
-    <div class="lby-count-lbl">players joined</div>
-    <div id="lby-char-avatar" class="char-avatar" style="opacity:0"></div>
-    <div class="chips" id="lby-chips"></div>
-    <div class="lby-wait pulse">Waiting for the teacher to start&hellip;</div>
+    <div class="screen-video-bg" id="lby-video-bg"></div>
+    <div class="lby-fg">
+      <div class="lby-badge">Waiting Room</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Room code</div>
+      <div class="lby-code" id="lby-code">------</div>
+      <div class="lby-player-count" id="lby-count">0</div>
+      <div class="lby-count-lbl">players joined</div>
+      <div class="chips" id="lby-chips"></div>
+      <div class="lby-wait pulse">Waiting for the teacher to start&hellip;</div>
+    </div>
   </div>
 
   <!-- COUNTDOWN -->
@@ -321,14 +315,20 @@
 
   <!-- FINAL -->
   <div class="screen" id="s-final">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Final Results</div>
-    <div class="lb-hdr">Game Over!</div>
-    <div class="final-podium" id="final-podium"></div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:6px" id="final-rank-badge"></div>
-    <div class="near-miss" id="final-nearmiss" style="text-align:center;margin-bottom:6px"></div>
-    <div class="final-score-big" id="final-score-big">0</div>
-    <div class="final-score-lbl">your total score</div>
-    <button class="play-again-btn" onclick="location.reload()">Play Again</button>
+    <div class="screen-video-bg" id="final-video-bg"></div>
+    <div class="final-fg" id="final-fg">
+      <div class="final-eyebrow" id="final-eyebrow">3RD PLACE</div>
+      <div class="final-reveal-name" id="final-reveal-name">&nbsp;</div>
+      <div class="final-reveal-score" id="final-reveal-score"></div>
+    </div>
+    <div class="final-summary" id="final-summary">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Final Results</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:6px" id="final-rank-badge"></div>
+      <div class="near-miss" id="final-nearmiss" style="text-align:center;margin-bottom:6px"></div>
+      <div class="final-score-big" id="final-score-big">0</div>
+      <div class="final-score-lbl">your total score</div>
+      <button class="play-again-btn" onclick="location.reload()">Play Again</button>
+    </div>
   </div>
 
 </div>
@@ -516,8 +516,7 @@ function doJoin(){
       btn.disabled=false; btn.textContent='Join Quiz';
       // Spawn avatar immediately — don't wait for Firebase callback
       myModelIdx=hashCharIndex(playerId);
-      var av=document.getElementById('lby-char-avatar');
-      if(av){av.style.opacity='1';spawnCharAvatar('lby-char-avatar',myModelIdx,'idle');}
+      spawnCharAvatar('lby-video-bg',myModelIdx,'idle');
       watchLobbyPlayers();
       watchAnswerKeys();
       watchGameState();
@@ -1065,21 +1064,6 @@ function showFinal(){
     var sorted=Object.entries(players)
       .filter(function(e){return e[1].name;})
       .sort(function(a,b){return (b[1].score||0)-(a[1].score||0);});
-    var podiumOrder=[1,0,2],pClasses=['p2','p1','p3'];
-    var podium=el('final-podium'); podium.innerHTML='';
-    podiumOrder.forEach(function(rank,slot){
-      var entry=sorted[rank]; if(!entry) return;
-      var p=entry[1],div=document.createElement('div');
-      div.id='lq-podium-'+(rank+1);
-      div.className='podium-slot '+pClasses[slot];
-      var charId='pod-char-'+rank;
-      div.innerHTML='<div id="'+charId+'" class="pod-char-avatar"></div>'
-        +'<div class="podium-name">'+esc(p.name)+'</div>'
-        +'<div class="podium-score">'+((p.score||0).toLocaleString())+'</div>'
-        +'<div class="podium-bar"></div>';
-      podium.appendChild(div);
-      spawnCharAvatar(charId, hashCharIndex(entry[0]), rank===0?'celebration':'defeat');
-    });
     var myRank=sorted.findIndex(function(e){return e[0]===playerId;});
     var myFinalScore=myRank>=0?(sorted[myRank][1].score||0):totalScore;
     var rankStr=myRank===0?'1st':myRank===1?'2nd':myRank===2?'3rd':(myRank>=0?(myRank+1)+'th':'—');
@@ -1088,20 +1072,32 @@ function showFinal(){
     var nmiF=nearMissInfo(sorted.map(function(e){return e[1].score||0;}),myRank);
     el('final-nearmiss').innerHTML=nmiF?(esc(nmiF.copy)+' &middot; '+esc(nmiF.gapText)):'';
 
-    // Staged suspense reveal — 3rd, then 2nd, then 1st (with a pulse),
-    // matching ChallengeMode.html/CompetitionMode.html's podium pacing.
-    setTimeout(function(){ var s=el('lq-podium-3'); if(s) s.classList.add('show'); },700);
-    setTimeout(function(){ var s=el('lq-podium-2'); if(s) s.classList.add('show'); },1700);
-    setTimeout(function(){
-      var s=el('lq-podium-1'); if(!s) return;
-      s.classList.add('show');
-      setTimeout(function(){ s.classList.add('pulse'); },450);
-    },2700);
-
     show('s-final');
-    if(typeof confetti==='function'){
-      setTimeout(function(){confetti({particleCount:180,spread:80,origin:{y:0.55}});},3150);
-    }
+
+    // Cinematic full-screen reveal — 3rd, then 2nd, then 1st, each taking
+    // over the whole screen as the video background (rather than three
+    // small side-by-side boxes). Only the winner gets the celebration clip
+    // (spawnCharAvatar below); 2nd/3rd play their idle "join" clip,
+    // grayscaled, so the win pose reads as belonging to the winner alone.
+    var stages=[]; [2,1,0].forEach(function(rank){ if(sorted[rank]) stages.push(rank); });
+    var eyebrows={0:'🏆 WINNER',1:'2ND PLACE',2:'3RD PLACE'};
+    var fg=el('final-fg');
+    stages.forEach(function(rank,i){
+      setTimeout(function(){
+        var entry=sorted[rank],p=entry[1];
+        spawnCharAvatar('final-video-bg',hashCharIndex(entry[0]),rank===0?'celebration':'defeat');
+        el('final-eyebrow').textContent=eyebrows[rank];
+        el('final-reveal-name').textContent=p.name;
+        el('final-reveal-score').textContent=(p.score||0).toLocaleString()+' pts';
+        fg.classList.remove('show','winner'); void fg.offsetWidth; fg.classList.add('show');
+        if(rank===0) fg.classList.add('winner');
+      },i*1300+300);
+    });
+    var settleAt=stages.length*1300+700;
+    setTimeout(function(){
+      el('final-summary').classList.add('show');
+      if(typeof confetti==='function'){confetti({particleCount:180,spread:80,origin:{y:0.55}});}
+    },settleAt);
   });
 }
 
@@ -1112,13 +1108,15 @@ function hashCharIndex(uid){
   return h%CHARS.length;
 }
 // Rendered 3D character clips (Remotion + Three.js pipeline) — 2 per
-// character: `join` plays in the lobby, `podium` plays for all 3 podium
-// spots at game end (rank is distinguished by the existing .celebrate/
-// .defeat CSS classes below — grayscale + a different bounce — not by a
-// separate clip). hashCharIndex(playerId) is a pure function of the
+// character: `join` (idle) plays in the lobby AND for non-winning final
+// slots, `podium` (the celebration pose) plays ONLY for the actual winner
+// — reusing the podium clip for 2nd/3rd as well used to make every final
+// slot look like it was celebrating identically; using the idle clip for
+// them instead (grayscaled via .defeat) reserves the win pose for the
+// winner alone. hashCharIndex(playerId) is a pure function of the
 // player's own ID, so every client independently computes the SAME index
 // for a given player with no Firebase write needed — that's what makes
-// the assignment "stick" from lobby through to the podium for free.
+// the assignment "stick" from lobby through to the final reveal for free.
 var CHARS=[
   {id:'ch46',     join:'assets/characters/ch46_join.mp4',     podium:'assets/characters/ch46_podium.mp4'},
   {id:'ch28',     join:'assets/characters/ch28_join.mp4',     podium:'assets/characters/ch28_podium.mp4'},
@@ -1130,11 +1128,10 @@ function spawnCharAvatar(elemId,playerIndex,animName){
   var c=CHARS[playerIndex%CHARS.length];
   var e=document.getElementById(elemId);
   if(!e)return;
-  var isPodium=(animName==='celebration'||animName==='defeat');
-  var src=isPodium?c.podium:c.join;
-  e.innerHTML='<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain;display:block" src="'+src+'"></video>';
-  var base=e.classList.contains('pod-char-avatar')?'pod-char-avatar':'char-avatar';
-  e.className=base+(animName==='celebration'?' celebrate':animName==='defeat'?' defeat':'');
+  var isWinner=animName==='celebration';
+  var src=isWinner?c.podium:c.join;
+  e.innerHTML='<video autoplay muted loop playsinline src="'+src+'"></video>';
+  e.classList.toggle('defeat',animName==='defeat');
 }
 
 /* ── CLEANUP ── */
