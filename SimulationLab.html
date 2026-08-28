@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Edurena — Simulation Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef5ff; --panel:#ffffff; --ink:#233047; --muted:#6b7896; --border:#dde6f5;
+    --f:'Plus Jakarta Sans',system-ui,sans-serif; --fd:'Baloo 2',var(--f);
+    --good:#22b573; --bad:#e5484d; --warn:#f5a623;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--f);background:var(--bg);color:var(--ink);min-height:100dvh}
+  .topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+  .back-btn{display:none;background:#f1f5fc;border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-family:var(--f);font-weight:700;font-size:14px;color:var(--ink);cursor:pointer;min-height:40px}
+  .back-btn.show{display:inline-flex;align-items:center;gap:6px}
+  .lab-title{font-family:var(--fd);font-weight:800;font-size:20px;color:#3355dd}
+  .sim-title{font-family:var(--fd);font-weight:800;font-size:18px}
+  .spacer{flex:1}
+  .mode-toggle{display:flex;background:#f1f5fc;border:1px solid var(--border);border-radius:12px;padding:3px;gap:3px}
+  .mode-btn{border:none;background:transparent;padding:8px 16px;border-radius:9px;font-family:var(--f);font-weight:700;font-size:13px;color:var(--muted);cursor:pointer;min-height:36px}
+  .mode-btn.on{background:#3355dd;color:#fff}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+
+  /* MENU */
+  #menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+  .sim-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px;cursor:pointer;transition:transform .15s,box-shadow .15s;text-align:left}
+  .sim-card:active{transform:scale(.97)}
+  .sim-card:hover{box-shadow:0 8px 24px rgba(30,50,100,.12);transform:translateY(-2px)}
+  .sim-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px}
+  .sim-name{font-family:var(--fd);font-weight:800;font-size:16.5px;margin-bottom:4px}
+  .sim-desc{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .lab-intro{font-size:14px;color:var(--muted);margin-bottom:18px;max-width:640px;line-height:1.6}
+
+  /* SIM SHELL */
+  #sim-view{display:none}
+  #sim-view.on{display:block}
+  #sim-stage{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px;min-height:320px}
+  .challenge-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff7e6;border:1px solid #f5d98a;border-radius:12px;padding:12px 14px;margin-bottom:16px}
+  .challenge-prompt{font-family:var(--fd);font-weight:700;font-size:15px;flex:1;min-width:200px}
+  .btn{font-family:var(--f);font-weight:700;font-size:13.5px;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;min-height:40px;touch-action:manipulation}
+  .btn-primary{background:#3355dd;color:#fff}
+  .btn-ghost{background:#f1f5fc;color:var(--ink);border:1px solid var(--border)}
+  .btn:active{transform:scale(.96)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .feedback{font-family:var(--fd);font-weight:800;font-size:16px;text-align:center;padding:12px;border-radius:12px;margin-top:14px;display:none}
+  .feedback.show{display:block}
+  .feedback.good{background:#e6f9f0;color:var(--good)}
+  .feedback.bad{background:#fdeceb;color:var(--bad)}
+
+  .stat-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:16px;font-family:var(--fd);font-weight:700;font-size:15px}
+  .stat-pill{background:#f1f5fc;border-radius:10px;padding:8px 16px}
+
+  .ctrl-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .ctrl-group{display:flex;flex-direction:column;align-items:center;gap:6px;background:#f8fafd;border:1px solid var(--border);border-radius:12px;padding:10px 14px}
+  .ctrl-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .ctrl-btns{display:flex;gap:6px}
+  .step-btn{width:38px;height:38px;border-radius:9px;border:none;background:#3355dd;color:#fff;font-size:18px;font-weight:800;cursor:pointer}
+  .step-btn.minus{background:#8896b3}
+  .step-btn:disabled{opacity:.35;cursor:not-allowed}
+
+  /* Place value blocks */
+  .pv-cols{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
+  .pv-col{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px}
+  .pv-col-label{font-family:var(--fd);font-weight:700;font-size:13px;color:var(--muted)}
+  .pv-blocks{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;min-height:90px;align-content:flex-start;width:100px}
+  .pv-hundred{width:96px;height:96px;background:repeating-linear-gradient(0deg,#3355dd 0 8px,#547af0 8px 16px),repeating-linear-gradient(90deg,transparent 0 8px,rgba(255,255,255,.25) 8px 9px);border-radius:6px}
+  .pv-ten{width:16px;height:96px;background:#22b573;border-radius:4px}
+  .pv-one{width:20px;height:20px;background:#f5a623;border-radius:5px}
+
+  /* Ten frame */
+  .tf-wrap{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+  .tf-grid{display:grid;grid-template-columns:repeat(5,44px);grid-template-rows:repeat(2,44px);gap:5px;background:#dde6f5;padding:6px;border-radius:10px}
+  .tf-cell{width:44px;height:44px;background:#fff;border:2px solid #c6d4ec;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .tf-cell.filled{background:#3355dd;border-color:#3355dd}
+  .tf-cell.filled::after{content:'';width:20px;height:20px;border-radius:50%;background:#fff}
+
+  /* number line */
+  #nl-svg{width:100%;max-width:760px;display:block;margin:0 auto}
+  .nl-jump-label{font-family:var(--fd);font-weight:700;font-size:14px;text-align:center;color:var(--muted);margin-bottom:8px}
+
+  /* clock */
+  .clock-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+  #clock-svg{width:220px;height:220px}
+  .digital-time{font-family:var(--fd);font-weight:800;font-size:28px;background:#0f172a;color:#4ade80;padding:8px 22px;border-radius:12px}
+
+  /* money */
+  .coin-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+  .coin-btn{background:#fff;border:2px solid #3355dd;color:#3355dd;font-family:var(--fd);font-weight:800;font-size:14px;border-radius:50%;width:60px;height:60px;cursor:pointer}
+  .note-btn{background:#3355dd;border:none;color:#fff;font-family:var(--fd);font-weight:800;font-size:13px;border-radius:8px;width:74px;height:46px;cursor:pointer}
+  .purse{display:flex;gap:6px;flex-wrap:wrap;min-height:44px;background:#f8fafd;border:1px dashed var(--border);border-radius:10px;padding:8px;justify-content:center}
+  .purse-item{background:#eef5ff;border:1px solid #c6d4ec;border-radius:8px;padding:6px 10px;font-family:var(--fd);font-weight:700;font-size:12.5px;cursor:pointer}
+  .purse-total{font-family:var(--fd);font-weight:800;font-size:20px;text-align:center;margin-top:10px;color:#3355dd}
+
+  /* geoboard */
+  #geo-svg{width:100%;max-width:420px;display:block;margin:0 auto;touch-action:manipulation}
+  .geo-peg{fill:#c6d4ec;cursor:pointer}
+  .geo-peg.selected{fill:#3355dd}
+  .geo-peg.first{fill:#22b573}
+
+  /* array */
+  .arr-grid{display:inline-grid;gap:6px;margin:0 auto}
+  .arr-dot{width:22px;height:22px;border-radius:50%;background:#3355dd}
+  .arr-fact{font-family:var(--fd);font-weight:800;font-size:20px;text-align:center;margin-top:14px}
+
+  /* converter */
+  .conv-cats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+  .conv-cat-btn{border:1px solid var(--border);background:#f1f5fc;color:var(--ink);font-family:var(--f);font-weight:700;font-size:13px;padding:9px 16px;border-radius:10px;cursor:pointer;min-height:40px}
+  .conv-cat-btn.on{background:#0891b2;color:#fff;border-color:#0891b2}
+  .conv-row{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap}
+  .conv-field{display:flex;flex-direction:column;gap:6px;align-items:center}
+  .conv-input{width:130px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--fd);font-weight:700;font-size:18px;text-align:center}
+  .conv-select{padding:10px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--f);font-weight:600;font-size:13.5px;background:#fff;min-height:44px}
+  .conv-equals{font-family:var(--fd);font-weight:800;font-size:24px;color:var(--muted)}
+  .conv-result{font-family:var(--fd);font-weight:800;font-size:20px;color:#0891b2;min-width:120px;text-align:center}
+  .conv-swap{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:18px;cursor:pointer}
+
+  /* shared object theme picker */
+  .theme-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+  .theme-btn{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:19px;cursor:pointer}
+  .theme-btn.on{border-color:#3355dd;background:#eef2ff}
+
+  /* addition / subtraction */
+  .as-groups{display:flex;justify-content:center;gap:28px;flex-wrap:wrap}
+  .as-group{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .as-icons{display:flex;flex-wrap:wrap;gap:4px;max-width:220px;min-height:40px;justify-content:center}
+  .as-icons span{font-size:22px}
+  .as-icons span.removed{opacity:.2}
+  .as-op{font-family:var(--fd);font-weight:800;font-size:30px;color:var(--muted);align-self:center}
+
+  /* compare and order */
+  .cmp-row{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
+  .cmp-num{font-family:var(--fd);font-weight:800;font-size:34px;background:#f1f5fc;border-radius:14px;padding:14px 24px;min-width:70px;text-align:center}
+  .cmp-sym-btns{display:flex;gap:8px}
+  .cmp-sym-btn{width:52px;height:52px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-family:var(--fd);font-weight:800;font-size:24px;cursor:pointer}
+  .cmp-sym-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
+  .order-pool{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .order-tile{background:#f1f5fc;border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;font-family:var(--fd);font-weight:800;font-size:18px;cursor:pointer;min-width:44px;text-align:center}
+  .order-tile.used{opacity:.25;cursor:not-allowed}
+  .order-slots{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .order-slot{background:#fff;border:2px dashed var(--border);border-radius:10px;padding:12px 16px;font-family:var(--fd);font-weight:800;font-size:18px;min-width:44px;text-align:center;color:var(--muted)}
+  .order-slot.filled{border-style:solid;border-color:#7c3aed;color:var(--ink)}
+
+  /* counting */
+  .count-scatter{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:340px;margin:0 auto 16px;min-height:60px}
+  .count-scatter span{font-size:26px}
+  .count-scatter span.ord-target{outline:3px solid #16a34a;border-radius:8px}
+  .ord-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 auto 16px}
+  .ord-row span{font-size:28px;cursor:pointer;padding:4px;border-radius:8px}
+  .ord-row span.picked{background:#dcfce7}
+
+  /* fractions */
+  .frac-bar{display:flex;height:70px;width:min(90vw,420px);margin:0 auto;border:2px solid #db2777;border-radius:8px;overflow:hidden}
+  .frac-seg{flex:1;border-right:2px solid #db2777;cursor:pointer;background:#fff}
+  .frac-seg:last-child{border-right:none}
+  .frac-seg.shaded{background:#f9a8d4}
+  .frac-label{font-family:var(--fd);font-weight:800;font-size:26px;text-align:center;margin-top:14px}
+
+  /* shapes */
+  #shape-svg{width:180px;height:180px;display:block;margin:0 auto 14px}
+  .shape-opts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .shape-opt-btn{padding:10px 16px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-family:var(--f);font-weight:700;font-size:13.5px;cursor:pointer;min-height:42px}
+  .shape-opt-btn.on{background:#ea580c;color:#fff;border-color:#ea580c}
+
+  /* ruler */
+  #ruler-svg{width:100%;max-width:640px;display:block;margin:0 auto 10px}
+
+  /* data / graphs */
+  .tally-row{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+  .tally-line{display:flex;align-items:center;gap:10px}
+  .tally-label{width:80px;font-family:var(--fd);font-weight:700;font-size:14px}
+  .tally-icons span{font-size:18px}
+  .bar-chart{display:flex;align-items:flex-end;gap:28px;justify-content:center;height:160px;margin-bottom:8px}
+  .bar-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px}
+  .bar-rect{width:40px;background:#4338ca;border-radius:4px 4px 0 0}
+  .bar-lbl{font-size:12px;color:var(--muted);font-weight:700}
+
+  @media(max-width:520px){
+    .lab-title{font-size:17px}
+    .sim-title{font-size:15px}
+    #sim-stage{padding:14px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" id="back-btn" onclick="showMenu()">&larr; Back</button>
+  <div class="lab-title" id="header-title">Edurena Simulation Lab</div>
+  <div class="spacer"></div>
+  <div class="mode-toggle" id="mode-toggle" style="display:none">
+    <button class="mode-btn on" id="mode-explore" onclick="setMode('explore')">Explore</button>
+    <button class="mode-btn" id="mode-challenge" onclick="setMode('challenge')">Challenge</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div id="menu-view">
+    <p class="lab-intro">Hands on maths tools for primary learners. Explore freely, or switch to Challenge mode inside any simulation for a target to reach.</p>
+    <div id="menu-grid"></div>
+  </div>
+
+  <div id="sim-view">
+    <div id="sim-stage"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+function el(id){ return document.getElementById(id); }
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// Shared across every simulation that shows a group of countable objects —
+// lets a teacher pick counters, apples, stars, whatever suits the lesson,
+// without changing any of the underlying counting/maths logic. Each sim
+// keeps its own local `theme` id and re-renders its own icons; this just
+// standardises the picker UI and the icon lookup.
+var OBJECT_THEMES=[
+  {id:'counter', label:'Counters', icon:'●'},
+  {id:'apple',   label:'Apples',   icon:'\u{1F34E}'},
+  {id:'star',    label:'Stars',    icon:'⭐'},
+  {id:'balloon', label:'Balloons', icon:'\u{1F388}'},
+  {id:'bug',     label:'Bugs',     icon:'\u{1F41E}'},
+  {id:'block',   label:'Blocks',   icon:'\u{1F7E6}'}
+];
+function objectIcon(themeId){
+  var t=OBJECT_THEMES.filter(function(o){return o.id===themeId;})[0];
+  return t?t.icon:OBJECT_THEMES[0].icon;
+}
+function objectThemePicker(selectedId){
+  return '<div class="theme-row">'+OBJECT_THEMES.map(function(o){
+    return '<button class="theme-btn'+(o.id===selectedId?' on':'')+'" data-theme="'+o.id+'" title="'+o.label+'">'+o.icon+'</button>';
+  }).join('')+'</div>';
+}
+// Wires up a theme-row already in the DOM. `onPick(themeId)` should update
+// the caller's own theme variable and re-render.
+function wireThemePicker(container, onPick){
+  Array.prototype.forEach.call(container.querySelectorAll('.theme-btn'),function(b){
+    b.addEventListener('click',function(){ onPick(b.getAttribute('data-theme')); });
+  });
+}
+
+var currentSimId=null;
+var currentMode='explore';
+var simInstance=null; // { onModeChange(mode) } returned by each sim's mount()
+
+var SIMS=[
+  {id:'placevalue', name:'Place Value Blocks', desc:'Build numbers with ones, tens and hundreds, and watch them regroup.', color:'#3355dd', icon:'\u{1F9F1}'},
+  {id:'tenframe', name:'Ten Frame', desc:'Fill the frame to build number sense, up to twenty.', color:'#22b573', icon:'⚪'},
+  {id:'numberline', name:'Number Line Jumps', desc:'Jump along the line to discover multiplication and division.', color:'#f5a623', icon:'\u{1F438}'},
+  {id:'clock', name:'Clock Explorer', desc:'Set the hands and read the time.', color:'#e5484d', icon:'\u{1F550}'},
+  {id:'money', name:'Money and Coins', desc:'Combine coins and notes to reach an amount.', color:'#0aa39a', icon:'\u{1F4B0}'},
+  {id:'geoboard', name:'Geoboard', desc:'Build shapes and discover their area and perimeter.', color:'#a855f7', icon:'\u{1F4D0}'},
+  {id:'array', name:'Array Builder', desc:'Build rows and columns to see multiplication and division as shape.', color:'#eb6f2d', icon:'▦'},
+  {id:'convert', name:'Unit Converter', desc:'Convert between units of liquid, mass, length, time and money, freely.', color:'#0891b2', icon:'⇄'},
+  {id:'addsub', name:'Addition and Subtraction', desc:'Combine or take away groups of objects and watch numbers regroup.', color:'#3355dd', icon:'➕'},
+  {id:'compare', name:'Compare and Order', desc:'Greater than, less than, equal to, and putting numbers in order.', color:'#7c3aed', icon:'⚖️'},
+  {id:'counting', name:'Counting and Ordinals', desc:'Count a group of objects, and find the first, second and third.', color:'#16a34a', icon:'🔢'},
+  {id:'fractions', name:'Fractions', desc:'Shade parts of a bar to build and compare fractions.', color:'#db2777', icon:'▬'},
+  {id:'shapes', name:'Shape Sorter', desc:'Name shapes and count their sides and corners.', color:'#ea580c', icon:'🔺'},
+  {id:'ruler', name:'Measuring Ruler', desc:'Read the length of an object against a real ruler.', color:'#0d9488', icon:'📏'},
+  {id:'databar', name:'Data and Graphs', desc:'Turn a tally into a bar graph.', color:'#4338ca', icon:'📊'}
+];
+
+function buildMenu(){
+  var grid=el('menu-grid');
+  grid.innerHTML=SIMS.map(function(s){
+    return '<div class="sim-card" onclick="openSim(\''+s.id+'\')">'
+      +'<div class="sim-icon" style="background:'+s.color+'22;color:'+s.color+'">'+s.icon+'</div>'
+      +'<div class="sim-name">'+s.name+'</div>'
+      +'<div class="sim-desc">'+s.desc+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+window.showMenu=function(){
+  currentSimId=null; simInstance=null;
+  el('menu-view').style.display='block';
+  el('sim-view').classList.remove('on');
+  el('back-btn').classList.remove('show');
+  el('mode-toggle').style.display='none';
+  el('header-title').textContent='Edurena Simulation Lab';
+};
+
+window.openSim=function(id){
+  var meta=SIMS.filter(function(s){return s.id===id;})[0];
+  if(!meta) return;
+  currentSimId=id;
+  currentMode='explore';
+  el('menu-view').style.display='none';
+  el('sim-view').classList.add('on');
+  el('back-btn').classList.add('show');
+  el('mode-toggle').style.display='flex';
+  el('header-title').textContent=meta.name;
+  el('mode-explore').classList.add('on');
+  el('mode-challenge').classList.remove('on');
+  mountCurrentSim();
+};
+
+window.setMode=function(mode){
+  currentMode=mode;
+  el('mode-explore').classList.toggle('on',mode==='explore');
+  el('mode-challenge').classList.toggle('on',mode==='challenge');
+  mountCurrentSim();
+};
+
+function mountCurrentSim(){
+  var stage=el('sim-stage');
+  stage.innerHTML='';
+  var mounters={
+    placevalue: mountPlaceValue,
+    tenframe: mountTenFrame,
+    numberline: mountNumberLine,
+    clock: mountClock,
+    money: mountMoney,
+    geoboard: mountGeoboard,
+    array: mountArray,
+    convert: mountConvert,
+    addsub: mountAddSub,
+    compare: mountCompare,
+    counting: mountCounting,
+    fractions: mountFractions,
+    shapes: mountShapes,
+    ruler: mountRuler,
+    databar: mountDataBar
+  };
+  var fn=mounters[currentSimId];
+  if(fn) simInstance=fn(stage, currentMode);
+}
+
+// Shared challenge-bar builder. `promptText` is shown to the student,
+// `onCheck` runs when Check is pressed and returns true/false,
+// `onNew` builds a fresh target and should reset the sim's own state.
+function buildChallengeBar(stage, getPromptText, onCheck, onNew){
+  var bar=document.createElement('div');
+  bar.className='challenge-bar';
+  bar.innerHTML='<div class="challenge-prompt" id="chal-prompt"></div>'
+    +'<button class="btn btn-primary" id="chal-check">Check</button>'
+    +'<button class="btn btn-ghost" id="chal-new">New Challenge</button>';
+  stage.appendChild(bar);
+  var fb=document.createElement('div');
+  fb.className='feedback'; fb.id='chal-feedback';
+  stage.appendChild(fb);
+  function refreshPrompt(){ el('chal-prompt').textContent=getPromptText(); }
+  refreshPrompt();
+  el('chal-check').addEventListener('click',function(){
+    var ok=onCheck();
+    fb.className='feedback show '+(ok?'good':'bad');
+    fb.textContent=ok?'Correct! Well done.':'Not quite, try adjusting it and check again.';
+  });
+  el('chal-new').addEventListener('click',function(){
+    onNew();
+    refreshPrompt();
+    fb.className='feedback';
+  });
+  return { bar:bar, feedback:fb, refreshPrompt:refreshPrompt };
+}
+
+/* ══════════════ 1. PLACE VALUE BLOCKS ══════════════ */
+function mountPlaceValue(stage, mode){
+  var state={ones:0,tens:0,hundreds:0};
+  var target=null;
+
+  var host=document.createElement('div');
+  stage.appendChild(host);
+
+  function total(){ return state.hundreds*100+state.tens*10+state.ones; }
+
+  function addOnes(n){
+    state.ones+=n;
+    while(state.ones>=10){ state.ones-=10; state.tens++; }
+    while(state.tens>=10){ state.tens-=10; state.hundreds++; }
+    render();
+  }
+  function addTens(n){
+    state.tens+=n;
+    while(state.tens>=10){ state.tens-=10; state.hundreds++; }
+    render();
+  }
+  function addHundreds(n){ state.hundreds+=n; render(); }
+  function subOnes(){ if(state.ones>0){ state.ones--; render(); } }
+  function subTens(){ if(state.tens>0){ state.tens--; render(); } }
+  function subHundreds(){ if(state.hundreds>0){ state.hundreds--; render(); } }
+
+  function blockRow(kind,count){
+    var out='';
+    for(var i=0;i<count;i++){
+      out+='<div class="pv-'+kind+'"></div>';
+    }
+    return out;
+  }
+
+  function render(){
+    host.innerHTML=
+      '<div class="pv-cols">'
+      +'<div class="pv-col"><div class="pv-col-label">Hundreds</div><div class="pv-blocks">'+blockRow('hundred',state.hundreds)+'</div>'
+      +'<div class="ctrl-btns"><button class="step-btn minus" id="pv-h-minus">&minus;</button><button class="step-btn" id="pv-h-plus">+</button></div></div>'
+      +'<div class="pv-col"><div class="pv-col-label">Tens</div><div class="pv-blocks">'+blockRow('ten',state.tens)+'</div>'
+      +'<div class="ctrl-btns"><button class="step-btn minus" id="pv-t-minus">&minus;</button><button class="step-btn" id="pv-t-plus">+</button></div></div>'
+      +'<div class="pv-col"><div class="pv-col-label">Ones</div><div class="pv-blocks">'+blockRow('one',state.ones)+'</div>'
+      +'<div class="ctrl-btns"><button class="step-btn minus" id="pv-o-minus">&minus;</button><button class="step-btn" id="pv-o-plus">+</button></div></div>'
+      +'</div>'
+      +'<div class="stat-row"><div class="stat-pill">Number: '+total()+'</div></div>';
+    el('pv-h-plus').onclick=function(){ addHundreds(1); };
+    el('pv-h-minus').onclick=subHundreds;
+    el('pv-t-plus').onclick=function(){ addTens(1); };
+    el('pv-t-minus').onclick=subTens;
+    el('pv-o-plus').onclick=function(){ addOnes(1); };
+    el('pv-o-minus').onclick=subOnes;
+  }
+
+  render();
+
+  if(mode==='challenge'){
+    function newTarget(){ target=rand(11,899); state.ones=0; state.tens=0; state.hundreds=0; render(); }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Build the number '+target+' using the blocks.'; },
+      function(){ return total()===target; }, newTarget);
+  }
+}
+
+/* ══════════════ 2. TEN FRAME ══════════════ */
+function mountTenFrame(stage, mode){
+  var filled=new Array(20).fill(false);
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var target=null;
+
+  function count(){ return filled.filter(Boolean).length; }
+
+  function render(){
+    var cellsA='', cellsB='';
+    for(var i=0;i<10;i++){
+      cellsA+='<div class="tf-cell'+(filled[i]?' filled':'')+'" data-i="'+i+'"></div>';
+    }
+    for(var j=10;j<20;j++){
+      cellsB+='<div class="tf-cell'+(filled[j]?' filled':'')+'" data-i="'+j+'"></div>';
+    }
+    host.innerHTML='<div class="tf-wrap">'
+      +'<div class="tf-grid">'+cellsA+'</div>'
+      +'<div class="tf-grid">'+cellsB+'</div>'
+      +'</div>'
+      +'<div class="stat-row"><div class="stat-pill">Filled: '+count()+'</div></div>'
+      +'<div class="stat-row"><button class="btn btn-ghost" id="tf-clear">Clear All</button></div>';
+    Array.prototype.forEach.call(host.querySelectorAll('.tf-cell'),function(c){
+      c.addEventListener('click',function(){
+        var i=parseInt(c.getAttribute('data-i'),10);
+        filled[i]=!filled[i];
+        render();
+      });
+    });
+    el('tf-clear').onclick=function(){ filled=new Array(20).fill(false); render(); };
+  }
+  render();
+
+  if(mode==='challenge'){
+    function newTarget(){
+      target=rand(3,20);
+      filled=new Array(20).fill(false);
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Fill exactly '+target+' counters.'; },
+      function(){ return count()===target; }, newTarget);
+  }
+}
+
+/* ══════════════ 3. NUMBER LINE JUMPS ══════════════ */
+function mountNumberLine(stage, mode){
+  var MAXV=40;
+  var pos=0;
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var jumpSize=1, targetVal=null, jumpsMade=0;
+
+  function svgLine(){
+    var w=740,h=100,padding=20,usable=w-padding*2;
+    function xFor(v){ return padding+(v/MAXV)*usable; }
+    var ticks='';
+    for(var v=0;v<=MAXV;v+=2){
+      var x=xFor(v);
+      ticks+='<line x1="'+x+'" y1="42" x2="'+x+'" y2="52" stroke="#c6d4ec" stroke-width="2"/>';
+      if(v%10===0){ ticks+='<text x="'+x+'" y="70" font-size="12" fill="#6b7896" text-anchor="middle">'+v+'</text>'; }
+    }
+    var markerX=xFor(pos);
+    return '<svg id="nl-svg" viewBox="0 0 '+w+' '+h+'">'
+      +'<line x1="'+padding+'" y1="47" x2="'+(w-padding)+'" y2="47" stroke="#8896b3" stroke-width="3"/>'
+      +ticks
+      +'<circle cx="'+markerX+'" cy="47" r="10" fill="#f5a623" stroke="#fff" stroke-width="2"/>'
+      +'</svg>';
+  }
+
+  function render(){
+    var jumpControls = mode==='challenge'
+      ? '<button class="btn btn-primary" id="nl-jump">Jump +'+jumpSize+'</button><button class="btn btn-ghost" id="nl-undo">Undo Jump</button>'
+      : '<button class="btn btn-primary" id="nl-j1">+1</button>'
+        +'<button class="btn btn-primary" id="nl-j2">+2</button>'
+        +'<button class="btn btn-primary" id="nl-j5">+5</button>'
+        +'<button class="btn btn-ghost" id="nl-jm1">&minus;1</button>';
+    host.innerHTML=(mode==='challenge'?'<div class="nl-jump-label">Jumps made: '+jumpsMade+'</div>':'')
+      +svgLine()
+      +'<div class="stat-row"><div class="stat-pill">Value: '+pos+'</div></div>'
+      +'<div class="ctrl-row">'+jumpControls+'<button class="btn btn-ghost" id="nl-reset">Reset</button></div>';
+    el('nl-reset').onclick=function(){ pos=0; jumpsMade=0; render(); };
+    if(mode==='challenge'){
+      el('nl-jump').onclick=function(){ if(pos+jumpSize<=MAXV){ pos+=jumpSize; jumpsMade++; render(); } };
+      el('nl-undo').onclick=function(){ if(jumpsMade>0){ pos-=jumpSize; jumpsMade--; render(); } };
+    } else {
+      el('nl-j1').onclick=function(){ pos=Math.min(MAXV,pos+1); render(); };
+      el('nl-j2').onclick=function(){ pos=Math.min(MAXV,pos+2); render(); };
+      el('nl-j5').onclick=function(){ pos=Math.min(MAXV,pos+5); render(); };
+      el('nl-jm1').onclick=function(){ pos=Math.max(0,pos-1); render(); };
+    }
+  }
+  render();
+
+  if(mode==='challenge'){
+    function newTarget(){
+      jumpSize=rand(2,9);
+      // jumps must stay small enough that jumpSize*jumps never exceeds the
+      // line's own max (MAXV=40) — otherwise the target would sit past the
+      // end of the visible line and the challenge could never be completed.
+      var maxJumps=Math.max(2,Math.min(6,Math.floor(MAXV/jumpSize)));
+      var jumps=rand(2,maxJumps);
+      targetVal=jumpSize*jumps;
+      pos=0; jumpsMade=0;
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Using jumps of '+jumpSize+', land exactly on '+targetVal+'.'; },
+      function(){ return pos===targetVal; }, newTarget);
+  }
+}
+
+/* ══════════════ 4. CLOCK EXPLORER ══════════════ */
+function mountClock(stage, mode){
+  var hour=3, minute=0;
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var targetHour=null, targetMinute=null;
+
+  function clockSvg(){
+    var cx=110,cy=110,r=100;
+    var minuteAngle=minute*6;
+    var hourAngle=(hour%12)*30+minute*0.5;
+    var ticks='';
+    for(var i=0;i<12;i++){
+      var a=i*30*Math.PI/180;
+      var x1=cx+Math.sin(a)*(r-8), y1=cy-Math.cos(a)*(r-8);
+      var x2=cx+Math.sin(a)*(r-16), y2=cy-Math.cos(a)*(r-16);
+      ticks+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#8896b3" stroke-width="3"/>';
+    }
+    return '<svg id="clock-svg" viewBox="0 0 220 220">'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#fff" stroke="#3355dd" stroke-width="4"/>'
+      +ticks
+      +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-46)+'" stroke="#233047" stroke-width="6" stroke-linecap="round" transform="rotate('+hourAngle+' '+cx+' '+cy+')"/>'
+      +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-72)+'" stroke="#e5484d" stroke-width="4" stroke-linecap="round" transform="rotate('+minuteAngle+' '+cx+' '+cy+')"/>'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="6" fill="#233047"/>'
+      +'</svg>';
+  }
+
+  function digital(){
+    var m=minute<10?'0'+minute:''+minute;
+    return hour+':'+m;
+  }
+
+  function render(){
+    host.innerHTML='<div class="clock-wrap">'
+      +clockSvg()
+      +'<div class="digital-time">'+digital()+'</div>'
+      +'<div class="ctrl-row">'
+      +'<div class="ctrl-group"><div class="ctrl-label">Hour</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-h-minus">&minus;</button><button class="step-btn" id="cl-h-plus">+</button></div></div>'
+      +'<div class="ctrl-group"><div class="ctrl-label">Minute</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-m-minus">&minus;</button><button class="step-btn" id="cl-m-plus">+</button></div></div>'
+      +'</div></div>';
+    el('cl-h-plus').onclick=function(){ hour=hour%12+1; render(); };
+    el('cl-h-minus').onclick=function(){ hour=(hour+10)%12+1; render(); };
+    el('cl-m-plus').onclick=function(){ minute=(minute+5)%60; render(); };
+    el('cl-m-minus').onclick=function(){ minute=(minute+55)%60; render(); };
+  }
+  render();
+
+  if(mode==='challenge'){
+    var variant='set', duration=0;
+    var mLabel=function(m){ return m<10?'0'+m:''+m; };
+    function newTarget(){
+      variant=Math.random()<0.5?'set':'elapsed';
+      if(variant==='set'){
+        targetHour=rand(1,12);
+        targetMinute=rand(0,11)*5;
+        hour=1; minute=0;
+      } else {
+        // Elapsed time: start the clock already showing a start time, ask
+        // the student to move it forward by a stated duration. Wraps within
+        // a 12-hour dial the same way a real analog clock face does (this
+        // sim doesn't track AM/PM anywhere else either, so that's
+        // consistent, not a shortcut).
+        hour=rand(1,12);
+        minute=rand(0,11)*5;
+        duration=rand(1,23)*5; // 5 to 115 minutes
+        var totalStart=(hour%12)*60+minute;
+        var totalEnd=(totalStart+duration)%720;
+        targetHour=Math.floor(totalEnd/60); if(targetHour===0) targetHour=12;
+        targetMinute=totalEnd%60;
+      }
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return variant==='set'
+        ? 'Set the clock to '+targetHour+':'+mLabel(targetMinute)+'.'
+        : 'The clock shows the start time. A class lasts '+duration+' minutes. Set the clock to show when it ends.';
+    }, function(){ return hour===targetHour && minute===targetMinute; }, newTarget);
+  }
+}
+
+/* ══════════════ 5. MONEY AND COINS ══════════════ */
+function mountMoney(stage, mode){
+  var DENOMS=[1,2,5,10,20,50,100,200];
+  var purse=[]; // array of {id,value}
+  var seq=0;
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var target=null;
+
+  function total(){ return purse.reduce(function(s,p){return s+p.value;},0); }
+
+  function render(){
+    var coinsHtml=DENOMS.map(function(v){
+      var isCoin=v<20;
+      return '<button class="'+(isCoin?'coin-btn':'note-btn')+'" data-v="'+v+'">₦'+v+'</button>';
+    }).join('');
+    var purseHtml=purse.map(function(p){
+      return '<div class="purse-item" data-id="'+p.id+'">₦'+p.value+'</div>';
+    }).join('') || '<span style="color:#8896b3;font-size:12.5px">Tap a coin or note to add it here</span>';
+    host.innerHTML='<div class="coin-row">'+coinsHtml+'</div>'
+      +'<div class="purse">'+purseHtml+'</div>'
+      +'<div class="purse-total">Total: ₦'+total()+'</div>'
+      +'<div class="stat-row"><button class="btn btn-ghost" id="money-clear">Empty Purse</button></div>';
+    Array.prototype.forEach.call(host.querySelectorAll('.coin-btn,.note-btn'),function(b){
+      b.addEventListener('click',function(){
+        purse.push({id:++seq, value:parseInt(b.getAttribute('data-v'),10)});
+        render();
+      });
+    });
+    Array.prototype.forEach.call(host.querySelectorAll('.purse-item'),function(p){
+      p.addEventListener('click',function(){
+        var id=parseInt(p.getAttribute('data-id'),10);
+        purse=purse.filter(function(x){return x.id!==id;});
+        render();
+      });
+    });
+    el('money-clear').onclick=function(){ purse=[]; render(); };
+  }
+  render();
+
+  if(mode==='challenge'){
+    var variant='make', changePrice=0, changePayment=0;
+    function newTarget(){
+      variant=Math.random()<0.5?'make':'change';
+      purse=[];
+      if(variant==='make'){
+        target=rand(5,300);
+      } else {
+        // Give change: pick a note to "pay with", then a price strictly
+        // less than it so the change owed is always a positive amount.
+        var payOptions=DENOMS.filter(function(v){ return v>=20; });
+        changePayment=payOptions[rand(0,payOptions.length-1)];
+        changePrice=rand(1,changePayment-1);
+        target=changePayment-changePrice;
+      }
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return variant==='make'
+        ? 'Make exactly ₦'+target+' using any coins and notes.'
+        : 'An item costs ₦'+changePrice+'. The customer pays with a ₦'+changePayment+' note. Put the correct change in the purse.';
+    }, function(){ return total()===target; }, newTarget);
+  }
+}
+
+/* ══════════════ 6. GEOBOARD ══════════════ */
+function mountGeoboard(stage, mode){
+  var GRID=6; // 0..5 pegs each axis
+  var spacing=64, pad=20;
+  var picked=[]; // list of {x,y} grid coords in order
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var target=null;
+
+  function pegKey(x,y){ return x+'_'+y; }
+
+  function shoelaceArea(pts){
+    if(pts.length<3) return 0;
+    var sum=0;
+    for(var i=0;i<pts.length;i++){
+      var a=pts[i], b=pts[(i+1)%pts.length];
+      sum += a.x*b.y - b.x*a.y;
+    }
+    return Math.abs(sum)/2;
+  }
+  function perimeter(pts){
+    if(pts.length<2) return 0;
+    var sum=0;
+    var n=pts.length;
+    var loopCount = pts.length>=3 ? n : n-1;
+    for(var i=0;i<loopCount;i++){
+      var a=pts[i], b=pts[(i+1)%n];
+      sum += Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2));
+    }
+    return sum;
+  }
+
+  function svg(){
+    var size=pad*2+spacing*(GRID-1);
+    var pegs='', lines='';
+    for(var gy=0;gy<GRID;gy++){
+      for(var gx=0;gx<GRID;gx++){
+        var px=pad+gx*spacing, py=pad+gy*spacing;
+        var idx=picked.filter(function(p){return p.x===gx&&p.y===gy;}).length>0
+          ? picked.map(function(p){return p.x+'_'+p.y;}).indexOf(gx+'_'+gy) : -1;
+        var cls='geo-peg'+(idx===0?' first':(idx>0?' selected':''));
+        pegs+='<circle class="'+cls+'" cx="'+px+'" cy="'+py+'" r="7" data-x="'+gx+'" data-y="'+gy+'"/>';
+      }
+    }
+    for(var i=0;i<picked.length-1;i++){
+      var a=picked[i], b=picked[i+1];
+      lines+='<line x1="'+(pad+a.x*spacing)+'" y1="'+(pad+a.y*spacing)+'" x2="'+(pad+b.x*spacing)+'" y2="'+(pad+b.y*spacing)+'" stroke="#3355dd" stroke-width="3"/>';
+    }
+    if(picked.length>=3){
+      var f=picked[0], l=picked[picked.length-1];
+      lines+='<line x1="'+(pad+l.x*spacing)+'" y1="'+(pad+l.y*spacing)+'" x2="'+(pad+f.x*spacing)+'" y2="'+(pad+f.y*spacing)+'" stroke="#3355dd" stroke-width="3" stroke-dasharray="5,4"/>';
+    }
+    return '<svg id="geo-svg" viewBox="0 0 '+size+' '+size+'">'+lines+pegs+'</svg>';
+  }
+
+  function render(){
+    var area=picked.length>=3?shoelaceArea(picked):0;
+    var perim=picked.length>=2?perimeter(picked):0;
+    host.innerHTML=svg()
+      +'<div class="stat-row"><div class="stat-pill">Vertices: '+picked.length+'</div>'
+      +'<div class="stat-pill">Area: '+(picked.length>=3?area.toFixed(1):'—')+' sq units</div>'
+      +'<div class="stat-pill">Perimeter: '+(picked.length>=2?perim.toFixed(1):'—')+' units</div></div>'
+      +'<div class="stat-row"><button class="btn btn-ghost" id="geo-clear">Clear Shape</button>'
+      +'<span style="font-size:12px;color:#8896b3;align-self:center">Tap pegs in order to build your shape. It closes automatically once you have three or more points.</span></div>';
+    Array.prototype.forEach.call(host.querySelectorAll('.geo-peg'),function(p){
+      p.addEventListener('click',function(){
+        var x=parseInt(p.getAttribute('data-x'),10), y=parseInt(p.getAttribute('data-y'),10);
+        // Re-tapping any already-picked peg (including the first one) is a
+        // no-op — the shape already closes on its own once there are three
+        // or more points (see the dashed closing edge drawn in svg()), so
+        // there's nothing special left to do when they tap it again.
+        var already=picked.some(function(pt){return pt.x===x&&pt.y===y;});
+        if(already) return;
+        picked.push({x:x,y:y});
+        render();
+      });
+    });
+    el('geo-clear').onclick=function(){ picked=[]; render(); };
+  }
+  render();
+
+  if(mode==='challenge'){
+    var achievable=[2,3,4,4.5,6,8,10,12];
+    function newTarget(){ target=achievable[rand(0,achievable.length-1)]; picked=[]; render(); }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Build a closed shape with an area of exactly '+target+' square units.'; },
+      function(){ if(picked.length<3) return false; return Math.abs(shoelaceArea(picked)-target)<0.05; }, newTarget);
+  }
+}
+
+/* ══════════════ 7. ARRAY BUILDER (multiplication & division) ══════════════ */
+function mountArray(stage, mode){
+  var rows=2, cols=2;
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var variant='mult', targetA=null, targetB=null, lockRows=false, lockCols=false;
+
+  function render(){
+    var dots='';
+    for(var i=0;i<rows*cols;i++){ dots+='<div class="arr-dot"></div>'; }
+    host.innerHTML='<div class="stat-row" style="margin-bottom:6px"><div class="stat-pill">Rows: '+rows+'</div><div class="stat-pill">Columns: '+cols+'</div></div>'
+      +'<div class="arr-grid" style="grid-template-columns:repeat('+cols+',22px)">'+dots+'</div>'
+      +'<div class="arr-fact">'+rows+' &times; '+cols+' = '+(rows*cols)+'</div>'
+      +'<div class="ctrl-row">'
+      +'<div class="ctrl-group"><div class="ctrl-label">Rows</div><div class="ctrl-btns"><button class="step-btn minus" id="ar-r-minus" '+(lockRows?'disabled':'')+'>&minus;</button><button class="step-btn" id="ar-r-plus" '+(lockRows?'disabled':'')+'>+</button></div></div>'
+      +'<div class="ctrl-group"><div class="ctrl-label">Columns</div><div class="ctrl-btns"><button class="step-btn minus" id="ar-c-minus" '+(lockCols?'disabled':'')+'>&minus;</button><button class="step-btn" id="ar-c-plus" '+(lockCols?'disabled':'')+'>+</button></div></div>'
+      +'</div>';
+    if(!lockRows){
+      el('ar-r-plus').onclick=function(){ rows=Math.min(10,rows+1); render(); };
+      el('ar-r-minus').onclick=function(){ rows=Math.max(1,rows-1); render(); };
+    }
+    if(!lockCols){
+      el('ar-c-plus').onclick=function(){ cols=Math.min(10,cols+1); render(); };
+      el('ar-c-minus').onclick=function(){ cols=Math.max(1,cols-1); render(); };
+    }
+  }
+  render();
+
+  if(mode==='challenge'){
+    function newTarget(){
+      variant=Math.random()<0.5?'mult':'div';
+      if(variant==='mult'){
+        targetA=rand(2,9); targetB=rand(2,9);
+        lockRows=false; lockCols=false;
+        rows=1; cols=1;
+      } else {
+        var r=rand(2,9), c=rand(2,9);
+        targetA=r; targetB=r*c; // fixed rows, total items
+        lockRows=true; lockCols=false;
+        rows=r; cols=1;
+      }
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return variant==='mult'
+        ? 'Build an array to show '+targetA+' × '+targetB+'.'
+        : 'Share '+targetB+' items into '+targetA+' equal rows. How many in each row?';
+    }, function(){
+      if(variant==='mult'){
+        return (rows===targetA && cols===targetB) || (rows===targetB && cols===targetA);
+      }
+      return rows===targetA && rows*cols===targetB;
+    }, newTarget);
+  }
+}
+
+/* ══════════════ 8. UNIT CONVERTER ══════════════ */
+// Every category here uses a base unit (multiplier 1) so any-to-any
+// conversion is just: value * mult[from] / mult[to]. Liquid, solid and
+// money are all power-of-ten relationships (1000, 1000, 100), so ANY value
+// converts cleanly in both directions — no special handling needed. Time
+// is the exception: 60 and 24 and 7 are not powers of ten, so converting
+// an arbitrary value (say 100 minutes to hours) can land on a repeating
+// decimal, which would be a broken question for a primary student, not a
+// flexible one. Explore mode stays fully open across every unit regardless
+// — it is a calculator, an odd decimal there is just informational — but
+// Challenge mode only ever quizzes the curated pairs/generators below,
+// which are built to always resolve to a clean answer.
+var CONV_CATS={
+  liquid:{ label:'Liquid (Capacity)', units:[
+    {id:'ml',label:'millilitres (ml)',mult:1},
+    {id:'l', label:'litres (l)',mult:1000}
+  ]},
+  solid:{ label:'Solid (Mass)', units:[
+    {id:'mg',label:'milligrams (mg)',mult:1},
+    {id:'g', label:'grams (g)',mult:1000},
+    {id:'kg',label:'kilograms (kg)',mult:1000000}
+  ]},
+  time:{ label:'Time', units:[
+    {id:'sec', label:'seconds',mult:1},
+    {id:'min', label:'minutes',mult:60},
+    {id:'hr',  label:'hours',mult:3600},
+    {id:'day', label:'days',mult:86400},
+    {id:'week',label:'weeks',mult:604800}
+  ]},
+  money:{ label:'Money', units:[
+    {id:'kobo', label:'kobo',mult:1},
+    {id:'naira',label:'naira (₦)',mult:100}
+  ]},
+  length:{ label:'Length', units:[
+    {id:'mm',label:'millimetres (mm)',mult:1},
+    {id:'cm',label:'centimetres (cm)',mult:10},
+    {id:'m', label:'metres (m)',mult:1000},
+    {id:'km',label:'kilometres (km)',mult:1000000}
+  ]}
+};
+var CONV_CAT_ORDER=['liquid','solid','length','time','money'];
+
+function convUnit(catId,unitId){
+  var found=null;
+  CONV_CATS[catId].units.forEach(function(u){ if(u.id===unitId) found=u; });
+  return found;
+}
+function convValue(catId,fromId,toId,val){
+  var f=convUnit(catId,fromId), t=convUnit(catId,toId);
+  return val*f.mult/t.mult;
+}
+function roundClean(n){
+  // Kills floating-point residue (e.g. 0.1+0.2 style artifacts) without
+  // hiding genuine small decimals a student is meant to see.
+  return Math.round(n*10000)/10000;
+}
+
+// Curated, always-clean challenge generators. Each returns
+// {cat, from, to, value, answer}. Liquid/solid/money use a single generic
+// generator per category since any value is safe; time uses one generator
+// per adjacent unit pair (see the comment above).
+function genLiquidChallenge(){
+  var toL=Math.random()<0.5;
+  if(toL){ var ml=rand(1,500)*10; return {cat:'liquid',from:'ml',to:'l',value:ml,answer:roundClean(ml/1000)}; }
+  var l=rand(10,500)/100; return {cat:'liquid',from:'l',to:'ml',value:l,answer:roundClean(l*1000)};
+}
+function genSolidChallenge(){
+  var pair=Math.random()<0.5?['mg','g',1000]:['g','kg',1000];
+  var small=pair[0], big=pair[1], ratio=pair[2];
+  if(Math.random()<0.5){
+    var vSmall=rand(1,500)*10;
+    return {cat:'solid',from:small,to:big,value:vSmall,answer:roundClean(vSmall/ratio)};
+  }
+  var vBig=rand(10,500)/100;
+  return {cat:'solid',from:big,to:small,value:vBig,answer:roundClean(vBig*ratio)};
+}
+function genLengthChallenge(){
+  var pairs=[['mm','cm',10],['cm','m',100],['m','km',1000]];
+  var p=pairs[rand(0,pairs.length-1)];
+  var small=p[0], big=p[1], ratio=p[2];
+  if(Math.random()<0.5){
+    var vSmall=rand(1,500)*10;
+    return {cat:'length',from:small,to:big,value:vSmall,answer:roundClean(vSmall/ratio)};
+  }
+  var vBig=rand(10,500)/100;
+  return {cat:'length',from:big,to:small,value:vBig,answer:roundClean(vBig*ratio)};
+}
+function genMoneyChallenge(){
+  if(Math.random()<0.5){
+    var kobo=rand(1,2000);
+    return {cat:'money',from:'kobo',to:'naira',value:kobo,answer:roundClean(kobo/100)};
+  }
+  var naira=rand(1,500)+ (rand(0,1)?0.5:0);
+  return {cat:'money',from:'naira',to:'kobo',value:naira,answer:roundClean(naira*100)};
+}
+var TIME_GENERATORS=[
+  function(){ var m=rand(1,20); return {from:'sec',to:'min',value:m*60,answer:m}; },
+  function(){ var m=rand(1,20); return {from:'min',to:'sec',value:m,answer:m*60}; },
+  function(){ var q=rand(1,16); var mins=q*15; return {from:'min',to:'hr',value:mins,answer:roundClean(mins/60)}; },
+  function(){ var h=rand(1,6); return {from:'hr',to:'min',value:h,answer:h*60}; },
+  function(){ var d=rand(1,5); var hrs=d*24; return {from:'hr',to:'day',value:hrs,answer:roundClean(hrs/24)}; },
+  function(){ var d=rand(1,10); return {from:'day',to:'hr',value:d,answer:d*24}; },
+  function(){ var w=rand(1,8); var days=w*7; return {from:'day',to:'week',value:days,answer:roundClean(days/7)}; },
+  function(){ var w=rand(1,10); return {from:'week',to:'day',value:w,answer:w*7}; }
+];
+function genTimeChallenge(){
+  var pick=TIME_GENERATORS[rand(0,TIME_GENERATORS.length-1)]();
+  pick.cat='time';
+  return pick;
+}
+var CONV_GENERATORS={ liquid:genLiquidChallenge, solid:genSolidChallenge, time:genTimeChallenge, money:genMoneyChallenge, length:genLengthChallenge };
+
+function mountConvert(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var cat='liquid', fromU=CONV_CATS.liquid.units[0].id, toU=CONV_CATS.liquid.units[1].id, inputVal=1;
+  var challenge=null;
+
+  function unitOptions(catId,selectedId){
+    return CONV_CATS[catId].units.map(function(u){
+      return '<option value="'+u.id+'"'+(u.id===selectedId?' selected':'')+'>'+u.label+'</option>';
+    }).join('');
+  }
+
+  function renderExplore(){
+    var result=roundClean(convValue(cat,fromU,toU,inputVal));
+    host.innerHTML='<div class="conv-cats">'
+      +CONV_CAT_ORDER.map(function(c){
+        return '<button class="conv-cat-btn'+(c===cat?' on':'')+'" data-cat="'+c+'">'+CONV_CATS[c].label+'</button>';
+      }).join('')
+      +'</div>'
+      +'<div class="conv-row">'
+      +'<div class="conv-field"><div class="ctrl-label">Value</div><input class="conv-input" type="number" id="conv-val" value="'+inputVal+'"></div>'
+      +'<div class="conv-field"><div class="ctrl-label">From</div><select class="conv-select" id="conv-from">'+unitOptions(cat,fromU)+'</select></div>'
+      +'<button class="conv-swap" id="conv-swap" title="Swap">&#8646;</button>'
+      +'<div class="conv-field"><div class="ctrl-label">To</div><select class="conv-select" id="conv-to">'+unitOptions(cat,toU)+'</select></div>'
+      +'<div class="conv-equals">=</div>'
+      +'<div class="conv-result">'+result+'</div>'
+      +'</div>';
+    Array.prototype.forEach.call(host.querySelectorAll('.conv-cat-btn'),function(b){
+      b.addEventListener('click',function(){
+        cat=b.getAttribute('data-cat');
+        fromU=CONV_CATS[cat].units[0].id;
+        toU=CONV_CATS[cat].units[1] ? CONV_CATS[cat].units[1].id : CONV_CATS[cat].units[0].id;
+        renderExplore();
+      });
+    });
+    el('conv-val').addEventListener('input',function(){
+      // Deliberately NOT a full renderExplore() here — that rebuilds this
+      // very input's innerHTML on every keystroke, which destroys and
+      // recreates the DOM node and drops focus after each character typed,
+      // making multi-digit entry nearly unusable. Update only the result
+      // text instead, leaving the input itself untouched.
+      var v=parseFloat(el('conv-val').value);
+      inputVal=isNaN(v)?0:v;
+      var resEl=host.querySelector('.conv-result');
+      if(resEl) resEl.textContent=roundClean(convValue(cat,fromU,toU,inputVal));
+    });
+    el('conv-from').addEventListener('change',function(){ fromU=el('conv-from').value; renderExplore(); });
+    el('conv-to').addEventListener('change',function(){ toU=el('conv-to').value; renderExplore(); });
+    el('conv-swap').addEventListener('click',function(){ var t=fromU; fromU=toU; toU=t; renderExplore(); });
+  }
+
+  function unitLabel(catId,unitId){ return convUnit(catId,unitId).label; }
+
+  function renderChallenge(){
+    host.innerHTML='<div class="conv-row">'
+      +'<div class="conv-field"><div class="ctrl-label">Your answer</div><input class="conv-input" type="number" id="conv-answer" placeholder="?"></div>'
+      +'</div>';
+  }
+
+  if(mode==='explore'){
+    renderExplore();
+  } else {
+    function newChallenge(){
+      var whichCat=CONV_CAT_ORDER[rand(0,CONV_CAT_ORDER.length-1)];
+      challenge=CONV_GENERATORS[whichCat]();
+      challenge.cat=challenge.cat||whichCat;
+      renderChallenge();
+    }
+    newChallenge();
+    buildChallengeBar(stage, function(){
+      return 'Convert '+challenge.value+' '+unitLabel(challenge.cat,challenge.from)+' to '+unitLabel(challenge.cat,challenge.to)+'.';
+    }, function(){
+      var v=parseFloat(el('conv-answer').value);
+      if(isNaN(v)) return false;
+      return Math.abs(v-challenge.answer)<0.01;
+    }, newChallenge);
+  }
+}
+
+/* ══════════════ 9. ADDITION AND SUBTRACTION ══════════════ */
+function mountAddSub(stage, mode){
+  var theme='counter';
+  var op='add';
+  var countA=3, countB=2;
+  var startCount=8, takeAway=3;
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var target=null;
+
+  function iconRow(count, removedFrom){
+    var out='';
+    for(var i=0;i<count;i++){
+      out+='<span class="'+(removedFrom!=null && i>=removedFrom?'removed':'')+'">'+objectIcon(theme)+'</span>';
+    }
+    return out;
+  }
+  function pvBlocksHtml(total){
+    var hundreds=Math.floor(total/100), tens=Math.floor((total%100)/10), ones=total%10;
+    function row(kind,c){ var o=''; for(var i=0;i<c;i++) o+='<div class="pv-'+kind+'"></div>'; return o; }
+    return '<div class="pv-cols">'
+      +'<div class="pv-col"><div class="pv-col-label">Hundreds</div><div class="pv-blocks">'+row('hundred',hundreds)+'</div></div>'
+      +'<div class="pv-col"><div class="pv-col-label">Tens</div><div class="pv-blocks">'+row('ten',tens)+'</div></div>'
+      +'<div class="pv-col"><div class="pv-col-label">Ones</div><div class="pv-blocks">'+row('one',ones)+'</div></div>'
+      +'</div>';
+  }
+  function currentTotal(){
+    return op==='add' ? (countA+countB) : Math.max(0,startCount-takeAway);
+  }
+
+  function render(){
+    var opControls = mode==='explore'
+      ? '<div class="stat-row"><button class="btn '+(op==='add'?'btn-primary':'btn-ghost')+'" id="as-op-add">Add</button><button class="btn '+(op==='sub'?'btn-primary':'btn-ghost')+'" id="as-op-sub">Subtract</button></div>'
+      : '';
+    var body;
+    if(op==='add'){
+      body='<div class="as-groups">'
+        +'<div class="as-group"><div class="as-icons">'+iconRow(countA,null)+'</div>'
+        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-a-minus">&minus;</button><button class="step-btn" id="as-a-plus">+</button></div>'
+        +'<div class="ctrl-label">Group A: '+countA+'</div></div>'
+        +'<div class="as-op">+</div>'
+        +'<div class="as-group"><div class="as-icons">'+iconRow(countB,null)+'</div>'
+        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-b-minus">&minus;</button><button class="step-btn" id="as-b-plus">+</button></div>'
+        +'<div class="ctrl-label">Group B: '+countB+'</div></div>'
+        +'</div>';
+    } else {
+      body='<div class="as-groups">'
+        +'<div class="as-group"><div class="as-icons">'+iconRow(startCount, startCount-takeAway)+'</div>'
+        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-start-minus">&minus;</button><button class="step-btn" id="as-start-plus">+</button></div>'
+        +'<div class="ctrl-label">Start: '+startCount+'</div></div>'
+        +'<div class="as-op">&minus;</div>'
+        +'<div class="as-group"><div class="ctrl-btns"><button class="step-btn minus" id="as-take-minus">&minus;</button><button class="step-btn" id="as-take-plus">+</button></div>'
+        +'<div class="ctrl-label">Take away: '+takeAway+'</div></div>'
+        +'</div>';
+    }
+    host.innerHTML=(mode==='explore'?objectThemePicker(theme):'')
+      +opControls
+      +body
+      +'<div style="margin-top:18px">'+pvBlocksHtml(currentTotal())+'</div>'
+      +'<div class="stat-row"><div class="stat-pill">'+(op==='add'?'Total':'Remaining')+': '+currentTotal()+'</div></div>';
+
+    if(mode==='explore'){
+      wireThemePicker(host,function(id){ theme=id; render(); });
+      el('as-op-add').onclick=function(){ op='add'; render(); };
+      el('as-op-sub').onclick=function(){ op='sub'; render(); };
+    }
+    if(op==='add'){
+      el('as-a-plus').onclick=function(){ countA=Math.min(20,countA+1); render(); };
+      el('as-a-minus').onclick=function(){ countA=Math.max(0,countA-1); render(); };
+      el('as-b-plus').onclick=function(){ countB=Math.min(20,countB+1); render(); };
+      el('as-b-minus').onclick=function(){ countB=Math.max(0,countB-1); render(); };
+    } else {
+      el('as-start-plus').onclick=function(){ startCount=Math.min(30,startCount+1); if(takeAway>startCount) takeAway=startCount; render(); };
+      el('as-start-minus').onclick=function(){ startCount=Math.max(0,startCount-1); if(takeAway>startCount) takeAway=startCount; render(); };
+      el('as-take-plus').onclick=function(){ takeAway=Math.min(startCount,takeAway+1); render(); };
+      el('as-take-minus').onclick=function(){ takeAway=Math.max(0,takeAway-1); render(); };
+    }
+  }
+  render();
+
+  if(mode==='challenge'){
+    // Kept to small numbers deliberately — object-icon counting is the
+    // concrete stage meant for small quantities; Place Value Blocks is
+    // the right tool once numbers get big, not this one.
+    function newTarget(){
+      op=Math.random()<0.5?'add':'sub';
+      if(op==='add'){
+        countA=0; countB=0;
+        target=rand(3,20);
+      } else {
+        startCount=rand(5,20);
+        takeAway=0;
+        target=startCount-rand(1,startCount-1);
+      }
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return op==='add'
+        ? 'Using Group A and Group B, make a total of '+target+'.'
+        : 'Start with '+startCount+' and take away enough to leave exactly '+target+'.';
+    }, function(){ return currentTotal()===target; }, newTarget);
+  }
+}
+
+/* ══════════════ 10. COMPARE AND ORDER ══════════════ */
+function mountCompare(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var numA=3, numB=7;
+
+  // Plain characters for all internal logic — HTML entities only ever get
+  // introduced right at the point of inserting into innerHTML text, never
+  // stored in a variable that also gets compared against elsewhere (that
+  // exact split caused a real mismatch bug while writing this: a data
+  // attribute holding "&gt;" decodes back to ">" once read via
+  // getAttribute, but a plain string "&gt;" built in JS never does).
+  function compareSymbol(a,b){ return a>b?'>':(a<b?'<':'='); }
+  function escSym(s){ return s==='<' ? '&lt;' : s; }
+  function shuffle(arr){
+    for(var i=arr.length-1;i>0;i--){
+      var j=rand(0,i), t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+    }
+    return arr;
+  }
+
+  function renderExplore(){
+    host.innerHTML='<div class="cmp-row">'
+      +'<div class="conv-field"><div class="ctrl-label">Number A</div><div class="cmp-num">'+numA+'</div>'
+      +'<div class="ctrl-btns"><button class="step-btn minus" id="cmp-a-minus">&minus;</button><button class="step-btn" id="cmp-a-plus">+</button></div></div>'
+      +'<div class="cmp-num" style="background:transparent;color:#7c3aed">'+escSym(compareSymbol(numA,numB))+'</div>'
+      +'<div class="conv-field"><div class="ctrl-label">Number B</div><div class="cmp-num">'+numB+'</div>'
+      +'<div class="ctrl-btns"><button class="step-btn minus" id="cmp-b-minus">&minus;</button><button class="step-btn" id="cmp-b-plus">+</button></div></div>'
+      +'</div>';
+    el('cmp-a-plus').onclick=function(){ numA=Math.min(999,numA+1); renderExplore(); };
+    el('cmp-a-minus').onclick=function(){ numA=Math.max(0,numA-1); renderExplore(); };
+    el('cmp-b-plus').onclick=function(){ numB=Math.min(999,numB+1); renderExplore(); };
+    el('cmp-b-minus').onclick=function(){ numB=Math.max(0,numB-1); renderExplore(); };
+  }
+
+  if(mode==='explore'){
+    renderExplore();
+  } else {
+    var variant='compare', chosenSymbol=null, pool=[], builtOrder=[], correctOrder=[];
+    var SYM_MAP={gt:'>',lt:'<',eq:'='};
+
+    function renderCompareChallenge(){
+      host.innerHTML='<div class="cmp-row">'
+        +'<div class="cmp-num">'+numA+'</div>'
+        +'<div class="cmp-sym-btns">'
+        +'<button class="cmp-sym-btn'+(chosenSymbol==='>'?' on':'')+'" data-s="gt">&gt;</button>'
+        +'<button class="cmp-sym-btn'+(chosenSymbol==='<'?' on':'')+'" data-s="lt">&lt;</button>'
+        +'<button class="cmp-sym-btn'+(chosenSymbol==='='?' on':'')+'" data-s="eq">=</button>'
+        +'</div>'
+        +'<div class="cmp-num">'+numB+'</div>'
+        +'</div>';
+      Array.prototype.forEach.call(host.querySelectorAll('.cmp-sym-btn'),function(b){
+        b.addEventListener('click',function(){
+          chosenSymbol=SYM_MAP[b.getAttribute('data-s')];
+          renderCompareChallenge();
+        });
+      });
+    }
+
+    function renderOrderChallenge(){
+      host.innerHTML='<div class="order-pool">'+pool.map(function(p,i){
+          return '<button class="order-tile'+(p.used?' used':'')+'" data-i="'+i+'"'+(p.used?' disabled':'')+'>'+p.value+'</button>';
+        }).join('')+'</div>'
+        +'<div class="order-slots">'+correctOrder.map(function(_,i){
+          return '<div class="order-slot'+(builtOrder[i]!=null?' filled':'')+'">'+(builtOrder[i]!=null?builtOrder[i]:'?')+'</div>';
+        }).join('')+'</div>'
+        +'<div class="stat-row"><button class="btn btn-ghost" id="cmp-order-reset">Reset Order</button></div>';
+      Array.prototype.forEach.call(host.querySelectorAll('.order-tile'),function(b){
+        b.addEventListener('click',function(){
+          var i=parseInt(b.getAttribute('data-i'),10);
+          if(pool[i].used) return;
+          pool[i].used=true;
+          builtOrder.push(pool[i].value);
+          renderOrderChallenge();
+        });
+      });
+      el('cmp-order-reset').onclick=function(){
+        pool.forEach(function(p){ p.used=false; });
+        builtOrder=[];
+        renderOrderChallenge();
+      };
+    }
+
+    function newTarget(){
+      variant=Math.random()<0.5?'compare':'order';
+      if(variant==='compare'){
+        numA=rand(1,99);
+        numB=Math.random()<0.2?numA:rand(1,99);
+        chosenSymbol=null;
+        renderCompareChallenge();
+      } else {
+        var vals=[];
+        while(vals.length<5){ var v=rand(1,99); if(vals.indexOf(v)===-1) vals.push(v); }
+        correctOrder=vals.slice().sort(function(a,b){return a-b;});
+        pool=shuffle(vals.slice()).map(function(v){ return {value:v,used:false}; });
+        builtOrder=[];
+        renderOrderChallenge();
+      }
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return variant==='compare'
+        ? 'Choose the correct symbol to compare '+numA+' and '+numB+'.'
+        : 'Tap the numbers in order, from smallest to largest.';
+    }, function(){
+      if(variant==='compare') return chosenSymbol===compareSymbol(numA,numB);
+      return builtOrder.length===correctOrder.length && builtOrder.every(function(v,i){ return v===correctOrder[i]; });
+    }, newTarget);
+  }
+}
+
+/* ══════════════ 10b. COUNTING AND ORDINALS ══════════════ */
+function mountCounting(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var theme='counter';
+  var n=5;
+
+  function renderExplore(){
+    var icons=''; for(var i=0;i<n;i++) icons+='<span>'+objectIcon(theme)+'</span>';
+    host.innerHTML=objectThemePicker(theme)
+      +'<div class="count-scatter">'+icons+'</div>'
+      +'<div class="stat-row"><div class="stat-pill">Count: '+n+'</div></div>'
+      +'<div class="ctrl-row"><button class="step-btn minus" id="ct-minus">&minus;</button><button class="step-btn" id="ct-plus">+</button></div>';
+    wireThemePicker(host,function(id){ theme=id; renderExplore(); });
+    el('ct-plus').onclick=function(){ n=Math.min(20,n+1); renderExplore(); };
+    el('ct-minus').onclick=function(){ n=Math.max(0,n-1); renderExplore(); };
+  }
+
+  function ordName(v){
+    var s=['th','st','nd','rd'], m=v%100;
+    return v+(s[(m-20)%10]||s[m]||s[0]);
+  }
+
+  if(mode==='explore'){
+    renderExplore();
+  } else {
+    var variant='count', targetCount=0, ordinalTarget=0, ordinalCount=0, tappedIndex=null;
+
+    function renderOrdinal(){
+      var row='';
+      for(var i=0;i<ordinalCount;i++){
+        row+='<span data-i="'+i+'" class="'+(tappedIndex===i?'picked':'')+'">'+objectIcon(theme)+'</span>';
+      }
+      host.innerHTML='<div class="ord-row">'+row+'</div>';
+      Array.prototype.forEach.call(host.querySelectorAll('.ord-row span'),function(s){
+        s.addEventListener('click',function(){
+          tappedIndex=parseInt(s.getAttribute('data-i'),10);
+          renderOrdinal();
+        });
+      });
+    }
+
+    function newTarget(){
+      variant=Math.random()<0.5?'count':'ordinal';
+      tappedIndex=null;
+      if(variant==='count'){
+        targetCount=rand(3,20);
+        var icons=''; for(var i=0;i<targetCount;i++) icons+='<span>'+objectIcon(theme)+'</span>';
+        host.innerHTML='<div class="count-scatter">'+icons+'</div>'
+          +'<div class="conv-row"><div class="conv-field"><div class="ctrl-label">How many?</div>'
+          +'<input class="conv-input" type="number" id="ct-answer" placeholder="?"></div></div>';
+      } else {
+        ordinalCount=rand(5,10);
+        ordinalTarget=rand(1,ordinalCount);
+        renderOrdinal();
+      }
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return variant==='count'
+        ? 'Count the objects and type how many there are.'
+        : 'Tap the '+ordName(ordinalTarget)+' object in the row.';
+    }, function(){
+      if(variant==='count'){
+        var v=parseInt(el('ct-answer').value,10);
+        return !isNaN(v) && v===targetCount;
+      }
+      return tappedIndex===(ordinalTarget-1);
+    }, newTarget);
+  }
+}
+
+/* ══════════════ 11. FRACTIONS ══════════════ */
+function mountFractions(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var denom=4, shaded=[];
+
+  function setDenom(d){
+    denom=d;
+    shaded=[];
+    for(var i=0;i<d;i++) shaded.push(false);
+  }
+  function numerator(){ return shaded.filter(Boolean).length; }
+
+  function render(){
+    var segs='';
+    for(var i=0;i<denom;i++){
+      segs+='<div class="frac-seg'+(shaded[i]?' shaded':'')+'" data-i="'+i+'"></div>';
+    }
+    host.innerHTML='<div class="frac-bar">'+segs+'</div>'
+      +'<div class="frac-label">'+numerator()+' / '+denom+'</div>'
+      +(mode==='explore'
+        ? '<div class="ctrl-row"><div class="ctrl-group"><div class="ctrl-label">Parts (denominator)</div>'
+          +'<div class="ctrl-btns"><button class="step-btn minus" id="fr-d-minus">&minus;</button><button class="step-btn" id="fr-d-plus">+</button></div></div></div>'
+        : '');
+    Array.prototype.forEach.call(host.querySelectorAll('.frac-seg'),function(s){
+      s.addEventListener('click',function(){
+        var i=parseInt(s.getAttribute('data-i'),10);
+        shaded[i]=!shaded[i];
+        render();
+      });
+    });
+    if(mode==='explore'){
+      el('fr-d-plus').onclick=function(){ if(denom<10) setDenom(denom+1); render(); };
+      el('fr-d-minus').onclick=function(){ if(denom>2) setDenom(denom-1); render(); };
+    }
+  }
+  setDenom(4);
+  render();
+
+  if(mode==='challenge'){
+    var targetNum=0, targetDenom=0;
+    function newTarget(){
+      targetDenom=rand(2,8);
+      targetNum=rand(1,targetDenom-1);
+      setDenom(targetDenom);
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Shade the bar to show '+targetNum+'/'+targetDenom+'.'; },
+      function(){ return denom===targetDenom && numerator()===targetNum; }, newTarget);
+  }
+}
+
+/* ══════════════ 12. SHAPE SORTER ══════════════ */
+var SHAPES=[
+  {id:'circle',name:'Circle',sides:0},
+  {id:'triangle',name:'Triangle',sides:3},
+  {id:'square',name:'Square',sides:4},
+  {id:'rectangle',name:'Rectangle',sides:4},
+  {id:'pentagon',name:'Pentagon',sides:5},
+  {id:'hexagon',name:'Hexagon',sides:6},
+  {id:'heptagon',name:'Heptagon',sides:7},
+  {id:'octagon',name:'Octagon',sides:8}
+];
+function regularPolygonPoints(sides,cx,cy,r){
+  var pts=[];
+  for(var i=0;i<sides;i++){
+    var a=(i*(360/sides)-90)*Math.PI/180; // -90 so the first vertex points straight up
+    pts.push((cx+r*Math.cos(a))+','+(cy+r*Math.sin(a)));
+  }
+  return pts.join(' ');
+}
+function shapeSvg(shapeId){
+  if(shapeId==='circle'){
+    return '<svg id="shape-svg" viewBox="0 0 180 180"><circle cx="90" cy="90" r="70" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>';
+  }
+  if(shapeId==='rectangle'){
+    return '<svg id="shape-svg" viewBox="0 0 180 180"><rect x="25" y="55" width="130" height="70" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>';
+  }
+  var shape=SHAPES.filter(function(s){return s.id===shapeId;})[0];
+  var pts=regularPolygonPoints(shape.sides,90,90,70);
+  return '<svg id="shape-svg" viewBox="0 0 180 180"><polygon points="'+pts+'" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>';
+}
+function shuffleArr(arr){
+  for(var i=arr.length-1;i>0;i--){ var j=rand(0,i), t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+  return arr;
+}
+function pickDistinctOptions(correctVal, pool, count){
+  var opts=[correctVal];
+  var tries=0;
+  while(opts.length<count && tries<80){
+    var v=pool[rand(0,pool.length-1)];
+    if(opts.indexOf(v)===-1) opts.push(v);
+    tries++;
+  }
+  return shuffleArr(opts);
+}
+function mountShapes(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var browseIdx=0;
+
+  function renderExplore(){
+    var s=SHAPES[browseIdx];
+    host.innerHTML=shapeSvg(s.id)
+      +'<div class="stat-row"><div class="stat-pill">'+s.name+'</div>'
+      +'<div class="stat-pill">'+(s.sides===0?'0 sides':s.sides+' sides, '+s.sides+' corners')+'</div></div>'
+      +'<div class="ctrl-row"><button class="btn btn-ghost" id="sh-prev">&larr; Prev</button><button class="btn btn-ghost" id="sh-next">Next &rarr;</button></div>';
+    el('sh-prev').onclick=function(){ browseIdx=(browseIdx+SHAPES.length-1)%SHAPES.length; renderExplore(); };
+    el('sh-next').onclick=function(){ browseIdx=(browseIdx+1)%SHAPES.length; renderExplore(); };
+  }
+
+  if(mode==='explore'){
+    renderExplore();
+  } else {
+    var variant='name', current=null, options=[], selectedOpt=null;
+    function renderChallenge(){
+      var html=shapeSvg(current.id)+'<div class="shape-opts">';
+      options.forEach(function(opt){
+        html+='<button class="shape-opt-btn'+(selectedOpt===opt?' on':'')+'" data-v="'+opt+'">'+opt+'</button>';
+      });
+      html+='</div>';
+      host.innerHTML=html;
+      Array.prototype.forEach.call(host.querySelectorAll('.shape-opt-btn'),function(b){
+        b.addEventListener('click',function(){
+          selectedOpt=b.getAttribute('data-v');
+          renderChallenge();
+        });
+      });
+    }
+    function newTarget(){
+      variant=Math.random()<0.5?'name':'sides';
+      current=SHAPES[rand(0,SHAPES.length-1)];
+      selectedOpt=null;
+      if(variant==='name'){
+        options=pickDistinctOptions(current.name, SHAPES.map(function(s){return s.name;}), 4);
+      } else {
+        options=pickDistinctOptions(current.sides, SHAPES.map(function(s){return s.sides;}), 4).map(String);
+      }
+      renderChallenge();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){
+      return variant==='name' ? 'What is the name of this shape?' : 'How many sides does this shape have?';
+    }, function(){
+      if(selectedOpt==null) return false;
+      return variant==='name' ? selectedOpt===current.name : parseInt(selectedOpt,10)===current.sides;
+    }, newTarget);
+  }
+}
+
+/* ══════════════ 13. MEASURING RULER ══════════════ */
+function mountRuler(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var MAXCM=20;
+  var lengthCm=7;
+
+  function rulerSvg(valueCm){
+    var w=680, h=110, padding=20, usable=w-padding*2;
+    var pxPerCm=usable/MAXCM;
+    var ticks='';
+    for(var mm=0; mm<=MAXCM*10; mm++){
+      var cmPos=mm/10;
+      var x=padding+cmPos*pxPerCm;
+      var isCm=mm%10===0;
+      var isHalf=mm%5===0;
+      var tickH=isCm?26:(isHalf?18:10);
+      ticks+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="'+(20+tickH)+'" stroke="#8896b3" stroke-width="'+(isCm?2:1)+'"/>';
+      if(isCm){ ticks+='<text x="'+x+'" y="'+(20+tickH+14)+'" font-size="11" fill="#6b7896" text-anchor="middle">'+cmPos+'</text>'; }
+    }
+    var barWidth=Math.max(0,valueCm*pxPerCm);
+    return '<svg id="ruler-svg" viewBox="0 0 '+w+' '+h+'">'
+      +'<rect x="'+padding+'" y="20" width="'+usable+'" height="52" fill="#fff" stroke="#0d9488" stroke-width="2"/>'
+      +ticks
+      +'<rect x="'+padding+'" y="66" width="'+barWidth+'" height="14" fill="#0d9488" opacity="0.75"/>'
+      +'</svg>';
+  }
+
+  function renderExplore(){
+    host.innerHTML=rulerSvg(lengthCm)
+      +'<div class="stat-row"><div class="stat-pill">Length: '+lengthCm+' cm</div></div>'
+      +'<div class="ctrl-row"><button class="step-btn minus" id="ru-minus">&minus;</button><button class="step-btn" id="ru-plus">+</button></div>';
+    el('ru-plus').onclick=function(){ lengthCm=Math.min(MAXCM,lengthCm+0.5); renderExplore(); };
+    el('ru-minus').onclick=function(){ lengthCm=Math.max(0.5,lengthCm-0.5); renderExplore(); };
+  }
+
+  if(mode==='explore'){
+    renderExplore();
+  } else {
+    var target=0;
+    function renderChallenge(){
+      host.innerHTML=rulerSvg(target)
+        +'<div class="conv-row"><div class="conv-field"><div class="ctrl-label">Length (cm)</div>'
+        +'<input class="conv-input" type="number" step="0.5" id="ru-answer" placeholder="?"></div></div>';
+    }
+    function newTarget(){
+      target=rand(1,2*MAXCM)/2; // half-cm steps, aligned exactly to a drawn tick
+      renderChallenge();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Read the ruler and type the length of the bar, in centimetres.'; },
+      function(){
+        var v=parseFloat(el('ru-answer').value);
+        return !isNaN(v) && Math.abs(v-target)<0.05;
+      }, newTarget);
+  }
+}
+
+/* ══════════════ 14. DATA AND GRAPHS ══════════════ */
+function mountDataBar(stage, mode){
+  var host=document.createElement('div');
+  stage.appendChild(host);
+  var CATS=[
+    {label:'Apples',  icon:'\u{1F34E}'},
+    {label:'Bananas', icon:'\u{1F34C}'},
+    {label:'Oranges', icon:'\u{1F34A}'}
+  ];
+  var tally=[3,5,2];
+  var bars=[0,0,0];
+
+  function tallyIcons(count,icon){ var out=''; for(var i=0;i<count;i++) out+='<span>'+icon+'</span>'; return out; }
+
+  function render(){
+    var tallyHtml=CATS.map(function(c,i){
+      return '<div class="tally-line"><div class="tally-label">'+c.label+'</div><div class="tally-icons">'+tallyIcons(tally[i],c.icon)+'</div></div>';
+    }).join('');
+    var barsHtml=CATS.map(function(c,i){
+      return '<div class="bar-col"><div class="bar-rect" style="height:'+(bars[i]*16)+'px"></div><div class="bar-lbl">'+c.label+' ('+bars[i]+')</div>'
+        +'<div class="ctrl-btns"><button class="step-btn minus" id="db-minus-'+i+'">&minus;</button><button class="step-btn" id="db-plus-'+i+'">+</button></div></div>';
+    }).join('');
+    host.innerHTML='<div class="tally-row">'+tallyHtml+'</div>'
+      +'<div class="bar-chart">'+barsHtml+'</div>'
+      +(mode==='explore'?'<div class="stat-row"><button class="btn btn-ghost" id="db-new">New Data</button></div>':'');
+    CATS.forEach(function(c,i){
+      el('db-plus-'+i).onclick=function(){ bars[i]=Math.min(10,bars[i]+1); render(); };
+      el('db-minus-'+i).onclick=function(){ bars[i]=Math.max(0,bars[i]-1); render(); };
+    });
+    if(mode==='explore'){
+      el('db-new').onclick=function(){ tally=CATS.map(function(){return rand(1,8);}); bars=[0,0,0]; render(); };
+    }
+  }
+  render();
+
+  if(mode==='challenge'){
+    function newTarget(){
+      tally=CATS.map(function(){ return rand(1,8); });
+      bars=[0,0,0];
+      render();
+    }
+    newTarget();
+    buildChallengeBar(stage, function(){ return 'Build a bar for each fruit to match the tally shown above.'; },
+      function(){ return bars.every(function(b,i){ return b===tally[i]; }); }, newTarget);
+  }
+}
+
+buildMenu();
+showMenu();
+})();
+</script>
+</body>
+</html>

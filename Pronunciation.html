@@ -228,8 +228,12 @@ function runRecognition(){
     // Tighter-than-default silence timeout: a student tapping the mic and
     // saying nothing gets a fast "didn't catch that" instead of a long
     // open mic — Azure bills per second of audio actually processed, so a
-    // fast timeout keeps an idle tap cheap by construction.
-    speechConfig.setProperty('SpeechServiceConnection_InitialSilenceTimeoutMs','3000');
+    // fast timeout keeps an idle tap cheap by construction. 3000ms proved
+    // too tight in real testing — a student taps the mic, then still has
+    // to read the word before saying it, and genuine attempts were timing
+    // out before speech even began. 5000ms keeps the same cost-control
+    // intent without punishing normal reaction time.
+    speechConfig.setProperty('SpeechServiceConnection_InitialSilenceTimeoutMs','5000');
     var audioConfig=SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
     var pronConfig=new SpeechSDK.PronunciationAssessmentConfig(
       word, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,

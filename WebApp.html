@@ -112,6 +112,16 @@
     }
     .btn-competition:hover { background:rgba(245,166,35,0.1); }
 
+    /* Simulation Lab button — blue to match the lab's own brand color */
+    .btn-simlab {
+      width:100%; padding:13px; background:transparent; border:1px solid #3355dd;
+      border-radius:10px; color:#3355dd; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-simlab:hover { background:rgba(51,85,221,0.1); }
+
     /* Divider with label */
     .or-divider {
       display:flex;
@@ -210,6 +220,9 @@
     <button class="btn-competition" onclick="openCompetitionMode()">
       &#x1F3C6; Competitions
     </button>
+    <button class="btn-simlab" onclick="openSimLab()">
+      &#x1F52C; Simulation Lab
+    </button>
 
     <div class="error" id="errMsg1"></div>
   </div>
@@ -261,6 +274,7 @@ var TOWER_URL     = 'https://edurena.online/TowerDefense.html';
 var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 var RACE_URL      = 'https://edurena.online/Race.html';
+var SIMLAB_URL    = 'https://edurena.online/SimulationLab.html';
 
 function refreshFromDash() {
   if (!window.DASH) return;
@@ -430,6 +444,14 @@ function openChallengeMode() {
             + 'script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
   });
+}
+
+// Simulation Lab is pure client-side (no question bank, no room code, no
+// backend calls at all — confirmed no GAS_URL/fetch in the file), so unlike
+// every other entry point here it needs no ?script= param and no whenReady()
+// gate on the backend being ready.
+function openSimLab() {
+  window.open(SIMLAB_URL, '_blank');
 }
 
 // Competitions are per-event (each needs its own ?competitionId=), so

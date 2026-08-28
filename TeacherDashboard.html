@@ -713,6 +713,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <button class="ni"            onclick="nav('questions',this);closeSidebar()"><span class="ico">?</span>Question Bank</button>
       <button class="ni"            onclick="nav('passages',this);closeSidebar()"><span class="ico">📖</span>Passages</button>
       <button class="ni"            onclick="nav('pronunciation',this);closeSidebar()"><span class="ico">🎤</span>Pronunciation</button>
+      <button class="ni"            onclick="openSimLab();closeSidebar()"><span class="ico">🔬</span>Simulation Lab</button>
       <button class="ni"            onclick="nav('students',this);closeSidebar()"><span class="ico">◉</span>Students<span class="nbadge" id="pend-badge">0</span></button>
       <button class="ni"            onclick="openRecoverModal();closeSidebar()"><span class="ico">📥</span>Recover Submission</button>
       <div class="nsec admin-only">Admin</div>
@@ -2617,6 +2618,14 @@ function bulkDeleteSelected(){
   call('deleteQuestion',{bulkIds:ids},function(){ toast('success',ids.length+' question(s) deleted'); _selectedQBIds={}; updateBulkSelCount(); loadQB(); });
 }
 function openBulkDeleteModal(){ document.getElementById('bulk-delete-mo').classList.add('on'); }
+// Simulation Lab is a standalone static page, not a dashboard tab (no
+// data to load, nothing to nav() into) — same reasoning as
+// openRecoverModal's direct action below, just opened in a new tab
+// instead of a modal.
+function openSimLab(){
+  var url=(window.DASH&&DASH.pageUrl)?DASH.pageUrl('SimulationLab.html'):'SimulationLab.html';
+  window.open(url,'_blank');
+}
 function openRecoverModal(){
   var ta=document.getElementById('recover-input'); if(ta) ta.value='';
   var st=document.getElementById('recover-status'); if(st) st.textContent='';
