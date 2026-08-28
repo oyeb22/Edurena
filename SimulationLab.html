@@ -88,12 +88,23 @@
   #clock-svg{width:220px;height:220px}
   .digital-time{font-family:var(--fd);font-weight:800;font-size:28px;background:#0f172a;color:#4ade80;padding:8px 22px;border-radius:12px}
 
-  /* money */
-  .coin-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
-  .coin-btn{background:#fff;border:2px solid #3355dd;color:#3355dd;font-family:var(--fd);font-weight:800;font-size:14px;border-radius:50%;width:60px;height:60px;cursor:pointer}
-  .note-btn{background:#3355dd;border:none;color:#fff;font-family:var(--fd);font-weight:800;font-size:13px;border-radius:8px;width:74px;height:46px;cursor:pointer}
-  .purse{display:flex;gap:6px;flex-wrap:wrap;min-height:44px;background:#f8fafd;border:1px dashed var(--border);border-radius:10px;padding:8px;justify-content:center}
-  .purse-item{background:#eef5ff;border:1px solid #c6d4ec;border-radius:8px;padding:6px 10px;font-family:var(--fd);font-weight:700;font-size:12.5px;cursor:pointer}
+  /* money — real coin (circular, metallic) and note (rectangular, tinted
+     per denomination) shapes, not text pills, both for the "add" buttons
+     and for what actually lands in the purse, so the purse visually reads
+     as a pile of coins and notes, not a list of tags. */
+  .coin-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;align-items:center}
+  .coin-btn,.note-btn{border:none;font-family:var(--fd);font-weight:800;cursor:pointer;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35);box-shadow:0 2px 5px rgba(0,0,0,.25),inset 0 1px 2px rgba(255,255,255,.4)}
+  .coin-btn{border-radius:50%;width:58px;height:58px;font-size:13px;background:radial-gradient(circle at 35% 30%,#f5cf6b,#b8860b 75%)}
+  .coin-btn[data-v="1"]{background:radial-gradient(circle at 35% 30%,#e8c27a,#9c7a3c 75%)}
+  .coin-btn[data-v="2"]{background:radial-gradient(circle at 35% 30%,#e0e0e0,#8a8f98 75%)}
+  .coin-btn[data-v="5"]{background:radial-gradient(circle at 35% 30%,#f5cf6b,#b8860b 75%)}
+  .coin-btn[data-v="10"]{background:radial-gradient(circle at 35% 30%,#f7d98a,#c9941e 75%)}
+  .note-btn{border-radius:5px;width:82px;height:44px;font-size:13px}
+  .note-btn[data-v="20"]{background:linear-gradient(135deg,#3aa876,#1e6b46)}
+  .note-btn[data-v="50"]{background:linear-gradient(135deg,#4d7fd6,#26449c)}
+  .note-btn[data-v="100"]{background:linear-gradient(135deg,#d65a5a,#8c2a2a)}
+  .note-btn[data-v="200"]{background:linear-gradient(135deg,#9a6bd6,#5a2f9c)}
+  .purse{display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-height:66px;background:#f8fafd;border:1px dashed var(--border);border-radius:10px;padding:10px;justify-content:center}
   .purse-total{font-family:var(--fd);font-weight:800;font-size:20px;text-align:center;margin-top:10px;color:#3355dd}
 
   /* geoboard */
@@ -119,6 +130,20 @@
   .conv-result{font-family:var(--fd);font-weight:800;font-size:20px;color:#0891b2;min-width:120px;text-align:center}
   .conv-swap{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:18px;cursor:pointer}
 
+  /* converter — real container fill, so liquid/solid conversions show a
+     value physically rising in a container instead of only a calculator
+     result. Not just a number — you can see the amount happening. */
+  .conv-container-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:24px}
+  .conv-beaker{position:relative;width:140px;height:200px;border:4px solid #233047;border-top:none;border-radius:0 0 16px 16px;background:rgba(255,255,255,.5);overflow:hidden}
+  .conv-beaker::before{content:'';position:absolute;top:-4px;left:-4px;right:-4px;height:6px;border:4px solid #233047;border-radius:8px;background:rgba(255,255,255,.6)}
+  .conv-fill{position:absolute;bottom:0;left:0;right:0;transition:height .4s ease;border-radius:0 0 12px 12px}
+  .conv-fill.liquid{background:linear-gradient(180deg,#7dd3fc,#0284c7)}
+  .conv-fill.solid{background:repeating-linear-gradient(45deg,#d9b98a,#d9b98a 6px,#c9a877 6px,#c9a877 12px)}
+  .conv-ticks{position:absolute;inset:0;pointer-events:none}
+  .conv-tick{position:absolute;right:0;width:14px;height:2px;background:rgba(35,48,71,.35)}
+  .conv-overflow{font-family:var(--fd);font-weight:800;color:#e5484d;text-align:center;min-height:20px}
+  .conv-capacity-note{font-size:11.5px;color:var(--muted);text-align:center}
+
   /* shared object theme picker */
   .theme-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
   .theme-btn{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:19px;cursor:pointer}
@@ -133,9 +158,11 @@
   .as-op{font-family:var(--fd);font-weight:800;font-size:30px;color:var(--muted);align-self:center}
 
   /* compare and order */
-  .cmp-row{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
-  .cmp-num{font-family:var(--fd);font-weight:800;font-size:34px;background:#f1f5fc;border-radius:14px;padding:14px 24px;min-width:70px;text-align:center}
-  .cmp-sym-btns{display:flex;gap:8px}
+  .cmp-row{display:flex;align-items:flex-end;justify-content:center;gap:18px;flex-wrap:wrap}
+  .cmp-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .cmp-bar{width:64px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#8aa3fb,#3355dd);display:flex;align-items:flex-start;justify-content:center;padding-top:6px;color:#fff;font-family:var(--fd);font-weight:800;font-size:16px;transition:height .3s ease;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+  .cmp-sym-display{font-family:var(--fd);font-weight:800;font-size:34px;color:#7c3aed;padding-bottom:20px}
+  .cmp-sym-btns{display:flex;gap:8px;padding-bottom:20px}
   .cmp-sym-btn{width:52px;height:52px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-family:var(--fd);font-weight:800;font-size:24px;cursor:pointer}
   .cmp-sym-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
   .order-pool{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
@@ -474,82 +501,127 @@ function mountTenFrame(stage, mode){
 
 /* ══════════════ 3. NUMBER LINE JUMPS ══════════════ */
 function mountNumberLine(stage, mode){
-  var MAXV=40;
+  // Range is a control, not a hardcoded cap — a teacher can widen it to
+  // whatever a lesson needs (negative numbers included), rather than being
+  // stuck with a fixed 0-40 window.
+  var MINV=-20, MAXV=20;
   var pos=0;
   var host=document.createElement('div');
   stage.appendChild(host);
   var jumpSize=1, targetVal=null, jumpsMade=0;
 
+  function clamp(v){ return Math.max(MINV,Math.min(MAXV,v)); }
+
   function svgLine(){
-    var w=740,h=100,padding=20,usable=w-padding*2;
-    function xFor(v){ return padding+(v/MAXV)*usable; }
-    var ticks='';
-    for(var v=0;v<=MAXV;v+=2){
+    var w=740,h=100,padding=20,usable=w-padding*2,span=MAXV-MINV;
+    function xFor(v){ return padding+((v-MINV)/span)*usable; }
+    var ticks='', step=span<=20?1:span<=60?2:span<=200?5:Math.ceil(span/40);
+    var labelEvery=step*(span<=20?2:5);
+    for(var v=MINV;v<=MAXV;v+=step){
       var x=xFor(v);
       ticks+='<line x1="'+x+'" y1="42" x2="'+x+'" y2="52" stroke="#c6d4ec" stroke-width="2"/>';
-      if(v%10===0){ ticks+='<text x="'+x+'" y="70" font-size="12" fill="#6b7896" text-anchor="middle">'+v+'</text>'; }
+      if(v%labelEvery===0){ ticks+='<text x="'+x+'" y="70" font-size="12" fill="#6b7896" text-anchor="middle">'+v+'</text>'; }
     }
+    var zeroX=xFor(0);
     var markerX=xFor(pos);
     return '<svg id="nl-svg" viewBox="0 0 '+w+' '+h+'">'
       +'<line x1="'+padding+'" y1="47" x2="'+(w-padding)+'" y2="47" stroke="#8896b3" stroke-width="3"/>'
       +ticks
+      +(MINV<0&&MAXV>0?'<line x1="'+zeroX+'" y1="30" x2="'+zeroX+'" y2="64" stroke="#3355dd" stroke-width="2"/>':'')
       +'<circle cx="'+markerX+'" cy="47" r="10" fill="#f5a623" stroke="#fff" stroke-width="2"/>'
       +'</svg>';
   }
 
   function render(){
     var jumpControls = mode==='challenge'
-      ? '<button class="btn btn-primary" id="nl-jump">Jump +'+jumpSize+'</button><button class="btn btn-ghost" id="nl-undo">Undo Jump</button>'
+      ? '<button class="btn btn-primary" id="nl-jump">Jump '+(jumpSize>=0?'+':'')+jumpSize+'</button><button class="btn btn-ghost" id="nl-undo">Undo Jump</button>'
       : '<button class="btn btn-primary" id="nl-j1">+1</button>'
         +'<button class="btn btn-primary" id="nl-j2">+2</button>'
         +'<button class="btn btn-primary" id="nl-j5">+5</button>'
-        +'<button class="btn btn-ghost" id="nl-jm1">&minus;1</button>';
+        +'<button class="btn btn-ghost" id="nl-jm1">&minus;1</button>'
+        +'<button class="btn btn-ghost" id="nl-jm2">&minus;2</button>'
+        +'<button class="btn btn-ghost" id="nl-jm5">&minus;5</button>';
+    var rangeControls = mode==='explore'
+      ? '<div class="ctrl-row"><div class="ctrl-group"><div class="ctrl-label">Line range</div>'
+        +'<input type="number" id="nl-min" value="'+MINV+'" style="width:70px" class="conv-input"> to '
+        +'<input type="number" id="nl-max" value="'+MAXV+'" style="width:70px" class="conv-input"></div></div>'
+      : '';
     host.innerHTML=(mode==='challenge'?'<div class="nl-jump-label">Jumps made: '+jumpsMade+'</div>':'')
       +svgLine()
       +'<div class="stat-row"><div class="stat-pill">Value: '+pos+'</div></div>'
-      +'<div class="ctrl-row">'+jumpControls+'<button class="btn btn-ghost" id="nl-reset">Reset</button></div>';
+      +'<div class="ctrl-row">'+jumpControls+'<button class="btn btn-ghost" id="nl-reset">Reset</button></div>'
+      +rangeControls;
     el('nl-reset').onclick=function(){ pos=0; jumpsMade=0; render(); };
     if(mode==='challenge'){
-      el('nl-jump').onclick=function(){ if(pos+jumpSize<=MAXV){ pos+=jumpSize; jumpsMade++; render(); } };
+      el('nl-jump').onclick=function(){ var np=pos+jumpSize; if(np>=MINV&&np<=MAXV){ pos=np; jumpsMade++; render(); } };
       el('nl-undo').onclick=function(){ if(jumpsMade>0){ pos-=jumpSize; jumpsMade--; render(); } };
     } else {
-      el('nl-j1').onclick=function(){ pos=Math.min(MAXV,pos+1); render(); };
-      el('nl-j2').onclick=function(){ pos=Math.min(MAXV,pos+2); render(); };
-      el('nl-j5').onclick=function(){ pos=Math.min(MAXV,pos+5); render(); };
-      el('nl-jm1').onclick=function(){ pos=Math.max(0,pos-1); render(); };
+      el('nl-j1').onclick=function(){ pos=clamp(pos+1); render(); };
+      el('nl-j2').onclick=function(){ pos=clamp(pos+2); render(); };
+      el('nl-j5').onclick=function(){ pos=clamp(pos+5); render(); };
+      el('nl-jm1').onclick=function(){ pos=clamp(pos-1); render(); };
+      el('nl-jm2').onclick=function(){ pos=clamp(pos-2); render(); };
+      el('nl-jm5').onclick=function(){ pos=clamp(pos-5); render(); };
+      el('nl-min').addEventListener('change',function(){
+        var v=parseInt(el('nl-min').value,10);
+        if(!isNaN(v)&&v<MAXV){ MINV=v; pos=clamp(pos); render(); }
+      });
+      el('nl-max').addEventListener('change',function(){
+        var v=parseInt(el('nl-max').value,10);
+        if(!isNaN(v)&&v>MINV){ MAXV=v; pos=clamp(pos); render(); }
+      });
     }
   }
   render();
 
   if(mode==='challenge'){
+    // Fixed, symmetric, negative-inclusive range for challenges — kept
+    // separate from Explore's teacher-adjustable range so the jump/target
+    // math below (which needs a KNOWN boundary distance in the jump's own
+    // direction to guarantee a reachable target) stays simple and correct,
+    // rather than trying to re-derive bounds for an arbitrary asymmetric
+    // range every time.
+    MINV=-20; MAXV=20;
     function newTarget(){
-      jumpSize=rand(2,9);
-      // jumps must stay small enough that jumpSize*jumps never exceeds the
-      // line's own max (MAXV=40) — otherwise the target would sit past the
-      // end of the visible line and the challenge could never be completed.
-      var maxJumps=Math.max(2,Math.min(6,Math.floor(MAXV/jumpSize)));
+      // Jumps can go either direction, and the target lands anywhere in
+      // range, negative included — no "must be reachable going up from
+      // zero" restriction. jumpSize is picked small enough relative to the
+      // boundary in ITS OWN direction that the target is always reachable
+      // in a whole number of jumps, never clamped/adjusted after the fact.
+      var dir=Math.random()<0.5?1:-1;
+      var room=dir>0?MAXV:-MINV; // distance from 0 to the boundary this jump direction is heading toward
+      var jumpMag=rand(2,Math.max(2,Math.min(9,Math.floor(room/2))));
+      jumpSize=dir*jumpMag;
+      var maxJumps=Math.max(2,Math.min(6,Math.floor(room/jumpMag)));
       var jumps=rand(2,maxJumps);
-      targetVal=jumpSize*jumps;
       pos=0; jumpsMade=0;
+      targetVal=jumpSize*jumps;
       render();
     }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Using jumps of '+jumpSize+', land exactly on '+targetVal+'.'; },
+    buildChallengeBar(stage, function(){ return 'Using jumps of '+(jumpSize>=0?'+':'')+jumpSize+', land exactly on '+targetVal+'.'; },
       function(){ return pos===targetVal; }, newTarget);
   }
 }
 
 /* ══════════════ 4. CLOCK EXPLORER ══════════════ */
 function mountClock(stage, mode){
-  var hour=3, minute=0;
+  // hour24 (0-23) is the single source of truth regardless of which format
+  // is on screen — a 12-hour DISPLAY still needs to distinguish morning
+  // from afternoon internally, otherwise "set it to 2 AM" and "set it to
+  // 2 PM" would be indistinguishable targets. The analog face only ever
+  // has 12 numbers on it, same as a real clock — 24-hour support means the
+  // DIGITAL readout and the underlying value, not a second dial.
+  var hour24=15, minute=0;
+  var use24=false;
   var host=document.createElement('div');
   stage.appendChild(host);
-  var targetHour=null, targetMinute=null;
+  var targetHour24=null, targetMinute=null;
 
   function clockSvg(){
     var cx=110,cy=110,r=100;
     var minuteAngle=minute*6;
-    var hourAngle=(hour%12)*30+minute*0.5;
+    var hourAngle=(hour24%12)*30+minute*0.5;
     var ticks='';
     for(var i=0;i<12;i++){
       var a=i*30*Math.PI/180;
@@ -566,21 +638,32 @@ function mountClock(stage, mode){
       +'</svg>';
   }
 
-  function digital(){
-    var m=minute<10?'0'+minute:''+minute;
-    return hour+':'+m;
+  function digital(h24,m){
+    var mm=m<10?'0'+m:''+m;
+    if(use24){
+      var hh=h24<10?'0'+h24:''+h24;
+      return hh+':'+mm;
+    }
+    var h12=h24%12; if(h12===0) h12=12;
+    return h12+':'+mm+' '+(h24<12?'AM':'PM');
   }
 
   function render(){
     host.innerHTML='<div class="clock-wrap">'
+      +'<div class="ctrl-row" style="margin-bottom:10px">'
+        +'<button class="btn '+(use24?'btn-ghost':'btn-primary')+'" id="cl-mode-12">12-hour</button>'
+        +'<button class="btn '+(use24?'btn-primary':'btn-ghost')+'" id="cl-mode-24">24-hour</button>'
+      +'</div>'
       +clockSvg()
-      +'<div class="digital-time">'+digital()+'</div>'
+      +'<div class="digital-time">'+digital(hour24,minute)+'</div>'
       +'<div class="ctrl-row">'
       +'<div class="ctrl-group"><div class="ctrl-label">Hour</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-h-minus">&minus;</button><button class="step-btn" id="cl-h-plus">+</button></div></div>'
       +'<div class="ctrl-group"><div class="ctrl-label">Minute</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-m-minus">&minus;</button><button class="step-btn" id="cl-m-plus">+</button></div></div>'
       +'</div></div>';
-    el('cl-h-plus').onclick=function(){ hour=hour%12+1; render(); };
-    el('cl-h-minus').onclick=function(){ hour=(hour+10)%12+1; render(); };
+    el('cl-mode-12').onclick=function(){ use24=false; render(); };
+    el('cl-mode-24').onclick=function(){ use24=true; render(); };
+    el('cl-h-plus').onclick=function(){ hour24=(hour24+1)%24; render(); };
+    el('cl-h-minus').onclick=function(){ hour24=(hour24+23)%24; render(); };
     el('cl-m-plus').onclick=function(){ minute=(minute+5)%60; render(); };
     el('cl-m-minus').onclick=function(){ minute=(minute+55)%60; render(); };
   }
@@ -588,25 +671,22 @@ function mountClock(stage, mode){
 
   if(mode==='challenge'){
     var variant='set', duration=0;
-    var mLabel=function(m){ return m<10?'0'+m:''+m; };
     function newTarget(){
       variant=Math.random()<0.5?'set':'elapsed';
       if(variant==='set'){
-        targetHour=rand(1,12);
+        targetHour24=rand(0,23);
         targetMinute=rand(0,11)*5;
-        hour=1; minute=0;
+        hour24=0; minute=0;
       } else {
         // Elapsed time: start the clock already showing a start time, ask
-        // the student to move it forward by a stated duration. Wraps within
-        // a 12-hour dial the same way a real analog clock face does (this
-        // sim doesn't track AM/PM anywhere else either, so that's
-        // consistent, not a shortcut).
-        hour=rand(1,12);
+        // the student to move it forward by a stated duration. Now wraps
+        // across the full 24-hour day, not just a 12-hour dial cycle.
+        hour24=rand(0,23);
         minute=rand(0,11)*5;
-        duration=rand(1,23)*5; // 5 to 115 minutes
-        var totalStart=(hour%12)*60+minute;
-        var totalEnd=(totalStart+duration)%720;
-        targetHour=Math.floor(totalEnd/60); if(targetHour===0) targetHour=12;
+        duration=rand(1,47)*5; // 5 to 235 minutes
+        var totalStart=hour24*60+minute;
+        var totalEnd=(totalStart+duration)%1440;
+        targetHour24=Math.floor(totalEnd/60);
         targetMinute=totalEnd%60;
       }
       render();
@@ -614,9 +694,9 @@ function mountClock(stage, mode){
     newTarget();
     buildChallengeBar(stage, function(){
       return variant==='set'
-        ? 'Set the clock to '+targetHour+':'+mLabel(targetMinute)+'.'
+        ? 'Set the clock to '+digital(targetHour24,targetMinute)+'.'
         : 'The clock shows the start time. A class lasts '+duration+' minutes. Set the clock to show when it ends.';
-    }, function(){ return hour===targetHour && minute===targetMinute; }, newTarget);
+    }, function(){ return hour24===targetHour24 && minute===targetMinute; }, newTarget);
   }
 }
 
@@ -637,7 +717,11 @@ function mountMoney(stage, mode){
       return '<button class="'+(isCoin?'coin-btn':'note-btn')+'" data-v="'+v+'">₦'+v+'</button>';
     }).join('');
     var purseHtml=purse.map(function(p){
-      return '<div class="purse-item" data-id="'+p.id+'">₦'+p.value+'</div>';
+      // Reuses the exact coin-btn/note-btn shape+colour rules (keyed off
+      // data-v) so a coin or note in the purse looks identical to the one
+      // that was tapped to add it — a real pile, not a list of text tags.
+      var isCoin=p.value<20;
+      return '<div class="purse-item '+(isCoin?'coin-btn':'note-btn')+'" data-id="'+p.id+'" data-v="'+p.value+'" title="Tap to remove">₦'+p.value+'</div>';
     }).join('') || '<span style="color:#8896b3;font-size:12.5px">Tap a coin or note to add it here</span>';
     host.innerHTML='<div class="coin-row">'+coinsHtml+'</div>'
       +'<div class="purse">'+purseHtml+'</div>'
@@ -957,6 +1041,39 @@ function mountConvert(stage, mode){
     }).join('');
   }
 
+  // Only liquid and solid get the container visual — time and money
+  // already have their own dedicated, richer simulations elsewhere in the
+  // lab (Clock Explorer, Money and Coins), so duplicating a lesser version
+  // of those here would be redundant rather than useful.
+  var CONTAINER_CAPACITY={ liquid:5000, solid:5000000 }; // base units: ml, mg
+  function containerVisualHtml(){
+    if(cat!=='liquid' && cat!=='solid') return '';
+    var baseUnit=CONV_CATS[cat].units[0].id;
+    var capacityBase=CONTAINER_CAPACITY[cat];
+    var valueInBase=convValue(cat,fromU,baseUnit,inputVal);
+    var fillPct=Math.max(0,Math.min(100,(valueInBase/capacityBase)*100));
+    var overflow=valueInBase>capacityBase;
+    var ticks='';
+    for(var i=1;i<=4;i++){ ticks+='<div class="conv-tick" style="bottom:'+(i*20)+'%"></div>'; }
+    var capacityLabel=cat==='liquid' ? (capacityBase/1000)+' litres' : (capacityBase/1000000)+' kilograms';
+    return '<div class="conv-container-wrap">'
+      +'<div class="conv-overflow" id="conv-overflow">'+(overflow?'⚠ Overflowing the container!':'')+'</div>'
+      +'<div class="conv-beaker"><div class="conv-fill '+cat+'" id="conv-fill" style="height:'+fillPct+'%"></div><div class="conv-ticks">'+ticks+'</div></div>'
+      +'<div class="conv-capacity-note">Container capacity: '+capacityLabel+'</div>'
+      +'</div>';
+  }
+  function updateContainerVisual(){
+    if(cat!=='liquid' && cat!=='solid') return;
+    var baseUnit=CONV_CATS[cat].units[0].id;
+    var capacityBase=CONTAINER_CAPACITY[cat];
+    var valueInBase=convValue(cat,fromU,baseUnit,inputVal);
+    var fillPct=Math.max(0,Math.min(100,(valueInBase/capacityBase)*100));
+    var fillEl=host.querySelector('#conv-fill');
+    if(fillEl) fillEl.style.height=fillPct+'%';
+    var overEl=host.querySelector('#conv-overflow');
+    if(overEl) overEl.textContent=valueInBase>capacityBase?'⚠ Overflowing the container!':'';
+  }
+
   function renderExplore(){
     var result=roundClean(convValue(cat,fromU,toU,inputVal));
     host.innerHTML='<div class="conv-cats">'
@@ -971,7 +1088,8 @@ function mountConvert(stage, mode){
       +'<div class="conv-field"><div class="ctrl-label">To</div><select class="conv-select" id="conv-to">'+unitOptions(cat,toU)+'</select></div>'
       +'<div class="conv-equals">=</div>'
       +'<div class="conv-result">'+result+'</div>'
-      +'</div>';
+      +'</div>'
+      +containerVisualHtml();
     Array.prototype.forEach.call(host.querySelectorAll('.conv-cat-btn'),function(b){
       b.addEventListener('click',function(){
         cat=b.getAttribute('data-cat');
@@ -990,6 +1108,7 @@ function mountConvert(stage, mode){
       inputVal=isNaN(v)?0:v;
       var resEl=host.querySelector('.conv-result');
       if(resEl) resEl.textContent=roundClean(convValue(cat,fromU,toU,inputVal));
+      updateContainerVisual();
     });
     el('conv-from').addEventListener('change',function(){ fromU=el('conv-from').value; renderExplore(); });
     el('conv-to').addEventListener('change',function(){ toU=el('conv-to').value; renderExplore(); });
@@ -1149,13 +1268,20 @@ function mountCompare(stage, mode){
     }
     return arr;
   }
+  // A digit next to a digit is exactly the abstract-symbol comparison a
+  // student is meant to grow INTO — the concrete step first is seeing
+  // which pile is actually bigger. Bar height stands in for that pile:
+  // taller genuinely means more, visible before either number is read.
+  function barHeight(v){ return Math.min(200, 24+v*1.7); }
 
   function renderExplore(){
     host.innerHTML='<div class="cmp-row">'
-      +'<div class="conv-field"><div class="ctrl-label">Number A</div><div class="cmp-num">'+numA+'</div>'
+      +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numA)+'px">'+numA+'</div>'
+      +'<div class="ctrl-label">Number A</div>'
       +'<div class="ctrl-btns"><button class="step-btn minus" id="cmp-a-minus">&minus;</button><button class="step-btn" id="cmp-a-plus">+</button></div></div>'
-      +'<div class="cmp-num" style="background:transparent;color:#7c3aed">'+escSym(compareSymbol(numA,numB))+'</div>'
-      +'<div class="conv-field"><div class="ctrl-label">Number B</div><div class="cmp-num">'+numB+'</div>'
+      +'<div class="cmp-sym-display">'+escSym(compareSymbol(numA,numB))+'</div>'
+      +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numB)+'px">'+numB+'</div>'
+      +'<div class="ctrl-label">Number B</div>'
       +'<div class="ctrl-btns"><button class="step-btn minus" id="cmp-b-minus">&minus;</button><button class="step-btn" id="cmp-b-plus">+</button></div></div>'
       +'</div>';
     el('cmp-a-plus').onclick=function(){ numA=Math.min(999,numA+1); renderExplore(); };
@@ -1172,13 +1298,13 @@ function mountCompare(stage, mode){
 
     function renderCompareChallenge(){
       host.innerHTML='<div class="cmp-row">'
-        +'<div class="cmp-num">'+numA+'</div>'
+        +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numA)+'px">'+numA+'</div></div>'
         +'<div class="cmp-sym-btns">'
         +'<button class="cmp-sym-btn'+(chosenSymbol==='>'?' on':'')+'" data-s="gt">&gt;</button>'
         +'<button class="cmp-sym-btn'+(chosenSymbol==='<'?' on':'')+'" data-s="lt">&lt;</button>'
         +'<button class="cmp-sym-btn'+(chosenSymbol==='='?' on':'')+'" data-s="eq">=</button>'
         +'</div>'
-        +'<div class="cmp-num">'+numB+'</div>'
+        +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numB)+'px">'+numB+'</div></div>'
         +'</div>';
       Array.prototype.forEach.call(host.querySelectorAll('.cmp-sym-btn'),function(b){
         b.addEventListener('click',function(){
