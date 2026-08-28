@@ -12,7 +12,7 @@ Disallow: /TeacherLogin.html
 Disallow: /TeacherDashboard.html
 Disallow: /SchoolAdminDashboard.html
 Disallow: /SuperAdminDashboard.html
-Disallow: /WebApp.html
+Disallow: /Webapp.html
 Disallow: /Exam.html
 Disallow: /LiveHost.html
 Disallow: /LiveQuiz.html
