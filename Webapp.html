@@ -56,6 +56,11 @@
       box-shadow:0 0 0 3px rgba(249,115,22,0.15);
     }
     select option { background:#0F1523; }
+    /* Class/School are derived from the validated exam code, not typed —
+       a visibly different (non-editable-looking) state so it reads as
+       intentional rather than a stuck/broken input. */
+    input[readonly] { background:#0F1523; color:#a9b2c9; cursor:default; }
+    input[readonly]:focus { border-color:#2e3248; box-shadow:none; }
 
     .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
@@ -96,6 +101,26 @@
       justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
     }
     .btn-challenge:hover { background:rgba(124,92,255,0.1); }
+
+    /* Competition Mode button — gold/trophy to match its own brand identity */
+    .btn-competition {
+      width:100%; padding:13px; background:transparent; border:1px solid #f5a623;
+      border-radius:10px; color:#f5a623; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-competition:hover { background:rgba(245,166,35,0.1); }
+
+    /* Simulation Lab button — blue to match the lab's own brand color */
+    .btn-simlab {
+      width:100%; padding:13px; background:transparent; border:1px solid #3355dd;
+      border-radius:10px; color:#3355dd; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-simlab:hover { background:rgba(51,85,221,0.1); }
 
     /* Divider with label */
     .or-divider {
@@ -192,6 +217,12 @@
     <button class="btn-challenge" onclick="openChallengeMode()">
       &#x26A1; Challenge Mode
     </button>
+    <button class="btn-competition" onclick="openCompetitionMode()">
+      &#x1F3C6; Competitions
+    </button>
+    <button class="btn-simlab" onclick="openSimLab()">
+      &#x1F52C; Simulation Lab
+    </button>
 
     <div class="error" id="errMsg1"></div>
   </div>
@@ -206,11 +237,12 @@
     <div class="row2">
       <div class="form-group">
         <label>Class</label>
-        <input type="text" id="studentClass" placeholder="e.g. SS2A">
+        <input type="text" id="studentClass" placeholder="e.g. SS2A" autocomplete="off">
+        <div style="font-size:11px;color:#7c85a2;margin-top:5px" id="classHint"></div>
       </div>
       <div class="form-group">
         <label>School</label>
-        <input type="text" id="studentSchool" placeholder="School name">
+        <input type="text" id="studentSchool" placeholder="School name" autocomplete="off">
       </div>
     </div>
     <button class="btn" id="profileBtn" onclick="doRegister()">Save &amp; Continue &#x2192;</button>
@@ -234,18 +266,22 @@
 // time a user clicks a button (extremely unlikely; <100ms typical).
 var SCRIPT_URL    = '';
 var EXAM_PAGE_URL = 'https://edurena.online/Exam.html';
-var LIVEQUIZ_URL  = 'https://edurena.online/livequiz.html';
+var LIVEQUIZ_URL  = 'https://edurena.online/LiveQuiz.html';
 var PUZZLE_URL    = 'https://edurena.online/Puzzle.html';
 var WHACK_URL     = 'https://edurena.online/WhackAMole.html';
 var SHOOTOUT_URL  = 'https://edurena.online/PenaltyShootout.html';
 var TOWER_URL     = 'https://edurena.online/TowerDefense.html';
 var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
+var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
+var RACE_URL      = 'https://edurena.online/Race.html';
+var SIMLAB_URL    = 'https://edurena.online/SimulationLab.html';
 
 function refreshFromDash() {
   if (!window.DASH) return;
   if (DASH.scriptUrl)     SCRIPT_URL    = DASH.scriptUrl;
   if (DASH.examPageUrl)   EXAM_PAGE_URL = DASH.examPageUrl;
   if (DASH.kahootPageUrl) LIVEQUIZ_URL  = DASH.kahootPageUrl;
+  if (DASH.racePageUrl)   RACE_URL      = DASH.racePageUrl;
 }
 // Apply immediately (in case DASH is already initialised) and again on .ready
 refreshFromDash();
@@ -255,6 +291,7 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
   var _code          = '';
   var _quizMeta      = null;
   var _quizSchool    = '';
+  var _quizClassId   = '';
   var _prefillName   = '';
   var _prefillClass  = '';
   var _prefillSchool = '';
@@ -265,20 +302,27 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
     var classEl  = document.getElementById('studentClass');
     var schoolEl = document.getElementById('studentSchool');
     if (nameEl)   nameEl.value   = _prefillName;
-    if (classEl)  classEl.value  = _prefillClass;
-    if (schoolEl) schoolEl.value = _prefillSchool;
+
+    // Class and School are never actually ambiguous once the exam code has
+    // been validated — a quiz belongs to exactly one school and one class
+    // (quizSchool/quizClassId), and only students registered under that
+    // same school+class are even allowed to enter (see the enrollment
+    // check in validateExamCode). Letting these be freely typed only
+    // invited typos/autofill glitches that get a legitimate student wrongly
+    // rejected — so they're always derived and locked here, for every
+    // student, not just ones with an existing profile.
+    if (classEl)  { classEl.value  = _quizClassId || _prefillClass;  classEl.readOnly  = !!_quizClassId; }
+    if (schoolEl) { schoolEl.value = _quizSchool  || _prefillSchool; schoolEl.readOnly = !!_quizSchool; }
+    var classHintEl = document.getElementById('classHint');
+    if (classHintEl) classHintEl.textContent = _quizClassId ? 'Set automatically from your exam code' : '';
 
     if (_profileLocked) {
-      // Locked profile: show data, disable editing
-      if (nameEl)   nameEl.readOnly = true;
-      if (classEl)  classEl.readOnly = true;
-      if (schoolEl) schoolEl.readOnly = true;
+      // Returning student with a stored profile: name is known too.
+      if (nameEl) nameEl.readOnly = true;
       var verifiedEl = document.querySelector('#panel2 .verified-badge');
       if (verifiedEl) verifiedEl.innerHTML = '🔒 Profile loaded — fields are locked to your registered details';
     } else {
-      if (nameEl)   nameEl.readOnly = false;
-      if (classEl)  classEl.readOnly = false;
-      if (schoolEl) schoolEl.readOnly = false;
+      if (nameEl) nameEl.readOnly = false;
     }
   }
 
@@ -346,7 +390,9 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
     {mode:'shootout', icon:'⚽',       glow:'46,204,113',  title:'Penalty Shootout',
      desc:'Random kicker/keeper pairs · fastest correct answer wins the duel'},
     {mode:'tower',    icon:'🏰', glow:'0,212,255',   title:'Tower Defense',
-     desc:'4 teams · defend your side · everyone shares one tower'}
+     desc:'4 teams · defend your side · everyone shares one tower'},
+    {mode:'race',     icon:'🏎️', glow:'255,51,85',   title:'Kart Race',
+     desc:'Self-paced · correct answers boost your kart · first past the line wins'}
   ];
 
   picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
@@ -380,7 +426,8 @@ function openGame(mode) {
       puzzle:   PUZZLE_URL,
       whack:    WHACK_URL,
       shootout: SHOOTOUT_URL,
-      tower:    TOWER_URL
+      tower:    TOWER_URL,
+      race:     RACE_URL
     };
     var base = GAME_URLS[mode] || LIVEQUIZ_URL;
     var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
@@ -395,6 +442,109 @@ function openChallengeMode() {
   whenReady(function(){
     var url = CHALLENGE_URL + (CHALLENGE_URL.indexOf('?') === -1 ? '?' : '&')
             + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
+}
+
+// Simulation Lab is pure client-side (no question bank, no room code, no
+// backend calls at all — confirmed no GAS_URL/fetch in the file), so unlike
+// every other entry point here it needs no ?script= param and no whenReady()
+// gate on the backend being ready.
+function openSimLab() {
+  window.open(SIMLAB_URL, '_blank');
+}
+
+// Competitions are per-event (each needs its own ?competitionId=), so
+// unlike Challenge Mode this fetches the live published list first and
+// shows a picker — same pattern as joinLiveGame()'s dropdown. Drafts and
+// test-status competitions never appear here (getPublishedCompetitions
+// only returns status='published'), so this stays harmlessly empty until
+// the admin actually publishes one.
+// ponytail: direct-to-Supabase read for this one public, read-only list,
+// bypassing the GAS round trip. Falls back to the old GAS action on any
+// error (e.g. RLS not open for anon), so behavior never regresses.
+var COMP_SB_URL  = 'https://hrslazwxaciooqowvzcy.supabase.co';
+var COMP_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyc2xhend4YWNpb29xb3d2emN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDk3NzksImV4cCI6MjA5MzM4NTc3OX0.UbEko3d0zyHguOq9w5Zy-_89OhAbQaV7Z6uBw_nS_yk';
+
+function fetchPublishedCompetitionsDirect() {
+  var t0 = performance.now();
+  var cols = 'id,title,description,theme,competition_date,lobby_open_at,price_per_ticket_ngn,prize_pool_ngn,prize_split_json,total_question_count';
+  var url = COMP_SB_URL + '/rest/v1/competitions?select=' + cols + '&status=eq.published&order=competition_date.asc';
+  return fetch(url, { headers: { apikey: COMP_SB_ANON, Authorization: 'Bearer ' + COMP_SB_ANON } })
+    .then(function(r){ if (!r.ok) throw new Error('Supabase ' + r.status); return r.json(); })
+    .then(function(rows){ console.log('[perf] competitions via Supabase direct:', Math.round(performance.now() - t0) + 'ms'); return rows; });
+}
+
+function fetchPublishedCompetitionsViaGAS() {
+  var t0 = performance.now();
+  return fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'getPublishedCompetitions' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(result) {
+    console.log('[perf] competitions via GAS:', Math.round(performance.now() - t0) + 'ms');
+    return (result && result.status === 'success') ? (result.data || []) : [];
+  });
+}
+
+function openCompetitionMode() {
+  var box = document.getElementById('competition-picker');
+  if (box) { box.parentNode.removeChild(box); return; }
+
+  whenReady(function(){
+    fetchPublishedCompetitionsDirect()
+    .catch(function(e){
+      console.warn('[perf] Supabase direct read failed, falling back to GAS:', e.message);
+      return fetchPublishedCompetitionsViaGAS();
+    })
+    .then(function(rows) {
+      var picker = document.createElement('div');
+      picker.id = 'competition-picker';
+      picker.style.cssText = 'margin-top:12px;border:1px solid #2e3248;border-radius:12px;overflow:hidden';
+
+      if (!rows.length) {
+        picker.innerHTML = '<div style="padding:14px 16px;background:#12151f;font-size:13px;color:#7c85a2">'
+          + 'No competitions are open right now — check back soon.</div>';
+      } else {
+        picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
+          + 'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Open Competitions</div>'
+          + rows.map(function(c, i) {
+              var dateStr = '';
+              try { dateStr = new Date(c.competition_date).toLocaleString(); } catch(e) {}
+              var price = '₦' + Number(c.price_per_ticket_ngn || 0).toLocaleString();
+              var prize = '₦' + Number(c.prize_pool_ngn || 0).toLocaleString();
+              var borderBottom = i < rows.length - 1 ? 'border-bottom:1px solid #2e3248;' : '';
+              return '<button onclick="openCompetitionById(\'' + c.id + '\')" style="'
+                + 'width:100%;padding:14px 16px;background:transparent;border:none;' + borderBottom
+                + 'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;'
+                + 'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"'
+                + ' onmouseenter="this.style.background=\'rgba(245,166,35,0.08)\'"'
+                + ' onmouseleave="this.style.background=\'transparent\'">'
+                + '<span style="font-size:20px">\u{1F3C6}</span>'
+                + '<div>'
+                + '<div style="font-weight:600">' + (c.title || 'Competition') + '</div>'
+                + '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">'
+                + dateStr + ' &middot; ' + price + ' ticket &middot; ' + prize + ' prize pool</div>'
+                + '</div>'
+                + '</button>';
+            }).join('');
+      }
+
+      var compBtn = document.querySelector('.btn-competition');
+      if (compBtn && compBtn.parentNode) {
+        compBtn.parentNode.insertBefore(picker, compBtn.nextSibling);
+      }
+    })
+    .catch(function(){});
+  });
+}
+
+function openCompetitionById(competitionId) {
+  whenReady(function(){
+    var url = COMPETITION_URL + (COMPETITION_URL.indexOf('?') === -1 ? '?' : '&')
+            + 'competitionId=' + encodeURIComponent(competitionId)
+            + '&script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
   });
 }
@@ -432,8 +582,9 @@ function openChallengeMode() {
         }
         _email      = email;
         _code       = code;
-        _quizMeta   = result.data.quizData;
-        _quizSchool = result.data.quizSchool || '';
+        _quizMeta    = result.data.quizData;
+        _quizSchool  = result.data.quizSchool  || '';
+        _quizClassId = result.data.quizClassId || '';
 
         fetch(SCRIPT_URL, {
           method: 'POST',
@@ -447,6 +598,19 @@ function openChallengeMode() {
         .then(function(profileResult) {
           if (profileResult && profileResult.status === 'success' && profileResult.data && profileResult.data.exists) {
             var d = profileResult.data;
+            // This student already has a REAL registered class at this
+            // school — that's ground truth, not the exam's own class. If it
+            // doesn't match the class this quiz is actually for, reject
+            // right here instead of letting registration silently overwrite
+            // their real class to whatever this exam happens to want (which
+            // would defeat the enrollment check in validateExamCode entirely
+            // — self-registration must never be able to rewrite an existing
+            // student's real class just by trying a different exam code).
+            if (_quizClassId && d.className && String(d.className).trim().toLowerCase() !== String(_quizClassId).trim().toLowerCase()) {
+              btn.disabled = false;
+              showErr(1, 'This exam is not available to your class (' + d.className + ').');
+              return;
+            }
             _prefillName   = d.name       || '';
             _prefillClass  = d.className  || '';
             _prefillSchool = d.school     || _quizSchool || '';
