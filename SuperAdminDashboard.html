@@ -567,16 +567,17 @@
         </div>
 
         <div class="card">
-          <div class="ct">Paste Questions (JSON)</div>
+          <div class="ct">Paste Questions (JSON)<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" style="width:280px"><code>tier</code>: "free" or "premium" — free-plan schools only ever see free-tier bank questions; premium schools get both. Leave it out and a question defaults to free.</span></span></div>
           <textarea id="eb-paste"
             style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
                    background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
                    border-radius:8px;padding:12px;resize:vertical"
-            placeholder='[ { "subject": "Mathematics", "topic": "Algebra", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "Option B", "points": 1, "explanation": "..." } ]'></textarea>
-          <div style="display:flex;gap:8px;margin-top:12px">
+            placeholder='[ { "subject": "Mathematics", "topic": "Algebra", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "Option B", "points": 1, "explanation": "...", "tier": "free" } ]'></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
             <button class="btn btn-g btn-sm" onclick="ebValidate()">🔍 Validate &amp; Preview</button>
             <button class="btn btn-p btn-sm" id="eb-commit-btn" onclick="ebCommit()" disabled>✅ Commit to Database</button>
             <button class="btn btn-g btn-sm" onclick="ebClear()">🗑 Clear</button>
+            <button class="btn btn-g btn-sm" onclick="ebCopyTemplate()">📋 Copy Full Template</button>
           </div>
         </div>
 
@@ -2027,6 +2028,44 @@ function ebClear() {
   document.getElementById('eb-result-card').style.display = 'none';
   ebValidatedData = null;
   document.getElementById('eb-commit-btn').disabled = true;
+}
+
+// The complete, current schema importJSON actually reads (verified against
+// code.gs, not reconstructed from memory) — kept here so it's always one
+// click away instead of something to go dig up or re-ask for. class_level
+// and exam_board are NOT in here — those are the "Class Level" field above
+// this box, applied once to the whole pasted batch, not per question.
+var EB_JSON_TEMPLATE = JSON.stringify([{
+  subject: "Mathematics",
+  topic: "Algebra",
+  difficulty: "medium",
+  type: "MCQ",
+  question: "What is 2x + 3 = 7?",
+  option_A: "x = 1", option_B: "x = 2", option_C: "x = 3", option_D: "x = 4",
+  option_A_image: "", option_B_image: "", option_C_image: "", option_D_image: "",
+  correct_answer: "Option B",
+  points: 1,
+  expected_items: null,
+  explanation: "7-3=4, 4/2=2",
+  session: "",
+  term: "",
+  instruction_group: "",
+  instruction_text: "",
+  image_url: "",
+  passage_id: "",
+  tier: "free"
+}], null, 2);
+
+function ebCopyTemplate() {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(EB_JSON_TEMPLATE).then(
+      function(){ toast('success','Template copied — paste it into the box and edit.'); },
+      function(){ document.getElementById('eb-paste').value = EB_JSON_TEMPLATE; toast('success','Clipboard blocked — pasted the template into the box instead.'); }
+    );
+  } else {
+    document.getElementById('eb-paste').value = EB_JSON_TEMPLATE;
+    toast('success','Template inserted into the box.');
+  }
 }
 
 // ── FLAGGED QUESTIONS ───────────────────────────────────────────
