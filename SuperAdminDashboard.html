@@ -769,7 +769,14 @@
               <input type="text" id="pd-title" placeholder="e.g. Demo — Common English Words" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
             </div>
             <div>
-              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Words (one per line)</label>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Practice type</label>
+              <select id="pd-mode" onchange="updateDemoPronunciationModeUI()" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+                <option value="word">Word Practice</option>
+                <option value="sentence">Sentence Practice</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px" id="pd-words-label">Words (one per line)</label>
               <textarea id="pd-words" rows="6" placeholder="photosynthesis&#10;itinerary&#10;entrepreneur" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none;resize:vertical;line-height:1.7"></textarea>
             </div>
             <button class="btn btn-p" onclick="saveDemoPronunciationList()" style="align-self:flex-start">Create Demo List →</button>
@@ -1439,8 +1446,8 @@ function loadPronunciationDemoTab() {
       var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(p.code) : '';
       return '<div style="padding:12px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
         + '<div style="flex:1;min-width:0">'
-          + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+escH(p.title)+'</div>'
-          + '<div style="font-size:12px;color:var(--txt2);margin-bottom:4px">'+p.wordCount+' word'+(p.wordCount===1?'':'s')+'</div>'
+          + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+escH(p.title)+' <span class="bdg by" style="margin-left:4px">'+(p.mode==='sentence'?'Sentence':'Word')+'</span></div>'
+          + '<div style="font-size:12px;color:var(--txt2);margin-bottom:4px">'+p.wordCount+' '+(p.mode==='sentence'?'sentence':'word')+(p.wordCount===1?'':'s')+'</div>'
           + '<div style="font-size:11.5px;color:var(--acc);font-weight:500;font-family:var(--mono)">Code: '+escH(p.code)+'</div>'
         + '</div>'
         + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
@@ -1452,15 +1459,26 @@ function loadPronunciationDemoTab() {
   });
 }
 
+function updateDemoPronunciationModeUI() {
+  var isSentence = document.getElementById('pd-mode').value === 'sentence';
+  document.getElementById('pd-words-label').textContent = isSentence ? 'Sentences (one per line)' : 'Words (one per line)';
+  document.getElementById('pd-words').placeholder = isSentence
+    ? 'The quick brown fox jumps over the lazy dog.\nShe sells seashells by the seashore.'
+    : 'photosynthesis\nitinerary\nentrepreneur';
+}
+
 function saveDemoPronunciationList() {
   var title = (document.getElementById('pd-title').value || '').trim();
+  var mode = document.getElementById('pd-mode').value;
   var words = (document.getElementById('pd-words').value || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
   if (!title) { toast('error','List title is required'); return; }
-  if (!words.length) { toast('error','Add at least one word'); return; }
-  call('savePronunciationList', { title:title, words:words, isDemo:true }, function(d) {
+  if (!words.length) { toast('error', mode==='sentence' ? 'Add at least one sentence' : 'Add at least one word'); return; }
+  call('savePronunciationList', { title:title, words:words, mode:mode, isDemo:true }, function(d) {
     toast('success', 'Demo list created — code: ' + d.code);
     document.getElementById('pd-title').value = '';
     document.getElementById('pd-words').value = '';
+    document.getElementById('pd-mode').value = 'word';
+    updateDemoPronunciationModeUI();
     loadPronunciationDemoTab();
   });
 }

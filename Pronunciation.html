@@ -53,6 +53,7 @@
 
     .progress{font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:14px}
     .word{font-size:34px;font-weight:800;margin:10px 0 22px;word-break:break-word}
+    .word.sentence{font-size:22px;font-weight:700;line-height:1.5;text-align:left}
     .mic-wrap{margin:10px 0 20px}
     .mic-btn{width:104px;height:104px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:40px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;box-shadow:0 0 0 0 var(--accent-glow)}
     .mic-btn:hover{transform:scale(1.04)}
@@ -99,7 +100,7 @@
   <div class="status" id="statusText"></div>
 
   <div class="score-wrap" id="scoreWrap">
-    <div class="score-label">Pronunciation Score</div>
+    <div class="score-label" id="scoreLabel">Accuracy Score</div>
     <div class="score-big" id="scoreBig">—</div>
     <div class="subscores">
       <div class="subscore"><div class="v" id="scAccuracy">—</div><div class="l">Accuracy</div></div>
@@ -110,7 +111,7 @@
 
   <div class="actions">
     <button class="btn btn-ghost" id="retryBtn" onclick="startAttempt()">Try Again</button>
-    <button class="btn" id="nextBtn" onclick="nextWord()">Next Word →</button>
+    <button class="btn" id="nextBtn" onclick="nextWord()">Next →</button>
   </div>
 </div>
 
@@ -143,14 +144,14 @@ function showCard(id){
   });
 }
 
-var words=[], wordIdx=0, listTitle='', azureToken=null, azureRegion=null, recognizer=null;
+var words=[], wordIdx=0, listTitle='', azureToken=null, azureRegion=null, recognizer=null, practiceMode='word';
 
 function joinByCode(){
   var code=(document.getElementById('codeInput').value||'').trim().toUpperCase();
   var errEl=document.getElementById('joinErr'); errEl.classList.remove('on');
   if(!code){ errEl.textContent='Enter a practice code.'; errEl.classList.add('on'); return; }
   document.getElementById('joinBtn').disabled=true;
-  showCard('loadingCard'); document.getElementById('loadingText').textContent='Loading word list…';
+  showCard('loadingCard'); document.getElementById('loadingText').textContent='Loading practice list…';
   post('getPronunciationListByCode',{code:code},function(e,r){
     document.getElementById('joinBtn').disabled=false;
     if(e||!r||r.status!=='success'){
@@ -160,6 +161,7 @@ function joinByCode(){
       return;
     }
     listTitle=r.data.title; words=r.data.words||[]; wordIdx=0;
+    practiceMode=(r.data.mode==='sentence')?'sentence':'word';
     if(!words.length){ showCard('joinCard'); errEl.textContent='This list has no words yet.'; errEl.classList.add('on'); return; }
     history.replaceState(null,'',window.location.pathname+'?code='+encodeURIComponent(code)+(PARAMS.script?'&script='+encodeURIComponent(PARAMS.script):''));
     document.getElementById('listTitle').textContent=listTitle;
@@ -172,9 +174,12 @@ function joinByCode(){
 var _pendingCode='';
 
 function renderWord(){
-  document.getElementById('progressText').textContent='Word '+(wordIdx+1)+' of '+words.length;
-  document.getElementById('wordText').textContent=words[wordIdx];
-  document.getElementById('statusText').textContent='Tap the mic and say the word.';
+  var isSentence=practiceMode==='sentence';
+  document.getElementById('progressText').textContent=(isSentence?'Sentence ':'Word ')+(wordIdx+1)+' of '+words.length;
+  var wordEl=document.getElementById('wordText');
+  wordEl.textContent=words[wordIdx];
+  wordEl.classList.toggle('sentence',isSentence);
+  document.getElementById('statusText').textContent=isSentence?'Tap the mic and read the sentence aloud.':'Tap the mic and say the word.';
   document.getElementById('scoreWrap').classList.remove('on');
   document.getElementById('retryBtn').classList.add('hidden');
   document.getElementById('nextBtn').classList.add('hidden');
@@ -275,7 +280,7 @@ function runRecognition(){
       pronConfig.applyTo(recognizer);
 
       micBtn.classList.add('listening');
-      statusEl.textContent='Listening… say "'+word+'"';
+      statusEl.textContent=(practiceMode==='sentence'?'Listening… read: "':'Listening… say "')+word+'"';
 
       recognizer.recognizeOnceAsync(function(result){
         micBtn.classList.remove('listening'); micBtn.disabled=false;
@@ -307,7 +312,19 @@ function runRecognition(){
 
 function showScore(pr){
   var round=function(n){ return Math.round(n||0); };
-  document.getElementById('scoreBig').textContent=round(pr.pronunciationScore);
+  // Word mode headlines Accuracy — for a single isolated word, Fluency and
+  // Completeness are near-automatic 100s regardless of pronunciation, so
+  // the blended score masks a genuinely wrong pronunciation behind a
+  // misleadingly high composite; Accuracy is the one sub-score that
+  // actually answers "did I say this word correctly." Sentence mode
+  // headlines the blended pronunciationScore instead, since Fluency
+  // (natural pacing across words) and Completeness (did they say the
+  // whole sentence) are real, meaningful signals once there's more than
+  // one word — that's exactly what this mode is meant to assess.
+  var isSentence=practiceMode==='sentence';
+  var headline=isSentence?pr.pronunciationScore:pr.accuracyScore;
+  document.getElementById('scoreBig').textContent=round(headline);
+  document.getElementById('scoreLabel').textContent=isSentence?'Pronunciation Score':'Accuracy Score';
   document.getElementById('scAccuracy').textContent=round(pr.accuracyScore);
   document.getElementById('scFluency').textContent=round(pr.fluencyScore);
   document.getElementById('scComplete').textContent=round(pr.completenessScore);

@@ -1415,13 +1415,20 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
           </div>
         </div>
         <div class="card" style="margin-bottom:10px">
-          <div class="ct">New Word List<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">One word per line. Students see these one at a time and try to pronounce each.</span></span></div>
+          <div class="ct">New Practice List<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" id="pr-mode-tip">One word per line. Students see these one at a time and try to pronounce each.</span></span></div>
           <div class="fgrid" style="margin-bottom:10px">
             <div class="fg"><label>List Title *</label><input type="text" id="pr-title" placeholder="e.g. Week 3 Vocabulary"></div>
             <div class="fg"><label>Class (optional)</label><select id="pr-class"><option value="">— Any class —</option></select></div>
           </div>
           <div class="fg" style="margin-bottom:10px">
-            <label>Words *</label>
+            <label>Practice Type</label>
+            <select id="pr-mode" onchange="updatePronunciationModeUI()">
+              <option value="word">Word Practice — single words, scored on accuracy</option>
+              <option value="sentence">Sentence Practice — full sentences, scored on accuracy, fluency and completeness</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:10px">
+            <label id="pr-words-label">Words *</label>
             <textarea id="pr-words" rows="6" placeholder="photosynthesis&#10;itinerary&#10;entrepreneur" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.7"></textarea>
           </div>
           <div style="display:flex;justify-content:flex-end">
@@ -3430,8 +3437,10 @@ function loadPronunciationTab() {
         var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(p.code) : '';
         return '<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
           + '<div style="flex:1;min-width:0">'
-            + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+esc(p.title)+(p.isDemo?' <span class="bdg by" style="margin-left:4px">Demo</span>':'')+'</div>'
-            + '<div style="font-size:12px;color:var(--text2);margin-bottom:4px">'+p.wordCount+' word'+(p.wordCount===1?'':'s')+(p.classId?' · '+esc(p.classId):'')+'</div>'
+            + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+esc(p.title)
+              +' <span class="bdg by" style="margin-left:4px">'+(p.mode==='sentence'?'Sentence':'Word')+'</span>'
+              +(p.isDemo?' <span class="bdg by" style="margin-left:4px">Demo</span>':'')+'</div>'
+            + '<div style="font-size:12px;color:var(--text2);margin-bottom:4px">'+p.wordCount+' '+(p.mode==='sentence'?'sentence':'word')+(p.wordCount===1?'':'s')+(p.classId?' · '+esc(p.classId):'')+'</div>'
             + '<div style="font-size:11.5px;color:var(--accent-text);font-weight:500;font-family:var(--mono)">Code: '+esc(p.code)+'</div>'
           + '</div>'
           + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
@@ -3444,16 +3453,31 @@ function loadPronunciationTab() {
   });
 }
 
+function updatePronunciationModeUI() {
+  var mode = document.getElementById('pr-mode').value;
+  var isSentence = mode === 'sentence';
+  document.getElementById('pr-words-label').textContent = isSentence ? 'Sentences *' : 'Words *';
+  document.getElementById('pr-words').placeholder = isSentence
+    ? 'The quick brown fox jumps over the lazy dog.\nShe sells seashells by the seashore.'
+    : 'photosynthesis\nitinerary\nentrepreneur';
+  document.getElementById('pr-mode-tip').textContent = isSentence
+    ? 'One sentence per line. Students see these one at a time and try to read each aloud.'
+    : 'One word per line. Students see these one at a time and try to pronounce each.';
+}
+
 function savePronunciationListUI() {
   var title = (document.getElementById('pr-title').value || '').trim();
   var classId = document.getElementById('pr-class').value;
+  var mode = document.getElementById('pr-mode').value;
   var words = (document.getElementById('pr-words').value || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
   if (!title) { toast('error','List title is required'); return; }
-  if (!words.length) { toast('error','Add at least one word'); return; }
-  call('savePronunciationList', { title:title, classId:classId||null, words:words }, function(d) {
+  if (!words.length) { toast('error', mode==='sentence' ? 'Add at least one sentence' : 'Add at least one word'); return; }
+  call('savePronunciationList', { title:title, classId:classId||null, words:words, mode:mode }, function(d) {
     toast('success', 'List saved — code: ' + d.code);
     document.getElementById('pr-title').value = '';
     document.getElementById('pr-words').value = '';
+    document.getElementById('pr-mode').value = 'word';
+    updatePronunciationModeUI();
     loadPronunciationTab();
   });
 }
