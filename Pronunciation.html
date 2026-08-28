@@ -234,6 +234,17 @@ function runRecognition(){
     // out before speech even began. 5000ms keeps the same cost-control
     // intent without punishing normal reaction time.
     speechConfig.setProperty('SpeechServiceConnection_InitialSilenceTimeoutMs','5000');
+    // This is the OTHER half of the silence handling, and the one actually
+    // missing: how long to wait AFTER speech is first detected, once things
+    // go quiet again, before deciding the word is finished. Left unset, the
+    // SDK's own default applies — which is tuned for full sentences, not a
+    // single short word, and ordinary room noise (fan hum, a chair creak)
+    // is often enough to keep it thinking speech might still be continuing,
+    // which is exactly the "still says Listening… long after I've stopped
+    // talking" symptom reported in testing, and it can drag a real attempt
+    // out to 10+ seconds before it finally gives up. A single word only
+    // needs a brief trailing pause to know it's over.
+    speechConfig.setProperty('SpeechServiceConnection_EndSilenceTimeoutMs','1200');
     var audioConfig=SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
     var pronConfig=new SpeechSDK.PronunciationAssessmentConfig(
       word, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
