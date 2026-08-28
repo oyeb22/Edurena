@@ -219,69 +219,90 @@ function startAttempt(){
   });
 }
 
+var _micStream=null;
+function _stopMicStream(){
+  if(_micStream){
+    try{ _micStream.getTracks().forEach(function(t){ t.stop(); }); }catch(_){}
+    _micStream=null;
+  }
+}
+
 function runRecognition(){
   var word=words[wordIdx];
   var micBtn=document.getElementById('micBtn'), statusEl=document.getElementById('statusText');
-  try{
-    var speechConfig=SpeechSDK.SpeechConfig.fromAuthorizationToken(azureToken,azureRegion);
-    speechConfig.speechRecognitionLanguage='en-US';
-    // Tighter-than-default silence timeout: a student tapping the mic and
-    // saying nothing gets a fast "didn't catch that" instead of a long
-    // open mic — Azure bills per second of audio actually processed, so a
-    // fast timeout keeps an idle tap cheap by construction. 3000ms proved
-    // too tight in real testing — a student taps the mic, then still has
-    // to read the word before saying it, and genuine attempts were timing
-    // out before speech even began. 5000ms keeps the same cost-control
-    // intent without punishing normal reaction time.
-    speechConfig.setProperty('SpeechServiceConnection_InitialSilenceTimeoutMs','5000');
-    // This is the OTHER half of the silence handling, and the one actually
-    // missing: how long to wait AFTER speech is first detected, once things
-    // go quiet again, before deciding the word is finished. Left unset, the
-    // SDK's own default applies — which is tuned for full sentences, not a
-    // single short word, and ordinary room noise (fan hum, a chair creak)
-    // is often enough to keep it thinking speech might still be continuing,
-    // which is exactly the "still says Listening… long after I've stopped
-    // talking" symptom reported in testing, and it can drag a real attempt
-    // out to 10+ seconds before it finally gives up. A single word only
-    // needs a brief trailing pause to know it's over.
-    speechConfig.setProperty('SpeechServiceConnection_EndSilenceTimeoutMs','1200');
-    var audioConfig=SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    var pronConfig=new SpeechSDK.PronunciationAssessmentConfig(
-      word, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-      SpeechSDK.PronunciationAssessmentGranularity.Word, true
-    );
-    recognizer=new SpeechSDK.SpeechRecognizer(speechConfig,audioConfig);
-    pronConfig.applyTo(recognizer);
 
-    micBtn.classList.add('listening');
-    statusEl.textContent='Listening… say "'+word+'"';
-
-    recognizer.recognizeOnceAsync(function(result){
-      micBtn.classList.remove('listening'); micBtn.disabled=false;
-      if(result.reason===SpeechSDK.ResultReason.RecognizedSpeech){
-        var pr=SpeechSDK.PronunciationAssessmentResult.fromResult(result);
-        showScore(pr);
-      } else if(result.reason===SpeechSDK.ResultReason.NoMatch){
-        statusEl.textContent="Didn't catch that — try again.";
-        document.getElementById('retryBtn').classList.remove('hidden');
-      } else {
-        statusEl.textContent='Something went wrong — try again.';
-        document.getElementById('retryBtn').classList.remove('hidden');
-      }
-      try{ recognizer.close(); }catch(_){}
-      recognizer=null;
-    }, function(err){
-      micBtn.classList.remove('listening'); micBtn.disabled=false;
-      statusEl.textContent='Microphone error — check permissions and try again.';
-      document.getElementById('retryBtn').classList.remove('hidden');
-      try{ recognizer.close(); }catch(_){}
-      recognizer=null;
-    });
-  }catch(ex){
+  function fail(msg){
     micBtn.classList.remove('listening'); micBtn.disabled=false;
-    statusEl.textContent='Could not access the microphone.';
+    statusEl.textContent=msg;
     document.getElementById('retryBtn').classList.remove('hidden');
+    _stopMicStream();
   }
+
+  // Requesting the stream ourselves (rather than letting
+  // AudioConfig.fromDefaultMicrophoneInput() grab it) so we can turn OFF
+  // Chrome's default echo cancellation / noise suppression / auto-gain —
+  // those are tuned for video calls, and on a quiet laptop mic they can
+  // strip enough of the actual voice signal that Azure never recognizes
+  // anything at all (NoMatch), even though the mic itself tests fine
+  // everywhere else. A single short word read close to the mic doesn't
+  // need any of that processing.
+  navigator.mediaDevices.getUserMedia({
+    audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+  }).then(function(stream){
+    _micStream=stream;
+    try{
+      var speechConfig=SpeechSDK.SpeechConfig.fromAuthorizationToken(azureToken,azureRegion);
+      speechConfig.speechRecognitionLanguage='en-US';
+      // Tighter-than-default silence timeout: a student tapping the mic and
+      // saying nothing gets a fast "didn't catch that" instead of a long
+      // open mic — Azure bills per second of audio actually processed, so a
+      // fast timeout keeps an idle tap cheap by construction. 3000ms proved
+      // too tight in real testing — a student taps the mic, then still has
+      // to read the word before saying it, and genuine attempts were timing
+      // out before speech even began. 5000ms keeps the same cost-control
+      // intent without punishing normal reaction time.
+      speechConfig.setProperty('SpeechServiceConnection_InitialSilenceTimeoutMs','5000');
+      // How long to wait AFTER speech is first detected, once things go
+      // quiet again, before deciding the word is finished. A single word
+      // only needs a brief trailing pause, not the sentence-length default.
+      speechConfig.setProperty('SpeechServiceConnection_EndSilenceTimeoutMs','1200');
+      var audioConfig=SpeechSDK.AudioConfig.fromStreamInput(stream);
+      var pronConfig=new SpeechSDK.PronunciationAssessmentConfig(
+        word, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+        SpeechSDK.PronunciationAssessmentGranularity.Word, true
+      );
+      recognizer=new SpeechSDK.SpeechRecognizer(speechConfig,audioConfig);
+      pronConfig.applyTo(recognizer);
+
+      micBtn.classList.add('listening');
+      statusEl.textContent='Listening… say "'+word+'"';
+
+      recognizer.recognizeOnceAsync(function(result){
+        micBtn.classList.remove('listening'); micBtn.disabled=false;
+        if(result.reason===SpeechSDK.ResultReason.RecognizedSpeech){
+          var pr=SpeechSDK.PronunciationAssessmentResult.fromResult(result);
+          showScore(pr);
+        } else if(result.reason===SpeechSDK.ResultReason.NoMatch){
+          statusEl.textContent="Didn't catch that — try again.";
+          document.getElementById('retryBtn').classList.remove('hidden');
+        } else {
+          statusEl.textContent='Something went wrong — try again.';
+          document.getElementById('retryBtn').classList.remove('hidden');
+        }
+        try{ recognizer.close(); }catch(_){}
+        recognizer=null;
+        _stopMicStream();
+      }, function(err){
+        fail('Microphone error — check permissions and try again.');
+        try{ recognizer.close(); }catch(_){}
+        recognizer=null;
+      });
+    }catch(ex){
+      fail('Could not access the microphone.');
+    }
+  }).catch(function(err){
+    fail('Microphone access was blocked — please allow it and try again.');
+  });
 }
 
 function showScore(pr){
