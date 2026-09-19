@@ -22,6 +22,7 @@
 </script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<link rel="apple-touch-icon" href="./assets/edurena_logo_200.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edurena — Where Classrooms Come Alive</title>
 <meta name="description" content="AI-proctored exams, live quiz games, and adaptive testing — all from one question bank. Edurena helps Nigerian schools run assessments that actually show what students understood, not just what they got wrong.">
@@ -106,6 +107,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 .hero-wm.show{opacity:1;}
 .hero-wm-word{font-size:clamp(44px,6vw,72px);font-weight:800;color:var(--brown);letter-spacing:-2px;line-height:1;}
 .hero-wm-word span{color:#b8761a;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .hero-wm-tag{font-size:13px;color:var(--brown);letter-spacing:.3em;text-transform:uppercase;margin-top:14px;font-weight:600;opacity:.8;}
 @keyframes bounceDown{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
 .hero-scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transition:opacity .8s;z-index:7;}
@@ -350,7 +352,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 <nav id="topnav">
   <a class="nav-brand" href="#hero">
     <div class="nav-logo-box">
-      <img src="./assets/edurena_logo_64.png" style="display:block;width:100%;height:100%;object-fit:cover;" alt="">
+      <img src="./assets/edurena_logo_64.png" style="display:block;width:100%;height:100%;object-fit:cover;" alt="Edurena">
     </div>
     <span class="nav-wordmark">edu<span>rena</span></span>
   </a>
@@ -382,8 +384,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
     <img id="hGif" src="./assets/nlogo.gif" alt="Edurena logo animation">
   </div>
   <div class="hero-wm" id="hWm">
-    <h1 class="hero-wm-word">edu<span>rena</span></h1>
-    <div class="hero-wm-tag">Convergence of learners.</div>
+    <h1 class="hero-wm-word">edu<span>rena</span><span class="sr-only"> — Where Classrooms Come Alive</span></h1>
+    <div class="hero-wm-tag">Where classrooms come alive.</div>
     <p class="hero-wm-desc">Most assessments tell you a student got something wrong. Edurena helps you understand why, and what to do about it.</p>
     <p class="hero-wm-desc" style="margin-top:10px;">Run exams, quizzes, and live competitions from a single question bank. Spend less time marking. Spend more time teaching.</p>
     <div class="hero-wm-btns">
@@ -399,8 +401,8 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
 
 <!-- MOBILE HERO DESC — hidden on desktop, visible below hero on mobile -->
 <div class="hero-mob-strip">
-  <p>Most assessments tell you a student got something wrong. Edurena helps you understand why, and what to do about it.</p>
-  <p>Run exams, quizzes, and live competitions from a single question bank. Spend less time marking. Spend more time teaching.</p>
+  <p>Know exactly where each student struggled, not just that they got it wrong.</p>
+  <p>One question bank powers your exams, quizzes, and live competitions — less marking, more teaching.</p>
   <div class="hmb-btns">
     <a href="Pricing.html" class="hero-btn-p">Get Started</a>
     <a href="#howitworks" class="hero-btn-s">See How It Works</a>
@@ -542,7 +544,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
         <li>Analytics and learning heatmaps</li>
         <li>Image-based questions</li>
       </ul>
-      <a href="Pricing.html?plan=standard" class="s5-btn s5-btn-std">Get Standard</a>
+      <a href="Pricing.html?plan=standard" rel="nofollow" class="s5-btn s5-btn-std">Get Standard</a>
     </div>
     <div class="s5-card featured">
       <div class="s5-badge">Most popular</div>
@@ -555,7 +557,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
         <li>Deeper insights</li>
         <li>Priority support</li>
       </ul>
-      <a href="Pricing.html?plan=premium" class="s5-btn s5-btn-prem">Get Premium</a>
+      <a href="Pricing.html?plan=premium" rel="nofollow" class="s5-btn s5-btn-prem">Get Premium</a>
     </div>
   </div>
   <div class="s5-calc reveal">
@@ -584,7 +586,7 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--wh
     <div>
       <div class="footer-brand">
         <div class="footer-logo-box">
-          <img src="./assets/edurena_logo_64.png" style="display:block;width:100%;height:100%;object-fit:cover;" alt="">
+          <img src="./assets/edurena_logo_64.png" style="display:block;width:100%;height:100%;object-fit:cover;" alt="Edurena">
         </div>
         <span class="footer-wordmark">edu<span>rena</span></span>
       </div>
