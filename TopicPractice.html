@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<title>Edurena — Topic Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080C16;--card:#0F1523;--line:#2e3248;--ink:#e2e8f0;--mute:#7c85a2;--acc:#F97316;--good:#34d399;--bad:#f87171}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(ellipse at 30% 0%,rgba(108,99,255,.14) 0%,transparent 55%),var(--bg);color:var(--ink);min-height:100dvh;padding:20px 16px 48px}
+.wrap{max-width:760px;margin:0 auto}
+.screen{display:none}.screen.on{display:block}
+h1{font-size:24px;font-weight:800;color:#FB923C}
+h2{font-size:18px;font-weight:700}
+.mute{color:var(--mute);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.btn{width:100%;padding:14px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:700 15px 'Plus Jakarta Sans',system-ui,sans-serif;cursor:pointer;min-height:48px;touch-action:manipulation}
+.btn:hover:not(:disabled){background:#EA6B10}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);font-weight:500}
+.btn.ghost:hover{border-color:var(--acc);color:#FB923C}
+.btn.alt{background:#7c5cff}.btn.alt:hover:not(:disabled){background:#6a49ee}
+.row{display:flex;gap:10px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:12px}
+input[type=text]{width:100%;padding:13px 14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--ink);font:500 16px 'Plus Jakarta Sans',system-ui,sans-serif;outline:none;min-height:48px}
+input[type=text]:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+label{display:block;font-size:12px;font-weight:500;color:var(--mute);margin-bottom:6px}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--mute);font:600 13px 'Plus Jakarta Sans',system-ui,sans-serif;cursor:pointer;min-height:36px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer;text-align:left;color:inherit;font-family:inherit;width:100%}
+.tcard:hover{border-color:var(--acc)}
+.tcard svg,.big svg{flex:none}
+.tname{font-weight:700;font-size:14.5px;line-height:1.25}
+.trank{font-size:12px;font-weight:700;margin-top:2px}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--acc);width:0}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-top:6px;margin-right:4px}
+.tag.trial{background:rgba(124,92,255,.18);color:#a99bff}.tag.rusty{background:rgba(249,115,22,.16);color:#FB923C}
+.big{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.ladder{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 4px}
+.ladder .step{opacity:.35;text-align:center;font-size:10px;color:var(--mute);width:44px}
+.ladder .step.done{opacity:1}.ladder .step.cur{opacity:1;outline:2px solid var(--acc);outline-offset:2px;border-radius:50%}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}.stat span{font-size:11px;color:var(--mute)}
+.need{font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.qcard{margin-top:6px}
+.qmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-bottom:10px}
+.pill{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:11px;padding:2px 9px;border-radius:99px;background:var(--line)}
+.pill.easy{color:#34d399}.pill.medium{color:#fbbf24}.pill.hard{color:#f87171}
+.qtext{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:16px;white-space:pre-wrap;word-break:break-word}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);text-align:left;font:500 15px 'Plus Jakarta Sans',system-ui,sans-serif;cursor:pointer;min-height:48px}
+.opt.sel{border-color:var(--acc);background:rgba(249,115,22,.1)}
+.opt:disabled{cursor:default}
+.fb{margin-top:14px;border-radius:12px;padding:14px;border:1px solid var(--line);background:var(--bg)}
+.fb.ok{border-color:var(--good)}.fb.no{border-color:var(--bad)}
+.fb b.ok{color:var(--good)}.fb b.no{color:var(--bad)}
+.fb .ans{margin-top:6px;font-size:14px}.fb .ex{margin-top:6px;font-size:13px;color:var(--mute)}
+.fb .pts{float:right;color:var(--good);font-weight:800}
+.hint{font-size:12px;color:var(--mute);margin-top:10px}
+.tq{border-top:1px solid var(--line);padding:16px 0}.tq:first-child{border-top:none;padding-top:0}
+.tq .qtext{font-size:16px;margin-bottom:10px}
+.res-ok{color:var(--good);font-weight:700}.res-no{color:var(--bad);font-weight:700}
+.timer{font:800 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#FB923C}
+#overlay{position:fixed;inset:0;background:rgba(4,6,12,.86);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:50;text-align:center;padding:24px}
+#overlay.on{display:flex}
+#overlay .bd{transform:scale(.4);opacity:0}
+#overlay.show .bd{transform:scale(1);opacity:1;transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .3s}
+#overlay .t{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700}
+#overlay .n{font-size:38px;font-weight:800}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1b2133;border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:14px;display:none;z-index:60;max-width:92vw}
+@media (prefers-reduced-motion:reduce){#overlay.show .bd{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="screen on" id="s-login">
+  <div class="card stack" style="max-width:440px;margin:8vh auto 0">
+    <div><h1>Topic Practice</h1><p class="mute" style="margin-top:4px">Practise one topic at a time and climb from Newbie to Legend.</p></div>
+    <div><label for="sid">Student ID or email (the one you use for exams)</label><input type="text" id="sid" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+    <div class="err" id="login-err"></div>
+    <button class="btn" id="login-btn">Continue</button>
+  </div>
+</div>
+
+<div class="screen" id="s-home">
+  <div class="top"><div><h1>Topic Practice</h1><p class="mute" id="who"></p></div><button class="btn ghost" style="width:auto;padding:10px 16px" id="switch-btn">Switch student</button></div>
+  <div class="chips" id="subjects"></div>
+  <div class="grid" id="topics"></div>
+</div>
+
+<div class="screen" id="s-topic">
+  <div class="top"><button class="btn ghost" style="width:auto;padding:10px 16px" id="back-home">&larr; Topics</button></div>
+  <div class="card">
+    <div class="big"><div id="t-badge"></div><div style="flex:1;min-width:200px"><p class="mute" id="t-subject"></p><h2 id="t-name"></h2><div id="t-rank" style="font-weight:800;font-size:26px;margin-top:2px"></div><div class="bar"><i id="t-bar"></i></div><p class="mute" id="t-barlabel" style="margin-top:6px"></p></div></div>
+    <div class="ladder" id="t-ladder"></div>
+    <div class="stats"><div class="stat"><b id="st-mp"></b><span>Mastery points</span></div><div class="stat"><b id="st-solved"></b><span>Questions solved</span></div><div class="stat"><b id="st-hard"></b><span>Hard solved</span></div></div>
+    <div class="need" id="t-need"></div>
+    <div style="margin-top:16px" class="stack">
+      <div><label>Practise</label><div class="chips" id="diff-chips"></div></div>
+      <button class="btn" id="start-practice">Start practice</button>
+      <button class="btn alt" id="start-trial" style="display:none"></button>
+      <div class="err" id="topic-err"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-practice">
+  <div class="top"><button class="btn ghost" style="width:auto;padding:10px 16px" id="quit-practice">&larr; Done</button><div class="mute" id="p-progress"></div></div>
+  <div class="card qcard">
+    <div class="qmeta"><span class="pill" id="p-diff"></span><span id="p-mp"></span></div>
+    <div class="qtext" id="p-q"></div>
+    <div id="p-answer"></div>
+    <div id="p-fb"></div>
+    <div class="hint" id="p-hint">Type just the answer. Use ^ for powers (2^3) and sqrt(x) for roots.</div>
+    <div style="margin-top:14px"><button class="btn" id="p-check">Check answer</button></div>
+  </div>
+</div>
+
+<div class="screen" id="s-trial">
+  <div class="top"><div><h2 id="tr-title"></h2><p class="mute" id="tr-sub"></p></div><div class="timer" id="tr-timer"></div></div>
+  <div class="card"><div id="tr-qs"></div><div style="margin-top:14px"><button class="btn alt" id="tr-submit">Submit trial</button></div></div>
+</div>
+
+<div class="screen" id="s-result">
+  <div class="card stack">
+    <h2 id="rs-title"></h2><p id="rs-sub" class="mute"></p>
+    <div id="rs-list"></div>
+    <button class="btn" id="rs-back">Back to topic</button>
+  </div>
+</div>
+
+</div>
+<div id="overlay"><div class="t" id="ov-t">Rank up</div><div class="bd" id="ov-badge"></div><div class="n" id="ov-n"></div><button class="btn ghost" style="width:auto;padding:12px 28px" id="ov-close">Continue</button></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+var P = new URLSearchParams(location.search);
+var GAS_URL = (P.get('script') || sessionStorage.getItem('edurena_script_url') || '').trim();
+if (GAS_URL) { try { sessionStorage.setItem('edurena_script_url', GAS_URL); } catch(e){} }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function show(id){ Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(s){ s.classList.remove('on'); }); $(id).classList.add('on'); window.scrollTo(0,0); }
+function toast(msg){ var t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(function(){ t.style.display='none'; }, 3500); }
+function post(action, payload){
+  if (!GAS_URL) return Promise.reject(new Error('Missing backend URL. Open this page from the student portal.'));
+  payload = Object.assign({ action: action, email: S.id }, payload || {});
+  return fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if (!j || j.status !== 'success') throw new Error((j && j.message) || 'Something went wrong'); return j.data; });
+}
+
+var S = { id: '', ladder: [], topics: [], subject: '', cur: null, diff: '', queue: [], qi: 0, batchRight: 0, batchDone: 0, trial: null, timer: null, answered: false };
+var COLORS = ['#7d8794','#3fae6a','#1fa39a','#3b82d6','#8b5cf6','#f08a24','#d9a521','#e94f8b'];
+
+/* ---------- badges ---------- */
+function starPts(cx,cy,r){var p=[],i,a,rr;for(i=0;i<10;i++){a=-Math.PI/2+i*Math.PI/5;rr=i%2?r*.45:r;p.push((cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1));}return p.join(' ');}
+var _bid = 0;
+function badge(i, px, faded){
+  var c = COLORS[i], g = 'bg' + (++_bid), s = '';
+  s += '<svg viewBox="0 0 100 100" width="'+px+'" height="'+px+'" aria-hidden="true"'+(faded?' style="opacity:.45"':'')+'><defs>';
+  if (i === 7) s += '<linearGradient id="'+g+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a59"/><stop offset=".35" stop-color="#e94f8b"/><stop offset=".7" stop-color="#7c5cf0"/><stop offset="1" stop-color="#22c1d6"/></linearGradient>';
+  else s += '<linearGradient id="'+g+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c+'"/><stop offset="1" stop-color="'+c+'" stop-opacity=".62"/></linearGradient>';
+  s += '</defs><circle cx="50" cy="50" r="48" fill="url(#'+g+')"/><circle cx="50" cy="50" r="40" fill="#0d1017" fill-opacity=".34"/><circle cx="50" cy="50" r="40" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6"/>';
+  if (i >= 4) for (var t=0;t<24;t++){ var a=t*Math.PI/12; s+='<line x1="'+(50+43.5*Math.cos(a)).toFixed(1)+'" y1="'+(50+43.5*Math.sin(a)).toFixed(1)+'" x2="'+(50+46.5*Math.cos(a)).toFixed(1)+'" y2="'+(50+46.5*Math.sin(a)).toFixed(1)+'" stroke="#fff" stroke-opacity=".7" stroke-width="1.6"/>'; }
+  var w = '#fff';
+  if (i === 0) s += '<circle cx="50" cy="50" r="8" fill="'+w+'"/>';
+  else if (i <= 3) for (var k=0;k<i;k++){ var y=(i===1?56:i===2?60:64)-k*13; s+='<path d="M31 '+(y+8)+' L50 '+(y-6)+' L69 '+(y+8)+'" fill="none" stroke="'+w+'" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>'; }
+  else if (i === 4) s += '<polygon points="'+starPts(50,51,22)+'" fill="'+w+'"/>';
+  else if (i === 5) s += '<polygon points="'+starPts(37,51,15)+'" fill="'+w+'"/><polygon points="'+starPts(63,51,15)+'" fill="'+w+'"/>';
+  else if (i === 6) s += '<polygon points="'+starPts(50,38,14)+'" fill="'+w+'"/><polygon points="'+starPts(35,60,14)+'" fill="'+w+'"/><polygon points="'+starPts(65,60,14)+'" fill="'+w+'"/>';
+  else s += '<path d="M27 67 L31 38 L42 53 L50 31 L58 53 L69 38 L73 67 Z" fill="'+w+'"/><rect x="27" y="69" width="46" height="5" rx="2" fill="'+w+'"/>';
+  return s + '</svg>';
+}
+function rankLabel(t){ return t.started ? t.rankName : 'Unranked'; }
+function rankColor(t){ return t.started ? COLORS[t.rank] : '#7c85a2'; }
+function nextTarget(t){ var n = S.ladder[t.rank + 1]; return n ? n.pct : 1; }
+function progressPct(t){
+  var lo = S.ladder[t.rank] ? S.ladder[t.rank].pct : 0, hi = nextTarget(t);
+  if (t.rank >= 7) return 100;
+  if (!t.started) return 0;
+  return Math.max(0, Math.min(100, Math.round((t.pct - lo) / Math.max(hi - lo, 0.001) * 100)));
+}
+
+/* ---------- login / home ---------- */
+function login(){
+  var id = $('sid').value.trim();
+  if (!id) { $('login-err').textContent = 'Enter your student ID or email.'; return; }
+  S.id = id.toLowerCase(); $('login-err').textContent = ''; $('login-btn').disabled = true;
+  post('getTopicPracticeHome').then(function(d){
+    try { localStorage.setItem('edurena_tp_id', S.id); } catch(e){}
+    S.ladder = d.ladder; S.topics = d.topics;
+    $('who').textContent = (d.student.name ? d.student.name + ' · ' : '') + (d.student.school || '');
+    if (!S.subject || !S.topics.some(function(t){ return t.subject === S.subject; })) S.subject = S.topics.length ? S.topics[0].subject : '';
+    renderHome(); show('s-home');
+  }).catch(function(e){ $('login-err').textContent = e.message; }).then(function(){ $('login-btn').disabled = false; });
+}
+function refreshHome(){
+  return post('getTopicPracticeHome').then(function(d){ S.topics = d.topics; if (S.cur) S.cur = findTopic(S.cur.subject, S.cur.topic); });
+}
+function findTopic(sub, top){ for (var i=0;i<S.topics.length;i++) if (S.topics[i].subject===sub && S.topics[i].topic===top) return S.topics[i]; return null; }
+function renderHome(){
+  var subs = []; S.topics.forEach(function(t){ if (subs.indexOf(t.subject) === -1) subs.push(t.subject); });
+  $('subjects').innerHTML = subs.map(function(s){ return '<button class="chip'+(s===S.subject?' on':'')+'" data-s="'+esc(s)+'">'+esc(s)+'</button>'; }).join('');
+  var list = S.topics.filter(function(t){ return t.subject === S.subject; });
+  $('topics').innerHTML = list.map(function(t, i){
+    return '<button class="tcard" data-i="'+S.topics.indexOf(t)+'">' + badge(t.started ? t.rank : 0, 60, !t.started) +
+      '<div style="flex:1;min-width:0"><div class="tname">'+esc(t.topic)+'</div><div class="trank" style="color:'+rankColor(t)+'">'+rankLabel(t)+'</div>' +
+      '<div class="bar"><i style="width:'+progressPct(t)+'%;background:'+rankColor(t)+'"></i></div>' +
+      (t.pendingTrial && !t.trialLockedUntil ? '<span class="tag trial">Trial ready</span>' : '') + (t.rusty ? '<span class="tag rusty">Rusty</span>' : '') + '</div></button>';
+  }).join('') || '<p class="mute">No topics are available yet.</p>';
+}
+$('subjects').addEventListener('click', function(e){ var b=e.target.closest('.chip'); if(!b) return; S.subject=b.getAttribute('data-s'); renderHome(); });
+$('topics').addEventListener('click', function(e){ var b=e.target.closest('.tcard'); if(!b) return; S.cur = S.topics[+b.getAttribute('data-i')]; renderTopic(); show('s-topic'); });
+
+/* ---------- topic screen ---------- */
+function needText(t){
+  if (t.rank >= 7) return 'You are a Legend in this topic. Nothing left to climb.';
+  var nx = S.ladder[t.rank + 1], parts = [];
+  var mpNeed = Math.max(0, Math.ceil(nx.pct * t.totalMp - 1e-9) - t.mp);
+  if (mpNeed > 0) parts.push(mpNeed + ' more mastery points');
+  var hNeed = Math.max(0, Math.ceil(nx.hard * t.hardTotal - 1e-9) - t.hardSolved);
+  if (hNeed > 0) parts.push(hNeed + ' more Hard question' + (hNeed === 1 ? '' : 's') + ' solved');
+  if (t.rank + 1 === 3 && t.acc < 0.7) parts.push('70% accuracy over your last 20 answers (now ' + Math.round(t.acc * 100) + '%)');
+  if (t.rank + 1 === 7 && t.solved < t.total) parts.push('every question in the topic solved (' + (t.total - t.solved) + ' left)');
+  var s = 'Next: ' + nx.name + (parts.length ? '. You need ' + parts.join(', ') + '.' : '. Requirements met.');
+  if (nx.trial && t.pendingTrial === t.rank + 1) s += ' Pass the rank trial to earn it.';
+  else if (nx.trial) s += ' It also needs a passed rank trial.';
+  return s;
+}
+function renderTopic(){
+  var t = S.cur; if (!t) return;
+  $('t-badge').innerHTML = badge(t.started ? t.rank : 0, 96, !t.started);
+  $('t-subject').textContent = t.subject; $('t-name').textContent = t.topic;
+  $('t-rank').textContent = rankLabel(t); $('t-rank').style.color = rankColor(t);
+  $('t-bar').style.width = progressPct(t) + '%'; $('t-bar').style.background = rankColor(t);
+  $('t-barlabel').textContent = t.mp + ' of ' + t.totalMp + ' points' + (t.rusty ? ' · Rusty: answer a few questions to shake it off' : '');
+  $('t-ladder').innerHTML = S.ladder.map(function(r, i){
+    var cls = t.started && i < t.rank ? 'done' : (t.started && i === t.rank ? 'cur' : '');
+    return '<div class="step '+cls+'">'+badge(i, 44)+'<div>'+esc(r.name)+'</div></div>';
+  }).join('');
+  $('st-mp').textContent = t.mp + '/' + t.totalMp; $('st-solved').textContent = t.solved + '/' + t.total; $('st-hard').textContent = t.hardSolved + '/' + t.hardTotal;
+  $('t-need').textContent = needText(t);
+  var chips = [['', 'Recommended'], ['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']];
+  $('diff-chips').innerHTML = chips.map(function(c){ return '<button class="chip'+(S.diff===c[0]?' on':'')+'" data-d="'+c[0]+'">'+c[1]+'</button>'; }).join('');
+  var tb = $('start-trial');
+  if (t.pendingTrial) {
+    var rule = S.ladder[t.pendingTrial].trial;
+    tb.style.display = 'block';
+    if (t.trialLockedUntil) { tb.disabled = true; tb.textContent = S.ladder[t.pendingTrial].name + ' trial: retry after ' + new Date(t.trialLockedUntil).toLocaleString(); }
+    else { tb.disabled = false; tb.textContent = 'Take the ' + S.ladder[t.pendingTrial].name + ' trial (' + rule.n + ' questions, ' + Math.round(rule.pass * 100) + '% to pass' + (rule.sec ? ', ' + Math.round(rule.sec / 60) + ' min' : '') + ')'; }
+  } else tb.style.display = 'none';
+  $('topic-err').textContent = '';
+}
+$('diff-chips').addEventListener('click', function(e){ var b=e.target.closest('.chip'); if(!b) return; S.diff=b.getAttribute('data-d'); renderTopic(); });
+$('back-home').onclick = function(){ renderHome(); show('s-home'); };
+
+/* ---------- practice ---------- */
+function loadBatch(){
+  $('topic-err').textContent = '';
+  return post('getTopicPracticeBatch', { subject: S.cur.subject, topic: S.cur.topic, difficulty: S.diff }).then(function(d){
+    S.cur = Object.assign(S.cur, d.mastery);
+    if (!d.questions.length) {
+      var why = d.cooling ? d.cooling + ' missed question' + (d.cooling === 1 ? '' : 's') + ' will be back after 24 hours.' : 'You have answered every question available here.';
+      toast(why); return false;
+    }
+    S.queue = d.questions; S.qi = 0; S.batchRight = 0; S.batchDone = 0; return true;
+  });
+}
+function startPractice(){
+  $('start-practice').disabled = true;
+  loadBatch().then(function(ok){ if (ok) { renderQuestion(); show('s-practice'); } else { renderTopic(); } })
+    .catch(function(e){ $('topic-err').textContent = e.message; })
+    .then(function(){ $('start-practice').disabled = false; });
+}
+$('start-practice').onclick = startPractice;
+function renderQuestion(){
+  var q = S.queue[S.qi]; S.answered = false;
+  $('p-progress').textContent = 'Question ' + (S.qi + 1) + ' of ' + S.queue.length;
+  var pill = $('p-diff'); pill.textContent = q.difficulty; pill.className = 'pill ' + q.difficulty;
+  $('p-mp').textContent = ({easy:1,medium:2,hard:3})[q.difficulty] + ' point' + (q.difficulty === 'easy' ? '' : 's');
+  $('p-q').textContent = q.question; $('p-fb').innerHTML = '';
+  var box = $('p-answer');
+  if (q.options && q.options.length) {
+    box.innerHTML = '<div class="opts">' + q.options.map(function(o){ return '<button class="opt" data-o="'+esc(o)+'">'+esc(o)+'</button>'; }).join('') + '</div>';
+    $('p-hint').style.display = 'none';
+  } else {
+    box.innerHTML = '<input type="text" id="p-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Your answer">';
+    $('p-hint').style.display = 'block';
+    setTimeout(function(){ var i=$('p-input'); if(i) i.focus(); }, 50);
+  }
+  $('p-check').textContent = 'Check answer'; $('p-check').disabled = false;
+}
+$('p-answer').addEventListener('click', function(e){
+  var b = e.target.closest('.opt'); if (!b || S.answered) return;
+  Array.prototype.forEach.call($('p-answer').querySelectorAll('.opt'), function(x){ x.classList.remove('sel'); });
+  b.classList.add('sel');
+});
+$('p-answer').addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); onCheck(); } });
+function currentAnswer(){
+  var sel = $('p-answer').querySelector('.opt.sel'); if (sel) return sel.getAttribute('data-o');
+  var i = $('p-input'); return i ? i.value.trim() : '';
+}
+function onCheck(){
+  if (S.answered) { nextQuestion(); return; }
+  var a = currentAnswer(); if (!a) { toast('Enter or choose an answer first.'); return; }
+  var q = S.queue[S.qi]; $('p-check').disabled = true;
+  post('submitTopicAnswer', { subject: S.cur.subject, topic: S.cur.topic, questionId: q.id, answer: a }).then(function(d){
+    S.answered = true; S.batchDone++; if (d.isCorrect) S.batchRight++;
+    S.cur = Object.assign(S.cur, d.mastery);
+    var inp = $('p-input'); if (inp) inp.disabled = true;
+    Array.prototype.forEach.call($('p-answer').querySelectorAll('.opt'), function(x){ x.disabled = true; });
+    $('p-fb').innerHTML = '<div class="fb '+(d.isCorrect?'ok':'no')+'">' + (d.awarded ? '<span class="pts">+'+d.awarded+' MP</span>' : '') +
+      '<b class="'+(d.isCorrect?'ok':'no')+'">'+(d.isCorrect?'Correct':'Not quite')+'</b>' +
+      (d.isCorrect ? '' : '<div class="ans">Answer: <b>'+esc(d.correctAnswer)+'</b></div>') +
+      (d.note ? '<div class="ex">'+esc(d.note)+'</div>' : '') + (d.explanation ? '<div class="ex">'+esc(d.explanation)+'</div>' : '') + '</div>';
+    $('p-check').textContent = S.qi + 1 < S.queue.length ? 'Next question' : 'Finish'; $('p-check').disabled = false;
+    if (d.rankedUp) rankUp(d.mastery);
+  }).catch(function(e){ toast(e.message); $('p-check').disabled = false; });
+}
+$('p-check').onclick = onCheck;
+function nextQuestion(){
+  if (S.qi + 1 < S.queue.length) { S.qi++; renderQuestion(); return; }
+  toast(S.batchRight + ' of ' + S.batchDone + ' correct. Loading more...');
+  loadBatch().then(function(ok){ if (ok) renderQuestion(); else endPractice(); }).catch(function(e){ toast(e.message); endPractice(); });
+}
+function endPractice(){ refreshHome().then(function(){ S.cur = findTopic(S.cur.subject, S.cur.topic) || S.cur; renderTopic(); show('s-topic'); }); }
+$('quit-practice').onclick = endPractice;
+
+/* ---------- rank-up overlay ---------- */
+function rankUp(t){
+  $('ov-badge').innerHTML = badge(t.rank, 150); $('ov-n').textContent = t.rankName; $('ov-n').style.color = COLORS[t.rank];
+  $('ov-t').textContent = 'Rank up · ' + t.topic;
+  var o = $('overlay'); o.classList.remove('show'); o.classList.add('on');
+  setTimeout(function(){ o.classList.add('show'); }, 450);
+}
+$('ov-close').onclick = function(){ $('overlay').classList.remove('on','show'); };
+
+/* ---------- trial ---------- */
+function startTrial(){
+  $('start-trial').disabled = true; $('topic-err').textContent = '';
+  post('startTopicTrial', { subject: S.cur.subject, topic: S.cur.topic }).then(function(d){
+    S.trial = d;
+    $('tr-title').textContent = d.rankName + ' trial · ' + S.cur.topic;
+    $('tr-sub').textContent = 'Answer at least ' + d.need + ' of ' + d.total + ' correctly. No feedback until you submit.';
+    $('tr-qs').innerHTML = d.questions.map(function(q, i){
+      var inner = q.options && q.options.length
+        ? '<div class="opts" data-q="'+esc(q.id)+'">' + q.options.map(function(o){ return '<button class="opt" data-o="'+esc(o)+'">'+esc(o)+'</button>'; }).join('') + '</div>'
+        : '<input type="text" data-q="'+esc(q.id)+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Your answer">';
+      return '<div class="tq"><div class="qmeta"><span class="pill '+q.difficulty+'">'+q.difficulty+'</span><span>'+(i+1)+' / '+d.total+'</span></div><div class="qtext">'+esc(q.question)+'</div>'+inner+'</div>';
+    }).join('');
+    show('s-trial'); $('tr-submit').disabled = false;
+    clearInterval(S.timer); var tEl = $('tr-timer');
+    if (d.limitSec) {
+      var end = Date.now() + d.limitSec * 1000;
+      var tick = function(){ var left = Math.max(0, Math.round((end - Date.now()) / 1000)); tEl.textContent = Math.floor(left/60) + ':' + ('0'+(left%60)).slice(-2); if (!left) { clearInterval(S.timer); submitTrial(); } };
+      tick(); S.timer = setInterval(tick, 1000);
+    } else tEl.textContent = '';
+  }).catch(function(e){ $('topic-err').textContent = e.message; renderTopic(); }).then(function(){ $('start-trial').disabled = false; });
+}
+$('start-trial').onclick = startTrial;
+$('tr-qs').addEventListener('click', function(e){
+  var b = e.target.closest('.opt'); if (!b) return;
+  Array.prototype.forEach.call(b.parentNode.querySelectorAll('.opt'), function(x){ x.classList.remove('sel'); });
+  b.classList.add('sel');
+});
+function submitTrial(){
+  if (!S.trial || $('tr-submit').disabled) return;
+  $('tr-submit').disabled = true; clearInterval(S.timer);
+  var answers = {};
+  Array.prototype.forEach.call($('tr-qs').querySelectorAll('input[data-q]'), function(i){ answers[i.getAttribute('data-q')] = i.value.trim(); });
+  Array.prototype.forEach.call($('tr-qs').querySelectorAll('.opts[data-q]'), function(o){ var s=o.querySelector('.opt.sel'); answers[o.getAttribute('data-q')] = s ? s.getAttribute('data-o') : ''; });
+  var token = S.trial.token, qs = S.trial.questions;
+  post('submitTopicTrial', { token: token, answers: answers }).then(function(d){
+    S.cur = Object.assign(S.cur, d.mastery); S.trial = null;
+    $('rs-title').textContent = d.passed ? 'Trial passed' : (d.late ? 'Out of time' : 'Not this time');
+    $('rs-title').style.color = d.passed ? 'var(--good)' : 'var(--bad)';
+    $('rs-sub').textContent = d.correct + ' of ' + d.total + ' correct (needed ' + d.need + ').' + (d.passed ? '' : ' You can retry after 24 hours. Keep practising in the meantime.');
+    var byId = {}; qs.forEach(function(q){ byId[q.id] = q; });
+    $('rs-list').innerHTML = d.results.map(function(r){
+      var q = byId[r.id] || {};
+      return '<div class="tq"><div class="qtext" style="font-size:15px">'+esc(q.question)+'</div><div class="'+(r.isCorrect?'res-ok':'res-no')+'">'+(r.isCorrect?'Correct':'Answer: '+esc(r.correctAnswer))+'</div>'+(r.explanation && !r.isCorrect ? '<div class="ex mute" style="font-size:13px;margin-top:4px">'+esc(r.explanation)+'</div>' : '')+'</div>';
+    }).join('');
+    show('s-result'); if (d.rankedUp) rankUp(d.mastery);
+  }).catch(function(e){ toast(e.message); $('tr-submit').disabled = false; });
+}
+$('tr-submit').onclick = submitTrial;
+$('rs-back').onclick = function(){ refreshHome().then(function(){ S.cur = findTopic(S.cur.subject, S.cur.topic) || S.cur; renderTopic(); show('s-topic'); }); };
+
+/* ---------- boot ---------- */
+$('login-btn').onclick = login;
+$('sid').addEventListener('keydown', function(e){ if (e.key === 'Enter') login(); });
+$('switch-btn').onclick = function(){ try { localStorage.removeItem('edurena_tp_id'); } catch(e){} S.id=''; $('sid').value=''; show('s-login'); };
+try { var saved = localStorage.getItem('edurena_tp_id'); if (saved) { $('sid').value = saved; if (GAS_URL) login(); } } catch(e){}
+if (!GAS_URL) $('login-err').textContent = 'Open Topic Practice from the student portal so it can reach the server.';
+})();
+</script>
+</body>
+</html>

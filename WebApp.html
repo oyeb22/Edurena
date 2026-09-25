@@ -102,14 +102,19 @@
     }
     .btn-challenge:hover { background:rgba(124,92,255,0.1); }
 
-    /* Competition Mode button — gold/trophy to match its own brand identity */
+    /* Competition Mode button — gold/trophy to match its own brand identity.
+       Hidden by default: it only appears once a competition has actually
+       been published for a date, not just as a permanently-visible button
+       that shows an empty list when tapped. See checkCompetitionAvailability(). */
     .btn-competition {
+      display:none;
       width:100%; padding:13px; background:transparent; border:1px solid #f5a623;
       border-radius:10px; color:#f5a623; font-size:14px; font-weight:600;
       font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      transition:all 0.15s; margin-top:10px; align-items:center;
       justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
     }
+    .btn-competition.show { display:flex; }
     .btn-competition:hover { background:rgba(245,166,35,0.1); }
 
     /* Simulation Lab button — blue to match the lab's own brand color */
@@ -121,6 +126,16 @@
       justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
     }
     .btn-simlab:hover { background:rgba(51,85,221,0.1); }
+
+    /* Topic Practice button - green, matching its rank-ladder identity */
+    .btn-practice {
+      width:100%; padding:13px; background:transparent; border:1px solid #3fae6a;
+      border-radius:10px; color:#3fae6a; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-practice:hover { background:rgba(63,174,106,0.1); }
 
     /* Divider with label */
     .or-divider {
@@ -223,6 +238,9 @@
     <button class="btn-simlab" onclick="openSimLab()">
       &#x1F52C; Simulation Lab
     </button>
+    <button class="btn-practice" onclick="openTopicPractice()">
+      &#x1F396;&#xFE0F; Topic Practice &amp; Ranks
+    </button>
 
     <div class="error" id="errMsg1"></div>
   </div>
@@ -272,6 +290,7 @@ var WHACK_URL     = 'https://edurena.online/WhackAMole.html';
 var SHOOTOUT_URL  = 'https://edurena.online/PenaltyShootout.html';
 var TOWER_URL     = 'https://edurena.online/TowerDefense.html';
 var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
+var PRACTICE_URL  = 'https://edurena.online/TopicPractice.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 var RACE_URL      = 'https://edurena.online/Race.html';
 var SIMLAB_URL    = 'https://edurena.online/SimulationLab.html';
@@ -450,6 +469,14 @@ function openChallengeMode() {
 // backend calls at all — confirmed no GAS_URL/fetch in the file), so unlike
 // every other entry point here it needs no ?script= param and no whenReady()
 // gate on the backend being ready.
+function openTopicPractice() {
+  whenReady(function(){
+    var url = PRACTICE_URL + (PRACTICE_URL.indexOf('?') === -1 ? '?' : '&')
+            + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
+}
+
 function openSimLab() {
   window.open(SIMLAB_URL, '_blank');
 }
@@ -539,6 +566,29 @@ function openCompetitionMode() {
     .catch(function(){});
   });
 }
+
+// Runs once at page load — reveals the Competitions button only if
+// getPublishedCompetitions actually returns something, i.e. the exact same
+// condition openCompetitionMode() itself checks before showing the picker.
+// Reusing that same call (rather than a separate "is anything scheduled
+// today" date check) guarantees the button's visibility can never
+// disagree with what tapping it would actually show — no separate rule to
+// keep in sync as competitions get published, tested, or unpublished.
+// fetchPublishedCompetitionsDirect() hits Supabase directly, so — like
+// Simulation Lab — this doesn't need to wait on whenReady()/GAS at all.
+function checkCompetitionAvailability() {
+  fetchPublishedCompetitionsDirect()
+    .catch(function(e){
+      console.warn('[perf] Supabase direct read failed, falling back to GAS:', e.message);
+      return fetchPublishedCompetitionsViaGAS();
+    })
+    .then(function(rows) {
+      var compBtn = document.querySelector('.btn-competition');
+      if (compBtn && rows && rows.length) compBtn.classList.add('show');
+    })
+    .catch(function(){}); // stays hidden on any error — never show a button that turns out empty
+}
+checkCompetitionAvailability();
 
 function openCompetitionById(competitionId) {
   whenReady(function(){
