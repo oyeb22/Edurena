@@ -546,24 +546,7 @@
       <div class="tp" id="tp-edurenabank">
         <div class="sh"><h2>Edurena Question Bank</h2></div>
         <div class="info-box">
-          <strong>How this works:</strong> Questions here are shared across every school, tagged by class level. Hidden from Create Quiz until you flip <code>EDURENA_BANK_ENABLED</code> on in the Apps Script editor. Paste a JSON batch, validate, then commit — same flow as the Challenge Mode bank above. For a SHORT question expecting several distinct answers (e.g. "name three..."), add <code>"expected_items": 3</code> to show students one input line per answer instead of a single box.
-        </div>
-
-        <div class="card">
-          <div class="ct">Batch Settings<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Applies to the whole batch below — paste one class level at a time.</span></span></div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <div style="flex:1;min-width:140px">
-              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Class Level *</label>
-              <select id="eb-class-level" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none">
-                <option value="">— Select —</option>
-                <option value="Basic1">Basic 1</option><option value="Basic2">Basic 2</option>
-                <option value="Basic3">Basic 3</option><option value="Basic4">Basic 4</option>
-                <option value="Basic5">Basic 5</option><option value="Basic6">Basic 6</option>
-                <option value="JSS1">JSS 1</option><option value="JSS2">JSS 2</option><option value="JSS3">JSS 3</option>
-                <option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option>
-              </select>
-            </div>
-          </div>
+          <strong>How this works:</strong> Questions here are shared across every school and organised by <strong>subject, topic and difficulty</strong> (no class levels). Hidden from Create Quiz until you flip <code>EDURENA_BANK_ENABLED</code> on in the Apps Script editor. Paste a JSON batch or load one or more <code>.json</code> files, validate, then commit. A question already in the bank (same subject, topic and text) is skipped, so re-importing a batch is safe. For a SHORT question expecting several distinct answers (e.g. "name three..."), add <code>"expected_items": 3</code> to show students one input line per answer instead of a single box.
         </div>
 
         <div class="card">
@@ -572,8 +555,10 @@
             style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
                    background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
                    border-radius:8px;padding:12px;resize:vertical"
-            placeholder='[ { "subject": "Mathematics", "topic": "Algebra", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "Option B", "points": 1, "explanation": "...", "tier": "free" } ]'></textarea>
+            placeholder='[ { "subject": "Mathematics", "topic": "Algebra", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "x = 2", "points": 1, "explanation": "...", "tier": "free" } ]'></textarea>
+          <input type="file" id="eb-files" accept=".json,application/json" multiple style="display:none" onchange="ebLoadFiles(this)">
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-g btn-sm" onclick="document.getElementById('eb-files').click()">📁 Load .json files</button>
             <button class="btn btn-g btn-sm" onclick="ebValidate()">🔍 Validate &amp; Preview</button>
             <button class="btn btn-p btn-sm" id="eb-commit-btn" onclick="ebCommit()" disabled>✅ Commit to Database</button>
             <button class="btn btn-g btn-sm" onclick="ebClear()">🗑 Clear</button>
@@ -1948,7 +1933,6 @@ function qbClear() {
 var ebValidatedData = null;
 function ebValidate() {
   var raw = document.getElementById('eb-paste').value.trim();
-  var classLevel = document.getElementById('eb-class-level').value;
   var previewCard = document.getElementById('eb-preview-card');
   var resultCard  = document.getElementById('eb-result-card');
   var commitBtn   = document.getElementById('eb-commit-btn');
@@ -1957,15 +1941,16 @@ function ebValidate() {
   ebValidatedData = null;
   commitBtn.disabled = true;
 
-  if (!classLevel) { alert('Select a class level first.'); return; }
-  if (!raw) { alert('Paste a JSON batch first.'); return; }
+  if (!raw) { alert('Paste a JSON batch or load .json files first.'); return; }
 
   var parsed;
   try { parsed = JSON.parse(raw); }
   catch (e) { alert('Invalid JSON: ' + e.message); return; }
   if (!Array.isArray(parsed)) { alert('Expected a JSON array of question objects.'); return; }
 
-  var requiredFields = ['subject', 'question', 'correct_answer'];
+  // explanation is required: the worked solution is what makes this a
+  // learning platform, so a question without one is not allowed into the bank.
+  var requiredFields = ['subject', 'topic', 'question', 'correct_answer', 'explanation'];
   var errors = [];
   parsed.forEach(function(q, i) {
     requiredFields.forEach(function(field) {
@@ -1978,8 +1963,10 @@ function ebValidate() {
     return;
   }
 
+  // Big batches (e.g. every topic file at once) would make thousands of table
+  // rows, so preview the first 100 and summarise the rest by subject/topic.
   var tbody = document.querySelector('#eb-preview-table tbody');
-  tbody.innerHTML = parsed.map(function(q, i) {
+  tbody.innerHTML = parsed.slice(0, 100).map(function(q, i) {
     return '<tr>' +
       '<td>' + (i + 1) + '</td>' +
       '<td>' + escH(q.subject || '') + '</td>' +
@@ -1989,8 +1976,11 @@ function ebValidate() {
       '<td><span style="color:var(--grn)">✓ Ready</span></td>' +
       '</tr>';
   }).join('');
+  var topics = {};
+  parsed.forEach(function(q) { topics[q.subject + ' / ' + q.topic] = true; });
   document.getElementById('eb-preview-summary').textContent =
-    parsed.length + ' question(s), all tagged ' + classLevel + '.';
+    parsed.length + ' question(s) across ' + Object.keys(topics).length + ' topic(s)' +
+    (parsed.length > 100 ? ' — showing the first 100.' : '.');
   previewCard.style.display = 'block';
 
   ebValidatedData = parsed;
@@ -2002,25 +1992,66 @@ function ebCommit() {
 
   var commitBtn = document.getElementById('eb-commit-btn');
   commitBtn.disabled = true;
-  commitBtn.textContent = 'Importing…';
 
-  call('importJSON', {
-    scope: 'global',
-    classLevel: document.getElementById('eb-class-level').value,
-    questions:  ebValidatedData
-  }, function(d) {
-    commitBtn.textContent = '✅ Commit to Database';
-    var resultCard = document.getElementById('eb-result-card');
-    var resultSummary = document.getElementById('eb-result-summary');
-    resultSummary.innerHTML = '<strong style="color:var(--grn)">' + (d.message || 'Import complete.') + '</strong>';
-    ebValidatedData = null;
-    document.getElementById('eb-paste').value = '';
-    document.getElementById('eb-preview-card').style.display = 'none';
-    resultCard.style.display = 'block';
-  }, function(er) {
-    commitBtn.textContent = '✅ Commit to Database';
-    commitBtn.disabled = false;
+  // Sent in slices of 300 so a large batch stays under the request-size limit
+  // and each Apps Script call finishes well inside its time limit.
+  var all = ebValidatedData, SLICE = 300, total = { imported: 0, duplicates: 0, skipped: 0 }, pos = 0;
+  function sendNext() {
+    if (pos >= all.length) {
+      commitBtn.textContent = '✅ Commit to Database';
+      var msg = 'Imported ' + total.imported + ' question(s)' +
+        (total.duplicates ? ', skipped ' + total.duplicates + ' already in the bank' : '') +
+        (total.skipped ? ', skipped ' + total.skipped + ' invalid' : '') + '.';
+      document.getElementById('eb-result-summary').innerHTML = '<strong style="color:var(--grn)">' + escH(msg) + '</strong>';
+      ebValidatedData = null;
+      document.getElementById('eb-paste').value = '';
+      document.getElementById('eb-preview-card').style.display = 'none';
+      document.getElementById('eb-result-card').style.display = 'block';
+      return;
+    }
+    commitBtn.textContent = 'Importing ' + Math.min(pos + SLICE, all.length) + ' of ' + all.length + '…';
+    call('importJSON', { scope: 'global', questions: all.slice(pos, pos + SLICE) }, function(d) {
+      total.imported += d.imported || 0; total.duplicates += d.duplicates || 0; total.skipped += d.skipped || 0;
+      pos += SLICE; sendNext();
+    }, function() {
+      commitBtn.textContent = '✅ Commit to Database';
+      commitBtn.disabled = false;
+      document.getElementById('eb-result-summary').innerHTML = '<strong style="color:var(--red,#f87171)">Stopped after ' + total.imported +
+        ' imported. Fix the error, then commit again: questions already imported are skipped.</strong>';
+      document.getElementById('eb-result-card').style.display = 'block';
+    });
+  }
+  sendNext();
+}
+
+// Reads one or more .json files (e.g. the per-topic files) and merges their
+// question arrays into the paste box, ready for Validate & Preview.
+function ebLoadFiles(input) {
+  var files = Array.prototype.slice.call(input.files || []);
+  if (!files.length) return;
+  var merged = [], bad = [], left = files.length;
+  files.forEach(function(f) {
+    var r = new FileReader();
+    r.onload = function() {
+      try {
+        var arr = JSON.parse(String(r.result).replace(/^﻿/, ''));
+        if (Array.isArray(arr)) merged = merged.concat(arr); else bad.push(f.name);
+      } catch (e) { bad.push(f.name); }
+      done();
+    };
+    r.onerror = function() { bad.push(f.name); done(); };
+    r.readAsText(f);
   });
+  function done() {
+    if (--left) return;
+    input.value = '';
+    document.getElementById('eb-paste').value = merged.length ? JSON.stringify(merged) : '';
+    document.getElementById('eb-preview-card').style.display = 'none';
+    document.getElementById('eb-commit-btn').disabled = true;
+    ebValidatedData = null;
+    if (bad.length) toast('error', 'Could not read: ' + bad.join(', '));
+    if (merged.length) toast('success', 'Loaded ' + merged.length + ' question(s) from ' + (files.length - bad.length) + ' file(s). Click Validate & Preview.');
+  }
 }
 function ebClear() {
   document.getElementById('eb-paste').value = '';
@@ -2032,9 +2063,8 @@ function ebClear() {
 
 // The complete, current schema importJSON actually reads (verified against
 // code.gs, not reconstructed from memory) — kept here so it's always one
-// click away instead of something to go dig up or re-ask for. class_level
-// and exam_board are NOT in here — those are the "Class Level" field above
-// this box, applied once to the whole pasted batch, not per question.
+// click away instead of something to go dig up or re-ask for. The bank has
+// no class levels: subject + topic + difficulty are what organise it.
 var EB_JSON_TEMPLATE = JSON.stringify([{
   subject: "Mathematics",
   topic: "Algebra",
@@ -2043,10 +2073,10 @@ var EB_JSON_TEMPLATE = JSON.stringify([{
   question: "What is 2x + 3 = 7?",
   option_A: "x = 1", option_B: "x = 2", option_C: "x = 3", option_D: "x = 4",
   option_A_image: "", option_B_image: "", option_C_image: "", option_D_image: "",
-  correct_answer: "Option B",
+  correct_answer: "x = 2",
   points: 1,
   expected_items: null,
-  explanation: "7-3=4, 4/2=2",
+  explanation: "Idea: undo what was done to x, in reverse order.\nStep 1: Subtract 3 from both sides: 2x + 3 - 3 = 7 - 3, so 2x = 4.\nStep 2: Divide both sides by 2: x = 4 / 2 = 2.\nAnswer: x = 2.\nCheck: 2 x 2 + 3 = 7, which matches.",
   session: "",
   term: "",
   instruction_group: "",
