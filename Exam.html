@@ -318,7 +318,7 @@
     .review-badge.ok{background:var(--green-glow);color:var(--green);}
     .review-badge.bad{background:var(--red-glow);color:var(--red);}
     .review-badge.skip{background:var(--yellow-glow);color:var(--yellow);}
-    .explain-box{margin-top:10px;padding:12px 14px;background:rgba(91,110,245,.07);border:1px solid rgba(91,110,245,.22);border-radius:10px;font-size:13px;line-height:1.65;color:var(--text);}
+    .explain-box{margin-top:10px;padding:12px 14px;background:rgba(91,110,245,.07);border:1px solid rgba(91,110,245,.22);border-radius:10px;font-size:13px;line-height:1.65;color:var(--text);white-space:pre-line;}
     .explain-box .ai-label{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
     .ai-explain-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 14px;background:rgba(91,110,245,.1);border:1px solid rgba(91,110,245,.3);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;}
     .ai-explain-btn:hover{background:rgba(91,110,245,.18);}
@@ -725,6 +725,7 @@
       <div class="rstat"><div class="rstat-val" id="resViolations">0</div><div class="rstat-label">Violations</div></div>
     </div>
     <div class="flagged-notice" id="flaggedNotice">🚩 You had flagged questions — they are marked below for your reference.</div>
+    <div id="practiceResult" style="display:none;margin-bottom:14px;padding:12px 14px;border:1px solid rgba(45,212,160,.3);background:rgba(45,212,160,.07);border-radius:var(--radius-sm);font-size:14px;line-height:1.7;text-align:center"></div>
     <div id="resSubjectBreakdown" style="display:none;margin-bottom:14px"></div>
     <div class="divider"></div>
     <div id="reviewSection">
@@ -806,6 +807,34 @@ async function supabaseGet(table, filters, select) {
   return resp.json();
 }
 var student    = { email: PARAMS.email || '', examCode: (PARAMS.code || '').toUpperCase() };
+// Topic Practice sets and rank trials are quizzes of type practice / practice_trial.
+function isPracticeQuiz(){ return !!(quizMeta && /^practice/.test(quizMeta.quizType || '')); }
+function goBackToPractice(pr){
+  var back = PARAMS.back || '';
+  if (back.indexOf(location.origin + '/') !== 0) back = 'https://edurena.online/TopicPractice.html'; // same-site only
+  var u = back + (back.indexOf('?') < 0 ? '?' : '&') + 'script=' + encodeURIComponent(SCRIPT_URL || '');
+  if (pr && pr.rankedUp && pr.mastery) u += '&ranked=' + pr.mastery.rank + '&rt=' + encodeURIComponent(pr.mastery.topic || '');
+  location.href = u;
+}
+function renderPracticeResult(pr, data){
+  var el = document.getElementById('practiceResult'); if (!el) return;
+  var m = pr.mastery || {}, lines = [];
+  if (pr.kind === 'trial') {
+    lines.push(pr.passed ? '🏅 Trial passed: ' + pr.correct + ' of ' + pr.total + ' correct (needed ' + pr.need + ').'
+      : '❌ Trial not passed: ' + pr.correct + ' of ' + pr.total + ' correct (needed ' + pr.need + '). ' + (pr.late ? 'You ran out of time. ' : '') + 'You can retry after 24 hours.');
+  } else lines.push('⭐ +' + (pr.awardedMp || 0) + ' Mastery Points');
+  if (pr.rankedUp) lines.push('🎉 Rank up! You are now <b>' + esc(pr.newRankName) + '</b>');
+  else if (m.rankName) lines.push('Your rank in this topic: <b>' + esc(m.rankName) + '</b> · ' + m.solved + ' of ' + m.total + ' questions solved');
+  el.innerHTML = lines.map(function(l){ return '<div>' + l + '</div>'; }).join('');
+  el.style.display = 'block';
+  var win = pr.kind === 'trial' ? pr.passed : parseFloat(data.percentage) >= 50;
+  safeText('resIcon', pr.rankedUp ? '🎉' : (win ? '👏' : '📚'));
+  safeText('resStatus', pr.kind === 'trial' ? (pr.passed ? 'TRIAL PASSED' : 'NOT YET') : (win ? 'GOOD WORK' : 'KEEP PRACTISING'));
+  safeText('resMsg', 'Read how to get each answer below. It is the fastest way to move up.');
+  var b = document.getElementById('closeBtn');
+  if (b) { b.textContent = '← Back to Topic Practice'; b.onclick = function(){ goBackToPractice(pr); }; }
+  var w = document.getElementById('closeWarning'); if (w) w.style.display = 'none';
+}
 console.log('[DEBUG] PARAMS:', JSON.stringify(PARAMS));
 console.log('[DEBUG] SCRIPT_URL:', SCRIPT_URL);
 console.log('[DEBUG] student:', JSON.stringify(student));
@@ -1660,7 +1689,8 @@ window.addEventListener('load',function(){
         var camCard = document.querySelector('.check-card');
         if (camCard) camCard.style.display = 'none';
         fetchStudentInfo();
-        initMedia(); // still needed for start-of-exam photo capture
+        if (isPracticeQuiz()) { safeText('camText', 'No camera needed for practice'); document.getElementById('startBtn').disabled = false; }
+        else initMedia(); // still needed for start-of-exam photo capture
       }
     }).catch(function(e) {
       hideLoading();
@@ -1952,7 +1982,7 @@ function startExam(){
         setTimeout(waitForVideoAndSnap, 500);
       }
     }
-    waitForVideoAndSnap();
+    if (mediaStream) waitForVideoAndSnap();
     }).catch(function(e) {
     hideLoading();
     if (confirm('Failed to load questions after several tries: ' + e.message + '\n\nTry again?')) {
@@ -2862,6 +2892,7 @@ function showResults(data){
     ? 'Congratulations! ' + rubricLabel + ' — you have passed this exam.'
     : rubricLabel + ' — keep studying, you can do better next time!');
   safeText('resExamName',quizMeta?quizMeta.title:'Exam');
+  if(data.practice) renderPracticeResult(data.practice, data);
   var attemptStr = (data.attemptNumber && data.attemptNumber > 1) ? ' · Attempt #'+data.attemptNumber : '';
   safeText('resCandidateName',[studentInfo.name,studentInfo.class,studentInfo.school].filter(Boolean).join(' · ')+(attemptStr)||student.email+attemptStr);
   safeText('resSchool',studentInfo.school||'Edurena');
@@ -2912,7 +2943,9 @@ function showResults(data){
       var letter=a.correctAnswerLetter||''; var text=a.correctAnswer||'';
       correctDisplay=(letter&&text&&text!==letter)?letter+' — '+text:(text||letter||'—');
     }
-    var explainBlock=(!a.isCorrect&&a.explanation)?'<div class="explain-box"><div class="ai-label">💡 Explanation</div>'+a.explanation+'</div>':'';
+    // Shown for every question with a stored explanation, right answers included:
+    // the worked solution is what turns a score into learning.
+    var explainBlock=a.explanation?'<div class="explain-box"><div class="ai-label">💡 How to get the answer</div>'+esc(a.explanation)+'</div>':'';
     var aiBlock=!a.isCorrect?'<div id="ai_wrap_'+i+'"><button class="ai-explain-btn" id="ai_btn_'+i+'" onclick="fetchAiExplanation('+i+')">✦ AI Explanation</button><div id="ai_box_'+i+'"></div></div>':'';
     
     // ── PARTIAL CREDIT DISPLAY (SHORT answer only) ─────────────────

@@ -715,6 +715,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <button class="ni"            onclick="nav('pronunciation',this);closeSidebar()"><span class="ico">🎤</span>Pronunciation</button>
       <button class="ni"            onclick="openSimLab();closeSidebar()"><span class="ico">🔬</span>Simulation Lab</button>
       <button class="ni"            onclick="nav('students',this);closeSidebar()"><span class="ico">◉</span>Students<span class="nbadge" id="pend-badge">0</span></button>
+      <button class="ni"            onclick="nav('practice',this);closeSidebar()"><span class="ico">★</span>Practice Results</button>
       <button class="ni"            onclick="openRecoverModal();closeSidebar()"><span class="ico">📥</span>Recover Submission</button>
       <div class="nsec admin-only">Admin</div>
       <button class="ni admin-only" onclick="nav('teachers',this);closeSidebar()"><span class="ico">♟</span>Teachers</button>
@@ -1438,6 +1439,70 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       </div>
 
       <!-- STUDENTS -->
+      <div class="tp" id="tp-practice">
+        <div class="sh">
+          <h2>Practice Results</h2>
+          <button class="btn" onclick="loadPractice()">↻ Refresh</button>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="ct"><span class="cq-ico">🛡️</span>Practice proctoring (your school)</div>
+          <p style="font-size:12.5px;color:var(--text2);margin:0 0 8px">Students' Topic Practice sets and Rank Trials open in the exam window. These switches apply to every practice session for your school. Any teacher at the school can change them.</p>
+          <div class="superadmin-only" style="margin-bottom:8px"><input type="text" id="pp-set-school" placeholder="School name (superadmin only)" onchange="loadPracticeSettings()"
+            style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;width:100%"></div>
+          <div class="tr-row">
+            <div><div class="tl">AI Face Detection Proctoring</div><div class="td">Camera-based absence and multi-person detection. Off means no camera is used.</div></div>
+            <div class="tog" id="pp-set-face" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Enable Read-Aloud (TTS)</div><div class="td">Show the text-to-speech panel</div></div>
+            <div class="tog" id="pp-set-tts" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Max violations before auto-submit</div><div class="td">Leaving fullscreen or the tab counts as a violation (1 to 10)</div></div>
+            <input type="number" id="pp-set-max" min="1" max="10" value="5" style="width:70px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 8px;color:var(--text);font-family:var(--font);font-size:13px">
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center"><button class="btn btn-p btn-sm" onclick="savePracticeSettings()">Save</button><span id="pp-set-note" style="font-size:12px;color:var(--text2)"></span></div>
+        </div>
+        <div class="sgrid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+          <div class="sc"><div class="sv" id="pp-active">—</div><div class="sl">Students Practising</div></div>
+          <div class="sc"><div class="sv" id="pp-answered">—</div><div class="sl">Questions Answered</div></div>
+          <div class="sc"><div class="sv" id="pp-acc">—</div><div class="sl">Recent Accuracy</div></div>
+          <div class="sc"><div class="sv" id="pp-idle">—</div><div class="sl">Inactive 14+ days</div></div>
+        </div>
+        <div class="card" style="padding:11px 13px;margin-bottom:8px">
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="pp-search" placeholder="Search student…" oninput="renderPractice()"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none;flex:1;min-width:140px">
+            <select id="pp-class" onchange="loadPractice()"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none">
+              <option value="">All Classes</option>
+            </select>
+            <select id="pp-status" onchange="renderPractice()"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12.5px;outline:none">
+              <option value="">All students</option><option value="idle">Inactive 14+ days</option><option value="never">Never practised</option>
+            </select>
+            <button class="btn btn-sm" onclick="downloadPracticeCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;margin-bottom:10px">
+          <div class="tw">
+            <table id="t-practice">
+              <thead><tr><th>Student</th><th>Class</th><th>Answered</th><th>Topics</th><th>Accuracy</th><th>Best Rank</th><th>Last Active</th></tr></thead>
+              <tbody><tr class="er"><td colspan="7">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Weakest topics (lowest recent accuracy)</div>
+          <div class="tw">
+            <table id="t-practice-topics">
+              <thead><tr><th>Subject</th><th>Topic</th><th>Students</th><th>Answered</th><th>Accuracy</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="tp" id="tp-students">
         <div class="sh">
           <h2>Student Register</h2>
@@ -1994,7 +2059,7 @@ function p2(n) { return String(n).padStart(2,'0'); }
 
 var TAB_NAMES = {
   overview:'Overview', create:'Create Quiz', manage:'Manage Quizzes', archive:'Archived Quizzes',
-  questions:'Question Bank', passages:'Comprehension Passages', pronunciation:'Pronunciation Practice', students:'Student Register', teachers:'Teachers', classes:'Classes',
+  questions:'Question Bank', passages:'Comprehension Passages', pronunciation:'Pronunciation Practice', students:'Student Register', practice:'Practice Results', teachers:'Teachers', classes:'Classes',
   profile:'My Profile', settings:'Platform Settings'
 };
 
@@ -2033,7 +2098,7 @@ var TAB_LOADERS = {
   overview: loadOverview, manage: loadQuizzes, archive: loadArchived,
   classes: loadClassesTab, questions: loadQBTab, passages: loadPassagesTab,
   pronunciation: loadPronunciationTab,
-  teachers: loadTeachersTab, students: loadStudentsTab, settings: loadSettingsTab
+  teachers: loadTeachersTab, students: loadStudentsTab, practice: loadPracticeTab, settings: loadSettingsTab
 };
 
 function nav(name, el) {
@@ -2080,7 +2145,7 @@ function loadClasses(cb) {
   call('getClasses', {}, function(cls){ allClasses=cls||[]; populateClassDropdowns(); if(cb)cb(); }, function(){ allClasses=[]; if(cb)cb(); });
 }
 function populateClassDropdowns() {
-  var ids=['c-class','imp-class','fil-class','st-filter-class','st-class','bulk-class','inline-class','pr-class'];
+  var ids=['c-class','imp-class','fil-class','st-filter-class','st-class','bulk-class','inline-class','pr-class','pp-class'];
   ids.forEach(function(id){
     var el=document.getElementById(id); if(!el) return;
     var first=el.options[0];
@@ -3479,6 +3544,71 @@ function doDeletePronunciationList(id, title) {
 }
 
 /* ── Students ── */
+// ── Practice Results (student Topic Practice, read-only for teachers) ──
+var _prac=null;
+function loadPracticeTab(){ populateClassDropdowns(); loadPractice(); loadPracticeSettings(); }
+function pracSchoolArg(){ var e=document.getElementById('pp-set-school'); return { school: (e&&e.value||'').trim() }; }
+function loadPracticeSettings(){
+  var a=pracSchoolArg(); if(document.body.classList.contains('is-superadmin') && !a.school){ setText('pp-set-note','Enter a school name to view or change its preset.'); return; }
+  call('getPracticeSettings',a,function(s){
+    document.getElementById('pp-set-face').classList.toggle('on',!!s.faceDetection);
+    document.getElementById('pp-set-tts').classList.toggle('on',!!s.enableTTS);
+    document.getElementById('pp-set-max').value=s.maxViolations;
+    setText('pp-set-note',s.configured?'':'Not saved yet: showing the defaults (no camera, 5 violations).');
+  });
+}
+function savePracticeSettings(){
+  var a=pracSchoolArg();
+  a.faceDetection=document.getElementById('pp-set-face').classList.contains('on');
+  a.enableTTS=document.getElementById('pp-set-tts').classList.contains('on');
+  a.maxViolations=parseInt(document.getElementById('pp-set-max').value)||0;
+  call('savePracticeSettings',a,function(){ setText('pp-set-note','Saved. New practice sessions use these settings.'); });
+}
+function loadPractice(){
+  var cid=(document.getElementById('pp-class')||{}).value||'';
+  call('getPracticeReport',{classId:cid},function(d){ _prac=d||{students:[],topics:[]}; renderPractice(); });
+}
+function pracPct(a){ return a==null?'—':Math.round(a*100)+'%'; }
+function pracAgo(iso){
+  if(!iso) return 'never';
+  var d=Math.floor((Date.now()-new Date(iso).getTime())/86400000);
+  return d<=0?'today':d===1?'yesterday':d+' days ago';
+}
+var PRAC_IDLE_DAYS=14;
+function pracDays(s){ return s.lastActive?Math.floor((Date.now()-new Date(s.lastActive).getTime())/86400000):null; }
+function pracIdle(s){ var d=pracDays(s); return d===null||d>=PRAC_IDLE_DAYS; }
+function pracToggle(i){ var d=document.getElementById('pp-d'+i); d.style.display=d.style.display==='none'?'':'none'; }
+function renderPractice(){
+  if(!_prac) return;
+  var q=((document.getElementById('pp-search')||{}).value||'').trim().toLowerCase();
+  var st=(document.getElementById('pp-status')||{}).value||'';
+  var all=_prac.students, rows=all.filter(function(s){ return (!q||(s.name||'').toLowerCase().indexOf(q)>-1||(s.email||'').toLowerCase().indexOf(q)>-1)&&(!st||(st==='never'?!s.answered:pracIdle(s))); });
+  var act=all.filter(function(s){return s.answered>0;}), ans=0, hit=0, n=0;
+  act.forEach(function(s){ ans+=s.answered; if(s.acc!=null){ hit+=s.acc; n++; } });
+  setText('pp-active',act.length+' / '+all.length); setText('pp-answered',ans); setText('pp-acc',n?pracPct(hit/n):'—'); setText('pp-idle',all.filter(pracIdle).length);
+  var tb=document.querySelector('#t-practice tbody');
+  tb.innerHTML=rows.length?rows.map(function(s,i){
+    var detail=s.topics.map(function(t){
+      return '<tr><td>'+esc(t.subject)+'</td><td>'+esc(t.topic)+'</td><td>'+esc(t.rankName)+'</td><td>'+t.solved+'/'+t.total+' solved</td><td>'+pracPct(t.acc)+'</td></tr>';
+    }).join('');
+    return '<tr'+(detail?' style="cursor:pointer" onclick="pracToggle('+i+')"':'')+'><td>'+esc(s.name)+'<div style="font-size:11px;opacity:.6">'+esc(s.email)+'</div></td><td>'+esc(s.className)+'</td><td>'+s.answered+'</td><td>'+s.topicsStarted+'</td><td>'+pracPct(s.acc)+'</td><td>'+esc(s.bestRankName||'—')+'</td><td>'+pracAgo(s.lastActive)+(pracIdle(s)?' <span style="color:#dc2626;font-weight:600">● '+(s.answered?'inactive':'not started')+'</span>':'')+'</td></tr>'
+      +(detail?'<tr id="pp-d'+i+'" style="display:none"><td colspan="7" style="padding:0"><table style="width:100%"><thead><tr><th>Subject</th><th>Topic</th><th>Rank</th><th>Progress</th><th>Accuracy</th></tr></thead><tbody>'+detail+'</tbody></table></td></tr>':'');
+  }).join(''):'<tr class="er"><td colspan="7">No students found.</td></tr>';
+  var tt=document.querySelector('#t-practice-topics tbody');
+  tt.innerHTML=_prac.topics.length?_prac.topics.slice(0,15).map(function(t){
+    return '<tr><td>'+esc(t.subject)+'</td><td>'+esc(t.topic)+'</td><td>'+t.students+'</td><td>'+t.answered+'</td><td>'+pracPct(t.acc)+'</td></tr>';
+  }).join(''):'<tr class="er"><td colspan="5">No practice activity yet.</td></tr>';
+}
+function downloadPracticeCSV(){
+  if(!_prac) return;
+  var q=function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; };
+  var lines=[['Name','ID','Class','Subject','Topic','Rank','Solved','Total','Accuracy'].map(q).join(',')];
+  _prac.students.forEach(function(s){
+    if(!s.topics.length) lines.push([s.name,s.email,s.className,'','','','','',''].map(q).join(','));
+    s.topics.forEach(function(t){ lines.push([s.name,s.email,s.className,t.subject,t.topic,t.rankName,t.solved,t.total,pracPct(t.acc)].map(q).join(',')); });
+  });
+  var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})); a.download='practice_results.csv'; a.click();
+}
 function loadStudentsTab(){
   populateClassDropdowns();
   // Use public endpoint so non-admin teachers can still see the school list
