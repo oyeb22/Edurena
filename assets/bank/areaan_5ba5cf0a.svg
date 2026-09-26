@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="148,183 252,183 184.4,53" fill="#dbeafe" fill-opacity="0.6" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round"/><line x1="184.4" y1="53" x2="184.4" y2="183" stroke="#0f172a" stroke-width="1.8" stroke-dasharray="6 5"/><polyline points="173.4,183 173.4,172 184.4,172" fill="none" stroke="#0f172a" stroke-width="1.6"/><text x="200" y="203" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">8 cm</text><text x="192.4" y="123" text-anchor="start" font-size="15" font-weight="700" fill="#dc2626">?</text><text x="200" y="244" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Area = 40 cm²</text>
+</svg>
