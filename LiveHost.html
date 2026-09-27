@@ -71,6 +71,7 @@
     .mode-card.whack{border-color:#ff9433}.mode-card.whack.sel,.mode-card.whack:hover{background:rgba(255,148,51,.12);border-color:#ffb066}
     .mode-card.shootout{border-color:#2ecc71}.mode-card.shootout.sel,.mode-card.shootout:hover{background:rgba(46,204,113,.12);border-color:#4ade80}
     .mode-card.tower{border-color:#00d4ff}.mode-card.tower.sel,.mode-card.tower:hover{background:rgba(0,212,255,.12);border-color:#60d8ff}
+    .mode-card.race{border-color:#ff3355}.mode-card.race.sel,.mode-card.race:hover{background:rgba(255,51,85,.12);border-color:#ff6680}
     .launch-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),#6b8ef5);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:800;font-family:var(--f);cursor:pointer;transition:all .2s;box-shadow:0 6px 28px rgba(79,120,255,.3);min-height:52px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center}
     .launch-btn:hover{transform:translateY(-2px)}
     .launch-btn:active:not(:disabled){transform:scale(.98)}
@@ -293,6 +294,11 @@
           <span class="mc-icon">&#x1F3AF;</span>
           <span class="mc-title">Live Quiz</span>
           <span class="mc-desc">Timed questions &middot; instant feedback &middot; timer auto-advances</span>
+        </button>
+        <button class="mode-card race" id="mc-race">
+          <span class="mc-icon">&#x1F3CE;&#xFE0F;</span>
+          <span class="mc-title">Race</span>
+          <span class="mc-desc">Self-paced &middot; faster correct answers = faster car &middot; first to the line wins</span>
         </button>
         <button class="mode-card puzzle" id="mc-puzzle">
           <span class="mc-icon">&#x1F9E9;</span>
@@ -578,7 +584,7 @@ window.addEventListener('load',function(){
 
 el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
-var MODE_CARD_IDS=['kahoot','puzzle','whack','shootout','tower'];
+var MODE_CARD_IDS=['kahoot','race','puzzle','whack','shootout','tower'];
 function wireModeCards(){
   MODE_CARD_IDS.forEach(function(m){
     el('mc-'+m).addEventListener('click',function(){selectMode(m);});
