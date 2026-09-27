@@ -31,7 +31,8 @@
     .screen{display:none;position:fixed;inset:0;z-index:100}
     .screen.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
     #s-fatal{background:var(--bg);z-index:9999}
-    #s-fatal h2{color:var(--red);font-family:var(--display);font-size:22px;margin-bottom:12px}
+    #s-fatal h2{color:var(--muted);font-family:var(--display);font-size:22px;margin-bottom:12px}
+    #s-fatal.err h2{color:var(--red)}
     #s-fatal p{color:var(--muted);font-size:14px;line-height:1.8;max-width:420px;text-align:center}
 
     /* ── JOIN ── */
@@ -222,9 +223,11 @@
 <body>
 
 <!-- SCREENS -->
+<!-- shown before any script has run — must stay neutral, since a slow connection can leave this on screen
+     for a while before the page's own JS gets a chance to replace it. fatal() calls below turn it red. -->
 <div class="screen on" id="s-fatal">
-  <h2>CANNOT LOAD</h2>
-  <p id="fatal-msg">Open this from the Edurena student portal.</p>
+  <h2 id="fatal-title">LOADING&hellip;</h2>
+  <p id="fatal-msg">Please wait a moment.</p>
 </div>
 
 <div class="screen" id="s-join">
@@ -358,7 +361,8 @@ var P = new URLSearchParams(window.location.search);
 var GAS_URL = (P.get('script') || '').trim();
 var preCode  = (P.get('room')   || '').trim().toUpperCase();
 
-if (!GAS_URL) { showScreen('s-fatal'); el('fatal-msg').textContent = 'Missing backend URL.'; return; }
+function fatal(msg) { showScreen('s-fatal'); el('s-fatal').classList.add('err'); el('fatal-title').textContent = 'CANNOT LOAD'; el('fatal-msg').textContent = msg; }
+if (!GAS_URL) { fatal('Missing backend URL.'); return; }
 showScreen('s-join');
 
 /* ════════════════ FIREBASE ════════════════ */
@@ -377,8 +381,7 @@ try {
   if (firebase.apps) firebase.apps.forEach(function(a){ if(a.name==='race') existingApp=a; });
   db = firebase.database(existingApp || firebase.initializeApp(cfg,'race'));
 } catch(e) {
-  showScreen('s-fatal');
-  el('fatal-msg').textContent = 'Firebase error: ' + e.message;
+  fatal('Firebase error: ' + e.message);
   return;
 }
 
