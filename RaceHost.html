@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* 3D switch: set USE_3D=true to send everyone to the Unity 3D version (Race3D falls back to this 2D page on phones that cannot run it).
+   ?v=3d forces the 3D page (no device check, for testing); ?v=2d forces this page. */
+(function(){var USE_3D=false,u=new URLSearchParams(location.search),v=u.get("v");if(v==="3d"||(USE_3D&&v!=="2d")){if(v!=="3d")u.set("v","auto");location.replace("RaceHost3D.html?"+u.toString());}})();
+</script>
 <meta charset="utf-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
 <meta name="viewport" content="width=device-width,initial-scale=1">
