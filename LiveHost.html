@@ -746,6 +746,9 @@ function _modeInfo(m){
 function showLobby(){
   var info=_modeInfo(mode);
   _joinUrl=info.url+'?script='+encodeURIComponent(SCRIPT_URL);
+  // "Race (3D test)" exists to test whether the 3D view actually works on a device — force the real
+  // attempt instead of letting Race3D.html's conservative device check quietly send it to the 2D race.
+  if(mode==='race3d') _joinUrl+='&v=3d';
   el('lby-tag').className  ='lobby-mode-tag '+info.tag;
   el('lby-tag').textContent=info.label;
   el('lby-code').textContent=sessionCode;
