@@ -159,6 +159,9 @@
 (function () {
 'use strict';
 var R = window.RACE3D;
+// raceCommon.js failed to load (network hiccup, ad blocker, etc.) — say so plainly instead of
+// crashing silently and leaving the generic "open from the student portal" placeholder on screen.
+if (!R) { document.getElementById('fatal-msg').textContent = 'A required file failed to load (assets/race3d/raceCommon.js). Check your connection and reload.'; return; }
 
 /* ── URL params ── */
 var P = new URLSearchParams(location.search);

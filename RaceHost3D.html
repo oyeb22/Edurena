@@ -101,6 +101,7 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
 (function () {
 'use strict';
 var R = window.RACE3D, P = new URLSearchParams(location.search);
+if (!R) { document.getElementById('w-err').textContent = 'A required file failed to load (assets/race3d/raceCommon.js). Check your connection and reload.'; return; }
 var raceId = (P.get('raceId') || '').trim().toUpperCase();
 function el(id) { return document.getElementById(id); }
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
