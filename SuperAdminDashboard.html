@@ -583,6 +583,35 @@
         </div>
 
         <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">Browse / Edit / Delete Existing Questions<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Import only ever adds — re-importing a corrected batch will duplicate rows instead of fixing them unless the old topic is deleted here first.</span></span></div>
+            <button class="btn btn-g btn-sm" onclick="ebLoadTopics()">↻ Refresh</button>
+          </div>
+          <div class="tw">
+            <table id="eb-topics-table">
+              <thead><tr><th>Subject</th><th>Topic</th><th>Questions</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="4">Click Refresh to load topics</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="eb-qlist-card" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div class="ct" style="margin-bottom:0" id="eb-qlist-title">Questions</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-g btn-sm" onclick="document.getElementById('eb-qlist-card').style.display='none'">Close</button>
+              <button class="btn btn-d btn-sm" onclick="ebDeleteTopic()">🗑 Delete Entire Topic</button>
+            </div>
+          </div>
+          <div class="tw">
+            <table id="eb-qlist-table">
+              <thead><tr><th>#</th><th>Type</th><th>Difficulty</th><th>Question</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
           <div class="ct">Flagged Questions<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Questions a student flagged as wrong while taking an Edurena-Bank-sourced quiz. Resolve once fixed (or dismissed).</span></span></div>
           <div class="tw">
             <table id="eb-flags-table">
@@ -1018,6 +1047,40 @@
   </div>
 </div>
 
+<!-- EDURENA BANK: EDIT A QUESTION -->
+<div class="mo" id="ebq-mo">
+  <div class="mbox" style="width:640px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Edit Question</span>
+      <button class="mc" onclick="closeMo('ebq-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fgrid" style="margin-bottom:12px">
+        <div class="fg"><label>Subject</label><input id="ebq-subject"></div>
+        <div class="fg"><label>Topic</label><input id="ebq-topic"></div>
+        <div class="fg"><label>Difficulty</label>
+          <select id="ebq-difficulty"><option value="easy">easy</option><option value="medium">medium</option><option value="hard">hard</option></select>
+        </div>
+        <div class="fg"><label>Type</label>
+          <select id="ebq-type" onchange="ebRenderOptFields()"><option value="MCQ">MCQ</option><option value="TF">TF</option><option value="SHORT">SHORT</option></select>
+        </div>
+        <div class="fg"><label>Points</label><input id="ebq-points" type="number" min="1" step="1"></div>
+        <div class="fg"><label>Tier</label>
+          <select id="ebq-tier"><option value="free">free</option><option value="premium">premium</option></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>Question</label><textarea id="ebq-question" style="width:100%;min-height:60px;font-family:inherit;background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:10px"></textarea></div>
+      <div id="ebq-opt-wrap" style="margin-bottom:12px"></div>
+      <div class="fg" style="margin-bottom:12px"><label>Correct Answer</label><input id="ebq-correct" style="width:100%"></div>
+      <div class="fg" style="margin-bottom:14px"><label>Explanation</label><textarea id="ebq-explanation" style="width:100%;min-height:100px;font-family:inherit;background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:10px"></textarea></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-g" onclick="closeMo('ebq-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="ebSaveQuestion()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="sp-ov" id="sp-ov"><div class="sp-box"><div class="sp"></div><div id="sp-txt">Working…</div></div></div>
 <div class="ts-stack" id="toasts"></div>
 
@@ -1154,7 +1217,7 @@ function navTo(name, el) {
   if (name === 'security')     loadSecurity();
   if (name === 'questionbank') loadThemes();
   if (name === 'competitions') loadCompetitions();
-  if (name === 'edurenabank')  loadFlaggedQuestions();
+  if (name === 'edurenabank')  { loadFlaggedQuestions(); ebLoadTopics(); }
   if (name === 'pronunciation') loadPronunciationDemoTab();
 }
 
@@ -2096,6 +2159,130 @@ function ebCopyTemplate() {
     document.getElementById('eb-paste').value = EB_JSON_TEMPLATE;
     toast('success','Template inserted into the box.');
   }
+}
+
+// ── EDURENA BANK: BROWSE / EDIT / DELETE ─────────────────────────
+var ebCurrentTopic = null;   // {subject, topic} of the currently-open question list
+var ebQuestionsCache = [];   // last-loaded question list, for the edit modal to read from
+
+function ebLoadTopics() {
+  var tb = document.querySelector('#eb-topics-table tbody');
+  tb.innerHTML = '<tr class="er"><td colspan="4">Loading…</td></tr>';
+  call('getEdurenaBankTopics', {}, function(rows) {
+    if (!rows.length) { tb.innerHTML = '<tr class="er"><td colspan="4">No questions in the bank yet.</td></tr>'; return; }
+    tb.innerHTML = rows.map(function(r) {
+      return '<tr><td>' + escH(r.subject) + '</td><td>' + escH(r.topic) + '</td><td>' + r.count + '</td>' +
+        '<td>' +
+        '<button class="btn btn-sm" onclick="ebViewTopic(\'' + escH(r.subject).replace(/'/g,"\\'") + '\',\'' + escH(r.topic).replace(/'/g,"\\'") + '\')">View</button> ' +
+        '<button class="btn btn-d btn-sm" onclick="ebDeleteTopicByName(\'' + escH(r.subject).replace(/'/g,"\\'") + '\',\'' + escH(r.topic).replace(/'/g,"\\'") + '\')">🗑 Delete Topic</button>' +
+        '</td></tr>';
+    }).join('');
+  }, function() { tb.innerHTML = '<tr class="er"><td colspan="4">Failed to load — try Refresh again.</td></tr>'; });
+}
+
+function ebDeleteTopicByName(subject, topic) {
+  if (!confirm('Delete ALL questions in "' + topic + '" (' + subject + ')? This cannot be undone.')) return;
+  call('deleteEdurenaBankTopic', { subject: subject, topic: topic }, function() {
+    toast('success', 'Deleted "' + topic + '".');
+    if (ebCurrentTopic && ebCurrentTopic.subject === subject && ebCurrentTopic.topic === topic) {
+      document.getElementById('eb-qlist-card').style.display = 'none';
+    }
+    ebLoadTopics();
+  });
+}
+
+function ebViewTopic(subject, topic) {
+  ebCurrentTopic = { subject: subject, topic: topic };
+  document.getElementById('eb-qlist-title').textContent = subject + ' — ' + topic;
+  document.getElementById('eb-qlist-card').style.display = 'block';
+  document.getElementById('eb-qlist-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var tb = document.querySelector('#eb-qlist-table tbody');
+  tb.innerHTML = '<tr class="er"><td colspan="5">Loading…</td></tr>';
+  call('getEdurenaBankQuestions', { subject: subject, topic: topic }, function(qs) {
+    ebQuestionsCache = qs;
+    if (!qs.length) { tb.innerHTML = '<tr class="er"><td colspan="5">No questions found.</td></tr>'; return; }
+    tb.innerHTML = qs.map(function(q, i) {
+      var preview = q.question.length > 90 ? q.question.slice(0, 90) + '…' : q.question;
+      return '<tr><td>' + (i + 1) + '</td><td>' + escH(q.type) + '</td><td>' + escH(q.difficulty) + '</td><td>' + escH(preview) + '</td>' +
+        '<td>' +
+        '<button class="btn btn-sm" onclick="ebOpenEdit(\'' + q.id + '\')">Edit</button> ' +
+        '<button class="btn btn-d btn-sm" onclick="ebDeleteOne(\'' + q.id + '\')">Del</button>' +
+        '</td></tr>';
+    }).join('');
+  }, function() { tb.innerHTML = '<tr class="er"><td colspan="5">Failed to load.</td></tr>'; });
+}
+
+// Called by the "Delete Entire Topic" button inside the open question-list card
+function ebDeleteTopic() {
+  if (!ebCurrentTopic) return;
+  ebDeleteTopicByName(ebCurrentTopic.subject, ebCurrentTopic.topic);
+}
+
+function ebDeleteOne(id) {
+  if (!confirm('Delete this question? This cannot be undone.')) return;
+  call('deleteQuestion', { questionId: id }, function() {
+    toast('success', 'Question deleted.');
+    if (ebCurrentTopic) ebViewTopic(ebCurrentTopic.subject, ebCurrentTopic.topic);
+    ebLoadTopics();
+  });
+}
+
+function ebOpenEdit(id) {
+  var q = ebQuestionsCache.find(function(x) { return x.id === id; });
+  if (!q) return;
+  document.getElementById('ebq-mo').dataset.id = id;
+  document.getElementById('ebq-subject').value = q.subject;
+  document.getElementById('ebq-topic').value = q.topic;
+  document.getElementById('ebq-difficulty').value = q.difficulty || 'medium';
+  document.getElementById('ebq-type').value = q.type;
+  document.getElementById('ebq-points').value = q.points || 1;
+  document.getElementById('ebq-tier').value = q.tier || 'free';
+  document.getElementById('ebq-question').value = q.question;
+  document.getElementById('ebq-correct').value = q.correctAnswer;
+  document.getElementById('ebq-explanation').value = q.explanation;
+  ebRenderOptFields(q);
+  document.getElementById('ebq-mo').classList.add('on');
+}
+
+// MCQ gets 4 option inputs; TF/SHORT don't need them (correct answer is typed directly above)
+function ebRenderOptFields(q) {
+  var type = document.getElementById('ebq-type').value;
+  var wrap = document.getElementById('ebq-opt-wrap');
+  if (type !== 'MCQ') { wrap.innerHTML = ''; return; }
+  var vals = q ? [q.optionA, q.optionB, q.optionC, q.optionD] : ['', '', '', ''];
+  wrap.innerHTML = '<div class="fgrid">' +
+    ['A', 'B', 'C', 'D'].map(function(L, i) {
+      return '<div class="fg"><label>Option ' + L + '</label><input id="ebq-opt' + L + '" value="' + escH(vals[i] || '') + '"></div>';
+    }).join('') + '</div>';
+}
+
+function ebSaveQuestion() {
+  var id = document.getElementById('ebq-mo').dataset.id;
+  var type = document.getElementById('ebq-type').value;
+  var payload = {
+    questionId: id,
+    subject: document.getElementById('ebq-subject').value.trim(),
+    topic: document.getElementById('ebq-topic').value.trim(),
+    difficulty: document.getElementById('ebq-difficulty').value,
+    type: type,
+    points: document.getElementById('ebq-points').value,
+    tier: document.getElementById('ebq-tier').value,
+    question: document.getElementById('ebq-question').value.trim(),
+    correctAnswer: document.getElementById('ebq-correct').value.trim(),
+    explanation: document.getElementById('ebq-explanation').value.trim()
+  };
+  if (type === 'MCQ') {
+    payload.optionA = document.getElementById('ebq-optA').value.trim();
+    payload.optionB = document.getElementById('ebq-optB').value.trim();
+    payload.optionC = document.getElementById('ebq-optC').value.trim();
+    payload.optionD = document.getElementById('ebq-optD').value.trim();
+  }
+  if (!payload.question || !payload.correctAnswer) { toast('error', 'Question and correct answer are required.'); return; }
+  call('updateEdurenaBankQuestion', payload, function() {
+    toast('success', 'Question updated.');
+    closeMo('ebq-mo');
+    if (ebCurrentTopic) ebViewTopic(ebCurrentTopic.subject, ebCurrentTopic.topic);
+  });
 }
 
 // ── FLAGGED QUESTIONS ───────────────────────────────────────────
