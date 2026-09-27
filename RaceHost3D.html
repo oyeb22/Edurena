@@ -67,6 +67,7 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
 <div id="hud">
   <div class="hud-brand">Kart Race 3D</div>
   <div class="hud-code" id="hud-code">----</div>
+  <div id="hud-err" style="display:none;color:#ff6680;font-size:12px;font-weight:600;margin-bottom:8px;line-height:1.5"></div>
   <div class="hud-h">Standings</div>
   <div id="standings"></div>
   <div class="hud-h">Camera</div>
@@ -124,7 +125,12 @@ function evList(id) { var e = events[id] || {}; return Object.keys(e).map(functi
 R.loadUnity({ canvas: el('unity'), buildUrl: './assets/race3d/Build', quality: P.get('q') || 'auto',
   onProgress: function (p) { el('w-load').textContent = 'Loading the 3D track… ' + Math.round(p * 100) + '%'; }, onStatus: function () {} })
   .then(function (h) { view = h; viewReady = true; h.setHud(false); el('w-load').textContent = '3D track ready'; sendSnapshot(); })
-  .catch(function (e) { el('w-err').textContent = '3D view could not start: ' + (e && e.message || e); });
+  .catch(function (e) {
+    // shown here AND in the sidebar, because the wait screen (and this message with it) gets hidden once the race starts
+    var msg = '3D view could not start: ' + (e && e.message || e) + '. Check that assets/race3d/Build/ was uploaded.';
+    el('w-err').textContent = msg;
+    var he = el('hud-err'); he.textContent = msg; he.style.display = 'block';
+  });
 
 function sendSnapshot() { if (viewReady) view.applySnapshot(R.snapshot(cfg, state && state.startedAt, offsetMs, players, events)); }
 function queueSnapshot() { if (snapTimer) return; snapTimer = setTimeout(function () { snapTimer = null; sendSnapshot(); }, 200); }

@@ -503,6 +503,8 @@ var SHOOTOUT_URL      = 'https://edurena.online/PenaltyShootout.html';
 var SHOOTOUT_HOST_URL = 'https://edurena.online/PenaltyShootoutHost.html';
 var TOWER_URL         = 'https://edurena.online/TowerDefense.html';
 var TOWER_HOST_URL    = 'https://edurena.online/TowerDefenseHost.html';
+var RACE3D_URL        = 'https://edurena.online/Race3D.html';
+var RACE3D_HOST_URL   = 'https://edurena.online/RaceHost3D.html';
 
 // If DASH resolves after this script, pick up the real URLs
 if (window.DASH && DASH.ready) {
@@ -732,7 +734,7 @@ function _modeInfo(m){
   switch(m){
     case 'race':     return {url:RACE_URL,     fbPath:'race',     tag:'race',     label:'🏁 Race',              hostUrl:RACE_HOST_URL,     hostLabel:'Open Projector View'};
     // same race engine/Firebase path as 'race' — only the join/projector pages differ (Unity 3D view). Testing only.
-    case 'race3d':   return {url:RACE_URL.replace('Race.html','Race3D.html'), fbPath:'race', tag:'race', label:'🏁 Race (3D test)', hostUrl:RACE_HOST_URL.replace('RaceHost.html','RaceHost3D.html'), hostLabel:'Open Projector View (3D)'};
+    case 'race3d':   return {url:RACE3D_URL,   fbPath:'race',     tag:'race',     label:'🏁 Race (3D test)',    hostUrl:RACE3D_HOST_URL,   hostLabel:'Open Projector View (3D)'};
     case 'puzzle':   return {url:PUZZLE_URL,   fbPath:'puzzle',   tag:'puzzle',   label:'🧩 Puzzle Race',        hostUrl:PUZZLE_HOST_URL,   hostLabel:'Open Projector View'};
     case 'tower':    return {url:TOWER_URL,    fbPath:'tower',    tag:'tower',    label:'🏰 Tower Defense',      hostUrl:TOWER_HOST_URL,    hostLabel:'Open Projector (required to run the game)'};
     case 'shootout': return {url:SHOOTOUT_URL, fbPath:'shootout', tag:'shootout', label:'⚽ Penalty Shootout',   hostUrl:SHOOTOUT_HOST_URL, hostLabel:'Open Projector (controls live there)'};
