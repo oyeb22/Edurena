@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Kart Race 3D — Edurena Racing</title>
+  <title>Edurena Rally — Edurena Racing</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#050810;--panel:#0d1117;--bdr:#1a2035;--txt:#e8edf5;--muted:#5a6a8a;--acc:#00d4ff;--grn:#00ff88;--red:#ff3355;--yel:#ffcc00;--pur:#bf5fff;--f:'Plus Jakarta Sans',system-ui,sans-serif;--display:'Orbitron',monospace}
@@ -32,6 +32,8 @@
     .join-btn{width:100%;padding:14px;min-height:52px;background:linear-gradient(135deg,#0055aa,#5500cc);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--display);letter-spacing:1px;cursor:pointer;touch-action:manipulation;box-shadow:0 4px 24px rgba(0,100,220,.35)}
     .join-btn:disabled{opacity:.5;cursor:not-allowed}
     .join-err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+    .car-credit{position:relative;z-index:1;max-width:360px;margin-top:22px;font-size:10px;line-height:1.6;color:var(--muted);text-align:center}
+    .car-credit a{color:var(--muted)}
     .lobby-code{font-family:var(--display);font-size:clamp(32px,8vw,56px);font-weight:900;letter-spacing:8px;color:var(--acc);margin:8px 0;text-shadow:0 0 30px rgba(0,212,255,.5);position:relative;z-index:1}
     .lobby-count{font-family:var(--display);font-size:44px;font-weight:900;color:var(--grn);margin-top:14px;text-shadow:0 0 20px rgba(0,255,136,.4);position:relative;z-index:1}
     .lobby-lbl{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 16px;position:relative;z-index:1}
@@ -108,7 +110,7 @@
 <div class="screen on" id="s-fatal"><h2 id="fatal-title">LOADING&hellip;</h2><p id="fatal-msg">Please wait a moment.</p></div>
 
 <div class="screen" id="s-join">
-  <div class="brand-title">KART RACE 3D</div>
+  <div class="brand-title">EDURENA RALLY</div>
   <div class="brand-sub">Edurena Racing &nbsp;&#x25BA;&nbsp; Answer Fast. Drive Faster.</div>
   <div class="join-card">
     <div class="field-lbl">Race Code</div>
@@ -118,10 +120,11 @@
     <button class="join-btn" id="joinBtn">&#x25B6;&nbsp; ENTER RACE</button>
     <div class="join-err" id="joinErr"></div>
   </div>
+  <div class="car-credit">Car models: "Generic passenger car pack" by Comrade1280 and "Jaguar/Daimler XJ X308 Pack" by Fishboe, via Sketchfab, licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</div>
 </div>
 
 <div class="screen" id="s-lobby">
-  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:3px">KART RACE 3D</div>
+  <div class="brand-title" style="font-size:clamp(14px,4vw,20px);margin-bottom:3px">EDURENA RALLY</div>
   <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;position:relative;z-index:1">STARTING GRID</div>
   <div style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;position:relative;z-index:1">RACE CODE</div>
   <div class="lobby-code" id="lby-code">------</div>
@@ -415,7 +418,10 @@ function onStatus(s) {
     lastProgressWrite = now;
     db.ref('race/' + raceId + '/players/' + playerId).update({ progress: Math.max(0, Math.min(1, (s.distance || 0) / (s.raceLength || cfg.raceLength))), updatedAt: firebase.database.ServerValue.TIMESTAMP });
   }
-  if (s.finished && !myFinished) onFinished(s);
+  // Unity flags "finished" purely from distance vs raceLength, which can happen before a fast/lucky
+  // player has gone through every question. Hold the finish (car just idles at the line) until their
+  // question queue is actually exhausted too, so nobody loses their last question to an early finish line.
+  if (s.finished && !myFinished && qPos >= qOrder.length) onFinished(s);
 }
 function rankNow() {
   var mine = R.finishTime(cfg, evList(playerId));

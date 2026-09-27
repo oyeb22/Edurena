@@ -1828,41 +1828,6 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
   </div>
 </div>
 
-<div class="mo" id="live-mo">
-  <div class="mbox" style="width:500px;max-width:96vw">
-    <div class="mh">
-      <div>
-        <span class="mh-title">Launch Live Quiz</span>
-        <div style="margin-top:3px;font-size:11px;color:var(--success);font-weight:500"><span class="live-dot"></span>Live Session</div>
-      </div>
-      <button class="mc" onclick="closeMo('live-mo')">✕</button>
-    </div>
-    <div class="mb">
-      <p style="font-size:12.5px;color:var(--text2);margin-bottom:16px;line-height:1.6">Students join with a room code and wait in the lobby until you start.</p>
-      <div style="display:none" id="live-room-display">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;margin-bottom:16px">
-          <div style="font-size:11px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:500">Room Code</div>
-          <div style="font-family:var(--mono);font-size:28px;font-weight:600;letter-spacing:6px" id="live-room-code">———</div>
-          <div style="font-size:11.5px;color:var(--text2);margin-top:6px">Share this with students</div>
-        </div>
-      </div>
-      <div id="live-config-section">
-        <div class="fgrid" style="margin-bottom:12px">
-          <div class="fg"><label>Exam Code</label><input type="text" id="live-exam-code" readonly style="background:var(--surface2);cursor:default"></div>
-          <div class="fg"><label>Seconds per Question</label><input type="number" id="live-time-per-q" value="20" min="5" max="120"></div>
-        </div>
-        <div class="tr-row" style="margin-bottom:14px">
-          <div><div class="tl">Save results to gradebook</div></div>
-          <div class="tog on" id="tog-save-results" onclick="this.classList.toggle('on')"></div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap">
-        <button class="btn" onclick="closeMo('live-mo')">Cancel</button>
-        <button class="btn btn-live" onclick="goLiveQuiz()">Open Live Host →</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div id="photo-lb" oncontextmenu="return false" style="user-select:none;-webkit-user-select:none">
   <button id="photo-lb-close" onclick="closeLightbox()">✕</button>
@@ -2358,7 +2323,7 @@ function renderRecentTable() {
     return;
   }
   tb.innerHTML=recent.map(function(q){
-    return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>'+sbadge(q)+'</td><td><div class="t-act-group"><button class="btn btn-sm" onclick="viewDetails(\''+esc(q.examCode)+'\')">Results</button><button class="btn btn-live btn-sm" onclick="openLiveMo(\''+esc(q.examCode)+'\')">⚡</button></div></td></tr>';
+    return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>'+sbadge(q)+'</td><td><div class="t-act-group"><button class="btn btn-sm" onclick="viewDetails(\''+esc(q.examCode)+'\')">Results</button><button class="btn btn-live btn-sm" onclick="goLive(\''+esc(q.examCode)+'\')">⚡</button></div></td></tr>';
   }).join('');
 }
 
@@ -2370,7 +2335,7 @@ function renderManageTable() {
   tb.innerHTML=allQuizzes.map(function(q){
     var ec=q.examCode;
     return '<tr><td style="font-weight:500">'+esc(q.title)+'</td><td><code>'+esc(ec)+'</code></td><td>'+esc(q.classId)+'</td><td>Wk '+esc(q.week)+'</td><td>'+esc(q.duration)+'m</td><td>'+sbadge(q)+'</td>' +
-      '<td class="fx"><button class="btn btn-sm" onclick="viewDetails(\''+esc(ec)+'\')">Results</button> <button class="btn btn-live btn-sm" onclick="openLiveMo(\''+esc(ec)+'\')">⚡ Live</button> <button class="btn btn-d btn-sm" onclick="doDelQuiz(\''+esc(ec)+'\')">Del</button></td></tr>';
+      '<td class="fx"><button class="btn btn-sm" onclick="viewDetails(\''+esc(ec)+'\')">Results</button> <button class="btn btn-live btn-sm" onclick="goLive(\''+esc(ec)+'\')">⚡ Live</button> <button class="btn btn-d btn-sm" onclick="doDelQuiz(\''+esc(ec)+'\')">Del</button></td></tr>';
   }).join('');
 }
 function sbadge(q) {
@@ -2383,18 +2348,11 @@ function doDelQuiz(code) {
 }
 
 /* ── Live ── */
-function openLiveMo(examCode) {
-  _liveExamCode=examCode;
-  var el=document.getElementById('live-exam-code'); if(el) el.value=examCode;
-  document.getElementById('live-room-display').style.display='none';
-  document.getElementById('live-config-section').style.display='block';
-  document.getElementById('live-mo').classList.add('on');
-}
-function goLiveQuiz() {
-  var timePerQ=parseInt(document.getElementById('live-time-per-q').value)||20;
-  var saveRes=document.getElementById('tog-save-results').classList.contains('on');
-  var url=DASH.pageUrl('LiveHost.html')+'&examCode='+encodeURIComponent(_liveExamCode)+'&timePerQ='+timePerQ+'&saveResults='+saveRes;
-  window.open(url,'_blank'); closeMo('live-mo');
+// Straight to LiveHost with the quiz already chosen — no timer/gradebook prompt first
+// (teachers didn't expect it and it made the game-mode click on LiveHost look unresponsive).
+function goLive(examCode) {
+  var url=DASH.pageUrl('LiveHost.html')+'&examCode='+encodeURIComponent(examCode)+'&timePerQ=20&saveResults=true';
+  window.open(url,'_blank');
 }
 
 /* ── Archived ── */

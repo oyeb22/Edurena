@@ -285,11 +285,11 @@
   <div class="screen" id="s-setup">
     <div class="setup-hdr">
       <h1>&#x26A1; Launch Live Game</h1>
-      <p>Pick a mode, select a quiz, then share the code with students</p>
+      <p id="setup-sub">Pick a mode, select a quiz, then share the code with students</p>
     </div>
     <div class="card">
       <div class="card-ttl">Game Mode</div>
-      <div class="mode-grid">
+      <div class="mode-grid" id="mode-grid">
         <button class="mode-card kahoot sel" id="mc-kahoot">
           <span class="mc-icon">&#x1F3AF;</span>
           <span class="mc-title">Live Quiz</span>
@@ -297,13 +297,8 @@
         </button>
         <button class="mode-card race" id="mc-race">
           <span class="mc-icon">&#x1F3CE;&#xFE0F;</span>
-          <span class="mc-title">Race</span>
-          <span class="mc-desc">Self-paced &middot; faster correct answers = faster car &middot; first to the line wins</span>
-        </button>
-        <button class="mode-card race" id="mc-race3d">
-          <span class="mc-icon">&#x1F3AE;</span>
-          <span class="mc-title">Race (3D test)</span>
-          <span class="mc-desc">Same as Race, but joins/projects into the new Unity 3D view &mdash; for testing only</span>
+          <span class="mc-title">Edurena Rally</span>
+          <span class="mc-desc">Self-paced 3D race &middot; faster correct answers = faster car &middot; first to the line wins</span>
         </button>
         <button class="mode-card puzzle" id="mc-puzzle">
           <span class="mc-icon">&#x1F9E9;</span>
@@ -327,7 +322,7 @@
         </button>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="quiz-card">
       <div class="card-ttl">Quiz</div>
       <div class="fg">
         <label>Select Exam / Quiz</label>
@@ -518,7 +513,7 @@ if (window.DASH && DASH.ready) {
 /* Race-engine modes reuse createRaceSession/getRaceQuestions/validateRaceAnswer
    verbatim (async per-student question stream, no contention). Everything
    else (kahoot, whack, shootout) uses the synced createLiveQuizSession engine. */
-var RACE_ENGINE_MODES   = {race:1, race3d:1, puzzle:1, tower:1};
+var RACE_ENGINE_MODES   = {race:1, puzzle:1, tower:1};
 var SYNCED_ENGINE_PATH  = {kahoot:'livequiz', whack:'whack', shootout:'shootout'};
 
 var TOKEN       = '';
@@ -580,6 +575,11 @@ try{
   khDb  =firebase.database(eK||firebase.initializeApp(sharedCfg,'kh'));
 }catch(e){console.error('[Edurena] Firebase init failed:',e.message);}
 
+// Set by TeacherDashboard's "⚡ Live" button, which already knows which quiz — skip the
+// redundant re-picker here so clicking a game mode launches straight into that quiz.
+var URL_EXAM_CODE=(function(){try{return new URLSearchParams(location.search).get('examCode')||'';}catch(e){return '';}})();
+var quizReady=!URL_EXAM_CODE;
+
 window.addEventListener('load',function(){
   try{TOKEN=localStorage.getItem('qf_token')||'';}catch(_){}
   if(!TOKEN){show('s-auth');return;}
@@ -591,26 +591,45 @@ window.addEventListener('load',function(){
 
 el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
-var MODE_CARD_IDS=['kahoot','race','race3d','puzzle','whack','shootout','tower'];
+var MODE_CARD_IDS=['kahoot','race','puzzle','whack','shootout','tower'];
 function wireModeCards(){
+  if(URL_EXAM_CODE) el('mode-grid').style.opacity='.5';
   MODE_CARD_IDS.forEach(function(m){
     el('mc-'+m).addEventListener('click',function(){selectMode(m);});
   });
 }
+function applyLockedQuiz(title){
+  el('quiz-card').style.display='none';
+  el('launchBtn').style.display='none';
+  el('mode-grid').style.opacity='';
+  quizReady=true;
+  el('setup-sub').textContent='Pick a mode to launch "'+title+'"';
+}
 function selectMode(m){
+  if(URL_EXAM_CODE&&!quizReady) return;   // quiz list still loading
   mode=m;
   MODE_CARD_IDS.forEach(function(c){ el('mc-'+c).classList.toggle('sel',c===m); });
   el('time-row').style.display=RACE_ENGINE_MODES[m]?'none':'block';
+  if(URL_EXAM_CODE) doLaunch();
 }
 
 function loadQuizzes(){
   post('getAllQuizzes',{token:TOKEN},function(e,r){
     var sel=el('sel-quiz');
-    if(e||!r||r.status!=='success'){sel.innerHTML='<option value="">Failed to load quizzes</option>';return;}
+    if(e||!r||r.status!=='success'){
+      sel.innerHTML='<option value="">Failed to load quizzes</option>';
+      if(URL_EXAM_CODE){quizReady=true;showErr('Could not load your quizzes. Refresh and try again.');}
+      return;
+    }
     var active=(r.data||[]).filter(function(q){return q.status==='active';});
     sel.innerHTML='<option value="">— Select a quiz —</option>'+active.map(function(q){
       return '<option value="'+q.examCode+'">'+q.title+' ('+q.examCode+') — '+q.classId+'</option>';
     }).join('');
+    if(URL_EXAM_CODE){
+      var picked=active.filter(function(q){return q.examCode===URL_EXAM_CODE;})[0];
+      if(picked){ sel.value=URL_EXAM_CODE; applyLockedQuiz(picked.title); }
+      else { quizReady=true; el('mode-grid').style.opacity=''; showErr('Quiz '+URL_EXAM_CODE+' was not found or is not active.'); }
+    }
   });
 }
 
@@ -732,9 +751,7 @@ function doLaunch(){
 
 function _modeInfo(m){
   switch(m){
-    case 'race':     return {url:RACE_URL,     fbPath:'race',     tag:'race',     label:'🏁 Race',              hostUrl:RACE_HOST_URL,     hostLabel:'Open Projector View'};
-    // same race engine/Firebase path as 'race' — only the join/projector pages differ (Unity 3D view). Testing only.
-    case 'race3d':   return {url:RACE3D_URL,   fbPath:'race',     tag:'race',     label:'🏁 Race (3D test)',    hostUrl:RACE3D_HOST_URL,   hostLabel:'Open Projector View (3D)'};
+    case 'race':     return {url:RACE3D_URL,   fbPath:'race',     tag:'race',     label:'🏁 Edurena Rally',      hostUrl:RACE3D_HOST_URL,   hostLabel:'Open Projector View'};
     case 'puzzle':   return {url:PUZZLE_URL,   fbPath:'puzzle',   tag:'puzzle',   label:'🧩 Puzzle Race',        hostUrl:PUZZLE_HOST_URL,   hostLabel:'Open Projector View'};
     case 'tower':    return {url:TOWER_URL,    fbPath:'tower',    tag:'tower',    label:'🏰 Tower Defense',      hostUrl:TOWER_HOST_URL,    hostLabel:'Open Projector (required to run the game)'};
     case 'shootout': return {url:SHOOTOUT_URL, fbPath:'shootout', tag:'shootout', label:'⚽ Penalty Shootout',   hostUrl:SHOOTOUT_HOST_URL, hostLabel:'Open Projector (controls live there)'};
@@ -746,9 +763,6 @@ function _modeInfo(m){
 function showLobby(){
   var info=_modeInfo(mode);
   _joinUrl=info.url+'?script='+encodeURIComponent(SCRIPT_URL);
-  // "Race (3D test)" exists to test whether the 3D view actually works on a device — force the real
-  // attempt instead of letting Race3D.html's conservative device check quietly send it to the 2D race.
-  if(mode==='race3d') _joinUrl+='&v=3d';
   el('lby-tag').className  ='lobby-mode-tag '+info.tag;
   el('lby-tag').textContent=info.label;
   el('lby-code').textContent=sessionCode;
@@ -772,9 +786,14 @@ function doStart(){
        shootout: PenaltyShootoutHost.html owns all round logic from here —
        this write just signals "lobby is over, go to the projector." */
     var info=_modeInfo(mode);
-    db.ref(info.fbPath+'/'+sessionCode+'/state').set({
-      phase:'started',
-      startedAt:firebase.database.ServerValue.TIMESTAMP
+    // race reuses the same fbPath across repeated Start presses in one lobby; wipe any
+    // boost events left over from a previous attempt so restarted races don't inherit stale ghosts.
+    var _clearEvents=(mode==='race')?db.ref(info.fbPath+'/'+sessionCode+'/events').remove():Promise.resolve();
+    _clearEvents.then(function(){
+      return db.ref(info.fbPath+'/'+sessionCode+'/state').set({
+        phase:'started',
+        startedAt:firebase.database.ServerValue.TIMESTAMP
+      });
     })
       .then(function(){
         btn.disabled=false;btn.textContent='▶ Start Game';
@@ -823,7 +842,7 @@ function doStart(){
 ═══════════════════════════════════ */
 function setRaceLiveLabels(m){
   var info=_modeInfo(m);
-  var titles={race:'🏁 Race is Live!',race3d:'🏁 Race (3D test) is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!'};
+  var titles={race:'🏁 Edurena Rally is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!'};
   el('race-hdr').textContent=titles[m]||'Game is Live!';
   el('raceProjBtn').textContent='\u{1F5A5} '+(info.hostLabel||'Open Projector View');
 }

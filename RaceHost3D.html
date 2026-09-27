@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kart Race 3D — Edurena Projector</title>
+<title>Edurena Rally — Edurena Projector</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050810;--panel:#0a0d1a;--bdr:#1a2035;--txt:#e8edf5;--muted:#5a6a8a;--acc:#00d4ff;--grn:#00ff88;--red:#ff3355;--yel:#ffcc00;--f:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'Orbitron',monospace}
@@ -43,6 +43,8 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
 .w-status{font-size:14px;color:var(--muted);letter-spacing:1px;margin-top:8px}
 .w-load{font-size:12px;color:var(--muted);margin-top:16px}
 .w-err{color:var(--red);font-size:14px;margin-top:10px}
+.w-credit{max-width:420px;margin:18px auto 0;font-size:10px;line-height:1.6;color:var(--muted);text-align:center}
+.w-credit a{color:var(--muted)}
 #cd{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:40;background:rgba(5,8,16,.35);pointer-events:none}
 #cd.show{display:flex}
 #cd-num{font-family:var(--mono);font-size:clamp(120px,24vw,260px);font-weight:900;color:#fff;text-shadow:0 0 60px var(--acc),0 0 120px #bf5fff}
@@ -65,7 +67,7 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
 <div id="stage"><canvas id="unity" tabindex="-1"></canvas></div>
 
 <div id="hud">
-  <div class="hud-brand">Kart Race 3D</div>
+  <div class="hud-brand">Edurena Rally</div>
   <div class="hud-code" id="hud-code">----</div>
   <div id="hud-err" style="display:none;color:#ff6680;font-size:12px;font-weight:600;margin-bottom:8px;line-height:1.5"></div>
   <div class="hud-h">Standings</div>
@@ -77,7 +79,7 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
 
 <div class="oscreen on" id="s-wait">
   <div class="wait-card">
-    <div class="w-brand">&#x1F3CE; Kart Race 3D &mdash; Projector View</div>
+    <div class="w-brand">&#x1F3CE; Edurena Rally &mdash; Projector View</div>
     <div class="w-lbl">Race Code</div>
     <div class="w-code" id="w-code">----</div>
     <div class="w-count-big" id="w-count">0</div>
@@ -86,6 +88,7 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;color:var(--txt
     <div class="w-status" id="w-status">Waiting for the race director to press Start&hellip;</div>
     <div class="w-load" id="w-load">Loading the 3D track&hellip; 0%</div>
     <div class="w-err" id="w-err"></div>
+    <div class="w-credit">Car models: "Generic passenger car pack" by Comrade1280 and "Jaguar/Daimler XJ X308 Pack" by Fishboe, via Sketchfab, licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</div>
   </div>
 </div>
 
