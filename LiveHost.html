@@ -315,6 +315,11 @@
           <span class="mc-title">Penalty Shootout</span>
           <span class="mc-desc">Random kicker/keeper pairs &middot; fastest correct answer wins the duel</span>
         </button>
+        <button class="mode-card shootout" id="mc-shootout3d">
+          <span class="mc-icon">&#x1F3AE;</span>
+          <span class="mc-title">Penalty Shootout (3D test)</span>
+          <span class="mc-desc">Same as Penalty Shootout, but joins/projects into the new Unity 3D view &mdash; for testing only</span>
+        </button>
         <button class="mode-card tower" id="mc-tower">
           <span class="mc-icon">&#x1F3F0;</span>
           <span class="mc-title">Tower Defense</span>
@@ -516,7 +521,7 @@ if (window.DASH && DASH.ready) {
    verbatim (async per-student question stream, no contention). Everything
    else (kahoot, whack, shootout) uses the synced createLiveQuizSession engine. */
 var RACE_ENGINE_MODES   = {race:1, puzzle:1, tower:1};
-var SYNCED_ENGINE_PATH  = {kahoot:'livequiz', whack:'whack', shootout:'shootout'};
+var SYNCED_ENGINE_PATH  = {kahoot:'livequiz', whack:'whack', shootout:'shootout', shootout3d:'shootout'};
 
 var TOKEN       = '';
 var mode        = 'kahoot';
@@ -593,7 +598,7 @@ window.addEventListener('load',function(){
 
 el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
-var MODE_CARD_IDS=['kahoot','race','puzzle','whack','shootout','tower'];
+var MODE_CARD_IDS=['kahoot','race','puzzle','whack','shootout','shootout3d','tower'];
 function wireModeCards(){
   if(URL_EXAM_CODE) el('mode-grid').style.opacity='.5';
   MODE_CARD_IDS.forEach(function(m){
@@ -767,6 +772,9 @@ function _modeInfo(m){
 function showLobby(){
   var info=_modeInfo(mode);
   _joinUrl=info.url+'?script='+encodeURIComponent(SCRIPT_URL);
+  // "Penalty Shootout (3D test)" exists to test whether the 3D view actually works on a device —
+  // force the real attempt instead of letting the page's conservative device check quietly fall back to 2D.
+  if(mode==='shootout3d') _joinUrl+='&v=3d';
   el('lby-tag').className  ='lobby-mode-tag '+info.tag;
   el('lby-tag').textContent=info.label;
   el('lby-code').textContent=sessionCode;
@@ -785,9 +793,9 @@ function doStart(){
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Starting&hellip;';
   detachPlayersListener();
 
-  if(RACE_ENGINE_MODES[mode]||mode==='shootout'){
+  if(RACE_ENGINE_MODES[mode]||mode==='shootout'||mode==='shootout3d'){
     /* race/puzzle/tower: students self-pace immediately once phase='started'.
-       shootout: PenaltyShootoutHost.html owns all round logic from here —
+       shootout/shootout3d: PenaltyShootoutHost(3D).html owns all round logic from here —
        this write just signals "lobby is over, go to the projector." */
     var info=_modeInfo(mode);
     // race reuses the same fbPath across repeated Start presses in one lobby; wipe any
@@ -846,7 +854,7 @@ function doStart(){
 ═══════════════════════════════════ */
 function setRaceLiveLabels(m){
   var info=_modeInfo(m);
-  var titles={race:'🏁 Edurena Rally is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!'};
+  var titles={race:'🏁 Edurena Rally is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!',shootout3d:'⚽ Penalty Shootout (3D test) is Live!'};
   el('race-hdr').textContent=titles[m]||'Game is Live!';
   el('raceProjBtn').textContent='\u{1F5A5} '+(info.hostLabel||'Open Projector View');
 }
@@ -879,7 +887,7 @@ function renderLiveRows(m,players){
         +'<div class="rr-name">'+esc(p.name)+' ('+esc(p.side||'?')+')</div><div class="rr-pct">'+(p.correct||0)+' hits</div></div>';
     }).join('');
   }
-  if(m==='shootout'){
+  if(m==='shootout'||m==='shootout3d'){
     var sorted3=players.slice().sort(function(a,b){return ((b.goals||0)+(b.saves||0))-((a.goals||0)+(a.saves||0));});
     return sorted3.map(function(p,i){
       return '<div class="race-row"><div class="rr-rank">'+(i+1)+'</div>'
