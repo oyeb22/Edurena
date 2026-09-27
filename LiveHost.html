@@ -300,6 +300,11 @@
           <span class="mc-title">Race</span>
           <span class="mc-desc">Self-paced &middot; faster correct answers = faster car &middot; first to the line wins</span>
         </button>
+        <button class="mode-card race" id="mc-race3d">
+          <span class="mc-icon">&#x1F3AE;</span>
+          <span class="mc-title">Race (3D test)</span>
+          <span class="mc-desc">Same as Race, but joins/projects into the new Unity 3D view &mdash; for testing only</span>
+        </button>
         <button class="mode-card puzzle" id="mc-puzzle">
           <span class="mc-icon">&#x1F9E9;</span>
           <span class="mc-title">Puzzle Race</span>
@@ -511,7 +516,7 @@ if (window.DASH && DASH.ready) {
 /* Race-engine modes reuse createRaceSession/getRaceQuestions/validateRaceAnswer
    verbatim (async per-student question stream, no contention). Everything
    else (kahoot, whack, shootout) uses the synced createLiveQuizSession engine. */
-var RACE_ENGINE_MODES   = {race:1, puzzle:1, tower:1};
+var RACE_ENGINE_MODES   = {race:1, race3d:1, puzzle:1, tower:1};
 var SYNCED_ENGINE_PATH  = {kahoot:'livequiz', whack:'whack', shootout:'shootout'};
 
 var TOKEN       = '';
@@ -584,7 +589,7 @@ window.addEventListener('load',function(){
 
 el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
-var MODE_CARD_IDS=['kahoot','race','puzzle','whack','shootout','tower'];
+var MODE_CARD_IDS=['kahoot','race','race3d','puzzle','whack','shootout','tower'];
 function wireModeCards(){
   MODE_CARD_IDS.forEach(function(m){
     el('mc-'+m).addEventListener('click',function(){selectMode(m);});
@@ -726,6 +731,8 @@ function doLaunch(){
 function _modeInfo(m){
   switch(m){
     case 'race':     return {url:RACE_URL,     fbPath:'race',     tag:'race',     label:'🏁 Race',              hostUrl:RACE_HOST_URL,     hostLabel:'Open Projector View'};
+    // same race engine/Firebase path as 'race' — only the join/projector pages differ (Unity 3D view). Testing only.
+    case 'race3d':   return {url:RACE_URL.replace('Race.html','Race3D.html'), fbPath:'race', tag:'race', label:'🏁 Race (3D test)', hostUrl:RACE_HOST_URL.replace('RaceHost.html','RaceHost3D.html'), hostLabel:'Open Projector View (3D)'};
     case 'puzzle':   return {url:PUZZLE_URL,   fbPath:'puzzle',   tag:'puzzle',   label:'🧩 Puzzle Race',        hostUrl:PUZZLE_HOST_URL,   hostLabel:'Open Projector View'};
     case 'tower':    return {url:TOWER_URL,    fbPath:'tower',    tag:'tower',    label:'🏰 Tower Defense',      hostUrl:TOWER_HOST_URL,    hostLabel:'Open Projector (required to run the game)'};
     case 'shootout': return {url:SHOOTOUT_URL, fbPath:'shootout', tag:'shootout', label:'⚽ Penalty Shootout',   hostUrl:SHOOTOUT_HOST_URL, hostLabel:'Open Projector (controls live there)'};
@@ -811,7 +818,7 @@ function doStart(){
 ═══════════════════════════════════ */
 function setRaceLiveLabels(m){
   var info=_modeInfo(m);
-  var titles={race:'🏁 Race is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!'};
+  var titles={race:'🏁 Race is Live!',race3d:'🏁 Race (3D test) is Live!',puzzle:'🧩 Puzzle Race is Live!',tower:'🏰 Tower Defense is Live!',shootout:'⚽ Penalty Shootout is Live!'};
   el('race-hdr').textContent=titles[m]||'Game is Live!';
   el('raceProjBtn').textContent='\u{1F5A5} '+(info.hostLabel||'Open Projector View');
 }
