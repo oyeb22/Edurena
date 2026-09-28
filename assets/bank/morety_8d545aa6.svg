@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="107.8,193 292.2,193 200,43" fill="#dbeafe" fill-opacity="0.6" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round"/><text x="200" y="214" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">22 cm</text><text x="260.2" y="115.4" text-anchor="middle" font-size="14" font-weight="700" fill="#dc2626">?</text><text x="139.8" y="115.4" text-anchor="middle" font-size="14" font-weight="700" fill="#dc2626">?</text><text x="200" y="244" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Perimeter = 64 cm</text>
+</svg>
