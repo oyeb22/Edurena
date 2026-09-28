@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="134.8,203 210.6,203 265.2,53" fill="#dbeafe" fill-opacity="0.6" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round"/><path d="M 154.8 203 A 20 20 0 0 0 147.9 187.9" fill="none" stroke="#2563eb" stroke-width="2"/><text x="180.3" y="187.3" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">49°</text><path d="M 217.4 184.2 A 20 20 0 0 0 190.6 203" fill="none" stroke="#2563eb" stroke-width="2"/><text x="191.7" y="181" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">110°</text><path d="M 252.1 68.1 A 20 20 0 0 0 258.4 71.8" fill="none" stroke="#2563eb" stroke-width="2"/><text x="239.8" y="101.1" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">21°</text>
+</svg>
