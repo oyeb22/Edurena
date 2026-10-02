@@ -102,16 +102,6 @@
     }
     .btn-challenge:hover { background:rgba(124,92,255,0.1); }
 
-    /* Race Challenge button — orange to match Edurena Rally's own brand identity */
-    .btn-race-challenge {
-      width:100%; padding:13px; background:transparent; border:1px solid #ff7a1a;
-      border-radius:10px; color:#ff7a1a; font-size:14px; font-weight:600;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
-      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
-    }
-    .btn-race-challenge:hover { background:rgba(255,122,26,0.1); }
-
     /* Competition Mode button — gold/trophy to match its own brand identity.
        Hidden by default: it only appears once a competition has actually
        been published for a date, not just as a permanently-visible button
@@ -242,9 +232,6 @@
     <button class="btn-challenge" onclick="openChallengeMode()">
       &#x26A1; Challenge Mode
     </button>
-    <button class="btn-race-challenge" onclick="openRaceChallengeMode()">
-      &#x1F3CE;&#xFE0F; Race Challenge
-    </button>
     <button class="btn-competition" onclick="openCompetitionMode()">
       &#x1F3C6; Competitions
     </button>
@@ -285,6 +272,10 @@
   <div class="panel" id="panel3">
     <div class="verified-badge">&#x1F393; Ready to begin your exam</div>
     <div id="examSummary" style="font-size:13px;color:#7c85a2;margin-bottom:20px;line-height:1.8;"></div>
+    <label id="botsToggleWrap" style="display:none;align-items:center;gap:8px;font-size:13px;color:#e2e8f0;margin-bottom:16px;cursor:pointer;user-select:none">
+      <input type="checkbox" id="botsToggle" style="width:16px;height:16px;accent-color:#FB923C">
+      &#x1F465; Practice with bots (3 friendly competitors join to make it feel like a real exam)
+    </label>
     <button class="btn" id="launchBtn" onclick="doLaunch()">Open Exam in New Tab &#x2192;</button>
     <div class="info" id="infoMsg"></div>
     <div class="error" id="errMsg3"></div>
@@ -306,7 +297,6 @@ var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
 var PRACTICE_URL  = 'https://edurena.online/TopicPractice.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 var RACE_URL      = 'https://edurena.online/Race3D.html';
-var RACE_CHALLENGE_URL = 'https://edurena.online/RaceChallenge.html';
 var SIMLAB_URL    = 'https://edurena.online/SimulationLab.html';
 
 function refreshFromDash() {
@@ -474,16 +464,6 @@ function openGame(mode) {
 function openChallengeMode() {
   whenReady(function(){
     var url = CHALLENGE_URL + (CHALLENGE_URL.indexOf('?') === -1 ? '?' : '&')
-            + 'script=' + encodeURIComponent(SCRIPT_URL);
-    window.open(url, '_blank');
-  });
-}
-
-// Race Challenge has no room code / teacher either — same standalone shape
-// as Challenge Mode, just routed to Edurena Rally instead of a quiz round.
-function openRaceChallengeMode() {
-  whenReady(function(){
-    var url = RACE_CHALLENGE_URL + (RACE_CHALLENGE_URL.indexOf('?') === -1 ? '?' : '&')
             + 'script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
   });
@@ -747,6 +727,15 @@ function openCompetitionById(competitionId) {
             + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
             + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
         }
+        var isRace = !!(_quizMeta && _quizMeta.quizType === 'race');
+        // Bot companions only make sense for a fixed-length exam — an adaptive
+        // quiz doesn't know its own question count in advance (see Exam.html's
+        // own BOTS.init() guard). A Race Challenge always has bots (no
+        // opt-in needed), so the checkbox is for every OTHER quiz type only.
+        var botsWrap = document.getElementById('botsToggleWrap');
+        if (botsWrap) botsWrap.style.display = (isRace || (_quizMeta && _quizMeta.quizType === 'adaptive')) ? 'none' : 'flex';
+        var launchBtn = document.getElementById('launchBtn');
+        if (launchBtn) launchBtn.textContent = isRace ? 'Start Race →' : 'Open Exam in New Tab →';
         setStep(3);
       })
       .catch(function(e) {
@@ -765,11 +754,14 @@ function openCompetitionById(competitionId) {
         showErr(3, 'Configuration error — please contact your administrator');
         return;
       }
+      if (_quizMeta && _quizMeta.quizType === 'race') { doLaunchRace(); return; }
 
+      var botsOn = (document.getElementById('botsToggle') || {}).checked;
       var examUrl = EXAM_PAGE_URL
         + '?email='  + encodeURIComponent(_email)
         + '&code='   + encodeURIComponent(_code)
-        + '&script=' + encodeURIComponent(SCRIPT_URL);
+        + '&script=' + encodeURIComponent(SCRIPT_URL)
+        + (botsOn ? '&bots=3' : '');
 
       var infoEl = document.getElementById('infoMsg');
       if (infoEl) {
@@ -782,6 +774,106 @@ function openCompetitionById(competitionId) {
 
       window.open(examUrl, '_blank');
     });
+  }
+
+  /* ════════════════ Race Challenge launch ════════════════
+     A Race Challenge exam code behaves like any other exam up to this
+     point (verify code, confirm profile) — only the final step differs:
+     instead of opening Exam.html, it spins up a fresh private race
+     (startRaceFromExamCode), fills it with bots written straight into the
+     race's own Firebase tree (same formula/division of labour as the old
+     Challenge Mode bot roster and Exam.html's own bot companions — never
+     server-side here, so no lobby/matchmaking round trip is needed), and
+     opens Race3D.html with &auto=1 so the race starts itself a few
+     seconds after the student joins. */
+  var RACE_BOT_IDENTITIES = [
+    { name:'Swift Fox',    school:'Greenfield Academy',           skillTier:'sharp',  accuracy:0.85 },
+    { name:'Quiz Whiz',    school:'Sunrise International School', skillTier:'sharp',  accuracy:0.85 },
+    { name:'Clever Cat',   school:'Hilltop Academy',              skillTier:'sharp',  accuracy:0.85 },
+    { name:'Brainy Bee',   school:'Maple Grove High',             skillTier:'steady', accuracy:0.65 },
+    { name:'Star Pupil',   school:'Riverside Secondary',          skillTier:'steady', accuracy:0.65 },
+    { name:'Ace Owl',      school:'Cedar Valley High',            skillTier:'steady', accuracy:0.65 },
+    { name:'Quick Quokka', school:'Northgate College',            skillTier:'casual', accuracy:0.45 },
+    { name:'Smart Cookie', school:'Lakeside Grammar School',      skillTier:'casual', accuracy:0.45 },
+    { name:'Bright Spark', school:'Brookside International',      skillTier:'casual', accuracy:0.45 }
+  ];
+  var RACE_BOT_COUNT = 3;
+  var RACE3D_URL = 'https://edurena.online/Race3D.html';
+  var _raceScriptsLoaded = false;
+
+  function loadScriptOnce(src) {
+    return new Promise(function(resolve, reject) {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+      var s = document.createElement('script');
+      s.src = src; s.onload = function(){ resolve(); }; s.onerror = function(){ reject(new Error('Failed to load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+  // Firebase + the race boost-formula constants only ever get fetched when
+  // a student actually opens a Race Challenge — every other visit to this
+  // page (the overwhelming majority) never loads them.
+  function ensureRaceScripts() {
+    if (_raceScriptsLoaded) return Promise.resolve();
+    return loadScriptOnce('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js')
+      .then(function(){ return loadScriptOnce('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js'); })
+      .then(function(){ return loadScriptOnce('./assets/race3d/raceCommon.js'); })
+      .then(function(){ _raceScriptsLoaded = true; });
+  }
+  function hashStr(s) {
+    var h = 1779033703 ^ s.length;
+    for (var i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    return function () { h = Math.imul(h ^ (h >>> 16), 2246822519); h = Math.imul(h ^ (h >>> 13), 3266489917); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+  }
+  // One boost event per question the bot "answers" — same formula Race3D/
+  // code.gs use for real players (RACE3D.configFor). A wrong answer just
+  // gets no event, exactly like a real player's miss.
+  function buildBotEventTimeline(raceId, botId, skill, totalQ) {
+    var raceCfg = RACE3D.configFor(totalQ);
+    var tierSpread = skill.skillTier === 'sharp' ? [2.2, 6.5] : skill.skillTier === 'steady' ? [3.2, 9] : [4.2, 11.5];
+    var rng = hashStr('racebot_' + raceId + '_' + botId);
+    var t = 2 + rng() * 2, ev = {};
+    for (var i = 0; i < totalQ; i++) {
+      var a = tierSpread[0] + rng() * (tierSpread[1] - tierSpread[0]);
+      t += 1 + a;
+      if (rng() < skill.accuracy) {
+        var boost = raceCfg.maxBoost * Math.max(raceCfg.minBoostFraction, 1 - a / raceCfg.refSeconds);
+        ev['e' + i] = { t: Math.round(t * 100) / 100, boost: Math.round(boost * 100) / 100 };
+      }
+    }
+    return ev;
+  }
+  function doLaunchRace() {
+    var infoEl = document.getElementById('infoMsg');
+    if (infoEl) { infoEl.innerHTML = '<span class="spinner"></span>Preparing your race&hellip;'; infoEl.classList.add('on'); }
+
+    ensureRaceScripts().then(function(){
+      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'startRaceFromExamCode', examCode: _code, studentEmail: _email }) });
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if (!res || res.status !== 'success') { showErr(3, (res && res.message) || 'Could not start the race.'); if (infoEl) infoEl.classList.remove('on'); return; }
+      var raceId = res.data.raceId, totalQ = res.data.totalQ || 10;
+
+      var cfg = { apiKey:'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc', authDomain:'kahoot-24063.firebaseapp.com', databaseURL:'https://kahoot-24063-default-rtdb.firebaseio.com', projectId:'kahoot-24063', storageBucket:'kahoot-24063.firebasestorage.app', messagingSenderId:'962917873467', appId:'1:962917873467:web:a6b526aee30cd15c92291e' };
+      var existing = null; if (firebase.apps) firebase.apps.forEach(function(a){ if (a.name === 'race') existing = a; });
+      var db = firebase.database(existing || firebase.initializeApp(cfg, 'race'));
+
+      var picks = RACE_BOT_IDENTITIES.slice().sort(function(){ return Math.random() - 0.5; }).slice(0, RACE_BOT_COUNT);
+      var NEON = ['#d62828','#1a4ea8','#f6c200','#ff7a1a','#2a8c4a','#7a3a99','#ff5599','#118ab2'];
+      var updates = {};
+      picks.forEach(function(b, i){
+        var botId = 'bot_' + i;
+        updates['players/' + botId] = { name: b.name, color: NEON[i % NEON.length], car: Math.floor(Math.random() * 16), progress: 0, correct: 0, streak: 0, finished: false };
+        updates['events/' + botId]  = buildBotEventTimeline(raceId, botId, b, totalQ);
+      });
+
+      db.ref('race/' + raceId).update(updates).then(function(){
+        var name = (document.getElementById('studentName').value || '').trim() || 'Player';
+        var raceUrl = RACE3D_URL + '?script=' + encodeURIComponent(SCRIPT_URL) + '&room=' + encodeURIComponent(raceId) + '&name=' + encodeURIComponent(name) + '&v=3d&auto=1';
+        if (infoEl) {
+          infoEl.innerHTML = '<span class="spinner"></span>Opening race&hellip;<br><br><small>If nothing opens, <a href="' + raceUrl + '" target="_blank" style="color:#FB923C;">click here</a></small>';
+        }
+        window.open(raceUrl, '_blank');
+      });
+    }).catch(function(e){ showErr(3, 'Network error: ' + e.message); if (infoEl) infoEl.classList.remove('on'); });
   }
 
   // Enter key shortcuts

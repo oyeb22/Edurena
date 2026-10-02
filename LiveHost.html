@@ -329,12 +329,12 @@
     </div>
     <div class="card" id="quiz-card">
       <div class="card-ttl">Quiz</div>
-      <div class="fg">
+      <div class="fg" id="quiz-select-row">
         <label>Select Exam / Quiz</label>
         <select id="sel-quiz"><option value="">Loading quizzes&hellip;</option></select>
       </div>
       <div class="fg" id="time-row" style="display:none">
-        <label>Seconds per question (Live Quiz only)</label>
+        <label>Seconds per question</label>
         <input type="number" id="sel-time" value="20" min="5" max="120">
       </div>
     </div>
@@ -617,8 +617,23 @@ function selectMode(m){
   if(URL_EXAM_CODE&&!quizReady) return;   // quiz list still loading
   mode=m;
   MODE_CARD_IDS.forEach(function(c){ el('mc-'+c).classList.toggle('sel',c===m); });
-  el('time-row').style.display=RACE_ENGINE_MODES[m]?'none':'block';
-  if(URL_EXAM_CODE) doLaunch();
+  var needsTimer=!RACE_ENGINE_MODES[m];
+  el('time-row').style.display=needsTimer?'block':'none';
+  if(URL_EXAM_CODE){
+    if(needsTimer){
+      // Give the teacher a chance to set seconds-per-question before
+      // launching, instead of auto-launching on the mode tap with
+      // whatever the timer field defaulted to (previously 20s, always,
+      // with no way to see or change it — applyLockedQuiz hides this
+      // whole card, and launching here used to happen in the same tick
+      // as the tap).
+      el('quiz-card').style.display='block';
+      el('quiz-select-row').style.display='none';
+      el('launchBtn').style.display='block';
+    } else {
+      doLaunch();
+    }
+  }
 }
 
 function loadQuizzes(){
