@@ -161,6 +161,28 @@
     .ecc-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .ecc-meta{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
     .ecc-vio{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--yellow);flex-shrink:0;text-align:right;}
+
+    /* ── Simulated bot competitors (cosmetic, &bots=N only) ── */
+    .bots-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;}
+    .bots-panel-head{font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .bots-panel-list{display:flex;flex-direction:column;gap:6px;}
+    .bot-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;}
+    .bot-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,rgba(91,110,245,.3),rgba(129,140,248,.2));border:1px solid rgba(91,110,245,.3);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+    .bot-info{flex:1;min-width:0;}
+    .bot-name{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bot-school{font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bot-stat{text-align:right;flex-shrink:0;}
+    .bot-q{font-family:var(--mono);font-size:10px;color:var(--text2);}
+    .bot-pct{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent2);}
+    .bots-final-head{font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+    .bots-final-list{display:flex;flex-direction:column;gap:5px;}
+    .bot-final-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;font-size:12px;}
+    .bot-final-row.is-you{border-color:rgba(91,110,245,.4);background:var(--accent-glow);}
+    .bot-final-rank{font-family:var(--mono);font-weight:700;color:var(--muted);width:24px;flex-shrink:0;}
+    .bot-final-name{flex:1;min-width:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bot-you-tag{color:var(--accent2);font-size:10px;}
+    .bot-final-score{font-family:var(--mono);font-size:11px;color:var(--text2);flex-shrink:0;}
+
     .q-count{font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
     .q-count-right{display:flex;align-items:center;gap:6px;}
     .flag-btn{padding:3px 9px;font-size:10px;font-weight:700;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--muted);cursor:pointer;font-family:var(--font);transition:all .15s;}
@@ -632,6 +654,12 @@
       <div class="ecc-vio" id="eccVio">0 / 3 strikes</div>
     </div>
 
+    <!-- Simulated bot competitors — cosmetic only, hidden unless ?bots= is on the exam URL -->
+    <div class="bots-panel hidden" id="botsPanel">
+      <div class="bots-panel-head">🤖 Live Competitors</div>
+      <div class="bots-panel-list" id="botsPanelList"></div>
+    </div>
+
     <div class="q-count">
       <span id="progressText">Question 0 of 0</span>
       <div class="q-count-right">
@@ -727,6 +755,7 @@
     <div class="flagged-notice" id="flaggedNotice">🚩 You had flagged questions — they are marked below for your reference.</div>
     <div id="practiceResult" style="display:none;margin-bottom:14px;padding:12px 14px;border:1px solid rgba(45,212,160,.3);background:rgba(45,212,160,.07);border-radius:var(--radius-sm);font-size:14px;line-height:1.7;text-align:center"></div>
     <div id="resSubjectBreakdown" style="display:none;margin-bottom:14px"></div>
+    <div id="botsResultPanel" style="display:none;margin-bottom:14px"></div>
     <div class="divider"></div>
     <div id="reviewSection">
       <div class="review-section"><h3>📋 Question Review</h3><div id="aiCreditBar" style="display:none;margin-top:8px;font-size:12px;color:rgba(255,255,255,.45);"></div></div>
@@ -864,6 +893,169 @@ var _explainCache = {};
 var _passageCache = {};
 var _subjectOrder = [];
 var _subjectFirst = {};
+
+// ================================================================
+// SIMULATED BOT COMPETITORS — cosmetic/motivational only.
+// Activated purely by the &bots=1 / &bots=N URL param (see BOTS.init).
+// Entirely client-side: a fixed local identity pool + a seeded PRNG, no
+// backend call, no Firebase, no Challenge Mode tables. Never reads or
+// writes `answers`, never touches the submit payload in doSubmit() — it
+// only reads questions.length / q.points / qIndex, all already in scope.
+// If ?bots= is absent, BOTS.active stays false and every BOTS.* call
+// below is a no-op — zero behavior change from today's Exam.html.
+// ================================================================
+var BOT_IDENTITIES = [
+  { name:'Tari Johnson',    school:'Greenfield Academy',           skillTier:'sharp',  accuracy:0.85 },
+  { name:'Chidinma Okafor', school:'Sunrise International School', skillTier:'sharp',  accuracy:0.85 },
+  { name:'Femi Adeyemi',    school:'Hilltop Academy',              skillTier:'sharp',  accuracy:0.85 },
+  { name:'Ngozi Eze',       school:'Westfield Secondary School',   skillTier:'sharp',  accuracy:0.85 },
+  { name:'Bolaji Olawale',  school:'Maple Grove High',             skillTier:'steady', accuracy:0.65 },
+  { name:'Amaka Nwosu',     school:'Riverside Secondary',          skillTier:'steady', accuracy:0.65 },
+  { name:'Segun Balogun',   school:'Cedar Valley High',            skillTier:'steady', accuracy:0.65 },
+  { name:'Zainab Yusuf',    school:'Oakridge Academy',             skillTier:'steady', accuracy:0.65 },
+  { name:'Emeka Udo',       school:'Northgate College',            skillTier:'casual', accuracy:0.45 },
+  { name:'Halima Bello',    school:'Lakeside Grammar School',      skillTier:'casual', accuracy:0.45 },
+  { name:'Obinna Chukwu',   school:'Brookside International',      skillTier:'casual', accuracy:0.45 },
+  { name:'Toyin Afolabi',   school:'Eastgate College',             skillTier:'casual', accuracy:0.45 }
+];
+// djb2-ish string hash → 32-bit seed. Deterministic: same string always
+// gives the same seed, which is what makes a bot replay identically on
+// every page load for the same exam code + bot name + bot count.
+function _botSeedFromString(s){
+  var h = 2166136261;
+  for (var i=0; i<s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// mulberry32 seeded PRNG — small, dependency-free, deterministic. Never
+// Math.random() here: unseeded randomness would make a bot behave
+// differently on every reload, which would be an obvious tell.
+function _botMakeRng(seed){
+  var a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+var BOTS = {
+  active: false,
+  bots: [],          // [{name,school,skillTier,accuracy,correct:[bool],timeSec:[num],cumPoints:[num],finalScore,finalMax,finalPct,avgTimeSec}]
+  totalQ: 0,
+  maxPoints: 0,
+  cumMaxPoints: [],   // prefix sum of q.points — same for every bot, used to turn a bot's running score into a %
+  // Called once from startExam(), right after questions are loaded (and
+  // after _initSubjectTabs has done any subject reordering) — so the bot
+  // timelines are built against the exact same question list/order the
+  // real student will see. Pure read of already-loaded state; writes
+  // nothing back into quizMeta/questions/answers.
+  init: function(){
+    this.active = false; this.bots = [];
+    var raw = (PARAMS.bots||'').trim();
+    if (!raw) return; // no &bots= param at all → feature off, no-op
+    // Adaptive quizzes don't have a fixed question count or point total
+    // known up front (the engine decides the next question as it goes), so
+    // an honest "Question X of N" / running-% panel can't be built for them.
+    // Design call: bots support standard / Subject-Sectioned / JAMB exams
+    // only, where totalQ and points are fixed and known in advance.
+    if (quizMeta && quizMeta.quizType==='adaptive') return;
+    if (!questions.length) return;
+    var n = (raw === '1') ? 3 : (parseInt(raw,10) || 3); // "&bots=1" = on-flag, default pool of 3
+    n = Math.max(1, Math.min(n, BOT_IDENTITIES.length));
+    this.totalQ = questions.length;
+    var cumMax = 0;
+    this.cumMaxPoints = questions.map(function(q){ cumMax += parseFloat(q.points)||1; return cumMax; });
+    this.maxPoints = cumMax;
+    var examCode = student.examCode || 'EXAM';
+    var self = this;
+    this.bots = BOT_IDENTITIES.slice(0, n).map(function(identity){
+      // Seed mixes exam code + bot name + bot count: same exam viewed again
+      // with the same &bots=N reproduces the exact same run; a different N
+      // (different roster composition) is free to simulate differently.
+      var rng = _botMakeRng(_botSeedFromString(examCode + '|' + identity.name + '|' + n));
+      var correct = [], timeSec = [], cumPoints = [], running = 0;
+      questions.forEach(function(q){
+        var isRight = rng() < identity.accuracy;
+        correct.push(isRight);
+        running += isRight ? (parseFloat(q.points)||1) : 0;
+        cumPoints.push(running);
+        // Plausible, non-robotic per-question pace by skill tier — cosmetic
+        // flavor only (shown as an "avg time" in the final summary). It
+        // deliberately does NOT drive the live panel's progress; see
+        // render() for why.
+        var base = identity.skillTier==='sharp' ? 18 : identity.skillTier==='steady' ? 28 : 40;
+        timeSec.push(Math.round(base + rng()*24));
+      });
+      var finalScore = cumPoints[cumPoints.length-1] || 0;
+      return {
+        name: identity.name, school: identity.school, skillTier: identity.skillTier,
+        accuracy: identity.accuracy, correct: correct, timeSec: timeSec, cumPoints: cumPoints,
+        finalScore: finalScore, finalMax: self.maxPoints,
+        finalPct: self.maxPoints>0 ? (finalScore/self.maxPoints*100) : 0,
+        avgTimeSec: Math.round(timeSec.reduce(function(a,b){return a+b;},0)/timeSec.length)
+      };
+    });
+    this.active = this.bots.length>0;
+    var panel = document.getElementById('botsPanel');
+    if (panel) panel.classList.toggle('hidden', !this.active);
+  },
+  // Called from renderQuestion() on every question render (initial render,
+  // Next/Prev, subject-transition resume, adaptive advance) — i.e. driven
+  // by the REAL student's own qIndex, never by a bot-side timer. Each bot
+  // is always shown on the SAME question number as the real student
+  // (qIndex+1): that's what guarantees a bot can never appear to race ahead
+  // or "finish" while the student is still reading — the exact tell this
+  // feature must avoid. Bots stay distinguishable from each other, and from
+  // the student, purely by their running % through the questions seen so
+  // far (driven by that bot's fixed accuracy), not by question count.
+  render: function(){
+    if (!this.active) return;
+    var list = document.getElementById('botsPanelList'); if (!list) return;
+    var atQ = Math.min(qIndex+1, this.totalQ); // 1-based — matches #progressText's own "Question N of M"
+    var possible = this.cumMaxPoints[atQ-1] || 1;
+    list.innerHTML = this.bots.map(function(b){
+      var pts = b.cumPoints[atQ-1]||0;
+      var pct = Math.round(pts/possible*100);
+      return '<div class="bot-row">'
+        +'<div class="bot-avatar">🤖</div>'
+        +'<div class="bot-info">'
+          +'<div class="bot-name">'+esc(b.name)+'</div>'
+          +'<div class="bot-school">'+esc(b.school)+'</div>'
+        +'</div>'
+        +'<div class="bot-stat">'
+          +'<div class="bot-q">Question '+atQ+' of '+BOTS.totalQ+'</div>'
+          +'<div class="bot-pct">'+pct+'%</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  },
+  // Called from showResults() once the real student's own final score is
+  // known — ranks the student against each bot's fully-precomputed final
+  // score. realScore/realMax/realPct are passed in from the already-final
+  // server result (data.score/data.totalPoints/data.percentage); this
+  // function only reads them, never feeds anything back into that data.
+  renderFinal: function(realScore, realMax, realPct){
+    if (!this.active) return;
+    var el = document.getElementById('botsResultPanel'); if (!el) return;
+    var rows = this.bots.map(function(b){
+      return { name:b.name, school:b.school, score:b.finalScore, max:b.finalMax, pct:b.finalPct, avgTimeSec:b.avgTimeSec, isYou:false };
+    });
+    rows.push({ name:(studentInfo.name||'You'), school:studentInfo.school||'', score:realScore, max:realMax, pct:realPct, isYou:true });
+    rows.sort(function(a,b){ return b.pct - a.pct; });
+    el.innerHTML = '<div class="bots-final-head">🏁 Here\'s how you did against the others</div>'
+      + '<div class="bots-final-list">'
+      + rows.map(function(r,i){
+          return '<div class="bot-final-row'+(r.isYou?' is-you':'')+'">'
+            +'<div class="bot-final-rank">#'+(i+1)+'</div>'
+            +'<div class="bot-final-name">'+esc(r.name)+(r.isYou?' <span class="bot-you-tag">(you)</span>':'')+'</div>'
+            +'<div class="bot-final-score">'+r.score+'/'+r.max+' · '+r.pct.toFixed(1)+'%</div>'
+          +'</div>';
+        }).join('')
+      + '</div>';
+    el.style.display = 'block';
+  }
+};
+
 // ================================================================
 // WAKE LOCK — prevent device screen from sleeping during exam
 // ================================================================
@@ -1509,7 +1701,7 @@ function checkPendingSubmission(){
   }
 
   // Shared-device / CBT-lab safeguard: only show the resume takeover if
-  // THIS page load's ?email=&code= (set by WebApp.html's launch link, or a
+  // THIS page load's ?email=&code= (set by Webapp.html's launch link, or a
   // returning student re-opening the same link) actually matches whose
   // submission this is. A different student sitting down at the same
   // browser for a different exam must never see — or be blocked by —
@@ -1957,6 +2149,7 @@ function startExam(){
     // through to rendering/timer-start against a half-initialized state,
     // which previously led to an unexpected auto-submit after question 1.
     if (!_initAdaptiveEngine()) return;
+    BOTS.init(); // no-op unless &bots= is on the URL — see BOTS.init() for why
     examStart = Date.now();
     requestWakeLock();
     timeLeft  = _sectionDurationSec();
@@ -2143,6 +2336,7 @@ function renderQuestion(){
   safeText('answeredCount',answered+' answered');
   var pb=document.getElementById('progressBar'); if(pb)pb.style.width=pct+'%';
   updateFlagBtn();
+  BOTS.render(); // no-op unless &bots= is on the URL
 
   var bar=document.getElementById('ttsBar');
   if(bar) bar.classList.toggle('hidden', !(quizMeta && quizMeta.enableTTS && TTS.enabled));
@@ -2511,7 +2705,7 @@ function _adaptiveAdvance(){
   },15000);
   post('validateAdaptiveAnswer',{
     examCode:student.examCode, studentEmail:student.email, examSessionToken:examSessionToken,
-    questionId:q.id, answer:ans, subject:q.subject||'', difficulty:q.difficulty||'medium',
+    questionId:q.id, answer:ans, subject:q.subject||'', topic:q.topic||'', difficulty:q.difficulty||'medium',
     points:q.points||1, orderIndex:qIndex
   },function(err,res){
     if(settled) return; // the 15s timeout already gave control back — ignore this late arrival
@@ -2881,6 +3075,7 @@ function showResults(data){
   ttsStop();
   _explainCache={};
   var pct=parseFloat(data.percentage); var passed=data.status==='Pass';
+  BOTS.renderFinal(parseFloat(data.score)||0, parseFloat(data.totalPoints)||0, pct); // no-op unless &bots= is on the URL
   safeText('resIcon',passed?'🎉':'📋');
   var scoreText=data.score+' / '+data.totalPoints;
   if(data.reportBase){ scoreText+=' ('+Math.round(pct/100*data.reportBase)+' / '+data.reportBase+')'; }

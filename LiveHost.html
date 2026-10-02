@@ -507,6 +507,7 @@ var RACE3D_URL        = 'https://edurena.online/Race3D.html';
 var RACE3D_HOST_URL   = 'https://edurena.online/RaceHost3D.html';
 var SHOOTOUT3D_URL      = 'https://edurena.online/PenaltyShootout3D.html';
 var SHOOTOUT3D_HOST_URL = 'https://edurena.online/PenaltyShootoutHost3D.html';
+var KAHOOT3D_URL        = 'https://edurena.online/LiveQuiz3D.html';
 
 // If DASH resolves after this script, pick up the real URLs
 if (window.DASH && DASH.ready) {
@@ -765,6 +766,8 @@ function _modeInfo(m){
     // same shootout engine/Firebase path as 'shootout' — only the join/projector pages differ (Unity 3D view). Testing only.
     case 'shootout3d': return {url:SHOOTOUT3D_URL, fbPath:'shootout', tag:'shootout', label:'⚽ Penalty Shootout (3D test)', hostUrl:SHOOTOUT3D_HOST_URL, hostLabel:'Open Projector (3D, controls live there)'};
     case 'whack':    return {url:WHACK_URL,    fbPath:'whack',    tag:'whack',    label:'🔨 Whack-a-Mole'};
+    // same livequiz engine/Firebase path as the default — only the character view differs (Unity 3D). Testing only.
+    case 'kahoot3d': return {url:KAHOOT3D_URL, fbPath:'livequiz', tag:'kahoot',   label:'🎯 Live Quiz (3D characters test)'};
     default:         return {url:KAHOOT_URL,   fbPath:'livequiz', tag:'kahoot',   label:'🎯 Live Quiz'};
   }
 }

@@ -102,6 +102,16 @@
     }
     .btn-challenge:hover { background:rgba(124,92,255,0.1); }
 
+    /* Race Challenge button — orange to match Edurena Rally's own brand identity */
+    .btn-race-challenge {
+      width:100%; padding:13px; background:transparent; border:1px solid #ff7a1a;
+      border-radius:10px; color:#ff7a1a; font-size:14px; font-weight:600;
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
+      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
+      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
+    }
+    .btn-race-challenge:hover { background:rgba(255,122,26,0.1); }
+
     /* Competition Mode button — gold/trophy to match its own brand identity.
        Hidden by default: it only appears once a competition has actually
        been published for a date, not just as a permanently-visible button
@@ -232,6 +242,9 @@
     <button class="btn-challenge" onclick="openChallengeMode()">
       &#x26A1; Challenge Mode
     </button>
+    <button class="btn-race-challenge" onclick="openRaceChallengeMode()">
+      &#x1F3CE;&#xFE0F; Race Challenge
+    </button>
     <button class="btn-competition" onclick="openCompetitionMode()">
       &#x1F3C6; Competitions
     </button>
@@ -293,6 +306,7 @@ var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
 var PRACTICE_URL  = 'https://edurena.online/TopicPractice.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 var RACE_URL      = 'https://edurena.online/Race3D.html';
+var RACE_CHALLENGE_URL = 'https://edurena.online/RaceChallenge.html';
 var SIMLAB_URL    = 'https://edurena.online/SimulationLab.html';
 
 function refreshFromDash() {
@@ -460,6 +474,16 @@ function openGame(mode) {
 function openChallengeMode() {
   whenReady(function(){
     var url = CHALLENGE_URL + (CHALLENGE_URL.indexOf('?') === -1 ? '?' : '&')
+            + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
+}
+
+// Race Challenge has no room code / teacher either — same standalone shape
+// as Challenge Mode, just routed to Edurena Rally instead of a quiz round.
+function openRaceChallengeMode() {
+  whenReady(function(){
+    var url = RACE_CHALLENGE_URL + (RACE_CHALLENGE_URL.indexOf('?') === -1 ? '?' : '&')
             + 'script=' + encodeURIComponent(SCRIPT_URL);
     window.open(url, '_blank');
   });
