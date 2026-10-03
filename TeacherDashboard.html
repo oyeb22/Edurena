@@ -2939,6 +2939,17 @@ var _QUIZ_TYPE_DESC = {
 // Adaptive mode picks subjects to include (checkboxes), standard/jamb picks
 // how many questions per subject (count inputs) — same section, different
 // meaning, so the header should say which one is actually happening.
+// Single choke point for "something changed that should refresh the
+// Content section" — branches to the right fetch (edurena bank has no
+// week at all, so onWeekChange's cid+wk guard would just silently no-op
+// for it). Every place that used to inline this check should call this
+// instead, so a 5th/6th call site can't reintroduce the same gap.
+function refreshSubjList(){
+  var isEdu=(document.getElementById('c-question-source')||{}).value==='edurena';
+  if(isEdu){ onEduBankChange(); return; }
+  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
+  if(cid&&wk) onWeekChange();
+}
 function updateAllocHeaderLabel(){
   var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
   var label = document.getElementById('alloc-header-label');
@@ -2957,8 +2968,7 @@ function onQuizTypeChange(){
   // Subject allocation rows render differently for adaptive (checkbox +
   // readiness) vs standard/jamb (count input) — re-fetch so the switch
   // takes effect immediately if a class/week was already picked.
-  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
-  if (cid && wk) onWeekChange();
+  refreshSubjList();
   updateQuizSummary();
 }
 function onAdaptiveModeChange(){
@@ -2967,8 +2977,7 @@ function onAdaptiveModeChange(){
   if(capLabel) capLabel.textContent = mode==='subject' ? 'Questions per Subject' : 'Question Cap';
   updateSectionTimerVisibility();
   updateAdaptiveMax();
-  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
-  if (cid && wk) onWeekChange();
+  refreshSubjList();
   updateQuizSummary();
 }
 // Live-recalculates the read-only "Max Possible Points" display from
@@ -3026,7 +3035,7 @@ function updateDurationVisibility(){
 function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); updateQuizSummary(); },100); }); }
 function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
-function onTypeChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
+function onTypeChange(){ refreshSubjList(); }
 function getWeekMode(){ var tog=document.getElementById('tog-week-mode'); return (tog&&tog.classList.contains('on'))?'cumulative':'single'; }
 
 // v5.3 RESTORED: exclude-weeks helpers — teacher unticks weeks to skip (e.g. holiday weeks)
@@ -3084,8 +3093,7 @@ function onQuestionSourceChange(){
   document.getElementById('subj-card').classList.add('hidden');
   document.getElementById('passage-card').classList.add('hidden');
   var tcb=document.getElementById('topic-checks-block'); if(tcb) tcb.style.display='none';
-  if(isEdu){ onEduBankChange(); }
-  else { var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value; if(cid&&wk) onWeekChange(); }
+  refreshSubjList();
 }
 // Edurena Question Bank equivalent of onWeekChange() — same subj-list/topic
 // UI, fed by the whole shared bank instead of class-id+week. (The backend
@@ -3154,8 +3162,7 @@ function updateTopicChecksSummary(){
 // immediately in each subject's available count — same as toggling a week.
 function topicCheckToggle(){
   updateTopicChecksSummary();
-  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value;
-  if(cid&&wk) onWeekChange();
+  refreshSubjList();
 }
 function loadAvailablePassages(classId,week){ var select=document.getElementById('passage-select'); if(!select) return; select.innerHTML='<option value="">— Loading… —</option>'; select.disabled=true; call('getAvailablePassages',{classId:classId,week:week},function(passages){ select.innerHTML='<option value="">— No passage (optional) —</option>'; if(passages&&passages.length) passages.forEach(function(p){ var opt=document.createElement('option'); opt.value=p.passage_id; opt.textContent=p.title+' ('+p.question_count+' questions)'; select.appendChild(opt); }); select.disabled=false; _selectedPassageId=''; document.getElementById('passage-preview').style.display='none'; }); }
 function onPassageSelect(){ var select=document.getElementById('passage-select'), preview=document.getElementById('passage-preview'); if(!select||!preview) return; var passageId=select.value; if(!passageId){ preview.style.display='none'; _selectedPassageId=''; return; } preview.style.display='block'; document.getElementById('passage-title').textContent='Loading…'; _selectedPassageId=passageId; call('getPassage',{passage_id:passageId},function(d){ document.getElementById('passage-title').textContent=d.title||passageId; document.getElementById('passage-preview-text').textContent=(d.body||'').substring(0,150)+((d.body||'').length>150?'…':''); call('getQuestionsByPassage',{passage_id:passageId},function(qd){ document.getElementById('passage-qcount').textContent=(qd||[]).length; }); }); }
