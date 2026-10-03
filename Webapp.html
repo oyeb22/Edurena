@@ -272,10 +272,6 @@
   <div class="panel" id="panel3">
     <div class="verified-badge">&#x1F393; Ready to begin your exam</div>
     <div id="examSummary" style="font-size:13px;color:#7c85a2;margin-bottom:20px;line-height:1.8;"></div>
-    <label id="botsToggleWrap" style="display:none;align-items:center;gap:8px;font-size:13px;color:#e2e8f0;margin-bottom:16px;cursor:pointer;user-select:none">
-      <input type="checkbox" id="botsToggle" style="width:16px;height:16px;accent-color:#FB923C">
-      &#x1F465; Practice with bots (3 friendly competitors join to make it feel like a real exam)
-    </label>
     <button class="btn" id="launchBtn" onclick="doLaunch()">Open Exam in New Tab &#x2192;</button>
     <button class="btn-ghost" id="raceBtn" style="display:none;margin-top:10px" onclick="doLaunchRace()">&#x1F3CE;&#xFE0F; Play as Race Challenge Instead</button>
     <div class="info" id="infoMsg"></div>
@@ -728,12 +724,9 @@ function openCompetitionById(competitionId) {
             + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
             + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
         }
-        // Bot companions and Race Challenge both need a fixed, known-in-advance
-        // question count — an adaptive quiz decides that live per student (see
-        // Exam.html's own BOTS.init() guard), so neither option applies there.
+        // Race Challenge needs a fixed, known-in-advance question count — an
+        // adaptive quiz decides that live per student, so it doesn't apply there.
         var isAdaptive = !!(_quizMeta && _quizMeta.quizType === 'adaptive');
-        var botsWrap = document.getElementById('botsToggleWrap');
-        if (botsWrap) botsWrap.style.display = isAdaptive ? 'none' : 'flex';
         var raceBtn = document.getElementById('raceBtn');
         if (raceBtn) raceBtn.style.display = isAdaptive ? 'none' : 'block';
         setStep(3);
@@ -754,12 +747,10 @@ function openCompetitionById(competitionId) {
         showErr(3, 'Configuration error — please contact your administrator');
         return;
       }
-      var botsOn = (document.getElementById('botsToggle') || {}).checked;
       var examUrl = EXAM_PAGE_URL
         + '?email='  + encodeURIComponent(_email)
         + '&code='   + encodeURIComponent(_code)
-        + '&script=' + encodeURIComponent(SCRIPT_URL)
-        + (botsOn ? '&bots=3' : '');
+        + '&script=' + encodeURIComponent(SCRIPT_URL);
 
       var infoEl = document.getElementById('infoMsg');
       if (infoEl) {
