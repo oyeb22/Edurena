@@ -868,7 +868,6 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
                 <option value="standard">Standard Proctored Exam</option>
                 <option value="jamb">Subject-Sectioned Exam</option>
                 <option value="adaptive">Adaptive Difficulty Exam</option>
-                <option value="race">Race Challenge</option>
               </select>
             </div>
           </div>
@@ -2933,8 +2932,7 @@ function showImportStatus(msg,type){ var el=document.getElementById('import-stat
 var _QUIZ_TYPE_DESC = {
   standard: 'Standard timed exam with proctoring. Questions are drawn from the question bank and shuffled for each student.',
   jamb:     'Subject-Sectioned Exam. Questions are grouped by subject in a teacher-chosen order — students see a subject tab bar and can navigate between sections.',
-  adaptive: 'Difficulty-aware exam. Questions are sorted Easy → Medium → Hard. Filter by difficulty level below.',
-  race:     'Edurena Rally with bots. Pick topics/questions exactly like a standard exam — a student who enters this code races alone against 3 bot competitors instead of taking a normal written exam. No proctoring, no live hosting needed.'
+  adaptive: 'Difficulty-aware exam. Questions are sorted Easy → Medium → Hard. Filter by difficulty level below.'
 };
 // Adaptive mode picks subjects to include (checkboxes), standard/jamb picks
 // how many questions per subject (count inputs) — same section, different
@@ -3302,7 +3300,7 @@ function updateQuizSummary(){
   setText('sum-code', (v('c-code')||'—').toUpperCase());
   var clSel=g('c-class'); setText('sum-class', clSel&&clSel.value?clSel.value:'—');
   var qt=v('c-quiz-type')||'standard';
-  setText('sum-type', qt==='jamb'?'Subject-Sectioned':qt==='adaptive'?'Adaptive':qt==='race'?'Race Challenge':'Standard');
+  setText('sum-type', qt==='jamb'?'Subject-Sectioned':qt==='adaptive'?'Adaptive':'Standard');
   if(qt==='adaptive'){ setText('sum-count', 'max '+(t('ad-max-display')||'—')+' pts'); }
   else { setText('sum-count', (t('tot-q')||'0')+' questions'); }
   var fmt=function(val){ if(!val) return '—'; var d=new Date(val); return isNaN(d.getTime())?'—':d.toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'}); };

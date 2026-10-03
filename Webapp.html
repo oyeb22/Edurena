@@ -277,6 +277,7 @@
       &#x1F465; Practice with bots (3 friendly competitors join to make it feel like a real exam)
     </label>
     <button class="btn" id="launchBtn" onclick="doLaunch()">Open Exam in New Tab &#x2192;</button>
+    <button class="btn-ghost" id="raceBtn" style="display:none;margin-top:10px" onclick="doLaunchRace()">&#x1F3CE;&#xFE0F; Play as Race Challenge Instead</button>
     <div class="info" id="infoMsg"></div>
     <div class="error" id="errMsg3"></div>
   </div>
@@ -727,15 +728,14 @@ function openCompetitionById(competitionId) {
             + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
             + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
         }
-        var isRace = !!(_quizMeta && _quizMeta.quizType === 'race');
-        // Bot companions only make sense for a fixed-length exam — an adaptive
-        // quiz doesn't know its own question count in advance (see Exam.html's
-        // own BOTS.init() guard). A Race Challenge always has bots (no
-        // opt-in needed), so the checkbox is for every OTHER quiz type only.
+        // Bot companions and Race Challenge both need a fixed, known-in-advance
+        // question count — an adaptive quiz decides that live per student (see
+        // Exam.html's own BOTS.init() guard), so neither option applies there.
+        var isAdaptive = !!(_quizMeta && _quizMeta.quizType === 'adaptive');
         var botsWrap = document.getElementById('botsToggleWrap');
-        if (botsWrap) botsWrap.style.display = (isRace || (_quizMeta && _quizMeta.quizType === 'adaptive')) ? 'none' : 'flex';
-        var launchBtn = document.getElementById('launchBtn');
-        if (launchBtn) launchBtn.textContent = isRace ? 'Start Race →' : 'Open Exam in New Tab →';
+        if (botsWrap) botsWrap.style.display = isAdaptive ? 'none' : 'flex';
+        var raceBtn = document.getElementById('raceBtn');
+        if (raceBtn) raceBtn.style.display = isAdaptive ? 'none' : 'block';
         setStep(3);
       })
       .catch(function(e) {
@@ -754,8 +754,6 @@ function openCompetitionById(competitionId) {
         showErr(3, 'Configuration error — please contact your administrator');
         return;
       }
-      if (_quizMeta && _quizMeta.quizType === 'race') { doLaunchRace(); return; }
-
       var botsOn = (document.getElementById('botsToggle') || {}).checked;
       var examUrl = EXAM_PAGE_URL
         + '?email='  + encodeURIComponent(_email)
@@ -843,6 +841,13 @@ function openCompetitionById(competitionId) {
     return ev;
   }
   function doLaunchRace() {
+    clearErr(3);
+    whenReady(function(){
+      if (!SCRIPT_URL) { showErr(3, 'Configuration error — please contact your administrator'); return; }
+      doLaunchRaceNow();
+    });
+  }
+  function doLaunchRaceNow() {
     var infoEl = document.getElementById('infoMsg');
     if (infoEl) { infoEl.innerHTML = '<span class="spinner"></span>Preparing your race&hellip;'; infoEl.classList.add('on'); }
 
