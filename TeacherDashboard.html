@@ -3033,7 +3033,23 @@ function updateDurationVisibility(){
   document.querySelectorAll('.sdur-wrap').forEach(function(el){ el.style.display = perSubject ? '' : 'none'; });
 }
 function loadCreateTab(){ loadClasses(function(){ populateClassDropdowns(); setDefaultTimes(); setTimeout(function(){ var container=document.getElementById('rubric-ranges'); if(container&&!container.children.length) resetRubricRanges(); updateQuizSummary(); },100); }); }
-function onClassChange(){ var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week'); wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true; document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden'); if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; } call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length) toast('error','No questions for this class yet.'); }); }
+function onClassChange(){
+  var cid=document.getElementById('c-class').value, wk=document.getElementById('c-week');
+  var isEdu=(document.getElementById('c-question-source')||{}).value==='edurena';
+  document.getElementById('passage-card').classList.add('hidden');
+  if(isEdu){
+    // Edurena Bank content isn't scoped by class at all — the class picked
+    // here only matters for who the quiz gets assigned to, so Content
+    // should stay visible (and just re-fetch) instead of being hidden and
+    // left stranded, since nothing afterward would ever bring it back.
+    refreshSubjList();
+  } else {
+    document.getElementById('subj-card').classList.add('hidden');
+  }
+  wk.innerHTML='<option value="">— Loading… —</option>'; wk.disabled=true;
+  if(!cid){ wk.innerHTML='<option value="">— Select —</option>'; return; }
+  call('getAvailableWeeks',{classId:cid},function(weeks){ wk.innerHTML='<option value="">— Select week —</option>'; (weeks||[]).forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; wk.appendChild(o); }); wk.disabled=false; if(!(weeks||[]).length && !isEdu) toast('error','No questions for this class yet.'); });
+}
 function getSelectedTypes(){ var checked=[]; document.querySelectorAll('.type-chk:checked').forEach(function(cb){ checked.push(cb.value); }); return checked; }
 function onTypeChange(){ refreshSubjList(); }
 function getWeekMode(){ var tog=document.getElementById('tog-week-mode'); return (tog&&tog.classList.contains('on'))?'cumulative':'single'; }
