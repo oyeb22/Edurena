@@ -1037,7 +1037,13 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             </div>
           </div>
           <div class="div" style="margin:0 0 12px"></div>
-          <div class="ct"><span id="alloc-header-label">Question Allocation</span> <span id="type-hint" style="color:var(--warn);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px"></span></div>
+          <div class="ct" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <span><span id="alloc-header-label">Question Allocation</span> <span id="type-hint" style="color:var(--warn);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px"></span></span>
+            <span id="alloc-bulk-actions" style="display:none;gap:6px">
+              <button type="button" class="btn btn-sm" onclick="setAllTopicCounts(0)">Clear All</button>
+              <button type="button" class="btn btn-sm" onclick="setAllTopicCounts('suggested')">Reset Suggested</button>
+            </span>
+          </div>
           <div id="subj-list"><p style="color:var(--text2);font-size:13px;padding:12px 0">Select a week to see available questions.</p></div>
           <div class="div"></div>
           <div class="fx" style="justify-content:flex-end">
@@ -3107,6 +3113,15 @@ function loadTopicOptions(cid,wk,weekMode){
 // checked state across re-renders (e.g. week/subject change) same as weeks.
 function renderTopicChecksUI(topics){
   var block=document.getElementById('topic-checks-block'); if(!block) return;
+  // Non-adaptive quiz types pick topics (and how many questions from each)
+  // directly in the Content section below — each topic there defaults to a
+  // suggested count and is "excluded" simply by setting that count to 0.
+  // This flat include/exclude grid would otherwise be a second, disconnected
+  // control over the same thing (it never actually fed the new per-topic
+  // selection — only subjectCounts' old random-pick path reads it), so for
+  // every quiz type except Adaptive it just stays hidden.
+  var quizType=(document.getElementById('c-quiz-type')||{}).value||'standard';
+  if(quizType!=='adaptive'){ block.style.display='none'; return; }
   if(!topics.length){ block.style.display='none'; return; }
   var list=document.getElementById('topic-checks-list');
   var existing={};
@@ -3172,7 +3187,9 @@ function renderSubjAlloc(subjs,wk,weekMode){
       +'<input type="number" class="sduration" data-subject="'+subjAttr+'" value="15" min="1" title="This subject\'s duration in minutes — only used with a per-subject timer" style="width:44px;margin-left:4px">'
       +'</span>';
   }
+  var bulkActions=document.getElementById('alloc-bulk-actions');
   if(isAdaptive){
+    if(bulkActions) bulkActions.style.display='none';
     document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){
       var subjectName=e[0], counts=e[1]||{available:0,easy:0,medium:0,hard:0};
       var available=counts.available||0;
@@ -3190,6 +3207,7 @@ function renderSubjAlloc(subjs,wk,weekMode){
     updateAdaptiveMax();
     return;
   }
+  if(bulkActions) bulkActions.style.display='inline-flex';
   // Non-adaptive: one row per TOPIC (nested under its subject), each with
   // its own exact question count and an optional difficulty restriction —
   // "Any" (default) picks randomly across whatever difficulties exist,
@@ -3212,13 +3230,26 @@ function renderSubjAlloc(subjs,wk,weekMode){
       return '<div class="ti"><div><div class="tn">'+esc(topicName)+'</div><div class="ta">'+tAvail+' available · E:'+(tc.easy||0)+' M:'+(tc.medium||0)+' H:'+(tc.hard||0)+'</div></div>'
         +'<div class="ti-controls">'
         +'<select class="ttdiff tdiff" data-subject="'+subjAttr+'" data-topic="'+topicAttr+'" title="Restrict this topic to one difficulty (default: any)">'+diffOpts+'</select>'
-        +'<input type="number" class="ttcount sinput" id="'+safeId+'" data-subject="'+subjAttr+'" data-topic="'+topicAttr+'" value="'+suggested+'" min="0" max="'+tAvail+'" onchange="updateTot()" aria-label="Number of questions from '+topicAttr+'" style="width:52px">'
+        +'<input type="number" class="ttcount sinput" id="'+safeId+'" data-subject="'+subjAttr+'" data-topic="'+topicAttr+'" data-suggested="'+suggested+'" value="'+suggested+'" min="0" max="'+tAvail+'" onchange="updateTot()" aria-label="Number of questions from '+topicAttr+'" style="width:52px">'
         +'</div></div>';
     }).join('');
     return '<div class="subj-group"><div class="subj-hdr"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+'</div></div>'
-      +(showOrderDuration?orderDurationHtml(subjAttr,i):'')+'</div>'
+      +'<span style="display:flex;align-items:center;gap:8px">'
+      +'<button type="button" class="btn btn-sm" onclick="setAllTopicCounts(0,'+"'"+subjAttr.replace(/'/g,"\\'")+"'"+')">Clear</button>'
+      +(showOrderDuration?orderDurationHtml(subjAttr,i):'')+'</span></div>'
       +topicRows+'</div>';
   }).join('');
+  updateTot();
+}
+// mode: 0 clears every (or one subject's) topic count to 0; 'suggested'
+// restores each input's own data-suggested value. subjectFilter (optional)
+// scopes either action to just that subject — used by each subject's own
+// "Clear" button so zeroing out Mathematics doesn't touch English too.
+function setAllTopicCounts(mode,subjectFilter){
+  document.querySelectorAll('.ttcount').forEach(function(el){
+    if(subjectFilter && el.getAttribute('data-subject')!==subjectFilter) return;
+    el.value = mode==='suggested' ? (el.getAttribute('data-suggested')||0) : 0;
+  });
   updateTot();
 }
 // Reads every per-topic count+difficulty row into the flat list createQuiz
