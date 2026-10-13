@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <base target="_top">
@@ -404,16 +404,10 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
   var GAME_ROWS = [
     {mode:'kahoot',   icon:'🎮', glow:'108,99,255',  title:'Live Quiz',
      desc:'Host-controlled · questions appear one at a time · live leaderboard'},
-    {mode:'puzzle',   icon:'🧩', glow:'168,85,247',  title:'Puzzle Race',
-     desc:'Self-paced · correct answers earn pieces · finish your picture first'},
-    {mode:'whack',    icon:'🔨', glow:'255,148,51',  title:'Whack-a-Mole',
-     desc:'Shared board · first correct answer whacks the mole'},
-    {mode:'shootout', icon:'⚽',       glow:'46,204,113',  title:'Penalty Shootout',
-     desc:'Random kicker/keeper pairs · fastest correct answer wins the duel'},
-    {mode:'tower',    icon:'🏰', glow:'0,212,255',   title:'Tower Defense',
-     desc:'4 teams · defend your side · everyone shares one tower'},
     {mode:'race',     icon:'🏎️', glow:'255,51,85',   title:'Edurena Rally',
-     desc:'Self-paced 3D race · correct answers boost your car · first past the line wins'}
+     desc:'Self-paced 3D race · correct answers boost your car · first past the line wins'},
+    {mode:'ladder',   icon:'🔤', glow:'255,204,0',   title:'Word Ladder',
+     desc:'Take turns changing one letter to make a new word · reveals its meaning'}
   ];
 
   picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
