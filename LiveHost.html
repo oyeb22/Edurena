@@ -72,6 +72,7 @@
     .mode-card.shootout{border-color:#2ecc71}.mode-card.shootout.sel,.mode-card.shootout:hover{background:rgba(46,204,113,.12);border-color:#4ade80}
     .mode-card.tower{border-color:#00d4ff}.mode-card.tower.sel,.mode-card.tower:hover{background:rgba(0,212,255,.12);border-color:#60d8ff}
     .mode-card.race{border-color:#ff3355}.mode-card.race.sel,.mode-card.race:hover{background:rgba(255,51,85,.12);border-color:#ff6680}
+    .mode-card.ladder{border-color:#ffcc00}.mode-card.ladder.sel,.mode-card.ladder:hover{background:rgba(255,204,0,.12);border-color:#ffe066}
     .launch-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),#6b8ef5);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:800;font-family:var(--f);cursor:pointer;transition:all .2s;box-shadow:0 6px 28px rgba(79,120,255,.3);min-height:52px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center}
     .launch-btn:hover{transform:translateY(-2px)}
     .launch-btn:active:not(:disabled){transform:scale(.98)}
@@ -86,6 +87,7 @@
     .lobby-mode-tag.whack{background:rgba(255,148,51,.15);color:#ffb066;border:1px solid rgba(255,148,51,.3)}
     .lobby-mode-tag.shootout{background:rgba(46,204,113,.15);color:#4ade80;border:1px solid rgba(46,204,113,.3)}
     .lobby-mode-tag.tower{background:rgba(0,212,255,.15);color:#60d8ff;border:1px solid rgba(0,212,255,.3)}
+    .lobby-mode-tag.ladder{background:rgba(255,204,0,.15);color:#ffe066;border:1px solid rgba(255,204,0,.3)}
     .lobby-code-wrap{margin-bottom:20px}
     .lobby-code-lbl{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
     .lobby-code{font-family:var(--mono);font-size:clamp(52px,12vw,80px);font-weight:600;letter-spacing:12px;color:#fff;background:linear-gradient(135deg,var(--surf),var(--surf2));border:2px solid var(--bdr);border-radius:20px;padding:16px 32px;display:inline-block;box-shadow:0 0 60px rgba(79,120,255,.2)}
@@ -300,30 +302,10 @@
           <span class="mc-title">Edurena Rally</span>
           <span class="mc-desc">Self-paced 3D race &middot; faster correct answers = faster car &middot; first to the line wins</span>
         </button>
-        <button class="mode-card puzzle" id="mc-puzzle">
-          <span class="mc-icon">&#x1F9E9;</span>
-          <span class="mc-title">Puzzle Race</span>
-          <span class="mc-desc">Self-paced &middot; correct answers earn pieces &middot; finish your picture first</span>
-        </button>
-        <button class="mode-card whack" id="mc-whack">
-          <span class="mc-icon">&#x1F528;</span>
-          <span class="mc-title">Whack-a-Mole</span>
-          <span class="mc-desc">Shared board &middot; first correct answer whacks the mole</span>
-        </button>
-        <button class="mode-card shootout" id="mc-shootout">
-          <span class="mc-icon">&#x26BD;</span>
-          <span class="mc-title">Penalty Shootout</span>
-          <span class="mc-desc">Random kicker/keeper pairs &middot; fastest correct answer wins the duel</span>
-        </button>
-        <button class="mode-card shootout" id="mc-shootout3d">
-          <span class="mc-icon">&#x1F3AE;</span>
-          <span class="mc-title">Penalty Shootout (3D test)</span>
-          <span class="mc-desc">Same as Penalty Shootout, but joins/projects into the new Unity 3D view &mdash; for testing only</span>
-        </button>
-        <button class="mode-card tower" id="mc-tower">
-          <span class="mc-icon">&#x1F3F0;</span>
-          <span class="mc-title">Tower Defense</span>
-          <span class="mc-desc">4 teams &middot; defend your side &middot; everyone shares one tower</span>
+        <button class="mode-card ladder" id="mc-ladder">
+          <span class="mc-icon">&#x1F524;</span>
+          <span class="mc-title">Word Ladder</span>
+          <span class="mc-desc">Students take turns changing one letter to make a new word &middot; reveals its meaning</span>
         </button>
       </div>
     </div>
@@ -336,6 +318,10 @@
       <div class="fg" id="time-row" style="display:none">
         <label>Seconds per question</label>
         <input type="number" id="sel-time" value="20" min="5" max="120">
+      </div>
+      <div class="fg" id="ladder-word-row" style="display:none">
+        <label>Starting word</label>
+        <input type="text" id="ladder-word" placeholder="e.g. CAT" maxlength="12" autocomplete="off" spellcheck="false">
       </div>
     </div>
     <button class="launch-btn" id="launchBtn">Launch Session &#x2192;</button>
@@ -362,6 +348,7 @@
     <div class="chips" id="lby-chips"></div>
     <div class="lobby-actions">
       <button class="start-btn" id="startBtn" disabled>&#x25B6; Start Game</button>
+      <button class="start-btn" id="ladderProjBtn" style="display:none">&#x1F5A5; Open Projector View</button>
       <button class="cancel-btn" id="cancelBtn">Cancel</button>
     </div>
   </div>
@@ -508,6 +495,8 @@ var RACE3D_HOST_URL   = 'https://edurena.online/RaceHost3D.html';
 var SHOOTOUT3D_URL      = 'https://edurena.online/PenaltyShootout3D.html';
 var SHOOTOUT3D_HOST_URL = 'https://edurena.online/PenaltyShootoutHost3D.html';
 var KAHOOT3D_URL        = 'https://edurena.online/LiveQuiz3D.html';
+var WORDLADDER_URL      = 'https://edurena.online/WordLadder.html';
+var WORDLADDER_HOST_URL = 'https://edurena.online/WordLadderHost.html';
 
 // If DASH resolves after this script, pick up the real URLs
 if (window.DASH && DASH.ready) {
@@ -599,7 +588,7 @@ window.addEventListener('load',function(){
 
 el('loginBtn').addEventListener('click',function(){window.location.href=SCRIPT_URL+'?page=login';});
 
-var MODE_CARD_IDS=['kahoot','race','puzzle','whack','shootout','shootout3d','tower'];
+var MODE_CARD_IDS=['kahoot','race','ladder'];
 function wireModeCards(){
   if(URL_EXAM_CODE) el('mode-grid').style.opacity='.5';
   MODE_CARD_IDS.forEach(function(m){
@@ -617,10 +606,12 @@ function selectMode(m){
   if(URL_EXAM_CODE&&!quizReady) return;   // quiz list still loading
   mode=m;
   MODE_CARD_IDS.forEach(function(c){ el('mc-'+c).classList.toggle('sel',c===m); });
-  var needsTimer=!RACE_ENGINE_MODES[m];
+  var needsTimer=!RACE_ENGINE_MODES[m]&&m!=='ladder';
   el('time-row').style.display=needsTimer?'block':'none';
+  el('ladder-word-row').style.display=(m==='ladder')?'block':'none';
+  el('quiz-select-row').style.display=(m==='ladder')?'none':'';
   if(URL_EXAM_CODE){
-    if(needsTimer){
+    if(needsTimer||m==='ladder'){
       // Give the teacher a chance to set seconds-per-question before
       // launching, instead of auto-launching on the mode tap with
       // whatever the timer field defaulted to (previously 20s, always,
@@ -673,6 +664,10 @@ function wireButtons(){
     window.open(url,'_blank');
   });
   el('raceEndBtn').addEventListener('click',doRaceEnd);
+  el('ladderProjBtn').addEventListener('click',function(){
+    var url=WORDLADDER_HOST_URL+'?sessionId='+encodeURIComponent(sessionCode)+'&script='+encodeURIComponent(SCRIPT_URL);
+    openExternal(url);
+  });
 }
 
 function doCopyUrl(){
@@ -708,6 +703,7 @@ function detachPlayersListener(){
 
 function doLaunch(){
   clearErr();
+  if(mode==='ladder'){ doLaunchLadder(); return; }
   var examCode=el('sel-quiz').value;
   var timePerQ=parseInt(el('sel-time').value)||20;
   if(!examCode){showErr('Please select a quiz');return;}
@@ -772,8 +768,39 @@ function doLaunch(){
   });
 }
 
+// Word Ladder doesn't fit the quiz-driven engines above (no exam code — just a starting word,
+// and play begins automatically once a 2nd player joins, so there's no separate "Start" step
+// here). The projector page owns the whole lobby-to-game lifecycle itself via Firebase.
+function doLaunchLadder(){
+  var startWord=(el('ladder-word').value||'').trim();
+  if(!startWord){showErr('Enter a starting word');return;}
+  var btn=el('launchBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
+  post('createWordLadderSession',{token:TOKEN,startWord:startWord},function(e,r){
+    btn.disabled=false;btn.textContent='Launch Session →';
+    if(e||!r||r.status!=='success'){showErr((r&&r.message)||'Failed to create game');return;}
+    sessionCode=r.data.sessionId;
+    showLadderLobby();
+  });
+}
+function showLadderLobby(){
+  var info=_modeInfo('ladder');
+  _joinUrl=info.url+'?script='+encodeURIComponent(SCRIPT_URL)+'&room='+encodeURIComponent(sessionCode);
+  el('lby-tag').className='lobby-mode-tag ladder';
+  el('lby-tag').textContent=info.label;
+  el('lby-code').textContent=sessionCode;
+  el('lby-url').textContent=_joinUrl;
+  el('lby-count').textContent='0';
+  el('lby-chips').innerHTML='';
+  el('startBtn').style.display='none';
+  el('ladderProjBtn').style.display='inline-block';
+  show('s-lobby');
+  attachPlayersListener('wordladder/'+sessionCode+'/players');
+}
+
 function _modeInfo(m){
   switch(m){
+    case 'ladder':   return {url:WORDLADDER_URL, fbPath:'wordladder', tag:'ladder', label:'🔤 Word Ladder', hostUrl:WORDLADDER_HOST_URL, hostLabel:'Open Projector View'};
     case 'race':     return {url:RACE3D_URL,   fbPath:'race',     tag:'race',     label:'🏁 Edurena Rally',      hostUrl:RACE3D_HOST_URL,   hostLabel:'Open Projector View'};
     case 'puzzle':   return {url:PUZZLE_URL,   fbPath:'puzzle',   tag:'puzzle',   label:'🧩 Puzzle Race',        hostUrl:PUZZLE_HOST_URL,   hostLabel:'Open Projector View'};
     case 'tower':    return {url:TOWER_URL,    fbPath:'tower',    tag:'tower',    label:'🏰 Tower Defense',      hostUrl:TOWER_HOST_URL,    hostLabel:'Open Projector (required to run the game)'};
@@ -800,6 +827,8 @@ function showLobby(){
   el('lby-count').textContent='0';
   el('lby-chips').innerHTML='';
   el('startBtn').disabled=true;
+  el('startBtn').style.display='inline-block';
+  el('ladderProjBtn').style.display='none';
   show('s-lobby');
   attachPlayersListener(info.fbPath+'/'+sessionCode+'/players');
 }

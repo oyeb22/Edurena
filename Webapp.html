@@ -294,6 +294,7 @@ var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
 var PRACTICE_URL  = 'https://edurena.online/TopicPractice.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 var RACE_URL      = 'https://edurena.online/Race3D.html';
+var WORDLADDER_URL = 'https://edurena.online/WordLadder.html';
 var SIMLAB_URL    = 'https://edurena.online/SimulationLab.html';
 
 function refreshFromDash() {
@@ -447,7 +448,8 @@ function openGame(mode) {
       whack:    WHACK_URL,
       shootout: SHOOTOUT_URL,
       tower:    TOWER_URL,
-      race:     RACE_URL
+      race:     RACE_URL,
+      ladder:   WORDLADDER_URL
     };
     var base = GAME_URLS[mode] || LIVEQUIZ_URL;
     var url  = base + (base.indexOf('?') === -1 ? '?' : '&')
