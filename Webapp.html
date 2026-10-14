@@ -469,16 +469,10 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
   var GAME_ROWS = [
     {mode:'kahoot',   icon:'grid',   c:'#9d86ff', title:'Live Quiz',
      desc:'Teacher-paced questions with a live leaderboard'},
-    {mode:'puzzle',   icon:'puzzle', c:'#c084fc', title:'Puzzle Race',
-     desc:'Correct answers earn pieces — finish your picture first'},
-    {mode:'whack',    icon:'hammer', c:'#ff9a4a', title:'Whack-a-Mole',
-     desc:'Shared board — first correct answer whacks the mole'},
-    {mode:'shootout', icon:'ball',   c:'#3fbf75', title:'Penalty Shootout',
-     desc:'Kicker vs keeper — fastest correct answer wins the duel'},
-    {mode:'tower',    icon:'castle', c:'#38c6ef', title:'Tower Defense',
-     desc:'Four teams, one tower — defend your side'},
     {mode:'race',     icon:'flag',   c:'#ff5470', title:'Edurena Rally',
-     desc:'3D race — correct answers boost your car'}
+     desc:'3D race — correct answers boost your car'},
+    {mode:'ladder',   icon:'rank',   c:'#38c6ef', title:'Word Ladder',
+     desc:'Climb the ladder one correct word at a time'}
   ];
 
   picker.innerHTML = '<div class="picker-h">Choose a game</div>'
