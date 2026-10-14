@@ -1,265 +1,326 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#030711">
   <title>Edurena — Start Exam</title>
   <script src="edurena-dash.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
-      background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
-                  radial-gradient(ellipse at 70% 20%, rgba(167,139,250,0.1)  0%, transparent 50%),
-                  #080C16;
-      min-height:100dvh; display:flex; align-items:center; justify-content:center;
-      color:#e2e8f0; padding:20px;
+    :root{
+      --bg:#030711;--s1:#070d1a;--s2:#0c1526;--s3:#111e33;
+      --line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);
+      --tx:#edf2ff;--tx2:#8898b8;--tx3:#4d5e7f;
+      --amber:#f5a623;--amber2:#ffc144;--amber-bg:rgba(245,166,35,.10);--amber-line:rgba(245,166,35,.34);
+      --ok:#22d18b;--bad:#ff5c5c;
+      --display:'Sora',system-ui,sans-serif;--f:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+      --ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
     }
-    .box {
-      background:#0F1523; border:1px solid #2e3248; border-radius:20px;
-      padding:36px 40px; width:460px; max-width:96vw;
-      box-shadow:0 24px 80px rgba(0,0,0,0.5);
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      font-family:var(--f);color:var(--tx);min-height:100dvh;
+      background:radial-gradient(900px 520px at 18% -8%,rgba(245,166,35,.10),transparent 62%),
+                 radial-gradient(700px 500px at 100% 100%,rgba(177,151,252,.05),transparent 60%),var(--bg);
+      display:flex;align-items:center;justify-content:center;padding:32px 20px;
+      -webkit-font-smoothing:antialiased;
     }
-    @media(max-width:520px){
-      .box { padding:28px 20px; border-radius:16px; }
-    }
-    .logo { text-align:center; margin-bottom:28px; }
-    .logo .icon { font-size:40px; display:block; margin-bottom:10px; }
-    .logo h1 { font-size:22px; font-weight:700; color:#FB923C; }
-    .logo p  { font-size:12px; color:#7c85a2; margin-top:4px; }
+    /* faint engineering grid, fading out from the top-left glow */
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;
+      background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+      background-size:56px 56px;
+      -webkit-mask-image:radial-gradient(ellipse 70% 60% at 20% 10%,#000 0%,transparent 75%);
+              mask-image:radial-gradient(ellipse 70% 60% at 20% 10%,#000 0%,transparent 75%);opacity:.55}
+    /* film grain so the dark fields don't read as flat digital black */
+    body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-    /* Step indicator */
-    .steps { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:28px; }
-    .step  { width:28px; height:28px; border-radius:50%; border:2px solid #2e3248; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#7c85a2; transition:all 0.2s; }
-    .step.active  { border-color:#F97316; background:#F97316; color:white; }
-    .step.done    { border-color:#34d399; background:#34d399; color:#000; }
-    .step-line    { flex:1; max-width:40px; height:2px; background:#2e3248; border-radius:1px; }
-    .step-line.done { background:#34d399; }
-    .step-label   { font-size:11px; color:#7c85a2; text-align:center; margin-top:4px; }
-    .steps-wrap   { margin-bottom:28px; }
-    .steps-labels { display:flex; justify-content:space-between; padding:0 4px; }
+    .shell{position:relative;z-index:1;width:100%;max-width:1040px;display:grid;grid-template-columns:minmax(0,1fr);gap:28px;align-items:center}
+    @media(min-width:940px){.shell{grid-template-columns:minmax(0,1fr) 470px;gap:72px}}
 
-    .form-group { margin-bottom:16px; }
-    label { display:block; font-size:12px; font-weight:500; color:#7c85a2; margin-bottom:6px; }
-    input, select {
-      width:100%; padding:12px 14px;
-      background:#080C16; border:1px solid #2e3248; border-radius:10px;
-      color:#e2e8f0; font-size:16px; font-family:'Plus Jakarta Sans',system-ui,sans-serif;
-      outline:none; transition:border-color 0.15s, box-shadow 0.15s;
-      min-height:48px; touch-action:manipulation;
+    /* ── Left: editorial intro ── */
+    .intro{animation:rise .7s var(--ease) both}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+    .logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;box-shadow:0 0 0 2px var(--amber),0 0 24px rgba(245,166,35,.35)}
+    .logo img{width:100%;height:100%;object-fit:cover;display:block}
+    .wordmark{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.2px}
+    .wordmark small{display:block;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--tx3);letter-spacing:1.6px;text-transform:uppercase;margin-top:2px}
+    .headline{text-wrap:balance;font-family:var(--display);font-weight:700;font-size:clamp(32px,5.2vw,58px);line-height:1.04;letter-spacing:-1.6px}
+    .headline .hl{position:relative;color:var(--amber2);white-space:nowrap}
+    .headline .hl svg{position:absolute;left:-2%;bottom:-.16em;width:104%;height:.36em;overflow:visible}
+    .headline .hl path{fill:none;stroke:var(--amber);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:240;stroke-dashoffset:240;animation:draw 1.1s .55s var(--ease) forwards}
+    .lede{margin-top:22px;max-width:420px;color:var(--tx2);font-size:15.5px;line-height:1.65}
+    .marks{display:flex;gap:22px;margin-top:34px;flex-wrap:wrap}
+    .mark{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--tx2)}
+    .mark svg{width:17px;height:17px;color:var(--amber)}
+    @media(max-width:939px){
+      .intro{text-align:left}
+      .brand{margin-bottom:18px}
+      .headline{font-size:clamp(28px,8vw,40px);letter-spacing:-1px}
+      .lede{font-size:14px;margin-top:12px}
+      .marks{display:none}
     }
-    input:focus, select:focus {
-      border-color:#F97316;
-      box-shadow:0 0 0 3px rgba(249,115,22,0.15);
-    }
-    select option { background:#0F1523; }
+
+    /* ── Right: the card ── */
+    .box{position:relative;background:linear-gradient(180deg,rgba(17,30,51,.72),rgba(7,13,26,.92));
+      border:1px solid var(--line2);border-radius:22px;padding:30px 30px 26px;
+      box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 30px 80px -20px rgba(0,0,0,.7);
+      -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);animation:rise .7s .08s var(--ease) both}
+    .box::before{content:'';position:absolute;top:-1px;left:28px;right:28px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);opacity:.7}
+    @media(max-width:520px){.box{padding:24px 18px 20px;border-radius:18px}}
+
+    /* Stepper */
+    .stepper{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+    .st{display:flex;align-items:center;gap:8px}
+    .st span{font-size:12px;font-weight:600;color:var(--tx3);transition:color .3s}
+    .st:has(.active) span,.st:has(.done) span{color:var(--tx)}
+    .step{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--tx3);border:1px solid var(--line2);background:var(--s1);transition:all .35s var(--ease)}
+    .step.active{color:#1a1002;background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 4px var(--amber-bg)}
+    .step.done{color:var(--ok);border-color:rgba(34,209,139,.4);background:rgba(34,209,139,.1)}
+    .step-line{flex:1;height:2px;border-radius:2px;background:var(--line2);position:relative;overflow:hidden;min-width:14px}
+    .step-line::after{content:'';position:absolute;inset:0;background:var(--ok);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease)}
+    .step-line.done::after{transform:scaleX(1)}
+    @media(max-width:380px){.st span{display:none}}
+
+    .panel{display:none}
+    .panel.active{display:block;animation:panelIn .45s var(--ease) both}
+    .panel-head{margin-bottom:20px}
+    .panel-head h2{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.3px}
+    .panel-head p{font-size:13.5px;color:var(--tx2);margin-top:5px;line-height:1.5}
+
+    .form-group{margin-bottom:14px}
+    label{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:7px;letter-spacing:.1px}
+    input,select{
+      width:100%;padding:13px 15px;background:rgba(3,7,17,.7);border:1px solid var(--line2);border-radius:12px;
+      color:var(--tx);font-size:16px;font-family:var(--f);outline:none;min-height:50px;touch-action:manipulation;
+      transition:border-color .2s,box-shadow .2s,background .2s}
+    input::placeholder{color:var(--tx3)}
+    input:hover{border-color:rgba(255,255,255,.2)}
+    input:focus,select:focus{border-color:var(--amber);background:rgba(3,7,17,.95);box-shadow:0 0 0 4px var(--amber-bg)}
+    select option{background:var(--s1)}
+    input.code-inp{font-family:var(--mono);font-weight:600;letter-spacing:3px;text-transform:uppercase}
     /* Class/School are derived from the validated exam code, not typed —
        a visibly different (non-editable-looking) state so it reads as
        intentional rather than a stuck/broken input. */
-    input[readonly] { background:#0F1523; color:#a9b2c9; cursor:default; }
-    input[readonly]:focus { border-color:#2e3248; box-shadow:none; }
+    input[readonly]{background:var(--s2);color:var(--tx2);cursor:default;border-style:dashed}
+    input[readonly]:focus{border-color:var(--line2);box-shadow:none}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:400px){.row2{grid-template-columns:1fr;gap:0}}
+    .hint{font-size:11px;color:var(--tx3);margin-top:6px;min-height:0}
 
-    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .btn{
+      position:relative;overflow:hidden;width:100%;padding:14px;margin-top:8px;min-height:52px;
+      background:linear-gradient(180deg,var(--amber2),var(--amber));color:#1a1002;border:none;border-radius:12px;
+      font-size:15px;font-weight:700;font-family:var(--f);cursor:pointer;touch-action:manipulation;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 10px 30px -8px rgba(245,166,35,.55);
+      transition:transform .15s var(--ease),box-shadow .2s,filter .2s}
+    .btn::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);transition:left .7s var(--ease)}
+    .btn:hover:not(:disabled)::after{left:130%}
+    .btn:hover:not(:disabled){box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 14px 36px -8px rgba(245,166,35,.7)}
+    .btn:active:not(:disabled){transform:scale(.985)}
+    .btn:disabled{filter:saturate(.4) brightness(.7);cursor:not-allowed}
+    .btn-ghost{width:100%;padding:12px;margin-top:10px;min-height:48px;background:transparent;color:var(--tx2);
+      border:1px solid var(--line2);border-radius:12px;font-size:14px;font-weight:600;font-family:var(--f);cursor:pointer;
+      touch-action:manipulation;transition:all .2s}
+    .btn-ghost:hover{border-color:var(--amber-line);color:var(--amber2);background:var(--amber-bg)}
 
-    .btn {
-      width:100%; padding:14px; background:#F97316; color:white;
-      border:none; border-radius:10px; font-size:15px; font-weight:700;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:background 0.15s, transform 0.1s; margin-top:6px;
-      min-height:50px; touch-action:manipulation; display:flex; align-items:center; justify-content:center;
-    }
-    .btn:hover:not(:disabled) { background:#EA6B10; }
-    .btn:active:not(:disabled) { transform:scale(.99); }
-    .btn:disabled { opacity:0.4; cursor:not-allowed; }
-    .btn-ghost {
-      width:100%; padding:12px; background:transparent; color:#7c85a2;
-      border:1px solid #2e3248; border-radius:10px; font-size:14px; font-weight:500;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer; transition:all 0.15s; margin-top:8px;
-      min-height:46px; touch-action:manipulation;
-    }
-    .btn-ghost:hover { border-color:#F97316; color:#FB923C; }
+    .or-divider{display:flex;align-items:center;gap:12px;margin:26px 0 14px;color:var(--tx3);font-family:var(--mono);font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase}
+    .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--line2)}
 
-    /* Live game button — distinct teal colour so it stands out */
-    .btn-live {
-      width:100%; padding:13px; background:transparent; border:1px solid #2dd4a0;
-      border-radius:10px; color:#2dd4a0; font-size:14px; font-weight:600;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
-      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
-    }
-    .btn-live:hover { background:rgba(45,212,160,0.1); }
+    /* "Other ways in" — compact tiles instead of a stack of five same-size
+       coloured outline buttons. Each keeps its own hue via --c so the
+       modes stay recognisable, but the card itself stays calm. Pickers
+       (#live-picker / #competition-picker) are inserted after a tile by the
+       script; grid-column:1/-1 + dense flow lets them open full-width
+       beneath it without leaving holes in the grid. */
+    .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;grid-auto-flow:row dense}
+    .tile{--c:#8898b8;position:relative;display:flex;align-items:center;gap:11px;text-align:left;padding:12px;min-height:62px;
+      background:var(--s1);border:1px solid var(--line);border-radius:14px;color:var(--tx);cursor:pointer;font-family:var(--f);
+      touch-action:manipulation;transition:border-color .2s,background .2s,transform .2s var(--ease);animation:rise .5s var(--ease) both}
+    .tile:nth-child(2){animation-delay:.04s}.tile:nth-child(3){animation-delay:.08s}.tile:nth-child(4){animation-delay:.12s}.tile:nth-child(5){animation-delay:.16s}
+    .tile:hover{border-color:color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 7%,var(--s1));transform:translateY(-2px)}
+    .tile:active{transform:translateY(0) scale(.98)}
+    .tile .ti{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;color:var(--c);
+      background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 28%,transparent)}
+    .tile .ti svg{width:18px;height:18px}
+    .tile .tt{font-size:13.5px;font-weight:600;line-height:1.25;min-width:0}
+    .tile .tt small{display:block;font-size:11.5px;font-weight:400;color:var(--tx2);margin-top:2px}
+    .btn-live{--c:#2dd4a0}
+    .btn-challenge{--c:#9d86ff}
+    .btn-simlab{--c:#5b8cff}
+    .btn-practice{--c:#3fbf75}
+    /* Competition Mode — hidden by default: it only appears once a
+       competition has actually been published (checkCompetitionAvailability).
+       When it does appear it's a full-width featured banner on top. */
+    .btn-competition{--c:#f5a623;display:none;grid-column:1/-1;order:-1;
+      background:linear-gradient(100deg,rgba(245,166,35,.13),rgba(245,166,35,.03) 70%);border-color:var(--amber-line)}
+    .btn-competition.show{display:flex}
+    .btn-competition .live-dot{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1.2px;color:var(--amber2)}
+    .live-dot i{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 0 rgba(245,166,35,.6);animation:ping 1.8s infinite}
+    @media(max-width:360px){.tile .tt small{display:none}.tile{min-height:54px}}
 
-    /* Challenge Mode button — purple/cyan to match its own brand identity */
-    .btn-challenge {
-      width:100%; padding:13px; background:transparent; border:1px solid #7c5cff;
-      border-radius:10px; color:#7c5cff; font-size:14px; font-weight:600;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
-      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
-    }
-    .btn-challenge:hover { background:rgba(124,92,255,0.1); }
+    /* Pickers generated by joinLiveGame() / openCompetitionMode() */
+    .picker{grid-column:1/-1;border:1px solid var(--line2);border-radius:14px;overflow:hidden;background:var(--s1);animation:drop .35s var(--ease) both}
+    .picker-h{padding:11px 14px;font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1.4px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
+    .picker-empty{padding:16px;font-size:13px;color:var(--tx2)}
+    .pick{--c:#8898b8;width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;background:transparent;border:none;border-bottom:1px solid var(--line);
+      color:var(--tx);font-family:var(--f);text-align:left;cursor:pointer;transition:background .15s;animation:rise .35s var(--ease) both}
+    .pick:last-child{border-bottom:none}
+    .pick:hover{background:color-mix(in srgb,var(--c) 8%,transparent)}
+    .pick .ti{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+    .pick .ti svg{width:17px;height:17px}
+    .pick b{display:block;font-size:14px;font-weight:600}
+    .pick small{display:block;font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.4}
+    .pick .go{margin-left:auto;color:var(--tx3);transition:transform .2s,color .2s}
+    .pick:hover .go{color:var(--c);transform:translateX(3px)}
+    .pick .go svg{width:16px;height:16px}
 
-    /* Competition Mode button — gold/trophy to match its own brand identity.
-       Hidden by default: it only appears once a competition has actually
-       been published for a date, not just as a permanently-visible button
-       that shows an empty list when tapped. See checkCompetitionAvailability(). */
-    .btn-competition {
-      display:none;
-      width:100%; padding:13px; background:transparent; border:1px solid #f5a623;
-      border-radius:10px; color:#f5a623; font-size:14px; font-weight:600;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; align-items:center;
-      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
-    }
-    .btn-competition.show { display:flex; }
-    .btn-competition:hover { background:rgba(245,166,35,0.1); }
+    .error{display:none;margin-top:12px;background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.28);border-radius:10px;
+      padding:10px 13px;color:#ff8a8a;font-size:13px;line-height:1.45}
+    .error.on{display:block;animation:shake .4s var(--ease)}
+    .info{display:none;margin-top:14px;background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:10px;
+      padding:11px 14px;color:var(--amber2);font-size:13px;line-height:1.5;text-align:center}
+    .info.on{display:block}
+    .info a{color:var(--amber2)}
+    .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(26,16,2,.25);border-top-color:#1a1002;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
+    .info .spinner{border-color:rgba(255,193,68,.25);border-top-color:var(--amber2)}
 
-    /* Simulation Lab button — blue to match the lab's own brand color */
-    .btn-simlab {
-      width:100%; padding:13px; background:transparent; border:1px solid #3355dd;
-      border-radius:10px; color:#3355dd; font-size:14px; font-weight:600;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
-      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
-    }
-    .btn-simlab:hover { background:rgba(51,85,221,0.1); }
+    .verified-badge{display:flex;align-items:center;gap:9px;background:rgba(34,209,139,.07);border:1px solid rgba(34,209,139,.25);
+      border-radius:12px;padding:10px 13px;font-size:13px;color:var(--ok);margin-bottom:18px;width:100%;line-height:1.4}
+    .verified-badge svg{width:17px;height:17px;flex-shrink:0}
 
-    /* Topic Practice button - green, matching its rank-ladder identity */
-    .btn-practice {
-      width:100%; padding:13px; background:transparent; border:1px solid #3fae6a;
-      border-radius:10px; color:#3fae6a; font-size:14px; font-weight:600;
-      font-family:'Plus Jakarta Sans',system-ui,sans-serif; cursor:pointer;
-      transition:all 0.15s; margin-top:10px; display:flex; align-items:center;
-      justify-content:center; gap:8px; min-height:48px; touch-action:manipulation;
-    }
-    .btn-practice:hover { background:rgba(63,174,106,0.1); }
+    /* Exam ticket on step 3 — perforated stub look */
+    .ticket{position:relative;background:var(--s2);border:1px solid var(--line2);border-radius:16px;margin-bottom:18px;overflow:hidden}
+    .ticket .tk-top{padding:16px 18px 14px}
+    .tk-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:1.6px;color:var(--amber);text-transform:uppercase}
+    .tk-title{font-family:var(--display);font-size:18px;font-weight:700;margin-top:4px;line-height:1.3;letter-spacing:-.2px}
+    .ticket .perf{position:relative;height:0;border-top:1.5px dashed var(--line2);margin:0 14px}
+    .ticket .perf::before,.ticket .perf::after{content:'';position:absolute;top:-10px;width:20px;height:20px;border-radius:50%;background:#08101f;border:1px solid var(--line2)}
+    .ticket .perf::before{left:-25px}.ticket .perf::after{right:-25px}
+    .tk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;padding:14px 18px 16px}
+    .tk-grid dt{font-family:var(--mono);font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--tx3)}
+    .tk-grid dd{font-size:13.5px;font-weight:600;margin-top:3px;overflow-wrap:anywhere}
 
-    /* Divider with label */
-    .or-divider {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin:20px 0 4px;
-      color:#4a5270;
-      font-size:12px;
-    }
-    .or-divider::before,
-    .or-divider::after {
-      content:'';
-      flex:1;
-      height:1px;
-      background:#2e3248;
-    }
+    .foot{margin-top:18px;text-align:center;font-size:11.5px;color:var(--tx3)}
 
-    .error {
-      display:none; margin-top:14px;
-      background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3);
-      border-radius:8px; padding:10px 14px; color:#f87171; font-size:13px; line-height:1.4;
-    }
-    .error.on { display:block; }
-    .info {
-      display:none; margin-top:14px;
-      background:rgba(108,99,255,0.1); border:1px solid rgba(108,99,255,0.3);
-      border-radius:8px; padding:10px 14px; color:#FB923C; font-size:13px;
-      line-height:1.4; text-align:center;
-    }
-    .info.on { display:block; }
-    .spinner {
-      display:inline-block; width:14px; height:14px;
-      border:2px solid rgba(255,255,255,0.3); border-top-color:white;
-      border-radius:50%; animation:spin 0.7s linear infinite;
-      vertical-align:middle; margin-right:8px;
-    }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    .panel { display:none; }
-    .panel.active { display:block; }
-
-    .verified-badge {
-      display:inline-flex; align-items:center; gap:6px;
-      background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3);
-      border-radius:8px; padding:8px 12px; font-size:13px; color:#34d399; margin-bottom:16px; width:100%;
-    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    @keyframes panelIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+    @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    @keyframes draw{to{stroke-dashoffset:0}}
+    @keyframes ping{0%{box-shadow:0 0 0 0 rgba(245,166,35,.55)}80%,100%{box-shadow:0 0 0 9px rgba(245,166,35,0)}}
+    @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}.headline .hl path{stroke-dashoffset:0}}
   </style>
 </head>
 <body>
-<div class="box">
-  <div class="logo">
-    <img src="assets/edurena_logo_64.png" class="icon" style="width:52px;height:52px;border-radius:50%;border:2px solid #f5a623;object-fit:cover;">
-    <h1 style="color:#F97316">Edurena</h1>
-    <p>AI-Proctored Examination Platform</p>
-  </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4h12l-2.5 4L17 12H5"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 16v5M7 3h10v6a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5.4 9.3A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.7L14 9V3M7.5 15h9"/></symbol>
+  <symbol id="i-rank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 13 6-5 6 5M6 19l6-5 6 5M12 2.5l1.4 2.6L12 7.5l-1.4-2.4z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.3 7.5 9.5 4.3-1.2 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 4h5.5a2.5 2.5 0 1 1 5 0H20v5.5a2.5 2.5 0 1 0 0 5V20h-5.5a2.5 2.5 0 1 0-5 0H4v-5.5a2.5 2.5 0 1 1 0-5z"/></symbol>
+  <symbol id="i-hammer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m13 5 6 6-3 3-6-6zM10 8l-7 7 3 3 7-7"/></symbol>
+  <symbol id="i-ball" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7.5 3.8 2.8-1.5 4.4H9.7l-1.5-4.4z"/></symbol>
+  <symbol id="i-castle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 21V8h3v3h3V8h4v3h3V8h3v13zM10 21v-4.5a2 2 0 0 1 4 0V21"/></symbol>
+</svg>
 
+<main class="shell">
+  <section class="intro">
+    <div class="brand">
+      <span class="logo"><img src="assets/edurena_logo_64.png" alt="Edurena"></span>
+      <span class="wordmark">Edurena<small>Exam portal</small></span>
+    </div>
+    <h1 class="headline">Your exam is<br><span class="hl">one code<svg viewBox="0 0 200 12" preserveAspectRatio="none"><path d="M2 8 C 50 2, 120 2, 198 7"/></svg></span> away.</h1>
+    <p class="lede">Enter the code your teacher gave you. We'll confirm your details, then open your exam in a secure, proctored tab.</p>
+    <div class="marks">
+      <span class="mark"><svg><use href="#i-shield"/></svg>AI-proctored</span>
+      <span class="mark"><svg><use href="#i-clock"/></svg>Timed sessions</span>
+      <span class="mark"><svg><use href="#i-check"/></svg>Results go to your teacher</span>
+    </div>
+  </section>
+
+<div class="box">
   <!-- Step indicators -->
-  <div class="steps-wrap">
-    <div class="steps">
-      <div class="step active" id="s1">1</div>
-      <div class="step-line" id="l1"></div>
-      <div class="step" id="s2">2</div>
-      <div class="step-line" id="l2"></div>
-      <div class="step" id="s3">3</div>
-    </div>
-    <div class="steps-labels">
-      <span class="step-label">Verify</span>
-      <span class="step-label">Profile</span>
-      <span class="step-label">Start</span>
-    </div>
+  <div class="stepper">
+    <div class="st"><div class="step active" id="s1">1</div><span>Verify</span></div>
+    <div class="step-line" id="l1"></div>
+    <div class="st"><div class="step" id="s2">2</div><span>Profile</span></div>
+    <div class="step-line" id="l2"></div>
+    <div class="st"><div class="step" id="s3">3</div><span>Start</span></div>
   </div>
 
   <!-- PANEL 1: Exam code + email verification -->
   <div class="panel active" id="panel1">
-    <div class="form-group">
-
-<label>Admission Number / Email</label>
-<input type="text" id="email" placeholder="e.g. ADM/2025/001 or email@gmail.com" autocomplete="off">
+    <div class="panel-head">
+      <h2>Verify your exam</h2>
+      <p>Use the admission number or email your school registered you with.</p>
     </div>
     <div class="form-group">
-      <label>Exam Code</label>
-      <input type="text" id="code" placeholder="e.g. MATH7A-W1"
-             style="font-family:'DM Mono',monospace;text-transform:uppercase;"
+      <label for="email">Admission number or email</label>
+      <input type="text" id="email" placeholder="ADM/2025/001 or you@gmail.com" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="code">Exam code</label>
+      <input type="text" id="code" class="code-inp" placeholder="MATH7A-W1" autocomplete="off" spellcheck="false"
              oninput="this.value=this.value.toUpperCase()">
     </div>
     <button class="btn" id="verifyBtn" onclick="doValidate()">Verify Exam Code &#x2192;</button>
-
-    <!-- Divider + Live Join button -->
-    <div class="or-divider">or</div>
-    <button class="btn-live" onclick="joinLiveGame()">
-      &#x26A1; Join a Live Game
-    </button>
-    <button class="btn-challenge" onclick="openChallengeMode()">
-      &#x26A1; Challenge Mode
-    </button>
-    <button class="btn-competition" onclick="openCompetitionMode()">
-      &#x1F3C6; Competitions
-    </button>
-    <button class="btn-simlab" onclick="openSimLab()">
-      &#x1F52C; Simulation Lab
-    </button>
-    <button class="btn-practice" onclick="openTopicPractice()">
-      &#x1F396;&#xFE0F; Topic Practice &amp; Ranks
-    </button>
-
     <div class="error" id="errMsg1"></div>
+
+    <div class="or-divider">or jump into</div>
+    <div class="modes">
+      <button class="tile btn-competition" onclick="openCompetitionMode()">
+        <span class="ti"><svg><use href="#i-trophy"/></svg></span>
+        <span class="tt">Competitions<small>Ticketed events with a prize pool</small></span>
+        <span class="live-dot"><i></i>OPEN</span>
+      </button>
+      <button class="tile btn-live" onclick="joinLiveGame()">
+        <span class="ti"><svg><use href="#i-bolt"/></svg></span>
+        <span class="tt">Live game<small>Play with your class</small></span>
+      </button>
+      <button class="tile btn-challenge" onclick="openChallengeMode()">
+        <span class="ti"><svg><use href="#i-flag"/></svg></span>
+        <span class="tt">Challenge<small>Race other students</small></span>
+      </button>
+      <button class="tile btn-simlab" onclick="openSimLab()">
+        <span class="ti"><svg><use href="#i-flask"/></svg></span>
+        <span class="tt">Simulation Lab<small>Hands-on experiments</small></span>
+      </button>
+      <button class="tile btn-practice" onclick="openTopicPractice()">
+        <span class="ti"><svg><use href="#i-rank"/></svg></span>
+        <span class="tt">Topic practice<small>Climb the ranks</small></span>
+      </button>
+    </div>
   </div>
 
   <!-- PANEL 2: Student profile -->
   <div class="panel" id="panel2">
-    <div class="verified-badge">&#x2705; Exam verified — complete your profile</div>
+    <div class="verified-badge"><svg><use href="#i-check"/></svg><span>Exam verified — confirm your profile</span></div>
     <div class="form-group">
-      <label>Full Name</label>
-      <input type="text" id="studentName" placeholder="e.g. John Doe" autocomplete="name">
+      <label for="studentName">Full name</label>
+      <input type="text" id="studentName" placeholder="e.g. Adaeze Okafor" autocomplete="name">
     </div>
     <div class="row2">
       <div class="form-group">
-        <label>Class</label>
+        <label for="studentClass">Class</label>
         <input type="text" id="studentClass" placeholder="e.g. SS2A" autocomplete="off">
-        <div style="font-size:11px;color:#7c85a2;margin-top:5px" id="classHint"></div>
+        <div class="hint" id="classHint"></div>
       </div>
       <div class="form-group">
-        <label>School</label>
+        <label for="studentSchool">School</label>
         <input type="text" id="studentSchool" placeholder="School name" autocomplete="off">
       </div>
     </div>
@@ -270,14 +331,21 @@
 
   <!-- PANEL 3: Launch -->
   <div class="panel" id="panel3">
-    <div class="verified-badge">&#x1F393; Ready to begin your exam</div>
-    <div id="examSummary" style="font-size:13px;color:#7c85a2;margin-bottom:20px;line-height:1.8;"></div>
+    <div class="ticket">
+      <div class="tk-top">
+        <div class="tk-eyebrow">Admit one &middot; ready to begin</div>
+        <div class="tk-title" id="tkTitle">Exam</div>
+      </div>
+      <div class="perf"></div>
+      <dl class="tk-grid" id="examSummary"></dl>
+    </div>
     <button class="btn" id="launchBtn" onclick="doLaunch()">Open Exam in New Tab &#x2192;</button>
-    <button class="btn-ghost" id="raceBtn" style="display:none;margin-top:10px" onclick="doLaunchRace()">&#x1F3CE;&#xFE0F; Play as Race Challenge Instead</button>
+    <button class="btn-ghost" id="raceBtn" style="display:none" onclick="doLaunchRace()">Play as a Race Challenge instead</button>
     <div class="info" id="infoMsg"></div>
     <div class="error" id="errMsg3"></div>
   </div>
 </div>
+</main>
 
 <script>
 // SCRIPT_URL and the page URLs come from edurena-dash.js (DASH).
@@ -341,11 +409,13 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
       // Returning student with a stored profile: name is known too.
       if (nameEl) nameEl.readOnly = true;
       var verifiedEl = document.querySelector('#panel2 .verified-badge');
-      if (verifiedEl) verifiedEl.innerHTML = '🔒 Profile loaded — fields are locked to your registered details';
+      if (verifiedEl) verifiedEl.innerHTML = '<svg><use href="#i-lock"/></svg><span>Profile loaded — locked to your registered details</span>';
     } else {
       if (nameEl) nameEl.readOnly = false;
     }
   }
+
+  function escHtml(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   function showErr(panel, msg) {
     var el = document.getElementById('errMsg' + panel);
@@ -394,37 +464,29 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
 
   var picker = document.createElement('div');
   picker.id = 'live-picker';
-  picker.style.cssText = [
-    'margin-top:12px',
-    'border:1px solid #2e3248',
-    'border-radius:12px',
-    'overflow:hidden'
-  ].join(';');
+  picker.className = 'picker';
 
   var GAME_ROWS = [
-    {mode:'kahoot',   icon:'🎮', glow:'108,99,255',  title:'Live Quiz',
-     desc:'Host-controlled · questions appear one at a time · live leaderboard'},
-    {mode:'race',     icon:'🏎️', glow:'255,51,85',   title:'Edurena Rally',
-     desc:'Self-paced 3D race · correct answers boost your car · first past the line wins'},
-    {mode:'ladder',   icon:'🔤', glow:'255,204,0',   title:'Word Ladder',
-     desc:'Take turns changing one letter to make a new word · reveals its meaning'}
+    {mode:'kahoot',   icon:'grid',   c:'#9d86ff', title:'Live Quiz',
+     desc:'Teacher-paced questions with a live leaderboard'},
+    {mode:'puzzle',   icon:'puzzle', c:'#c084fc', title:'Puzzle Race',
+     desc:'Correct answers earn pieces — finish your picture first'},
+    {mode:'whack',    icon:'hammer', c:'#ff9a4a', title:'Whack-a-Mole',
+     desc:'Shared board — first correct answer whacks the mole'},
+    {mode:'shootout', icon:'ball',   c:'#3fbf75', title:'Penalty Shootout',
+     desc:'Kicker vs keeper — fastest correct answer wins the duel'},
+    {mode:'tower',    icon:'castle', c:'#38c6ef', title:'Tower Defense',
+     desc:'Four teams, one tower — defend your side'},
+    {mode:'race',     icon:'flag',   c:'#ff5470', title:'Edurena Rally',
+     desc:'3D race — correct answers boost your car'}
   ];
 
-  picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
-    + 'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Choose Game Mode</div>'
+  picker.innerHTML = '<div class="picker-h">Choose a game</div>'
     + GAME_ROWS.map(function(g, i){
-        var borderBottom = i < GAME_ROWS.length - 1 ? 'border-bottom:1px solid #2e3248;' : '';
-        return '<button onclick="openGame(\'' + g.mode + '\')" style="'
-          + 'width:100%;padding:14px 16px;background:transparent;border:none;' + borderBottom
-          + 'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;'
-          + 'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"'
-          + ' onmouseenter="this.style.background=\'rgba(' + g.glow + ',0.08)\'"'
-          + ' onmouseleave="this.style.background=\'transparent\'">'
-          + '<span style="font-size:20px">' + g.icon + '</span>'
-          + '<div>'
-          + '<div style="font-weight:600">' + g.title + '</div>'
-          + '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">' + g.desc + '</div>'
-          + '</div>'
+        return '<button class="pick" style="--c:' + g.c + ';animation-delay:' + (i * 35) + 'ms" onclick="openGame(\'' + g.mode + '\')">'
+          + '<span class="ti"><svg><use href="#i-' + g.icon + '"/></svg></span>'
+          + '<span><b>' + g.title + '</b><small>' + g.desc + '</small></span>'
+          + '<span class="go"><svg><use href="#i-arrow"/></svg></span>'
           + '</button>';
       }).join('');
 
@@ -525,32 +587,22 @@ function openCompetitionMode() {
     .then(function(rows) {
       var picker = document.createElement('div');
       picker.id = 'competition-picker';
-      picker.style.cssText = 'margin-top:12px;border:1px solid #2e3248;border-radius:12px;overflow:hidden';
+      picker.className = 'picker';
 
       if (!rows.length) {
-        picker.innerHTML = '<div style="padding:14px 16px;background:#12151f;font-size:13px;color:#7c85a2">'
-          + 'No competitions are open right now — check back soon.</div>';
+        picker.innerHTML = '<div class="picker-empty">No competitions are open right now — check back soon.</div>';
       } else {
-        picker.innerHTML = '<div style="padding:12px 14px;background:#12151f;font-size:11px;font-weight:600;'
-          + 'color:#7c85a2;text-transform:uppercase;letter-spacing:.6px">Open Competitions</div>'
+        picker.innerHTML = '<div class="picker-h">Open competitions</div>'
           + rows.map(function(c, i) {
               var dateStr = '';
-              try { dateStr = new Date(c.competition_date).toLocaleString(); } catch(e) {}
+              try { dateStr = new Date(c.competition_date).toLocaleString([], {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}); } catch(e) {}
               var price = '₦' + Number(c.price_per_ticket_ngn || 0).toLocaleString();
               var prize = '₦' + Number(c.prize_pool_ngn || 0).toLocaleString();
-              var borderBottom = i < rows.length - 1 ? 'border-bottom:1px solid #2e3248;' : '';
-              return '<button onclick="openCompetitionById(\'' + c.id + '\')" style="'
-                + 'width:100%;padding:14px 16px;background:transparent;border:none;' + borderBottom
-                + 'color:#e2e8f0;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;'
-                + 'cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:background .15s"'
-                + ' onmouseenter="this.style.background=\'rgba(245,166,35,0.08)\'"'
-                + ' onmouseleave="this.style.background=\'transparent\'">'
-                + '<span style="font-size:20px">\u{1F3C6}</span>'
-                + '<div>'
-                + '<div style="font-weight:600">' + (c.title || 'Competition') + '</div>'
-                + '<div style="font-size:11.5px;color:#7c85a2;margin-top:2px">'
-                + dateStr + ' &middot; ' + price + ' ticket &middot; ' + prize + ' prize pool</div>'
-                + '</div>'
+              return '<button class="pick" style="--c:#f5a623;animation-delay:' + (i * 35) + 'ms" onclick="openCompetitionById(\'' + c.id + '\')">'
+                + '<span class="ti"><svg><use href="#i-trophy"/></svg></span>'
+                + '<span><b>' + escHtml(c.title || 'Competition') + '</b>'
+                + '<small>' + dateStr + ' &middot; ' + price + ' ticket &middot; ' + prize + ' prize pool</small></span>'
+                + '<span class="go"><svg><use href="#i-arrow"/></svg></span>'
                 + '</button>';
             }).join('');
       }
@@ -714,11 +766,12 @@ function openCompetitionById(competitionId) {
         }
         var summary = document.getElementById('examSummary');
         if (summary) {
+          document.getElementById('tkTitle').textContent = (_quizMeta && _quizMeta.title) || 'Exam';
           summary.innerHTML =
-            '<strong style="color:#e2e8f0">' + (_quizMeta ? _quizMeta.title : 'Exam') + '</strong><br>'
-            + 'Student: ' + name + '<br>'
-            + 'Class: '   + cls  + ' &nbsp;|&nbsp; School: ' + school + '<br>'
-            + 'Duration: ' + ((_quizMeta && _quizMeta.duration) || 30) + ' minutes';
+              '<div><dt>Student</dt><dd>'  + escHtml(name)   + '</dd></div>'
+            + '<div><dt>Duration</dt><dd>' + ((_quizMeta && _quizMeta.duration) || 30) + ' min</dd></div>'
+            + '<div><dt>Class</dt><dd>'    + escHtml(cls)    + '</dd></div>'
+            + '<div><dt>School</dt><dd>'   + escHtml(school) + '</dd></div>';
         }
         // Race Challenge needs a fixed, known-in-advance question count — an
         // adaptive quiz decides that live per student, so it doesn't apply there.
@@ -753,7 +806,7 @@ function openCompetitionById(competitionId) {
         infoEl.innerHTML =
           '<span class="spinner"></span>Opening exam tab...<br><br>' +
           '<small>If nothing opens, ' +
-          '<a href="' + examUrl + '" target="_blank" style="color:#FB923C;">click here</a></small>';
+          '<a href="' + examUrl + '" target="_blank">click here</a></small>';
         infoEl.classList.add('on');
       }
 
@@ -861,7 +914,7 @@ function openCompetitionById(competitionId) {
         var name = (document.getElementById('studentName').value || '').trim() || 'Player';
         var raceUrl = RACE3D_URL + '?script=' + encodeURIComponent(SCRIPT_URL) + '&room=' + encodeURIComponent(raceId) + '&name=' + encodeURIComponent(name) + '&v=3d&auto=1';
         if (infoEl) {
-          infoEl.innerHTML = '<span class="spinner"></span>Opening race&hellip;<br><br><small>If nothing opens, <a href="' + raceUrl + '" target="_blank" style="color:#FB923C;">click here</a></small>';
+          infoEl.innerHTML = '<span class="spinner"></span>Opening race&hellip;<br><br><small>If nothing opens, <a href="' + raceUrl + '" target="_blank">click here</a></small>';
         }
         window.open(raceUrl, '_blank');
       });
