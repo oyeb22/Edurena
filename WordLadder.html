@@ -95,9 +95,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 .wl-timer-n{font-family:var(--mono);font-size:15px;font-weight:700;min-width:30px;text-align:right;color:var(--acc2);font-variant-numeric:tabular-nums}
 .wl-timer.low .wl-timer-n{color:var(--red);animation:blink .6s infinite}
 /* Alarm-style letter wheels: each column scroll-snaps through A-Z, the centred row is the pick */
-.wl-wheels{--row:46px;display:flex;gap:8px;justify-content:center;margin:0 auto 14px;position:relative;transition:opacity .25s}
+.wl-wheels{--row:46px;--arr:30px;display:flex;gap:8px;justify-content:center;margin:0 auto 14px;position:relative;transition:opacity .25s}
 .wl-wheels.off{opacity:.4;pointer-events:none}
-.wl-wheels::before{content:'';position:absolute;left:0;right:0;top:var(--row);height:var(--row);border-radius:12px;background:var(--acc-bg);border:1px solid var(--acc-line);pointer-events:none}
+.wcol{position:relative;display:flex;flex-direction:column;align-items:center;transition:opacity .2s}
+.wcol::before{content:'';position:absolute;left:0;right:0;top:calc(var(--arr) + var(--row));height:var(--row);border-radius:12px;background:var(--acc-bg);border:1px solid var(--acc-line);pointer-events:none}
+.warr{width:100%;height:var(--arr);display:grid;place-items:center;background:transparent;border:none;color:var(--muted);cursor:pointer;touch-action:manipulation;border-radius:10px;position:relative;z-index:1;transition:color .15s,background .15s}
+.warr svg{width:18px;height:18px}
+.warr:hover{color:var(--acc2);background:var(--acc-bg)}
+.warr:active{transform:scale(.92)}
 .wheel{width:clamp(44px,12vw,58px);height:calc(var(--row)*3);overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;position:relative;
   -webkit-mask-image:linear-gradient(180deg,transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(180deg,transparent,#000 32%,#000 68%,transparent)}
 .wheel::-webkit-scrollbar{display:none}
@@ -105,7 +110,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 .wheel-it{height:var(--row);display:flex;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always;font-family:var(--mono);font-size:26px;font-weight:700;color:var(--dim);user-select:none;-webkit-user-select:none;transition:color .15s,transform .15s}
 .wheel-it.sel{color:var(--txt);transform:scale(1.15)}
 .wheel.chg .wheel-it.sel{color:var(--acc2)}
-.wheel.lock{pointer-events:none;opacity:.35;transition:opacity .2s}
+.wcol.lock{pointer-events:none;opacity:.35}
+.wl-goal{text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:var(--muted);margin:-8px 0 16px;text-transform:uppercase}
+.wl-goal b{color:var(--acc2)}
 .wl-input-row{display:flex;gap:8px;margin-bottom:6px;max-width:460px;margin-left:auto;margin-right:auto}
 .wl-input{flex:1;min-width:0;padding:12px 14px;min-height:54px;background:rgba(3,7,17,.75);border:1px solid var(--bdr2);border-radius:12px;color:var(--txt);font-size:20px;font-family:var(--mono);font-weight:700;letter-spacing:.3em;text-transform:uppercase;outline:none;text-align:center;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
 .wl-input:focus{border-color:var(--acc);box-shadow:0 0 0 4px var(--acc-bg)}
@@ -210,6 +217,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
     <div class="stage" id="wl-stage">
       <div class="wl-turn-banner" id="wl-turn-banner">&hellip;</div>
       <div class="wl-tiles" id="wl-tiles"></div>
+      <div class="wl-goal" id="wl-goal" style="display:none"></div>
       <div class="wl-timer" id="wl-timer"><div class="wl-timer-bar"><div class="wl-timer-fill" id="wl-timer-fill"></div></div><div class="wl-timer-n" id="wl-timer-n">--</div></div>
       <div class="wl-wheels" id="wl-wheels"></div>
       <div class="wl-input-row">
@@ -401,6 +409,9 @@ function render() {
   banner.className = 'wl-turn-banner ' + (mine ? 'mine' : 'theirs');
   banner.textContent = mine ? 'Your turn — change one letter' : ((turnPlayer ? turnPlayer.name : '…') + '’s turn');
   el('wl-stage').classList.toggle('mine', !!mine);
+  var goal = el('wl-goal'), gap = state.winGap || 0;
+  goal.style.display = gap > 0 ? 'block' : 'none';
+  if (gap > 0) goal.innerHTML = 'Lead by <b>' + gap + '</b> point' + (gap === 1 ? '' : 's') + ' to win';
   buildWheels(current.word, mine, state.turnStartedAt);
   updateWheelState();
 
@@ -449,13 +460,20 @@ function buildWheels(word, mine, turnStamp) {
   wheelKey = key;
   var items = '';
   for (var c = 0; c < CYCLES; c++) for (var k = 0; k < 26; k++) items += '<div class="wheel-it">' + ALPHA[k] + '</div>';
+  var UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>';
+  var DN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   box.innerHTML = word.split('').map(function () {
-    return '<div class="wheel"><div class="wheel-pad"></div>' + items + '<div class="wheel-pad"></div></div>';
+    return '<div class="wcol"><button type="button" class="warr up" aria-label="Previous letter">' + UP + '</button>'
+      + '<div class="wheel"><div class="wheel-pad"></div>' + items + '<div class="wheel-pad"></div></div>'
+      + '<button type="button" class="warr dn" aria-label="Next letter">' + DN + '</button></div>';
   }).join('');
   wheelRow = parseFloat(getComputedStyle(box).getPropertyValue('--row')) || 46;
   wheelEls().forEach(function (w, i) {
     var raf = 0, last = -1, settle = 0;
     w._sel = null;
+    var col = w.parentNode;
+    col.querySelector('.up').addEventListener('click', function () { w.scrollTo({ top: (wheelAbs(w) - 1) * wheelRow, behavior: 'smooth' }); });
+    col.querySelector('.dn').addEventListener('click', function () { w.scrollTo({ top: (wheelAbs(w) + 1) * wheelRow, behavior: 'smooth' }); });
     w.scrollTop = (MID * 26 + Math.max(0, ALPHA.indexOf(word[i]))) * wheelRow;
     w.addEventListener('scroll', function () {
       clearTimeout(settle);
@@ -482,7 +500,7 @@ function updateWheelState() {
   ws.forEach(function (w, i) {
     var changed = cur && ALPHA[wheelIdx(w)] !== cur[i];
     w.classList.toggle('chg', !!changed);
-    w.classList.toggle('lock', diff === 1 && i !== changedIdx);
+    w.parentNode.classList.toggle('lock', diff === 1 && i !== changedIdx);
     var items = w.children, a = wheelAbs(w) + 1;          // +1 skips the leading pad
     if (w._sel !== a) {
       if (w._sel != null && items[w._sel]) items[w._sel].classList.remove('sel');
@@ -511,6 +529,9 @@ function doSubmitMove() {
 }
 
 function renderEnded() {
+  var sorted0 = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+  var winName = state.winnerName || (sorted0[0] && sorted0[0].name) || '';
+  el('wl-end-title').textContent = winName ? winName + ' wins!' : 'Game over';
   el('wl-final-scores').innerHTML = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).map(function (p, i) {
     return '<div class="wl-score-row' + (p.playerId === playerId ? ' me' : '') + '" style="animation-delay:' + (i * 70) + 'ms"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
   }).join('');
