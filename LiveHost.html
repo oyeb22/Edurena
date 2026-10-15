@@ -688,7 +688,9 @@ function applyLockedQuiz(title){
   quizReady=true;
   el('setup-sub').textContent='Pick a mode to launch "'+title+'"';
 }
+var launching=false;   // a session is being created: mode taps are ignored until it finishes (a 2nd tap used to launch a 2nd session and relabel the lobby)
 function selectMode(m){
+  if(launching) return;
   if(URL_EXAM_CODE&&!quizReady) return;   // quiz list still loading
   mode=m;
   MODE_CARD_IDS.forEach(function(c){ el('mc-'+c).classList.toggle('sel',c===m); });
@@ -698,19 +700,11 @@ function selectMode(m){
   el('ladder-time-row').style.display=(m==='ladder')?'block':'none';
   el('quiz-select-row').style.display=(m==='ladder')?'none':'';
   if(URL_EXAM_CODE){
-    if(needsTimer||m==='ladder'){
-      // Give the teacher a chance to set seconds-per-question before
-      // launching, instead of auto-launching on the mode tap with
-      // whatever the timer field defaulted to (previously 20s, always,
-      // with no way to see or change it — applyLockedQuiz hides this
-      // whole card, and launching here used to happen in the same tick
-      // as the tap).
-      el('quiz-card').style.display='block';
-      el('quiz-select-row').style.display='none';
-      el('launchBtn').style.display='block';
-    } else {
-      doLaunch();
-    }
+    // Tapping a mode only SELECTS it — it must never create a room by itself. The teacher
+    // reviews/sets the options (if the mode has any) and presses Launch Session.
+    el('quiz-card').style.display=(needsTimer||m==='ladder')?'block':'none';
+    el('quiz-select-row').style.display='none';
+    el('launchBtn').style.display='block';
   }
 }
 
@@ -797,6 +791,7 @@ function doLaunch(){
   if(!getDb()){showErr('Firebase is not ready. Refresh the page.');return;}
 
   var btn=el('launchBtn');
+  launching=true;
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
 
   var isRaceEngine=!!RACE_ENGINE_MODES[mode];
@@ -807,12 +802,12 @@ function doLaunch(){
 
   post(action,payload,function(e,r){
     btn.disabled=false;btn.textContent='Launch Session →';
-    if(e||!r||r.status!=='success'){showErr((r&&r.message)||'Failed to create session');return;}
+    if(e||!r||r.status!=='success'){launching=false;showErr((r&&r.message)||'Failed to create session');return;}
 
     if(isRaceEngine){
       sessionCode=r.data.raceId;
-      if(!sessionCode){showErr('Server returned empty session code. Try again.');return;}
-      showLobby();
+      if(!sessionCode){launching=false;showErr('Server returned empty session code. Try again.');return;}
+      launching=false;showLobby();
     }else{
       sessionCode  =r.data.sessionId;
       khQuestions  =r.data.questions||[];
@@ -832,7 +827,7 @@ function doLaunch(){
         };
       });
 
-      if(!sessionCode){showErr('Server returned empty session code. Try again.');return;}
+      if(!sessionCode){launching=false;showErr('Server returned empty session code. Try again.');return;}
       btn.disabled=true;
       btn.innerHTML='<span class="spin"></span>Setting up room…';
       var fbPath=SYNCED_ENGINE_PATH[mode]||'livequiz';
@@ -845,11 +840,11 @@ function doLaunch(){
       }).then(function(){
         btn.disabled=false;
         btn.textContent='Launch Session →';
-        showLobby();
+        launching=false;showLobby();
       }).catch(function(err){
         btn.disabled=false;
         btn.textContent='Launch Session →';
-        showErr('Firebase write failed: '+err.message);
+        launching=false;showErr('Firebase write failed: '+err.message);
       });
     }
   });
@@ -862,9 +857,11 @@ function doLaunchLadder(){
   var startWord=(el('ladder-word').value||'').trim();
   if(!startWord){showErr('Enter a starting word');return;}
   var btn=el('launchBtn');
+  launching=true;
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
   post('createWordLadderSession',{token:TOKEN,startWord:startWord,turnSeconds:parseInt(el('ladder-time').value,10)||30},function(e,r){
     btn.disabled=false;btn.textContent='Launch Session →';
+    launching=false;
     if(e||!r||r.status!=='success'){showErr((r&&r.message)||'Failed to create game');return;}
     sessionCode=r.data.sessionId;
     showLadderLobby();
