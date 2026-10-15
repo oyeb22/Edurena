@@ -88,6 +88,24 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
   font-family:var(--mono);font-size:clamp(24px,6.5vw,34px);font-weight:700;color:var(--txt);
   background:linear-gradient(180deg,#16243d,#0c1526);border:1px solid var(--bdr2);box-shadow:0 4px 0 #060b16,0 12px 24px -12px rgba(0,0,0,.8);animation:tileIn .45s var(--spring) both}
 .wl-tile.chg{background:linear-gradient(180deg,var(--acc2),var(--acc));border-color:var(--acc);color:#1a1002;box-shadow:0 4px 0 #a86a07,0 14px 30px -10px rgba(245,166,35,.7);animation:flip .7s var(--ease) both}
+.wl-timer{max-width:460px;margin:-6px auto 16px;display:flex;align-items:center;gap:10px}
+.wl-timer-bar{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.wl-timer-fill{height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transform-origin:left;transition:transform .25s linear,background .3s}
+.wl-timer.low .wl-timer-fill{background:var(--red)}
+.wl-timer-n{font-family:var(--mono);font-size:15px;font-weight:700;min-width:30px;text-align:right;color:var(--acc2);font-variant-numeric:tabular-nums}
+.wl-timer.low .wl-timer-n{color:var(--red);animation:blink .6s infinite}
+/* Alarm-style letter wheels: each column scroll-snaps through A-Z, the centred row is the pick */
+.wl-wheels{--row:46px;display:flex;gap:8px;justify-content:center;margin:0 auto 14px;position:relative;transition:opacity .25s}
+.wl-wheels.off{opacity:.4;pointer-events:none}
+.wl-wheels::before{content:'';position:absolute;left:0;right:0;top:var(--row);height:var(--row);border-radius:12px;background:var(--acc-bg);border:1px solid var(--acc-line);pointer-events:none}
+.wheel{width:clamp(44px,12vw,58px);height:calc(var(--row)*3);overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;position:relative;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(180deg,transparent,#000 32%,#000 68%,transparent)}
+.wheel::-webkit-scrollbar{display:none}
+.wheel-pad{height:var(--row)}
+.wheel-it{height:var(--row);display:flex;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always;font-family:var(--mono);font-size:26px;font-weight:700;color:var(--dim);user-select:none;-webkit-user-select:none;transition:color .15s,transform .15s}
+.wheel-it.sel{color:var(--txt);transform:scale(1.15)}
+.wheel.chg .wheel-it.sel{color:var(--acc2)}
+.wheel.lock{pointer-events:none;opacity:.35;transition:opacity .2s}
 .wl-input-row{display:flex;gap:8px;margin-bottom:6px;max-width:460px;margin-left:auto;margin-right:auto}
 .wl-input{flex:1;min-width:0;padding:12px 14px;min-height:54px;background:rgba(3,7,17,.75);border:1px solid var(--bdr2);border-radius:12px;color:var(--txt);font-size:20px;font-family:var(--mono);font-weight:700;letter-spacing:.3em;text-transform:uppercase;outline:none;text-align:center;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
 .wl-input:focus{border-color:var(--acc);box-shadow:0 0 0 4px var(--acc-bg)}
@@ -192,8 +210,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
     <div class="stage" id="wl-stage">
       <div class="wl-turn-banner" id="wl-turn-banner">&hellip;</div>
       <div class="wl-tiles" id="wl-tiles"></div>
+      <div class="wl-timer" id="wl-timer"><div class="wl-timer-bar"><div class="wl-timer-fill" id="wl-timer-fill"></div></div><div class="wl-timer-n" id="wl-timer-n">--</div></div>
+      <div class="wl-wheels" id="wl-wheels"></div>
       <div class="wl-input-row">
-        <input class="wl-input" id="wlInput" type="text" maxlength="12" autocomplete="off" spellcheck="false">
         <button class="wl-submit" id="wlSubmit">Submit</button>
       </div>
       <div class="wl-err" id="wl-err"></div>
@@ -233,13 +252,33 @@ function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&
 function showScreen(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('on'); }); var t = el(id); if (t) t.classList.add('on'); }
 function fatal(msg) { showScreen('s-fatal'); el('s-fatal').classList.add('err'); el('fatal-title').textContent = 'CANNOT LOAD'; el('fatal-msg').textContent = msg; }
 if (!GAS_URL) { fatal('Missing backend URL.'); return; }
-showScreen('s-join');
+// ── Local dictionary ────────────────────────────────────────
+// {WORD: "definition"} downloaded once (browser-cached) instead of calling a web API mid-game.
+var DICT = null, dictLoading = null;
+function loadDict() {
+  if (dictLoading) return dictLoading;
+  dictLoading = fetch('./assets/wordladder/words.json', { cache: 'force-cache' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (d) { DICT = d; })
+    .catch(function (e) { dictLoading = null; throw e; });
+  return dictLoading;
+}
+// Inflected forms are stored as "@BASE" to keep the file small; expand to a readable definition.
+function defOf(w) {
+  var d = (DICT && DICT[String(w || '').toUpperCase()]) || '';
+  if (d.charAt(0) === '@') { var b = d.slice(1); return DICT[b] ? '(Form of ' + b + ') ' + DICT[b] : ''; }
+  return d;
+}
 
-var db;
+showScreen('s-join');
+loadDict().catch(function () { /* retried on Join */ });
+
+var db, serverOffset = 0;
 try {
   var cfgFb = { apiKey: 'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc', authDomain: 'kahoot-24063.firebaseapp.com', databaseURL: 'https://kahoot-24063-default-rtdb.firebaseio.com', projectId: 'kahoot-24063', storageBucket: 'kahoot-24063.firebasestorage.app', messagingSenderId: '962917873467', appId: '1:962917873467:web:a6b526aee30cd15c92291e' };
   var existing = null; if (firebase.apps) firebase.apps.forEach(function (a) { if (a.name === 'wl') existing = a; });
   db = firebase.database(existing || firebase.initializeApp(cfgFb, 'wl'));
+  db.ref('.info/serverTimeOffset').on('value', function (s) { serverOffset = s.val() || 0; });
 } catch (e) { fatal('Firebase error: ' + e.message); return; }
 
 function gasPost(body, cb) {
@@ -255,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function () {
   el('inp-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') doJoin(); });
   el('joinBtn').addEventListener('click', doJoin);
   el('wlSubmit').addEventListener('click', doSubmitMove);
-  el('wlInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSubmitMove(); });
 });
 
 function doJoin() {
@@ -266,14 +304,42 @@ function doJoin() {
   if (sessionId.length < 4) { errE.textContent = 'Enter a valid game code'; return; }
   if (playerName.length < 2) { errE.textContent = 'Enter your name (min 2 chars)'; return; }
   btn.disabled = true; btn.textContent = 'Joining…';
-  gasPost({ action: 'joinWordLadder', sessionId: sessionId, playerName: playerName }, function (gErr, res) {
+  loadDict().then(function () {
+    gasPost({ action: 'joinWordLadder', sessionId: sessionId, playerName: playerName }, function (gErr, res) {
+      btn.disabled = false; btn.textContent = 'Join Game';
+      if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not join. Check your code.'; return; }
+      playerId = res.data.playerId;
+      listenFirebase();
+      applyState(res.data.state);
+    });
+  }, function () {
     btn.disabled = false; btn.textContent = 'Join Game';
-    if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not join. Check your code.'; return; }
-    playerId = res.data.playerId;
-    listenFirebase();
-    applyState(res.data.state);
+    errE.textContent = 'Could not load the word list — check your connection and try again.';
   });
 }
+
+// ── Turn timer ──────────────────────────────────────────────
+var timerHandle = null, skipSentFor = '';
+function turnMs() { return ((state && state.turnSeconds) || 30) * 1000; }
+function stopTimer() { if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
+function tickTimer() {
+  if (!state || state.status === 'ended' || !state.turnStartedAt) return;
+  var total = turnMs();
+  var left = total - (Date.now() + serverOffset - new Date(state.turnStartedAt).getTime());
+  var secs = Math.max(0, Math.ceil(left / 1000));
+  el('wl-timer-n').textContent = secs;
+  el('wl-timer-fill').style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / total)) + ')';
+  el('wl-timer').classList.toggle('low', secs <= 5);
+  // At zero the current player asks the server to skip; everyone else backs it up 2.5s later in
+  // case that player has dropped. The server ignores duplicates (keyed on turnStartedAt).
+  if (left <= 0 && skipSentFor !== state.turnStartedAt && (myTurn() || left <= -2500)) {
+    skipSentFor = state.turnStartedAt;
+    gasPost({ action: 'skipWordLadderTurn', sessionId: sessionId, turnStartedAt: state.turnStartedAt }, function (e, res) {
+      if (e || !res || res.status !== 'success') skipSentFor = '';   // allow a retry on the next tick
+    });
+  }
+}
+function startTimer() { stopTimer(); tickTimer(); timerHandle = setInterval(tickTimer, 250); }
 
 function listenFirebase() {
   db.ref('wordladder/' + sessionId).on('value', function (s) {
@@ -285,10 +351,10 @@ function listenFirebase() {
 function applyState(v) {
   state = v;
   if (!state) return;
-  if (state.status === 'ended') { renderEnded(); showScreen('s-ended'); return; }
+  if (state.status === 'ended') { stopTimer(); renderEnded(); showScreen('s-ended'); return; }
   // No separate host "start" step — play begins as soon as a 2nd player joins.
-  if ((state.players || []).length >= 2) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); return; }
-  showScreen('s-lobby'); renderLobby();
+  if ((state.players || []).length >= 2) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); startTimer(); return; }
+  stopTimer(); showScreen('s-lobby'); renderLobby();
 }
 
 function renderLobby() {
@@ -335,9 +401,8 @@ function render() {
   banner.className = 'wl-turn-banner ' + (mine ? 'mine' : 'theirs');
   banner.textContent = mine ? 'Your turn — change one letter' : ((turnPlayer ? turnPlayer.name : '…') + '’s turn');
   el('wl-stage').classList.toggle('mine', !!mine);
-  el('wlInput').disabled = !mine;
-  el('wlSubmit').disabled = !mine;
-  if (mine && document.activeElement !== el('wlInput')) el('wlInput').value = current.word;
+  buildWheels(current.word, mine, state.turnStartedAt);
+  updateWheelState();
 
   el('wl-scores').innerHTML = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).map(function (p, i) {
     return '<div class="wl-score-row' + (p.playerId === playerId ? ' me' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
@@ -348,34 +413,99 @@ function render() {
     var c = chain[k];
     rungs.push('<div class="wl-chain-item"><div class="wl-chain-head">' + miniTiles(c.word, changedIdx(chain[k - 1].word, c.word))
       + '<span class="wl-chain-by">by ' + esc(c.playerName || '?') + '</span></div>'
-      + (c.definition ? '<div class="wl-chain-def">' + esc(c.definition) + '</div>' : '') + '</div>');
+      + (defOf(c.word) ? '<div class="wl-chain-def">' + esc(defOf(c.word)) + '</div>' : '') + '</div>');
   }
   rungs.push('<div class="wl-chain-item start"><div class="wl-chain-head">' + miniTiles(chain[0].word, -1)
     + '<span class="wl-chain-by">starting word</span></div>'
-    + (chain[0].definition ? '<div class="wl-chain-def">' + esc(chain[0].definition) + '</div>' : '') + '</div>');
+    + (defOf(chain[0].word) ? '<div class="wl-chain-def">' + esc(defOf(chain[0].word)) + '</div>' : '') + '</div>');
   el('wl-chain').innerHTML = rungs.join('');
 
   if (chain.length > lastChainLen && lastChainLen > 0) {
     var latest = chain[chain.length - 1];
     el('wl-def-word').textContent = latest.word;
-    el('wl-def-text').textContent = latest.definition || '';
+    el('wl-def-text').textContent = defOf(latest.word);
     el('wl-def-pop').classList.add('show');
     setTimeout(function () { el('wl-def-pop').classList.remove('show'); }, 4000);
   }
   lastChainLen = chain.length;
 }
 
+// ── Letter wheels ───────────────────────────────────────────
+// Endless: the A-Z column is repeated CYCLES times and, once a spin settles, silently re-centred
+// onto the middle repeat — identical letters, so Z rolls on to A (and A back to Z) with no seam.
+var ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', CYCLES = 7, MID = 3, wheelKey = '', wheelRow = 46;
+function wheelEls() { return Array.prototype.slice.call(document.querySelectorAll('#wl-wheels .wheel')); }
+function wheelAbs(w) { return Math.max(0, Math.min(CYCLES * 26 - 1, Math.round(w.scrollTop / wheelRow))); }
+function wheelIdx(w) { return wheelAbs(w) % 26; }
+function wheelWord() { return wheelEls().map(function (w) { return ALPHA[wheelIdx(w)]; }).join(''); }
+
+// Rebuilt only when the word, whose turn it is, or the turn clock restarts — score updates
+// arrive through the same listener and must not yank a wheel out from under a scrolling thumb.
+function buildWheels(word, mine, turnStamp) {
+  var key = word + '|' + (mine ? 1 : 0) + '|' + turnStamp;
+  var box = el('wl-wheels');
+  box.classList.toggle('off', !mine);
+  if (key === wheelKey) return;
+  wheelKey = key;
+  var items = '';
+  for (var c = 0; c < CYCLES; c++) for (var k = 0; k < 26; k++) items += '<div class="wheel-it">' + ALPHA[k] + '</div>';
+  box.innerHTML = word.split('').map(function () {
+    return '<div class="wheel"><div class="wheel-pad"></div>' + items + '<div class="wheel-pad"></div></div>';
+  }).join('');
+  wheelRow = parseFloat(getComputedStyle(box).getPropertyValue('--row')) || 46;
+  wheelEls().forEach(function (w, i) {
+    var raf = 0, last = -1, settle = 0;
+    w._sel = null;
+    w.scrollTop = (MID * 26 + Math.max(0, ALPHA.indexOf(word[i]))) * wheelRow;
+    w.addEventListener('scroll', function () {
+      clearTimeout(settle);
+      settle = setTimeout(function () {                 // spin finished: hop back to the middle repeat
+        var a = wheelAbs(w);
+        if (a < 26 * 2 || a >= 26 * (CYCLES - 2)) w.scrollTop = (MID * 26 + a % 26) * wheelRow;
+      }, 160);
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = 0;
+        var a = wheelAbs(w);
+        if (a !== last) { last = a; if (navigator.vibrate) try { navigator.vibrate(4); } catch (e) {} updateWheelState(); }
+      });
+    });
+  });
+  updateWheelState();
+}
+// One letter per move: as soon as one wheel is off its original letter the others lock; put it
+// back on its original letter (or any wheel's, by scrolling) and they all free up again.
+function updateWheelState() {
+  var cur = state && state.chain ? state.chain[state.chain.length - 1].word : '';
+  var ws = wheelEls(), changedIdx = -1, diff = 0;
+  ws.forEach(function (w, i) { if (cur && ALPHA[wheelIdx(w)] !== cur[i]) { diff++; changedIdx = i; } });
+  ws.forEach(function (w, i) {
+    var changed = cur && ALPHA[wheelIdx(w)] !== cur[i];
+    w.classList.toggle('chg', !!changed);
+    w.classList.toggle('lock', diff === 1 && i !== changedIdx);
+    var items = w.children, a = wheelAbs(w) + 1;          // +1 skips the leading pad
+    if (w._sel !== a) {
+      if (w._sel != null && items[w._sel]) items[w._sel].classList.remove('sel');
+      if (items[a]) items[a].classList.add('sel');
+      w._sel = a;
+    }
+  });
+  el('wlSubmit').disabled = !myTurn() || diff !== 1;
+}
+
 function doSubmitMove() {
   if (!myTurn()) return;
   var errE = el('wl-err'); errE.textContent = '';
-  var candidate = (el('wlInput').value || '').trim().toUpperCase();
+  var candidate = wheelWord();
   var current = state.chain[state.chain.length - 1].word;
   if (candidate.length !== current.length) { errE.textContent = 'Must be ' + current.length + ' letters'; return; }
   var diff = 0; for (var i = 0; i < candidate.length; i++) if (candidate[i] !== current[i]) diff++;
   if (diff !== 1) { errE.textContent = 'Change exactly one letter'; return; }
+  if ((state.used || []).indexOf(candidate) !== -1 || state.chain.some(function (c) { return c.word === candidate; })) { errE.textContent = '"' + candidate + '" was already used'; return; }
+  if (!defOf(candidate)) { errE.textContent = '"' + candidate + '" is not in the dictionary — try another letter'; return; }
   el('wlSubmit').disabled = true;
   gasPost({ action: 'submitWordLadderMove', sessionId: sessionId, playerId: playerId, word: candidate }, function (gErr, res) {
-    el('wlSubmit').disabled = !myTurn();
+    updateWheelState();
     if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not submit — try again.'; return; }
   });
 }
