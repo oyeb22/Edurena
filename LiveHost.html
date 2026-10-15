@@ -403,6 +403,16 @@
           <option value="120">2 minutes</option>
         </select>
       </div>
+      <div class="fg" id="ladder-gap-row" style="display:none">
+        <label for="ladder-gap">Point difference to win</label>
+        <select id="ladder-gap">
+          <option value="3">Lead by 3 points</option>
+          <option value="5" selected>Lead by 5 points</option>
+          <option value="7">Lead by 7 points</option>
+          <option value="10">Lead by 10 points</option>
+          <option value="0">No limit (I will end the game)</option>
+        </select>
+      </div>
     </div>
     <button class="launch-btn" id="launchBtn">Launch Session &#x2192;</button>
     <div class="err" id="setup-err"></div>
@@ -698,6 +708,7 @@ function selectMode(m){
   el('time-row').style.display=needsTimer?'block':'none';
   el('ladder-word-row').style.display=(m==='ladder')?'block':'none';
   el('ladder-time-row').style.display=(m==='ladder')?'block':'none';
+  el('ladder-gap-row').style.display=(m==='ladder')?'block':'none';
   el('quiz-select-row').style.display=(m==='ladder')?'none':'';
   if(URL_EXAM_CODE){
     // Tapping a mode only SELECTS it — it must never create a room by itself. The teacher
@@ -859,7 +870,7 @@ function doLaunchLadder(){
   var btn=el('launchBtn');
   launching=true;
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
-  post('createWordLadderSession',{token:TOKEN,startWord:startWord,turnSeconds:parseInt(el('ladder-time').value,10)||30},function(e,r){
+  post('createWordLadderSession',{token:TOKEN,startWord:startWord,turnSeconds:parseInt(el('ladder-time').value,10)||30,winGap:parseInt(el('ladder-gap').value,10)||0},function(e,r){
     btn.disabled=false;btn.textContent='Launch Session →';
     launching=false;
     if(e||!r||r.status!=='success'){showErr((r&&r.message)||'Failed to create game');return;}
