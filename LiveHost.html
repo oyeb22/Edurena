@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -391,6 +391,18 @@
         <label for="ladder-word">Starting word</label>
         <input type="text" id="ladder-word" placeholder="CAT" maxlength="12" autocomplete="off" spellcheck="false">
       </div>
+      <div class="fg" id="ladder-time-row" style="display:none">
+        <label for="ladder-time">Time per turn</label>
+        <select id="ladder-time">
+          <option value="15">15 seconds</option>
+          <option value="20">20 seconds</option>
+          <option value="30" selected>30 seconds</option>
+          <option value="45">45 seconds</option>
+          <option value="60">1 minute</option>
+          <option value="90">1 minute 30 seconds</option>
+          <option value="120">2 minutes</option>
+        </select>
+      </div>
     </div>
     <button class="launch-btn" id="launchBtn">Launch Session &#x2192;</button>
     <div class="err" id="setup-err"></div>
@@ -683,6 +695,7 @@ function selectMode(m){
   var needsTimer=!RACE_ENGINE_MODES[m]&&m!=='ladder';
   el('time-row').style.display=needsTimer?'block':'none';
   el('ladder-word-row').style.display=(m==='ladder')?'block':'none';
+  el('ladder-time-row').style.display=(m==='ladder')?'block':'none';
   el('quiz-select-row').style.display=(m==='ladder')?'none':'';
   if(URL_EXAM_CODE){
     if(needsTimer||m==='ladder'){
@@ -850,7 +863,7 @@ function doLaunchLadder(){
   if(!startWord){showErr('Enter a starting word');return;}
   var btn=el('launchBtn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating&hellip;';
-  post('createWordLadderSession',{token:TOKEN,startWord:startWord},function(e,r){
+  post('createWordLadderSession',{token:TOKEN,startWord:startWord,turnSeconds:parseInt(el('ladder-time').value,10)||30},function(e,r){
     btn.disabled=false;btn.textContent='Launch Session →';
     if(e||!r||r.status!=='success'){showErr((r&&r.message)||'Failed to create game');return;}
     sessionCode=r.data.sessionId;
