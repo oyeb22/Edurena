@@ -5,55 +5,104 @@
 <link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Word Ladder — Projector</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050810;--panel:#0d1117;--bdr:#1a2035;--txt:#e8edf5;--muted:#5a6a8a;--acc:#00d4ff;--grn:#00ff88;--red:#ff3355;--yel:#ffcc00;--pur:#bf5fff;--f:'Plus Jakarta Sans',system-ui,sans-serif;--display:'Orbitron',monospace}
+:root{
+  --bg:#030711;--panel:#0c1526;--panel2:#111e33;--bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.14);
+  --txt:#edf2ff;--muted:#8898b8;--dim:#4d5e7f;
+  --acc:#f5a623;--acc2:#ffc144;--acc-bg:rgba(245,166,35,.10);--acc-line:rgba(245,166,35,.36);
+  --grn:#22d18b;--red:#ff5c5c;
+  --f:'Inter',system-ui,sans-serif;--display:'Sora',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:var(--f);overflow:hidden}
+html,body{width:100%;height:100%;color:var(--txt);font-family:var(--f);overflow:hidden;
+  background:radial-gradient(900px 520px at 50% -15%,rgba(245,166,35,.10),transparent 62%),var(--bg)}
 .screen{display:none;position:fixed;inset:0;z-index:100}
 .screen.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
-#s-fatal h2{color:var(--muted);font-family:var(--display);font-size:22px;margin-bottom:12px}
+#s-fatal h2{color:var(--muted);font-family:var(--mono);font-size:13px;letter-spacing:3px;margin-bottom:12px}
 #s-fatal.err h2{color:var(--red)}
 #s-fatal p{color:var(--muted);font-size:14px;line-height:1.8;max-width:420px;text-align:center}
-.brand-title{font-family:var(--display);font-size:clamp(20px,5vw,34px);font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,var(--acc),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
-.brand-sub{color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;text-align:center}
-.wait-code{font-family:var(--display);font-size:clamp(48px,11vw,110px);font-weight:900;letter-spacing:10px;color:var(--acc);text-shadow:0 0 40px rgba(0,212,255,.4)}
-.wait-count{font-family:var(--display);font-size:clamp(32px,6vw,52px);font-weight:900;color:var(--grn);margin-top:18px;text-shadow:0 0 20px rgba(0,255,136,.4)}
+
+.brand-title{font-family:var(--display);font-size:clamp(22px,4.4vw,34px);font-weight:700;letter-spacing:-1px;margin-bottom:6px}
+.brand-title em{font-style:normal;color:var(--acc2)}
+.brand-sub{color:var(--muted);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:30px;text-align:center}
+.wait-code{font-family:var(--mono);font-size:clamp(48px,10vw,100px);font-weight:700;letter-spacing:.18em;padding-left:.18em;color:#fff;text-shadow:0 0 50px rgba(245,166,35,.4)}
+.wait-count{font-family:var(--mono);font-size:clamp(30px,5.5vw,48px);font-weight:700;color:var(--grn);margin-top:18px}
 .wait-lbl{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:4px 0 20px}
 .wait-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:900px;margin:0 auto}
-.wait-chip{padding:6px 14px;background:#0d1525;border:1px solid #1e2d4a;border-radius:20px;font-size:14px;font-weight:600;color:var(--acc)}
-.wait-status{font-size:14px;color:var(--muted);letter-spacing:1px;margin-top:20px}
+.wait-chip{padding:6px 14px;background:var(--panel);border:1px solid var(--bdr2);border-radius:20px;font-size:14px;font-weight:600;color:var(--acc2)}
+.wait-status{font-size:14px;color:var(--muted);letter-spacing:.5px;margin-top:20px}
 
-#s-board{align-items:stretch;justify-content:flex-start;background:var(--bg)}
-.wlh-top{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--bdr)}
-.wlh-brand{font-family:var(--display);font-size:13px;font-weight:900;letter-spacing:3px;color:var(--acc)}
-.wlh-code{font-family:var(--display);font-size:16px;font-weight:900;letter-spacing:4px;color:var(--txt)}
-.wlh-end{padding:8px 16px;border-radius:8px;border:1px solid rgba(255,51,85,.5);background:rgba(255,51,85,.12);color:#ff6680;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer}
-.wlh-body{flex:1;display:flex;min-height:0}
-.wlh-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-width:0}
-.wlh-turn{font-family:var(--display);font-size:clamp(14px,2.4vw,20px);font-weight:700;letter-spacing:2px;margin-bottom:18px;text-align:center}
-.wlh-turn.live{color:var(--grn)}
-.wlh-tiles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
-.wlh-tile{width:clamp(44px,6vw,72px);height:clamp(52px,7vw,84px);display:flex;align-items:center;justify-content:center;background:var(--panel);border:2px solid var(--bdr);border-radius:12px;font-family:var(--display);font-size:clamp(22px,3.2vw,38px);font-weight:900;color:var(--acc)}
-.wlh-def{max-width:560px;text-align:center;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:12px;padding:14px 20px;min-height:60px}
-.wlh-def-word{font-family:var(--display);font-weight:900;color:var(--grn);font-size:18px;letter-spacing:1px}
-.wlh-def-text{font-size:14px;color:var(--txt);margin-top:4px;line-height:1.5}
-.wlh-side{width:min(320px,34vw);border-left:1px solid var(--bdr);padding:16px;overflow-y:auto;scrollbar-width:none}
+#s-board{align-items:stretch;justify-content:flex-start}
+.wlh-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--bdr)}
+.wlh-brand{font-family:var(--display);font-size:15px;font-weight:700}
+.wlh-brand em{font-style:normal;color:var(--acc2)}
+.wlh-code{font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:3px;color:var(--muted);padding:5px 14px;border:1px solid var(--bdr2);border-radius:999px}
+.wlh-end{padding:9px 18px;border-radius:999px;border:1px solid rgba(255,92,92,.4);background:rgba(255,92,92,.1);color:#ff8a8a;font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer}
+
+.wlh-score-strip{display:flex;flex-wrap:wrap;gap:8px;padding:14px 22px 0}
+.wlh-score-chip{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--panel);border:1px solid var(--bdr2);border-radius:999px;font-size:14px}
+.wlh-score-chip .rk{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.wlh-score-chip .nm{font-weight:600}
+.wlh-score-chip .sc{font-family:var(--mono);font-weight:700;color:var(--acc2);font-variant-numeric:tabular-nums}
+.wlh-score-chip.lead{border-color:var(--acc-line);background:linear-gradient(90deg,rgba(245,166,35,.18),var(--panel) 80%)}
+
+.wlh-body{flex:1;display:flex;min-height:0;padding:18px 22px 22px;gap:20px}
+.wlh-main{flex:1.5;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+.wlh-turn{font-family:var(--mono);font-size:clamp(13px,1.8vw,16px);font-weight:600;letter-spacing:1.6px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:9px;color:var(--acc2)}
+.wlh-turn::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;animation:ping 1.5s infinite}
+.wlh-tiles{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+.wlh-tile{width:clamp(48px,6.5vw,76px);height:clamp(58px,7.5vw,88px);display:flex;align-items:center;justify-content:center;border-radius:14px;
+  font-family:var(--mono);font-size:clamp(24px,3.4vw,40px);font-weight:700;color:var(--txt);
+  background:linear-gradient(180deg,#16243d,#0c1526);border:1px solid var(--bdr2);box-shadow:0 4px 0 #060b16,0 14px 28px -12px rgba(0,0,0,.8)}
+.wlh-timer{max-width:420px;width:100%;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.wlh-timer-bar{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.wlh-timer-fill{height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transform-origin:left;transition:transform .25s linear,background .3s}
+.wlh-timer.low .wlh-timer-fill{background:var(--red)}
+.wlh-timer-n{font-family:var(--mono);font-size:16px;font-weight:700;min-width:32px;text-align:right;color:var(--acc2);font-variant-numeric:tabular-nums}
+.wlh-timer.low .wlh-timer-n{color:var(--red)}
+.wlh-def{max-width:560px;width:100%;text-align:center;background:rgba(34,209,139,.07);border:1px solid rgba(34,209,139,.28);border-radius:16px;padding:16px 20px;min-height:66px}
+.wlh-def-word{font-family:var(--mono);font-weight:700;color:var(--grn);font-size:19px;letter-spacing:2px}
+.wlh-def-text{font-size:14px;color:var(--txt);margin-top:5px;line-height:1.5}
+.blurred{filter:blur(6px);user-select:none}
+.wlh-goal{font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-top:14px}
+.wlh-goal b{color:var(--acc2)}
+
+.wlh-side{flex:1;max-width:360px;background:rgba(7,13,26,.7);border:1px solid var(--bdr);border-radius:20px;padding:16px;overflow-y:auto;scrollbar-width:none}
 .wlh-side::-webkit-scrollbar{display:none}
-.wlh-h{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:4px 0 10px}
-.wlh-score-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--panel);border:1px solid var(--bdr);border-radius:8px;margin-bottom:6px;font-size:13px}
-.wlh-score-row.lead{border-color:rgba(255,204,0,.5);background:rgba(255,204,0,.07)}
-.wlh-score-row .sc{font-family:var(--display);color:var(--yel);font-weight:700}
-.wlh-chain-item{padding:6px 0 6px 10px;border-left:2px solid var(--bdr);margin-bottom:8px;font-size:12px}
-.wlh-chain-word{font-family:var(--display);font-weight:700;color:var(--acc)}
-.wlh-chain-by{color:var(--muted);font-size:10px;margin-left:5px}
-.wlh-chain-def{color:var(--muted);font-size:11px;margin-top:2px;line-height:1.4}
+.wlh-h{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--dim);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:12px}
+.ladder{position:relative;padding:0 16px}
+.ladder::before,.ladder::after{content:'';position:absolute;top:0;bottom:0;width:3px;border-radius:2px;background:linear-gradient(180deg,var(--acc-line),rgba(245,166,35,.08))}
+.ladder::before{left:0}.ladder::after{right:0}
+.wlh-chain-item{position:relative;padding:11px 4px;border-bottom:1px dashed var(--bdr)}
+.wlh-chain-item:last-child{border-bottom:none}
+.wlh-chain-item::before,.wlh-chain-item::after{content:'';position:absolute;top:22px;width:14px;height:3px;background:var(--acc-line)}
+.wlh-chain-item::before{left:-16px}.wlh-chain-item::after{right:-16px}
+.wlh-chain-word{font-family:var(--mono);font-weight:700;color:var(--acc2);letter-spacing:1px}
+.wlh-chain-by{color:var(--muted);font-size:12px;margin-left:8px}
+.wlh-empty{color:var(--dim);font-size:13px}
 
-.oscreen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;background:rgba(5,8,16,.95);backdrop-filter:blur(10px)}
+.oscreen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;background:rgba(3,7,17,.96);backdrop-filter:blur(10px)}
 .oscreen.on{display:flex}
-.pod-title{font-family:var(--display);font-size:clamp(28px,6vw,56px);font-weight:900;letter-spacing:6px;color:var(--yel);margin-bottom:28px;text-shadow:0 0 30px rgba(255,204,0,.4)}
-.pod-list{width:min(420px,88vw)}
-.end-close{margin-top:26px;padding:10px 22px;border-radius:8px;border:1px solid var(--bdr);background:#0d1525;color:var(--txt);cursor:pointer;font-family:var(--f)}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.confetti i{position:absolute;top:-20px;width:9px;height:16px;border-radius:2px;opacity:0;animation:confettiFall ease-in forwards}
+.wlh-trophy{width:72px;height:72px;color:var(--acc2);margin-bottom:12px;filter:drop-shadow(0 8px 24px rgba(245,166,35,.55));animation:trophyIn .65s var(--spring) both}
+.pod-k{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--acc);text-transform:uppercase;margin-bottom:10px;position:relative;z-index:1}
+.pod-title{font-family:var(--display);font-size:clamp(30px,6vw,56px);font-weight:700;letter-spacing:-1.5px;margin-bottom:28px;text-align:center;position:relative;z-index:1}
+.pod-title em{font-style:normal;color:var(--acc2)}
+.pod-list{width:min(440px,88vw);position:relative;z-index:1}
+.wlh-score-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--panel);border:1px solid var(--bdr);border-radius:12px;margin-bottom:7px;font-size:15px}
+.wlh-score-row .rk{width:20px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.wlh-score-row .nm{flex:1;font-weight:600}
+.wlh-score-row .sc{font-family:var(--mono);color:var(--acc2);font-weight:700}
+.wlh-score-row:first-child{border-color:rgba(255,193,68,.5);background:linear-gradient(90deg,rgba(245,166,35,.2),var(--panel) 75%)}
+.end-close{margin-top:28px;padding:11px 24px;border-radius:999px;border:1px solid var(--bdr2);background:var(--panel);color:var(--txt);cursor:pointer;font-family:var(--f);font-weight:600;position:relative;z-index:1}
+
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(245,166,35,.6)}80%,100%{box-shadow:0 0 0 8px rgba(245,166,35,0)}}
+@keyframes trophyIn{0%{opacity:0;transform:scale(.4) rotate(-15deg)}100%{opacity:1;transform:none}}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(540deg)}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -63,8 +112,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-fami
 <div class="screen on" id="s-fatal"><h2 id="fatal-title">LOADING&hellip;</h2><p id="fatal-msg">Please wait a moment.</p></div>
 
 <div class="screen" id="s-wait">
-  <div class="brand-title">WORD LADDER</div>
-  <div class="brand-sub">Edurena &middot; Projector View</div>
+  <div class="brand-title">Word <em>Ladder</em></div>
+  <div class="brand-sub">Projector View</div>
   <div class="wait-code" id="w-code">------</div>
   <div class="wait-count" id="w-count">0</div>
   <div class="wait-lbl">players joined</div>
@@ -74,30 +123,37 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-fami
 
 <div class="screen" id="s-board">
   <div class="wlh-top">
-    <div class="wlh-brand">WORD LADDER</div>
+    <div class="wlh-brand">Word <em>Ladder</em></div>
     <div class="wlh-code" id="hud-code">------</div>
-    <button class="wlh-end" id="endBtn">&#x23F9; End Game</button>
+    <button class="wlh-end" id="endBtn">End Game</button>
   </div>
+  <div class="wlh-score-strip" id="wlh-score-strip"></div>
   <div class="wlh-body">
     <div class="wlh-main">
       <div class="wlh-turn" id="wlh-turn">&hellip;</div>
       <div class="wlh-tiles" id="wlh-tiles"></div>
+      <div class="wlh-timer" id="wlh-timer"><div class="wlh-timer-bar"><div class="wlh-timer-fill" id="wlh-timer-fill"></div></div><div class="wlh-timer-n" id="wlh-timer-n">--</div></div>
       <div class="wlh-def" id="wlh-def">
         <div class="wlh-def-word" id="wlh-def-word">&mdash;</div>
         <div class="wlh-def-text" id="wlh-def-text">Waiting for the first move&hellip;</div>
       </div>
+      <div class="wlh-goal" id="wlh-goal" style="display:none"></div>
     </div>
     <div class="wlh-side">
-      <div class="wlh-h">Scoreboard</div>
-      <div id="wlh-scores"></div>
-      <div class="wlh-h">Word Chain</div>
-      <div id="wlh-chain"></div>
+      <div class="wlh-h">The ladder so far</div>
+      <div class="ladder" id="wlh-chain"></div>
     </div>
   </div>
 </div>
 
 <div class="oscreen" id="s-end">
-  <div class="pod-title">GAME OVER</div>
+  <div class="confetti" id="wlh-confetti" aria-hidden="true"></div>
+  <svg class="wlh-trophy" id="wlh-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+    <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/>
+    <path d="M17 5h2a2 2 0 0 1 2 2 4 4 0 0 1-4 4M7 5H5a2 2 0 0 0-2 2 4 4 0 0 0 4 4"/>
+  </svg>
+  <div class="pod-k">Final standings</div>
+  <div class="pod-title" id="pod-title">Game over</div>
   <div class="pod-list" id="pod-list"></div>
   <button class="end-close" onclick="window.close()">Close Projector</button>
 </div>
@@ -115,14 +171,19 @@ function showScreen(id) { document.querySelectorAll('.screen').forEach(function 
 function fatal(msg) { showScreen('s-fatal'); el('s-fatal').classList.add('err'); el('fatal-title').textContent = 'CANNOT LOAD'; el('fatal-msg').textContent = msg; }
 if (!sessionId) { fatal('No game code — open this from the "Open Projector" link in the live-game launcher.'); return; }
 
-var db;
+// Definitions come straight from Firebase state now — the server (code.gs) looks each word up
+// in Supabase's wordladder_dictionary table at submit time and writes the result into the chain,
+// so the projector (which only ever displays, never submits) needs no dictionary of its own.
+
+var db, serverOffset = 0;
 try {
   var cfgFb = { apiKey: 'AIzaSyCLfySFzCpbz3CBX1bjha5KxvA0MrJExIc', authDomain: 'kahoot-24063.firebaseapp.com', databaseURL: 'https://kahoot-24063-default-rtdb.firebaseio.com', projectId: 'kahoot-24063', storageBucket: 'kahoot-24063.firebasestorage.app', messagingSenderId: '962917873467', appId: '1:962917873467:web:a6b526aee30cd15c92291e' };
   var existing = null; if (firebase.apps) firebase.apps.forEach(function (a) { if (a.name === 'wl') existing = a; });
   db = firebase.database(existing || firebase.initializeApp(cfgFb, 'wl'));
+  db.ref('.info/serverTimeOffset').on('value', function (s) { serverOffset = s.val() || 0; });
 } catch (e) { fatal('Firebase error: ' + e.message); return; }
 
-var state = null, lastChainLen = 0;
+var state = null, timerHandle = null;
 el('w-code').textContent = sessionId;
 el('hud-code').textContent = sessionId;
 
@@ -131,12 +192,25 @@ db.ref('wordladder/' + sessionId).on('value', function (s) {
   state = v; render();
 });
 
+function stopTimer() { if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
+function tickTimer() {
+  if (!state || state.status === 'ended' || !state.turnStartedAt) return;
+  var total = ((state.turnSeconds || 30) * 1000);
+  var left = total - (Date.now() + serverOffset - new Date(state.turnStartedAt).getTime());
+  var secs = Math.max(0, Math.ceil(left / 1000));
+  el('wlh-timer-n').textContent = secs;
+  el('wlh-timer-fill').style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / total)) + ')';
+  el('wlh-timer').classList.toggle('low', secs <= 5);
+}
+function startTimer() { stopTimer(); tickTimer(); timerHandle = setInterval(tickTimer, 250); }
+
 function render() {
   if (!state) return;
-  if (state.status === 'ended') { renderEnd(); overlay('s-end'); showScreen('s-board'); return; }
+  if (state.status === 'ended') { stopTimer(); renderEnd(); overlay('s-end'); showScreen('s-board'); return; }
   overlay(null);
   var players = state.players || [];
   if (players.length < 2) {
+    stopTimer();
     showScreen('s-wait');
     el('w-count').textContent = players.length;
     el('w-chips').innerHTML = players.map(function (p) { return '<div class="wait-chip">' + esc(p.name) + '</div>'; }).join('');
@@ -144,42 +218,60 @@ function render() {
     return;
   }
   showScreen('s-board');
+  startTimer();
 
   var chain = state.chain || [];
   var current = chain[chain.length - 1];
   el('wlh-tiles').innerHTML = current.word.split('').map(function (ch) { return '<div class="wlh-tile">' + esc(ch) + '</div>'; }).join('');
 
   var turnPlayer = players[state.turnIndex];
-  var tEl = el('wlh-turn');
-  tEl.textContent = (turnPlayer ? turnPlayer.name : '…') + "'s turn to change a letter";
-  tEl.className = 'wlh-turn live';
+  el('wlh-turn').textContent = (turnPlayer ? turnPlayer.name : '…') + "'s turn to change a letter";
 
-  if (chain.length > 1) {
-    el('wlh-def-word').textContent = current.word;
-    el('wlh-def-text').textContent = (current.playerName ? current.playerName + ' found: ' : '') + (current.definition || '');
-  } else {
-    el('wlh-def-word').textContent = current.word;
-    el('wlh-def-text').textContent = current.definition || '';
-  }
+  var def = current.definition || '';
+  el('wlh-def-word').textContent = current.word;
+  el('wlh-def-text').textContent = chain.length > 1
+    ? ((current.playerName ? current.playerName + ' found: ' : '') + def)
+    : def;
+  el('wlh-def-text').classList.toggle('blurred', !!current.flagged);
+
+  var gap = state.winGap || 0;
+  el('wlh-goal').style.display = gap > 0 ? 'block' : 'none';
+  if (gap > 0) el('wlh-goal').innerHTML = 'Lead by <b>' + gap + '</b> point' + (gap === 1 ? '' : 's') + ' to win';
 
   var sorted = players.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-  el('wlh-scores').innerHTML = sorted.map(function (p, i) {
-    return '<div class="wlh-score-row' + (i === 0 && (p.score || 0) > 0 ? ' lead' : '') + '"><span>' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
+  el('wlh-score-strip').innerHTML = sorted.map(function (p, i) {
+    return '<div class="wlh-score-chip' + (i === 0 && (p.score || 0) > 0 ? ' lead' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
   }).join('');
 
   var hist = chain.slice(1).slice().reverse();
   el('wlh-chain').innerHTML = hist.map(function (c) {
-    return '<div class="wlh-chain-item"><span class="wlh-chain-word">' + esc(c.word) + '</span><span class="wlh-chain-by">by ' + esc(c.playerName || '?') + '</span><div class="wlh-chain-def">' + esc(c.definition || '') + '</div></div>';
-  }).join('') || '<div style="color:var(--muted);font-size:11px">No words changed yet</div>';
-
-  lastChainLen = chain.length;
+    return '<div class="wlh-chain-item"><span class="wlh-chain-word">' + esc(c.word) + '</span><span class="wlh-chain-by">by ' + esc(c.playerName || '?') + '</span></div>';
+  }).join('') || '<div class="wlh-empty">No words changed yet</div>';
 }
 
 function renderEnd() {
-  var players = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-  el('pod-list').innerHTML = players.map(function (p, i) {
-    return '<div class="wlh-score-row' + (i === 0 ? ' lead' : '') + '"><span>' + (i + 1) + '. ' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
+  var sorted = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+  // A player always wins: the winGap rule already guarantees a clear leader when the server
+  // ends the game on its own, and a host-triggered manual end just crowns whoever's ahead then.
+  var winName = state.winnerName || (sorted[0] && sorted[0].name) || '';
+  el('pod-title').innerHTML = winName ? '<em>' + esc(winName) + '</em> wins!' : 'Game over';
+  el('wlh-trophy').style.display = winName ? 'block' : 'none';
+  el('pod-list').innerHTML = sorted.map(function (p, i) {
+    return '<div class="wlh-score-row"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
   }).join('');
+  if (winName) burstConfetti(); else el('wlh-confetti').innerHTML = '';
+}
+
+function burstConfetti() {
+  var box = el('wlh-confetti');
+  var colors = ['#f5a623', '#ffc144', '#22d18b', '#ff5c5c', '#8aa4ff'];
+  var html = '';
+  for (var i = 0; i < 50; i++) {
+    var left = Math.random() * 100, delay = Math.random() * .5, dur = 2.2 + Math.random() * 1.6;
+    var rot = (Math.random() > .5 ? 1 : -1) * Math.round(Math.random() * 60);
+    html += '<i style="left:' + left + '%;background:' + colors[i % colors.length] + ';animation-delay:' + delay + 's;animation-duration:' + dur + 's;transform:rotate(' + rot + 'deg)"></i>';
+  }
+  box.innerHTML = html;
 }
 
 el('endBtn').addEventListener('click', function () {

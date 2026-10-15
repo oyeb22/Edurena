@@ -125,9 +125,17 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 .wl-def-pop.show{display:block;animation:fadeUp .4s var(--ease)}
 .wl-def-word{font-family:var(--mono);font-weight:700;color:var(--grn);font-size:15px;letter-spacing:2px}
 .wl-def-text{font-size:14px;line-height:1.55;color:var(--txt);margin-top:4px}
+.blurred{filter:blur(6px);user-select:none}
 
-.cols{display:grid;grid-template-columns:1fr;gap:16px}
-@media(min-width:760px){.cols{grid-template-columns:1.5fr 1fr;align-items:start}}
+/* Compact score strip — sits right under the top bar so standings never scroll out of view */
+.wl-score-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.wl-score-chip{display:flex;align-items:center;gap:7px;padding:8px 14px;background:var(--panel);border:1px solid var(--bdr2);border-radius:999px;font-size:13px;animation:pop .35s var(--spring) both}
+.wl-score-chip .rk{font-family:var(--mono);font-size:11px;color:var(--dim);min-width:12px}
+.wl-score-chip .nm{font-weight:600;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wl-score-chip .sc{font-family:var(--mono);font-weight:700;color:var(--acc2);font-variant-numeric:tabular-nums}
+.wl-score-chip.lead{border-color:var(--acc-line);background:linear-gradient(90deg,rgba(245,166,35,.18),var(--panel) 80%)}
+.wl-score-chip.me{box-shadow:0 0 0 1px var(--acc-line) inset}
+
 .panel{background:rgba(7,13,26,.7);border:1px solid var(--bdr);border-radius:20px;padding:16px}
 .wl-section-h{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--dim);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:12px}
 .wl-score-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel);border:1px solid var(--bdr);border-radius:12px;margin-bottom:6px;font-size:14px;animation:slideIn .35s var(--ease) both}
@@ -155,9 +163,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 .empty{color:var(--dim);font-size:13px;line-height:1.5}
 
 /* End */
+.wl-trophy{width:60px;height:60px;color:var(--acc2);margin-bottom:10px;filter:drop-shadow(0 8px 20px rgba(245,166,35,.55));animation:trophyIn .65s var(--spring) both}
 .wl-end-k{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--acc);text-transform:uppercase;margin-bottom:10px}
-.wl-end-title{font-family:var(--display);font-size:clamp(32px,8vw,52px);font-weight:700;letter-spacing:-1.5px;margin-bottom:24px;text-align:center}
-.wl-final-wrap{max-width:380px;width:100%}
+.wl-end-title{font-family:var(--display);font-size:clamp(30px,7.5vw,48px);font-weight:700;letter-spacing:-1.5px;margin-bottom:24px;text-align:center}
+.wl-end-title em{font-style:normal;color:var(--acc2)}
+.wl-final-wrap{max-width:380px;width:100%;position:relative;z-index:1}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.confetti i{position:absolute;top:-20px;width:8px;height:14px;border-radius:2px;opacity:0;animation:confettiFall ease-in forwards}
 .wl-final-wrap .wl-score-row:first-child{padding:14px;border-color:rgba(255,193,68,.5);background:linear-gradient(90deg,rgba(245,166,35,.2),var(--panel) 75%);font-size:16px}
 
 @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -171,6 +183,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-5px);opacity:1}}
 @keyframes blink{50%{opacity:.25}}
 @keyframes ping{0%{box-shadow:0 0 0 0 rgba(245,166,35,.6)}80%,100%{box-shadow:0 0 0 8px rgba(245,166,35,0)}}
+@keyframes trophyIn{0%{opacity:0;transform:scale(.4) rotate(-15deg)}100%{opacity:1;transform:none}}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(540deg)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -214,6 +228,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
       <div class="wl-brand">Word <em>Ladder</em></div>
       <div class="wl-code" id="wl-code"></div>
     </div>
+    <div class="wl-score-strip" id="wl-score-strip"></div>
     <div class="stage" id="wl-stage">
       <div class="wl-turn-banner" id="wl-turn-banner">&hellip;</div>
       <div class="wl-tiles" id="wl-tiles"></div>
@@ -229,22 +244,21 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
         <div class="wl-def-text" id="wl-def-text"></div>
       </div>
     </div>
-    <div class="cols">
-      <div class="panel">
-        <div class="wl-section-h">The ladder so far</div>
-        <div class="ladder" id="wl-chain"></div>
-      </div>
-      <div class="panel">
-        <div class="wl-section-h">Scoreboard</div>
-        <div id="wl-scores"></div>
-      </div>
+    <div class="panel">
+      <div class="wl-section-h">The ladder so far</div>
+      <div class="ladder" id="wl-chain"></div>
     </div>
   </div>
 </div>
 
 <div class="screen" id="s-ended">
+  <div class="confetti" id="wl-confetti" aria-hidden="true"></div>
+  <svg class="wl-trophy" id="wl-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+    <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/>
+    <path d="M17 5h2a2 2 0 0 1 2 2 4 4 0 0 1-4 4M7 5H5a2 2 0 0 0-2 2 4 4 0 0 0 4 4"/>
+  </svg>
   <div class="wl-end-k">Final standings</div>
-  <div class="wl-end-title">Game over</div>
+  <div class="wl-end-title" id="wl-end-title">Game over</div>
   <div class="wl-final-wrap" id="wl-final-scores"></div>
 </div>
 
@@ -260,26 +274,30 @@ function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&
 function showScreen(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('on'); }); var t = el(id); if (t) t.classList.add('on'); }
 function fatal(msg) { showScreen('s-fatal'); el('s-fatal').classList.add('err'); el('fatal-title').textContent = 'CANNOT LOAD'; el('fatal-msg').textContent = msg; }
 if (!GAS_URL) { fatal('Missing backend URL.'); return; }
-// ── Local dictionary ────────────────────────────────────────
-// {WORD: "definition"} downloaded once (browser-cached) instead of calling a web API mid-game.
-var DICT = null, dictLoading = null;
-function loadDict() {
-  if (dictLoading) return dictLoading;
-  dictLoading = fetch('./assets/wordladder/words.json', { cache: 'force-cache' })
-    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function (d) { DICT = d; })
-    .catch(function (e) { dictLoading = null; throw e; });
-  return dictLoading;
-}
-// Inflected forms are stored as "@BASE" to keep the file small; expand to a readable definition.
-function defOf(w) {
-  var d = (DICT && DICT[String(w || '').toUpperCase()]) || '';
-  if (d.charAt(0) === '@') { var b = d.slice(1); return DICT[b] ? '(Form of ' + b + ') ' + DICT[b] : ''; }
-  return d;
+// ── Dictionary ──────────────────────────────────────────────
+// Word validity + definitions come from Supabase's wordladder_dictionary table (same project
+// Edurena already uses elsewhere for direct, read-only lookups) instead of a multi-megabyte
+// downloaded file. The server (code.gs) is the one that actually DECIDES whether a move is
+// valid and writes the definition into the chain — this client-side lookup is only an optional,
+// instant "is this worth submitting" check; if it fails for any reason, submission just proceeds
+// and lets the server have the final say, so a flaky query here never blocks real play.
+var WL_SB_URL  = 'https://hrslazwxaciooqowvzcy.supabase.co';
+var WL_SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyc2xhend4YWNpb29xb3d2emN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDk3NzksImV4cCI6MjA5MzM4NTc3OX0.UbEko3d0zyHguOq9w5Zy-_89OhAbQaV7Z6uBw_nS_yk';
+var checkCache = {}; // word -> {definition, flagged} | null (not found), so repeated checks in one session don't re-query
+function checkWord(w, cb) {
+  var word = String(w || '').toUpperCase();
+  if (checkCache.hasOwnProperty(word)) { cb(checkCache[word]); return; }
+  fetch(WL_SB_URL + '/rest/v1/wordladder_dictionary?word=eq.' + encodeURIComponent(word) + '&select=definition,flagged', {
+    headers: { apikey: WL_SB_ANON, Authorization: 'Bearer ' + WL_SB_ANON }
+  }).then(function (r) { return r.json(); }).then(function (rows) {
+    var result = (rows && rows[0]) || null;
+    checkCache[word] = result;
+    cb(result);
+  }).catch(function () { cb(undefined); }); // undefined = "couldn't check" (not "doesn't exist") — caller must not block on this
+
 }
 
 showScreen('s-join');
-loadDict().catch(function () { /* retried on Join */ });
 
 var db, serverOffset = 0;
 try {
@@ -312,17 +330,12 @@ function doJoin() {
   if (sessionId.length < 4) { errE.textContent = 'Enter a valid game code'; return; }
   if (playerName.length < 2) { errE.textContent = 'Enter your name (min 2 chars)'; return; }
   btn.disabled = true; btn.textContent = 'Joining…';
-  loadDict().then(function () {
-    gasPost({ action: 'joinWordLadder', sessionId: sessionId, playerName: playerName }, function (gErr, res) {
-      btn.disabled = false; btn.textContent = 'Join Game';
-      if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not join. Check your code.'; return; }
-      playerId = res.data.playerId;
-      listenFirebase();
-      applyState(res.data.state);
-    });
-  }, function () {
+  gasPost({ action: 'joinWordLadder', sessionId: sessionId, playerName: playerName }, function (gErr, res) {
     btn.disabled = false; btn.textContent = 'Join Game';
-    errE.textContent = 'Could not load the word list — check your connection and try again.';
+    if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not join. Check your code.'; return; }
+    playerId = res.data.playerId;
+    listenFirebase();
+    applyState(res.data.state);
   });
 }
 
@@ -415,26 +428,29 @@ function render() {
   buildWheels(current.word, mine, state.turnStartedAt);
   updateWheelState();
 
-  el('wl-scores').innerHTML = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).map(function (p, i) {
-    return '<div class="wl-score-row' + (p.playerId === playerId ? ' me' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
+  el('wl-score-strip').innerHTML = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).map(function (p, i) {
+    return '<div class="wl-score-chip' + (i === 0 && (p.score || 0) > 0 ? ' lead' : '') + (p.playerId === playerId ? ' me' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
   }).join('');
 
+  // Definitions now travel with the chain itself (the server looks them up at submit time and
+  // writes them into state), so rendering history needs no extra lookup — just read the fields.
   var rungs = [];
   for (var k = chain.length - 1; k >= 1; k--) {
     var c = chain[k];
     rungs.push('<div class="wl-chain-item"><div class="wl-chain-head">' + miniTiles(c.word, changedIdx(chain[k - 1].word, c.word))
       + '<span class="wl-chain-by">by ' + esc(c.playerName || '?') + '</span></div>'
-      + (defOf(c.word) ? '<div class="wl-chain-def">' + esc(defOf(c.word)) + '</div>' : '') + '</div>');
+      + (c.definition ? '<div class="wl-chain-def' + (c.flagged ? ' blurred' : '') + '">' + esc(c.definition) + '</div>' : '') + '</div>');
   }
   rungs.push('<div class="wl-chain-item start"><div class="wl-chain-head">' + miniTiles(chain[0].word, -1)
     + '<span class="wl-chain-by">starting word</span></div>'
-    + (defOf(chain[0].word) ? '<div class="wl-chain-def">' + esc(defOf(chain[0].word)) + '</div>' : '') + '</div>');
+    + (chain[0].definition ? '<div class="wl-chain-def' + (chain[0].flagged ? ' blurred' : '') + '">' + esc(chain[0].definition) + '</div>' : '') + '</div>');
   el('wl-chain').innerHTML = rungs.join('');
 
   if (chain.length > lastChainLen && lastChainLen > 0) {
     var latest = chain[chain.length - 1];
     el('wl-def-word').textContent = latest.word;
-    el('wl-def-text').textContent = defOf(latest.word);
+    el('wl-def-text').textContent = latest.definition || '';
+    el('wl-def-text').classList.toggle('blurred', !!latest.flagged);
     el('wl-def-pop').classList.add('show');
     setTimeout(function () { el('wl-def-pop').classList.remove('show'); }, 4000);
   }
@@ -520,21 +536,42 @@ function doSubmitMove() {
   var diff = 0; for (var i = 0; i < candidate.length; i++) if (candidate[i] !== current[i]) diff++;
   if (diff !== 1) { errE.textContent = 'Change exactly one letter'; return; }
   if ((state.used || []).indexOf(candidate) !== -1 || state.chain.some(function (c) { return c.word === candidate; })) { errE.textContent = '"' + candidate + '" was already used'; return; }
-  if (!defOf(candidate)) { errE.textContent = '"' + candidate + '" is not in the dictionary — try another letter'; return; }
   el('wlSubmit').disabled = true;
-  gasPost({ action: 'submitWordLadderMove', sessionId: sessionId, playerId: playerId, word: candidate }, function (gErr, res) {
-    updateWheelState();
-    if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not submit — try again.'; return; }
+  // Instant local feedback when we can get it, but this is advisory only — the server is the
+  // real authority on word validity (see code.gs), so a failed/slow check here never blocks
+  // submission, it just skips straight to asking the server.
+  checkWord(candidate, function (result) {
+    if (result === null) { updateWheelState(); errE.textContent = '"' + candidate + '" is not in the dictionary — try another letter'; return; }
+    gasPost({ action: 'submitWordLadderMove', sessionId: sessionId, playerId: playerId, word: candidate }, function (gErr, res) {
+      updateWheelState();
+      if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not submit — try again.'; return; }
+    });
   });
 }
 
 function renderEnded() {
   var sorted0 = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+  // A player always wins: the winGap rule already guarantees a clear leader when the server
+  // ends the game on its own, and a host-triggered manual end just crowns whoever's ahead then.
   var winName = state.winnerName || (sorted0[0] && sorted0[0].name) || '';
-  el('wl-end-title').textContent = winName ? winName + ' wins!' : 'Game over';
+  el('wl-end-title').innerHTML = winName ? '<em>' + esc(winName) + '</em> wins!' : 'Game over';
+  el('wl-trophy').style.display = winName ? 'block' : 'none';
   el('wl-final-scores').innerHTML = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).map(function (p, i) {
     return '<div class="wl-score-row' + (p.playerId === playerId ? ' me' : '') + '" style="animation-delay:' + (i * 70) + 'ms"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
   }).join('');
+  if (winName) burstConfetti(); else el('wl-confetti').innerHTML = '';
+}
+
+function burstConfetti() {
+  var box = el('wl-confetti');
+  var colors = ['#f5a623', '#ffc144', '#22d18b', '#ff5c5c', '#8aa4ff'];
+  var html = '';
+  for (var i = 0; i < 40; i++) {
+    var left = Math.random() * 100, delay = Math.random() * .5, dur = 2 + Math.random() * 1.4;
+    var rot = (Math.random() > .5 ? 1 : -1) * Math.round(Math.random() * 60);
+    html += '<i style="left:' + left + '%;background:' + colors[i % colors.length] + ';animation-delay:' + delay + 's;animation-duration:' + dur + 's;transform:rotate(' + rot + 'deg)"></i>';
+  }
+  box.innerHTML = html;
 }
 
 window.addEventListener('beforeunload', function () { try { db.ref('wordladder/' + sessionId).off('value'); } catch (e) {} });
