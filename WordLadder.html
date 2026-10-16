@@ -362,7 +362,11 @@ function tickTimer() {
   if (left <= 0 && skipSentFor !== state.turnStartedAt && (myTurn() || left <= -2500)) {
     skipSentFor = state.turnStartedAt;
     gasPost({ action: 'skipWordLadderTurn', sessionId: sessionId, turnStartedAt: state.turnStartedAt }, function (e, res) {
-      if (e || !res || res.status !== 'success') skipSentFor = '';   // allow a retry on the next tick
+      if (e || !res || res.status !== 'success') { skipSentFor = ''; return; }   // allow a retry on the next tick
+      // Apply the authoritative state straight from this response instead of waiting on
+      // Firebase's own echo of the same write — on a slow connection that echo can lag well
+      // behind it, or never arrive at all, leaving the screen frozen on the old turn.
+      if (res.data && res.data.state) applyState(res.data.state);
     });
   }
 }
@@ -548,7 +552,15 @@ function doSubmitMove() {
   // common case (a valid word) to save time on the rare case (an invalid one).
   gasPost({ action: 'submitWordLadderMove', sessionId: sessionId, playerId: playerId, word: candidate }, function (gErr, res) {
     updateWheelState();
-    if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not submit — try again.'; return; }
+    if (gErr || !res || res.status !== 'success') {
+      errE.textContent = (res && res.message) || 'Could not submit — try again.';
+      // The server hands back its current state even on a rejection (e.g. the turn moved on
+      // while this request was in flight) — resync from it immediately instead of leaving the
+      // UI stuck showing a turn that's no longer current, which otherwise only self-heals once
+      // Firebase's own echo of the same change happens to arrive.
+      if (res && res.data && res.data.state) applyState(res.data.state);
+      return;
+    }
     // Render straight from this response instead of waiting for Firebase to echo the same
     // state back — that was a third serialized round trip on top of the two this call already
     // costs, pure latency with nothing extra to show for it.
