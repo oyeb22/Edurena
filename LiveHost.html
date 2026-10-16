@@ -861,9 +861,10 @@ function doLaunch(){
   });
 }
 
-// Word Ladder doesn't fit the quiz-driven engines above (no exam code — just a starting word,
-// and play begins automatically once a 2nd player joins, so there's no separate "Start" step
-// here). The projector page owns the whole lobby-to-game lifecycle itself via Firebase.
+// Word Ladder doesn't fit the quiz-driven engines above (no exam code — just a starting word).
+// The projector page (WordLadderHost.html) owns the whole lobby-to-game lifecycle itself via
+// Firebase, including its own "Start Game" button — nothing more is needed from this launcher
+// once the session is created.
 function doLaunchLadder(){
   var startWord=(el('ladder-word').value||'').trim();
   if(!startWord){showErr('Enter a starting word');return;}

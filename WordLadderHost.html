@@ -34,6 +34,10 @@ html,body{width:100%;height:100%;color:var(--txt);font-family:var(--f);overflow:
 .wait-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:900px;margin:0 auto}
 .wait-chip{padding:6px 14px;background:var(--panel);border:1px solid var(--bdr2);border-radius:20px;font-size:14px;font-weight:600;color:var(--acc2)}
 .wait-status{font-size:14px;color:var(--muted);letter-spacing:.5px;margin-top:20px}
+.wait-start{display:none;margin-top:22px;padding:14px 34px;min-height:54px;border-radius:999px;border:none;font-family:var(--f);font-size:16px;font-weight:700;cursor:pointer;
+  background:linear-gradient(180deg,var(--acc2),var(--acc));color:#1a1002;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 4px 0 #b9760a,0 14px 30px -10px rgba(245,166,35,.6)}
+.wait-start.show{display:inline-block}
+.wait-start:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 1px 0 #b9760a}
 
 #s-board{align-items:stretch;justify-content:flex-start}
 .wlh-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--bdr)}
@@ -119,6 +123,7 @@ html,body{width:100%;height:100%;color:var(--txt);font-family:var(--f);overflow:
   <div class="wait-lbl">players joined</div>
   <div class="wait-chips" id="w-chips"></div>
   <div class="wait-status" id="w-status">Waiting for a 2nd player to join&hellip;</div>
+  <button class="wait-start" id="startBtn">Start Game</button>
 </div>
 
 <div class="screen" id="s-board">
@@ -209,12 +214,18 @@ function render() {
   if (state.status === 'ended') { stopTimer(); renderEnd(); overlay('s-end'); showScreen('s-board'); return; }
   overlay(null);
   var players = state.players || [];
-  if (players.length < 2) {
+  // Game board only shows once the host has explicitly pressed Start — not the instant a 2nd
+  // player's join lands, which used to stamp the turn clock before either client had even
+  // rendered the board, letting a slow connection burn through round 1 before anyone could play.
+  if (!state.started) {
     stopTimer();
     showScreen('s-wait');
     el('w-count').textContent = players.length;
     el('w-chips').innerHTML = players.map(function (p) { return '<div class="wait-chip">' + esc(p.name) + '</div>'; }).join('');
-    el('w-status').textContent = players.length === 0 ? 'Waiting for players to join…' : 'Waiting for a 2nd player to join…';
+    var ready = players.length >= 2;
+    el('w-status').textContent = players.length === 0 ? 'Waiting for players to join…'
+      : (ready ? 'Ready — press Start when everyone is in' : 'Waiting for a 2nd player to join…');
+    el('startBtn').classList.toggle('show', ready);
     return;
   }
   showScreen('s-board');
@@ -280,6 +291,26 @@ el('endBtn').addEventListener('click', function () {
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'endWordLadderSession', sessionId: sessionId }) })
     .then(function (r) { return r.json(); })
     .catch(function () {});
+});
+
+el('startBtn').addEventListener('click', function () {
+  if (!GAS_URL) { fatal('Missing backend URL — cannot start the game from here.'); return; }
+  el('startBtn').disabled = true;
+  el('startBtn').textContent = 'Starting…';
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'startWordLadderGame', sessionId: sessionId }) })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      el('startBtn').disabled = false;
+      el('startBtn').textContent = 'Start Game';
+      // No need to act on the response here — the Firebase listener above re-renders the board
+      // the instant `started` flips, for this screen and every player's screen alike.
+      if (!res || res.status !== 'success') el('w-status').textContent = (res && res.message) || 'Could not start — try again.';
+    })
+    .catch(function () {
+      el('startBtn').disabled = false;
+      el('startBtn').textContent = 'Start Game';
+      el('w-status').textContent = 'Could not start — try again.';
+    });
 });
 })();
 </script>

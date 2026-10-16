@@ -224,7 +224,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
   <div class="lobby-count" id="lby-count">0</div>
   <div class="lobby-lbl">players joined</div>
   <div class="chips" id="lby-chips"></div>
-  <div class="lobby-wait"><span class="dots3"><i></i><i></i><i></i></span>Play starts when a second player joins</div>
+  <div class="lobby-wait"><span class="dots3"><i></i><i></i><i></i></span><span id="lby-wait-text">Play starts when a second player joins</span></div>
 </div>
 
 <div class="screen" id="s-game">
@@ -383,8 +383,11 @@ function applyState(v) {
   state = v;
   if (!state) return;
   if (state.status === 'ended') { stopTimer(); renderEnded(); showScreen('s-ended'); return; }
-  // No separate host "start" step — play begins as soon as a 2nd player joins.
-  if ((state.players || []).length >= 2) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); startTimer(); return; }
+  // Only the host's explicit Start (via WordLadderHost.html's projector) moves everyone off the
+  // lobby — previously this fired the instant a 2nd player's join landed, which stamped the turn
+  // clock before either client had rendered the game screen, so on a slow connection the clock
+  // could burn through most of round 1 before a player even finished loading.
+  if (state.started) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); startTimer(); return; }
   stopTimer(); showScreen('s-lobby'); renderLobby();
 }
 
@@ -393,6 +396,7 @@ function renderLobby() {
   var names = (state.players || []).map(function (p) { return p.name; });
   el('lby-count').textContent = names.length;
   el('lby-chips').innerHTML = names.map(function (n) { return '<div class="chip">' + esc(n) + '</div>'; }).join('');
+  el('lby-wait-text').textContent = names.length >= 2 ? 'Waiting for the host to start the game' : 'Play starts when a second player joins';
 }
 
 function myTurn() {
