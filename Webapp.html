@@ -466,19 +466,17 @@ if (window.DASH && DASH.ready) DASH.ready.then(refreshFromDash);
   picker.id = 'live-picker';
   picker.className = 'picker';
 
+  // Only the 3 live games stay linked here (Live Quiz, Edurena Rally, Word Ladder) — the older
+  // minigames (Puzzle Race, Whack-a-Mole, Penalty Shootout, Tower Defense) are unlinked from the
+  // picker per the earlier cleanup decision, not deleted: their files and backend actions still
+  // exist, they're just no longer offered to students from this entry point.
   var GAME_ROWS = [
     {mode:'kahoot',   icon:'grid',   c:'#9d86ff', title:'Live Quiz',
      desc:'Teacher-paced questions with a live leaderboard'},
-    {mode:'puzzle',   icon:'puzzle', c:'#c084fc', title:'Puzzle Race',
-     desc:'Correct answers earn pieces — finish your picture first'},
-    {mode:'whack',    icon:'hammer', c:'#ff9a4a', title:'Whack-a-Mole',
-     desc:'Shared board — first correct answer whacks the mole'},
-    {mode:'shootout', icon:'ball',   c:'#3fbf75', title:'Penalty Shootout',
-     desc:'Kicker vs keeper — fastest correct answer wins the duel'},
-    {mode:'tower',    icon:'castle', c:'#38c6ef', title:'Tower Defense',
-     desc:'Four teams, one tower — defend your side'},
     {mode:'race',     icon:'flag',   c:'#ff5470', title:'Edurena Rally',
-     desc:'3D race — correct answers boost your car'}
+     desc:'3D race — correct answers boost your car'},
+    {mode:'ladder',   icon:'puzzle', c:'#22d18b', title:'Word Ladder',
+     desc:'Change one letter, make a new word, learn what it means'}
   ];
 
   picker.innerHTML = '<div class="picker-h">Choose a game</div>'
