@@ -495,6 +495,11 @@ function doLogin() {
     try {
       localStorage.setItem('qf_token', r.data.token);
       localStorage.setItem('qf_teacher', JSON.stringify(r.data));
+      // Every dashboard's auth gate (TeacherDashboard/SchoolAdminDashboard/
+      // SuperAdminDashboard) reads the token from sessionStorage, not
+      // localStorage — without this, login succeeds but the very next
+      // page load always shows "No active session."
+      sessionStorage.setItem('qf_token', r.data.token);
     } catch(_) {}
 
     /* ── ROUTING FIX: dashboards live on GitHub Pages, accessed via DASH ── */
