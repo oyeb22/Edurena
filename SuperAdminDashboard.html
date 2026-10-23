@@ -23,194 +23,119 @@
 </script>
   
   <meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <script src="edurena-dash.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edurena — Super Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="edurena-dash-design.css">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-/* ── SuperAdminDashboard Premium v6.0 (Purple+Amber accent) ── */
     :root {
-      --bg:#030711; --surf:#070d1a; --surf2:#0c1526; --surf3:#111e33;
-      --bdr:rgba(255,255,255,0.06); --bdr2:rgba(255,255,255,0.12);
-      --acc:#b197fc; --acc2:#c9b8ff; --acc-glow:rgba(177,151,252,0.18);
-      --grn:#22d18b; --grn-glow:rgba(34,209,139,0.12);
-      --red:#ff5c5c; --red-glow:rgba(255,92,92,0.12);
-      --yel:#f5a623; --yel-glow:rgba(245,166,35,0.14);
-      --pur:#b197fc; --pur-glow:rgba(177,151,252,0.14);
-      --txt:#edf2ff; --txt2:#8898b8; --muted:#3d4f6e;
-      --font:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
-      --r:12px; --rs:8px;
-      /* shared token aliases */
-      --surface: var(--surf); --surface2: var(--surf2);
-      --border: var(--bdr); --border2: var(--bdr2);
-      --text: var(--txt); --text2: var(--txt2); --text3: var(--muted);
-      --accent: var(--pur); --accent2: var(--acc2);
-      --accent-bg: var(--pur-glow); --accent-border: rgba(177,151,252,0.28);
-      --success: var(--grn); --success-bg: var(--grn-glow); --success-border: rgba(34,209,139,0.28);
-      --danger: var(--red); --danger-bg: var(--red-glow); --danger-border: rgba(255,92,92,0.28);
-      --warn: var(--yel); --warn-bg: var(--yel-glow); --warn-border: rgba(245,166,35,0.28);
-      --purple: var(--pur); --purple-bg: var(--pur-glow); --purple-border: var(--accent-border);
-      --r-sm: var(--rs); --sb-w: 230px;
+      /* v5.8: cream/amber palette — matches TeacherDashboard/SchoolAdminDashboard,
+         so the whole admin suite reads as one product. */
+      --bg:#fff8f6; --surf:#ffffff; --surf2:#faebe4; --surf3:#f4e5df;
+      --bdr:rgba(113,74,35,0.10); --bdr2:rgba(113,74,35,0.20);
+      --acc:#714a23; --acc2:#8a6236; --acc-glow:rgba(113,74,35,0.12);
+      --grn:#166534; --grn-glow:#f0fdf4;
+      --red:#991b1b; --red-glow:#fef2f2;
+      --yel:#92400e; --yel-glow:#fffbeb;
+      --pur:#4c1d95; --pur-glow:#f5f3ff;
+      --txt:#211a16; --txt2:#50453b; --muted:#82756a;
+      --font:'Hanken Grotesk',system-ui,sans-serif; --font-head:'Manrope','Hanken Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+      --r:14px; --rs:10px;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
-    html,body{height:100%;}
-    body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:13.5px;-webkit-font-smoothing:antialiased;}
+    body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.5;}
+    /* ── Info tooltip — tap/click to toggle, not hover (works on mobile) ── */
+    .itip{position:relative;display:inline-flex;vertical-align:middle;margin-left:5px;}
+    .itip-btn{width:15px;height:15px;border-radius:50%;background:var(--bdr2);color:var(--txt2);border:none;font-size:10px;font-weight:700;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;flex-shrink:0;}
+    .itip-btn:hover{background:var(--acc);color:#fff;}
+    .itip-pop{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:60;width:230px;max-width:70vw;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:9px 11px;font-size:11.5px;font-weight:400;color:var(--txt2);line-height:1.5;text-transform:none;letter-spacing:normal;box-shadow:0 6px 20px rgba(0,0,0,0.18);}
+    .itip.open .itip-pop{display:block;}
 
     #gate{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;}
     #gate.on{display:flex;}
-    .gate-spin{width:40px;height:40px;border:2.5px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:spin 0.9s linear infinite;}
+    .gate-logo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #f5a623;box-shadow:0 0 28px rgba(245,166,35,.35);display:block;}
     #gate-msg{color:var(--txt2);font-size:13px;}
-    .gate-btn{
-      padding:10px 24px;background:linear-gradient(135deg,var(--acc),var(--acc2));
-      border:none;border-radius:var(--rs);color:#030711;font-size:13px;font-weight:700;
-      font-family:var(--font);cursor:pointer;display:none;
-      box-shadow:0 4px 20px rgba(177,151,252,0.3);
-    }
+    .gate-btn{padding:10px 22px;background:var(--acc);border:none;border-radius:var(--rs);color:#fff;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:none;}
     @keyframes spin{to{transform:rotate(360deg)}}
 
     .app{display:flex;height:100vh;overflow:hidden;}
-    .sb{
-      width:var(--sb-w);flex-shrink:0;
-      background:linear-gradient(180deg,var(--surf) 0%,#040910 100%);
-      border-right:1px solid var(--bdr);
-      display:flex;flex-direction:column;
-      box-shadow:2px 0 24px rgba(0,0,0,0.4);
-      overflow:hidden;
-    }
-    .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--bdr);background:rgba(177,151,252,0.03);}
+    .sb{width:225px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;}
+    .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--bdr);}
     .sb-logo-row{display:flex;align-items:center;gap:9px;}
-    .logo-box{flex-shrink:0;}
-    .logo-txt h1{font-size:13.5px;font-weight:700;letter-spacing:-0.03em;color:var(--txt);}
-    .logo-txt p{font-size:10.5px;color:var(--muted);}
-    .sb-profile{
-      margin:8px;padding:10px 12px;
-      background:rgba(255,255,255,0.04);border:1px solid var(--bdr);
-      border-radius:var(--rs);transition:all 0.18s;
-    }
-    .sb-profile:hover{border-color:rgba(177,151,252,0.3);background:rgba(177,151,252,0.06);}
-    .sp-row{display:flex;align-items:center;gap:9px;}
-    .sp-av{
-      width:32px;height:32px;border-radius:50%;
-      background:var(--pur-glow);border:1.5px solid rgba(177,151,252,0.35);
-      display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
-      box-shadow:0 0 0 2px rgba(177,151,252,0.12);
-    }
+    .logo-box{width:32px;height:32px;background:linear-gradient(135deg,var(--pur),var(--acc));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+    .logo-txt h1{font-size:13px;font-weight:700;color:var(--pur);}
+    .logo-txt p{font-size:10px;color:var(--muted);}
+    .sb-profile{margin:10px;padding:10px 12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;}
+    .sp-row{display:flex;align-items:center;gap:8px;}
+    .sp-av{width:30px;height:30px;border-radius:50%;background:var(--pur-glow);border:1.5px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
     .sp-info{flex:1;min-width:0;}
-    .sp-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt);}
-    .sp-role{font-size:9.5px;color:var(--acc2);margin-top:2px;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;}
+    .sp-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .sp-role{font-size:10px;color:var(--pur);margin-top:1px;text-transform:uppercase;font-weight:700;}
     nav.nav{padding:8px;flex:1;overflow-y:auto;}
-    .nsec{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;padding:10px 10px 3px;}
-    .ni{
-      display:flex;align-items:center;gap:8px;padding:7.5px 11px;border-radius:var(--rs);
-      cursor:pointer;color:var(--txt2);font-size:12px;font-weight:500;
-      transition:all 0.15s cubic-bezier(0.4,0,0.2,1);
-      margin-bottom:1px;border:none;background:none;width:100%;text-align:left;
-      position:relative;
-    }
-    .ni:hover{background:rgba(177,151,252,0.08);color:var(--txt);}
-    .ni.on{background:rgba(177,151,252,0.14);color:var(--acc2);font-weight:700;}
-    .ni.on::before{
-      content:'';position:absolute;left:0;top:22%;bottom:22%;
-      width:2.5px;border-radius:99px;background:var(--acc);
-      box-shadow:0 0 8px rgba(177,151,252,0.5);
-    }
-    .ni .ico{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:0.65;transition:opacity 0.15s;}
-    .ni.on .ico{opacity:1;}
+    .nsec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 10px 4px;}
+    .ni{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--rs);cursor:pointer;color:var(--txt2);font-size:12px;font-weight:500;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;}
+    .ni:hover{background:var(--surf2);color:var(--txt);}
+    .ni.on{background:rgba(167,139,250,.12);color:var(--pur);}
+    .ni .ico{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
     .sb-foot{padding:10px;border-top:1px solid var(--bdr);}
-    .btn-out{
-      width:100%;padding:7px;border-radius:var(--rs);
-      background:rgba(255,92,92,0.08);border:1px solid rgba(255,92,92,0.2);
-      color:var(--red);cursor:pointer;font-size:11px;font-family:var(--font);
-      font-weight:600;transition:all 0.15s;
-    }
-    .btn-out:hover{background:rgba(255,92,92,0.16);}
+    .btn-out{width:100%;padding:7px;background:var(--red-glow);border:1px solid rgba(240,100,90,.2);color:var(--red);border-radius:var(--rs);cursor:pointer;font-size:11px;font-family:var(--font);transition:all .15s;}
+    .btn-out:hover{background:rgba(240,100,90,.22);}
 
-    /* v5.5: sidebar mini-stats */
-    .sb-stats{padding:8px;display:flex;flex-direction:column;gap:5px;}
-    .sb-stat{
-      position:relative;overflow:hidden;
-      background:rgba(255,255,255,0.03);border:1px solid var(--bdr);
-      border-radius:var(--rs);padding:8px 10px;
-      transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;
-    }
-    .sb-stat::before{content:'';position:absolute;inset:0;background:radial-gradient(200px circle at 50% -20%,rgba(177,151,252,0.1),transparent 70%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
-    .sb-stat:hover{border-color:rgba(177,151,252,0.35);transform:translateY(-1px);box-shadow:0 4px 16px rgba(177,151,252,0.1);}
+    /* v5.5: sidebar mini-stats with spotlight hover */
+    .sb-stats{padding:8px;display:flex;flex-direction:column;gap:6px;}
+    .sb-stat{position:relative;overflow:hidden;background:var(--surf);border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;transition:border-color .2s, transform .2s;}
+    .sb-stat::before{content:'';position:absolute;inset:0;background:radial-gradient(180px circle at 50% 0%, rgba(245,166,35,0.08), transparent 70%);opacity:0;transition:opacity .25s;pointer-events:none;}
+    .sb-stat:hover{border-color:rgba(245,166,35,0.3);transform:translateY(-1px);}
     .sb-stat:hover::before{opacity:1;}
-    .sb-stat-lbl{font-size:9.5px;color:var(--muted);letter-spacing:0.06em;font-weight:600;text-transform:uppercase;}
-    .sb-stat-val{font-size:18px;font-weight:700;color:var(--txt);margin-top:3px;line-height:1;font-family:var(--mono);letter-spacing:-0.03em;}
-    .sb-stat-val.amber{color:var(--yel);}
-    .sb-stat-val.green{color:var(--grn);}
-    .sb-stat-val.red{color:var(--red);}
+    .sb-stat-lbl{font-size:10px;color:var(--txt2);letter-spacing:0.04em;}
+    .sb-stat-val{font-size:17px;font-weight:600;color:var(--txt);margin-top:2px;line-height:1;font-family:var(--mono);}
+    .sb-stat-val.amber{color:#f5a623;}
+    .sb-stat-val.green{color:#22c55e;}
+    .sb-stat-val.red{color:#ef4444;}
+    
+    /* v5.5: logo box now contains an SVG instead of emoji — flex-shrink prevents squish */
     .sb-logo-row .logo-box{flex-shrink:0;}
 
     .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
-    .topbar{
-      padding:0 22px;height:54px;
-      border-bottom:1px solid var(--bdr);
-      display:flex;align-items:center;justify-content:space-between;
-      background:rgba(7,13,26,0.9);
-      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      position:sticky;top:0;z-index:10;
-      box-shadow:0 1px 0 rgba(255,255,255,0.04),0 2px 12px rgba(0,0,0,0.3);
-    }
-    .tb-title{font-size:15px;font-weight:700;letter-spacing:-0.03em;}
-    .tb-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .topbar{padding:13px 22px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--surf);position:sticky;top:0;z-index:10;}
+    .tb-title{font-size:23px;font-weight:800;letter-spacing:-.4px;font-family:var(--font-head);line-height:1.2;}
+    .tb-sub{font-size:11px;color:var(--txt2);margin-top:1px;}
     .content{padding:20px 22px;flex:1;}
-    .tp{display:none;}.tp.on{display:block;animation:fadeSlideIn 0.22s cubic-bezier(0.4,0,0.2,1);}
-    @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .tp{display:none;} .tp.on{display:block;}
 
-    .card{
-      background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);
-      padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.25);
-    }
-    .ct{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px;}
+    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(113,74,35,0.05),0 1px 2px rgba(113,74,35,0.04);}
+    .ct{font-size:15px;font-weight:800;color:var(--acc);text-transform:none;letter-spacing:-.2px;margin-bottom:14px;font-family:var(--font-head);}
     .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
-    .sc{
-      background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;
-      cursor:default;transition:border-color 0.2s,box-shadow 0.2s,transform 0.2s;
-      position:relative;overflow:hidden;
-    }
-    .sc::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(177,151,252,0.05) 0%,transparent 60%);pointer-events:none;}
+    .sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;cursor:default;transition:border-color .15s;}
     .sc.clickable{cursor:pointer;}
-    .sc.clickable:hover{border-color:rgba(245,166,35,0.35);box-shadow:0 4px 20px rgba(245,166,35,0.1);transform:translateY(-1px);}
-    .sv{font-size:24px;font-weight:800;font-family:var(--mono);letter-spacing:-0.04em;}
+    .sc.clickable:hover{border-color:var(--yel);}
+    .sv{font-size:24px;font-weight:800;font-family:var(--mono);}
     .sl{font-size:11px;color:var(--txt2);margin-top:4px;}
 
-    .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .tw{overflow-x:auto;}
     table{width:100%;border-collapse:collapse;font-size:12px;}
-    thead th{
-      text-align:left;padding:8px 11px;font-size:9.5px;font-weight:700;
-      color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
-      border-bottom:1px solid var(--bdr);background:rgba(255,255,255,0.02);
-    }
-    tbody td{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
-    tbody tr{transition:background 0.12s;}
-    tbody tr:hover td{background:rgba(177,151,252,0.04);}
+    thead{background:var(--surf2);}
+    thead th{text-align:left;padding:9px 11px;font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bdr2);}
+    tbody td{padding:9px 11px;border-bottom:1px solid rgba(36,43,61,.5);vertical-align:middle;}
+    tbody tr:hover td{background:var(--surf2);}
     tbody tr:last-child td{border-bottom:none;}
     .er td{text-align:center;color:var(--txt2);padding:24px;}
 
-    .bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:9.5px;font-weight:700;letter-spacing:0.02em;}
-    .bg{background:var(--grn-glow);color:var(--grn);border:1px solid rgba(34,209,139,0.28);}
-    .br{background:var(--red-glow);color:var(--red);border:1px solid rgba(255,92,92,0.28);}
-    .by{background:var(--yel-glow);color:var(--yel);border:1px solid rgba(245,166,35,0.28);}
-    .bp{background:var(--pur-glow);color:var(--pur);border:1px solid rgba(177,151,252,0.28);}
-    .bb{background:var(--acc-glow);color:var(--acc2);border:1px solid rgba(177,151,252,0.28);}
-    .bmute{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--bdr);}
+    .bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;}
+    .bg{background:var(--grn-glow);color:var(--grn);}
+    .br{background:var(--red-glow);color:var(--red);}
+    .by{background:var(--yel-glow);color:var(--yel);}
+    .bp{background:var(--pur-glow);color:var(--pur);}
+    .bb{background:var(--acc-glow);color:var(--acc2);}
+    .bmute{background:var(--surf2);color:var(--muted);}
 
     .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
-    .fgrid.c1{grid-template-columns:1fr;}
     .fg{display:flex;flex-direction:column;gap:5px;}
-    .fg label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
-    .fg input,.fg select,.fg textarea{
-      background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);
-      padding:8px 10px;color:var(--txt);font-size:12px;font-family:var(--font);
-      transition:border-color 0.18s,box-shadow 0.18s;outline:none;
-    }
-    .fg input:focus,.fg select:focus,.fg textarea:focus{
-      border-color:var(--acc);box-shadow:0 0 0 3px rgba(177,151,252,0.12);
-    }
+    .fg label{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.3px;}
+    .fg input,.fg select,.fg textarea{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:8px 10px;color:var(--txt);font-size:12px;font-family:var(--font);transition:border-color .15s;outline:none;}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--acc);}
     .fg input:disabled{opacity:0.5;cursor:not-allowed;}
     .fg .hint{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
 
@@ -218,131 +143,106 @@
     .tr-row:last-child{border-bottom:none;}
     .tl{font-size:12px;font-weight:500;}
     .td-d{font-size:11px;color:var(--txt2);margin-top:2px;}
-    .tog{width:36px;height:20px;background:var(--bdr2);border-radius:10px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;}
-    .tog.on{background:var(--acc);box-shadow:0 0 10px rgba(177,151,252,0.35);}
-    .tog::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+    .tog{width:36px;height:20px;background:var(--bdr);border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+    .tog.on{background:var(--acc);}
+    .tog::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;}
     .tog.on::after{left:18px;}
 
-    .btn{
-      padding:7px 14px;border:none;border-radius:var(--rs);cursor:pointer;
-      font-size:12px;font-weight:700;font-family:var(--font);
-      transition:all 0.15s cubic-bezier(0.4,0,0.2,1);white-space:nowrap;
-      display:inline-flex;align-items:center;gap:5px;
-    }
-    .btn:active{transform:scale(0.97);}
-    .btn-p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#030711;box-shadow:0 2px 12px rgba(177,151,252,0.3);}
-    .btn-p:hover{background:linear-gradient(135deg,var(--acc2),#d9cbff);box-shadow:0 4px 18px rgba(177,151,252,0.42);transform:translateY(-1px);}
-    .btn-d{background:var(--red-glow);color:var(--red);border:1px solid rgba(255,92,92,0.28);}
-    .btn-d:hover{background:rgba(255,92,92,0.18);}
-    .btn-g{background:rgba(255,255,255,0.06);color:var(--txt);border:1px solid var(--bdr2);}
-    .btn-g:hover{border-color:rgba(177,151,252,0.35);color:var(--acc2);background:rgba(177,151,252,0.06);}
-    .btn-ok{background:var(--grn-glow);color:var(--grn);border:1px solid rgba(34,209,139,0.28);}
-    .btn-ok:hover{background:rgba(34,209,139,0.18);}
-    .btn-warn{background:var(--yel-glow);color:var(--yel);border:1px solid rgba(245,166,35,0.28);}
-    .btn-warn:hover{background:rgba(245,166,35,0.18);}
-    .btn-sm{padding:4px 10px;font-size:11px;}
-    .btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+    .btn{padding:7px 13px;border:none;border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);transition:all .15s ease;white-space:nowrap;}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(113,74,35,0.10);}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 8px rgba(113,74,35,0.25);} .btn-p:hover{background:var(--acc);opacity:.92;box-shadow:0 6px 16px rgba(113,74,35,0.32);}
+    .btn-d{background:var(--red-glow);color:var(--red);border:1px solid rgba(240,100,90,.25);} .btn-d:hover{background:rgba(240,100,90,.24);}
+    .btn-g{background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);} .btn-g:hover{border-color:var(--acc);color:var(--acc2);}
+    .btn-ok{background:var(--grn-glow);color:var(--grn);border:1px solid rgba(41,201,138,.25);} .btn-ok:hover{background:rgba(41,201,138,.22);}
+    .btn-warn{background:var(--yel-glow);color:var(--yel);border:1px solid rgba(245,192,38,.25);} .btn-warn:hover{background:rgba(245,192,38,.22);}
+    .btn-sm{padding:4px 9px;font-size:11px;}
 
-    .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
-    .filter-bar input{
-      background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);
-      padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);
-      outline:none;transition:border-color 0.18s,box-shadow 0.18s;flex:1;min-width:160px;
-    }
-    .filter-bar input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(177,151,252,0.1);}
-    .filter-bar select{
-      background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);
-      padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;
-    }
+    .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+    .filter-bar input{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;transition:border-color .15s;flex:1;}
+    .filter-bar input:focus{border-color:var(--acc);}
+    .filter-bar select{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--font);outline:none;}
+    /* Native <option> list defaults to the OS theme (usually white) regardless
+       of the closed <select>'s own styling — set it explicitly everywhere. */
+    select option{background:var(--surf);color:var(--txt);}
 
-    .mo{display:none;position:fixed;inset:0;background:rgba(3,7,17,0.82);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
+    .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
     .mo.on{display:flex;}
-    .mbox{
-      background:var(--surf);border:1px solid var(--bdr2);border-radius:16px;
-      display:flex;flex-direction:column;overflow:hidden;max-height:92vh;
-      box-shadow:0 32px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);
-    }
-    .mh{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:rgba(255,255,255,0.02);}
-    .mh-title{font-size:14px;font-weight:700;letter-spacing:-0.02em;}
-    .mc{cursor:pointer;color:var(--txt2);font-size:16px;padding:4px;border:none;background:none;border-radius:6px;transition:all 0.15s;}
-    .mc:hover{color:var(--txt);background:rgba(255,255,255,0.08);}
+    .mbox{background:var(--surf);border:1px solid var(--bdr);border-radius:15px;display:flex;flex-direction:column;overflow:hidden;max-height:92vh;}
+    .mh{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .mh-title{font-size:14px;font-weight:700;}
+    .mc{cursor:pointer;color:var(--txt2);font-size:16px;padding:3px;border:none;background:none;}
+    .mc:hover{color:var(--txt);}
     .mb{padding:20px;overflow-y:auto;flex:1;}
 
-    .info-box{
-      background:rgba(255,255,255,0.03);border:1px solid var(--bdr2);
-      border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;
-      font-size:11.5px;color:var(--txt2);line-height:1.6;
-    }
+    .info-box{background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;font-size:11.5px;color:var(--txt2);line-height:1.6;}
     .info-box strong{color:var(--acc2);}
-    .info-box.warn{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.06);color:var(--yel);}
+    .info-box.warn{border-color:rgba(245,192,38,.3);background:rgba(245,192,38,.06);color:var(--yel);}
     .info-box.warn strong{color:var(--yel);}
-    .info-box.danger{border-color:rgba(255,92,92,0.3);background:rgba(255,92,92,0.06);color:var(--red);}
+    .info-box.danger{border-color:rgba(240,100,90,.3);background:rgba(240,100,90,.06);color:var(--red);}
     .info-box.danger strong{color:var(--red);}
-    .info-box.success{border-color:rgba(34,209,139,0.3);background:rgba(34,209,139,0.05);color:var(--grn);}
+    .info-box.success{border-color:rgba(41,201,138,.3);background:rgba(41,201,138,.05);color:var(--grn);}
 
     .divider{height:1px;background:var(--bdr2);margin:16px 0;}
 
     .ts-stack{position:fixed;top:16px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
-    .tst{
-      background:rgba(7,13,26,0.95);border:1px solid var(--bdr2);
-      border-radius:10px;padding:10px 13px;font-size:12px;max-width:320px;
-      pointer-events:all;display:flex;align-items:flex-start;gap:8px;
-      box-shadow:0 8px 32px rgba(0,0,0,0.5);backdrop-filter:blur(8px);
-      animation:si .2s cubic-bezier(0.16,1,0.3,1);
-    }
-    .tst.success{border-color:rgba(34,209,139,0.4);background:rgba(34,209,139,0.08);}
-    .tst.error{border-color:rgba(255,92,92,0.4);background:rgba(255,92,92,0.08);}
+    .tst{background:var(--surf);border:1px solid var(--bdr);border-radius:9px;padding:10px 13px;font-size:12px;max-width:320px;pointer-events:all;display:flex;align-items:flex-start;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,.4);animation:si .2s ease;}
+    .tst.success{border-color:var(--grn);}
+    .tst.error{border-color:var(--red);}
     @keyframes si{from{transform:translateX(28px);opacity:0}to{transform:translateX(0);opacity:1}}
 
-    .sp-ov{display:none;position:fixed;inset:0;background:rgba(3,7,17,0.72);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;}
+    .sp-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;}
     .sp-ov.on{display:flex;}
-    .sp-box{background:var(--surf);border:1px solid var(--bdr2);border-radius:14px;padding:24px 32px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.6);}
-    .sp{width:32px;height:32px;border:2.5px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
-    #sp-txt{font-size:12px;color:var(--txt2);font-weight:500;}
+    .sp-box{background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:24px 32px;text-align:center;}
+    .sp{width:32px;height:32px;border:3px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+    #sp-txt{font-size:12px;color:var(--txt2);}
 
-    .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
-    .sh h2{font-size:16px;font-weight:700;letter-spacing:-0.03em;}
-    .fx{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .sh h2{font-size:21px;font-weight:800;letter-spacing:-.4px;font-family:var(--font-head);}
     .hidden{display:none!important;}
 
-    @media(max-width:900px){
-      .sb{
-        position:fixed;top:0;left:0;height:100%;z-index:500;
-        transform:translateX(-105%);
-        transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
-        box-shadow:4px 0 40px rgba(0,0,0,.65);
-        width:min(var(--sb-w),88vw);
-      }
-      .sb.drawer-open{transform:translateX(0);}
+    /* Mobile hamburger + slide-in sidebar */
+    .mob-topbar{display:none;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surf);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:50;}
+    .mob-topbar-left{display:flex;align-items:center;gap:10px;}
+    .mob-logo-box{width:28px;height:28px;background:linear-gradient(135deg,var(--pur),var(--acc));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+    .mob-wordmark{font-size:14px;font-weight:700;color:var(--pur);}
+    .mob-ham{background:none;border:1px solid var(--bdr);border-radius:7px;padding:7px 9px;cursor:pointer;color:var(--txt2);font-size:16px;line-height:1;touch-action:manipulation;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;transition:border-color .15s;}
+    .mob-ham:hover{border-color:var(--acc);color:var(--acc);}
+    .sb-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);}
+    .sb-overlay.on{display:block;}
+    @media(max-width:860px){
+      .app{display:block;height:auto;overflow:visible;}
+      .sb{position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:240px;}
+      .sb.open{transform:translateX(0);}
+      .main{height:auto;overflow-y:visible;}
+      .topbar{display:none;}
+      .mob-topbar{display:flex;}
+      body{min-height:100dvh;}
       .sgrid{grid-template-columns:1fr 1fr;}
       .fgrid{grid-template-columns:1fr;}
-      .content{padding:14px;}
-      .mbox{width:calc(100vw - 24px)!important;border-radius:14px;}
+      .content{padding:14px 14px;}
     }
-    @media(max-width:520px){
-      .sgrid{grid-template-columns:1fr 1fr;gap:6px;}
-      .sv{font-size:20px;}
-      .content{padding:12px;}
+    @media(max-width:480px){
+      .sgrid{grid-template-columns:1fr;}
+      .sb{width:85vw;max-width:280px;}
     }
   </style>
 </head>
 <body>
 
 <div id="gate" class="on">
-  <div class="gate-spin"></div>
+  <img src="assets/edurena_logo_64.png" class="gate-logo" alt="Edurena">
   <div id="gate-msg">Verifying super-admin session…</div>
   <button class="gate-btn" id="gate-btn" onclick="goLogin()">Go to Login →</button>
 </div>
 
+<!-- Sidebar overlay for mobile -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
 <div class="app" id="shell" style="display:none">
-  <aside class="sb">
+  <aside class="sb" id="sb-aside">
     <div class="sb-logo">
       <div class="sb-logo-row">
-        <svg class="logo-box" viewBox="-130 -90 260 200" width="32" height="28" aria-label="Edurena">
-          <path d="M -110 -55 L -65 -55 L -45 15 L -25 -30 L 25 -30 L 45 15 L 65 -55 L 110 -55 L 110 40 L 65 40 L 45 -15 L 25 40 L -25 40 L -45 -15 L -65 40 L -110 40 Z" fill="#f5a623"/>
-          <circle cx="-35" cy="20" r="7" fill="#03060f"/>
-          <circle cx="35" cy="20" r="7" fill="#03060f"/>
-        </svg>
+        <img src="assets/edurena_logo_64.png" alt="Edurena" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">
         <div class="logo-txt"><h1>edurena</h1><p>Super Admin</p></div>
       </div>
     </div>
@@ -362,6 +262,10 @@
       <button class="ni"    onclick="navTo('activate',this)"><span class="ico">⚡</span>Activate School</button>
       <button class="ni"    onclick="navTo('pricing',this)"><span class="ico">₦</span>Pricing</button>
       <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
+      <button class="ni"    onclick="navTo('questionbank',this)"><span class="ico">📚</span>Question Bank</button>
+      <button class="ni"    onclick="navTo('edurenabank',this)"><span class="ico">🎓</span>Edurena Bank</button>
+      <button class="ni"    onclick="navTo('competitions',this)"><span class="ico">🏆</span>Competitions</button>
+      <button class="ni"    onclick="navTo('pronunciation',this)"><span class="ico">🎤</span>Pronunciation Demo</button>
       <div class="nsec">Account</div>
       <button class="ni"    onclick="navTo('security',this)"><span class="ico">🔒</span>Security</button>
     </nav>
@@ -386,6 +290,17 @@
   </aside>
 
   <div class="main">
+    <!-- Mobile top bar -->
+    <div class="mob-topbar">
+      <div class="mob-topbar-left">
+        <button class="mob-ham" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
+        <div class="mob-logo-box">
+          <img src="./assets/edurena_logo_64.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">
+        </div>
+        <span class="mob-wordmark">Super Admin</span>
+      </div>
+      <span style="font-size:11px;color:var(--txt2)" id="tb-right-mob">—</span>
+    </div>
     <div class="topbar">
       <div>
         <div class="tb-title" id="tb-title">Overview</div>
@@ -460,14 +375,12 @@
           <div class="ct">School Details</div>
           <div class="fgrid" style="margin-bottom:12px">
             <div class="fg">
-              <label>School Name *</label>
+              <label>School Name *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Must match exactly if renewing an existing school</span></span></label>
               <input type="text" id="act-school-name" placeholder="e.g. Sunrise Academy">
-              <div class="hint">Must match exactly if renewing an existing school</div>
             </div>
             <div class="fg">
-              <label>Contact / Admin Email *</label>
+              <label>Contact / Admin Email *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">This email becomes the school_admin login account</span></span></label>
               <input type="email" id="act-contact-email" placeholder="admin@school.edu">
-              <div class="hint">This email becomes the school_admin login account</div>
             </div>
           </div>
           <div class="fgrid" style="margin-bottom:12px">
@@ -480,9 +393,8 @@
               </select>
             </div>
             <div class="fg">
-              <label>Duration (months) *</label>
+              <label>Duration (months) *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Stacks on top of existing expiry if school already active</span></span></label>
               <input type="number" id="act-months" value="12" min="1" max="36">
-              <div class="hint">Stacks on top of existing expiry if school already active</div>
             </div>
           </div>
           <div class="fgrid" style="margin-bottom:12px">
@@ -549,6 +461,187 @@
         </div>
       </div>
 
+      <!-- QUESTION BANK IMPORT -->
+      <div class="tp" id="tp-questionbank">
+        <div class="sh">
+          <h2>Question Bank Import</h2>
+        </div>
+        <div class="info-box">
+          <strong>How this works:</strong> Paste a JSON batch of questions drafted
+          and reviewed by Claude into the box below. Click <em>Validate &amp; Preview</em>
+          to check the format and see a summary before anything is saved. Nothing
+          is written to the database until you click <em>Commit to Database</em>.
+        </div>
+
+        <div class="card">
+          <div class="ct">Paste Question Batch (JSON)</div>
+          <textarea id="qb-paste"
+            style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
+                   background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
+                   border-radius:8px;padding:12px;resize:vertical"
+            placeholder='[ { "theme": "human-body", "tier": "middle", ... } ]'></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-g btn-sm" onclick="qbValidate()">🔍 Validate &amp; Preview</button>
+            <button class="btn btn-p btn-sm" id="qb-commit-btn" onclick="qbCommit()" disabled>✅ Commit to Database</button>
+            <button class="btn btn-g btn-sm" onclick="qbClear()">🗑 Clear</button>
+          </div>
+        </div>
+
+        <div class="card" id="qb-preview-card" style="display:none">
+          <div class="ct">Preview</div>
+          <div id="qb-preview-summary" style="margin-bottom:12px;font-size:13px;color:var(--txt2)"></div>
+          <div class="tw">
+            <table id="qb-preview-table">
+              <thead><tr><th>#</th><th>Theme</th><th>Tier</th><th>Format</th><th>Question</th><th>Status</th><th>Notes</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="qb-result-card" style="display:none">
+          <div class="ct">Import Result</div>
+          <div id="qb-result-summary" style="font-size:13px;color:var(--txt2)"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Challenge Mode Themes<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" style="width:260px">Each Challenge Mode match draws its questions from one active theme below and uses that theme's own timer for every round. If no themes are active, matches fall back to mixing all approved questions for the tier with a 12s default.</span></span></div>
+          <div class="tw">
+            <table id="theme-table">
+              <thead><tr><th>Theme</th><th>Label</th><th>Time/Q (s)</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:end">
+            <div style="flex:1;min-width:120px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Theme key</label>
+              <input type="text" id="theme-key" placeholder="e.g. human-body" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--mono);font-size:12.5px;outline:none">
+            </div>
+            <div style="flex:1;min-width:140px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Display label</label>
+              <input type="text" id="theme-label" placeholder="e.g. Human Body" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none">
+            </div>
+            <div style="width:100px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Time/Q (s)</label>
+              <input type="number" id="theme-time" min="5" max="60" value="12" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--mono);font-size:12.5px;outline:none">
+            </div>
+            <button class="btn btn-p btn-sm" onclick="saveTheme()">+ Add / Update</button>
+            <button class="btn btn-g btn-sm" onclick="clearThemeForm()">Clear</button>
+          </div>
+          <div id="theme-status" style="margin-top:8px;font-size:12px;display:none"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Topic of the Day — Calendar<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Assign one featured theme per day — every Challenge Mode match that day uses it and its timer. Days left unset pick a random active theme instead.</span></span></div>
+          <div class="tw">
+            <table id="cal-table">
+              <thead><tr><th>Date</th><th>Day</th><th>Theme</th></tr></thead>
+              <tbody><tr class="er"><td colspan="3">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDURENA QUESTION BANK (global, syllabus-aligned — separate from
+           the Challenge Mode bank above, different schema entirely) -->
+      <div class="tp" id="tp-edurenabank">
+        <div class="sh"><h2>Edurena Question Bank</h2></div>
+        <div class="info-box">
+          <strong>How this works:</strong> Questions here are shared across every school and organised by <strong>subject, topic and difficulty</strong> (no class levels). Hidden from Create Quiz until you flip <code>EDURENA_BANK_ENABLED</code> on in the Apps Script editor. Paste a JSON batch or load one or more <code>.json</code> files, validate, then commit. A question already in the bank (same subject, topic and text) is skipped, so re-importing a batch is safe. For a SHORT question expecting several distinct answers (e.g. "name three..."), add <code>"expected_items": 3</code> to show students one input line per answer instead of a single box.
+        </div>
+
+        <div class="card">
+          <div class="ct">Paste Questions (JSON)<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop" style="width:280px"><code>tier</code>: "free" or "premium" — free-plan schools only ever see free-tier bank questions; premium schools get both. Leave it out and a question defaults to free.</span></span></div>
+          <textarea id="eb-paste"
+            style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
+                   background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
+                   border-radius:8px;padding:12px;resize:vertical"
+            placeholder='[ { "subject": "Mathematics", "topic": "Algebra", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "x = 2", "points": 1, "explanation": "...", "tier": "free" } ]'></textarea>
+          <input type="file" id="eb-files" accept=".json,application/json" multiple style="display:none" onchange="ebLoadFiles(this)">
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-g btn-sm" onclick="document.getElementById('eb-files').click()">📁 Load .json files</button>
+            <button class="btn btn-g btn-sm" onclick="ebValidate()">🔍 Validate &amp; Preview</button>
+            <button class="btn btn-p btn-sm" id="eb-commit-btn" onclick="ebCommit()" disabled>✅ Commit to Database</button>
+            <button class="btn btn-g btn-sm" onclick="ebClear()">🗑 Clear</button>
+            <button class="btn btn-g btn-sm" onclick="ebCopyTemplate()">📋 Copy Full Template</button>
+          </div>
+        </div>
+
+        <div class="card" id="eb-preview-card" style="display:none">
+          <div class="ct">Preview</div>
+          <div id="eb-preview-summary" style="margin-bottom:12px;font-size:13px;color:var(--txt2)"></div>
+          <div class="tw">
+            <table id="eb-preview-table">
+              <thead><tr><th>#</th><th>Subject</th><th>Topic</th><th>Difficulty</th><th>Question</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="eb-result-card" style="display:none">
+          <div class="ct">Import Result</div>
+          <div id="eb-result-summary" style="font-size:13px;color:var(--txt2)"></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">Browse / Edit / Delete Existing Questions<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Import only ever adds — re-importing a corrected batch will duplicate rows instead of fixing them unless the old topic is deleted here first.</span></span></div>
+            <button class="btn btn-g btn-sm" onclick="ebLoadTopics()">↻ Refresh</button>
+          </div>
+          <div class="tw">
+            <table id="eb-topics-table">
+              <thead><tr><th>Subject</th><th>Topic</th><th>Questions</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="4">Click Refresh to load topics</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="eb-qlist-card" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div class="ct" style="margin-bottom:0" id="eb-qlist-title">Questions</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-g btn-sm" onclick="document.getElementById('eb-qlist-card').style.display='none'">Close</button>
+              <button class="btn btn-d btn-sm" onclick="ebDeleteTopic()">🗑 Delete Entire Topic</button>
+            </div>
+          </div>
+          <div class="tw">
+            <table id="eb-qlist-table">
+              <thead><tr><th>#</th><th>Type</th><th>Difficulty</th><th>Question</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Flagged Questions<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Questions a student flagged as wrong while taking an Edurena-Bank-sourced quiz. Resolve once fixed (or dismissed).</span></span></div>
+          <div class="tw">
+            <table id="eb-flags-table">
+              <thead><tr><th>Question ID</th><th>Exam Code</th><th>Reason</th><th>Flagged</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPETITION MODE -->
+      <div class="tp" id="tp-competitions">
+        <div class="sh"><h2>Competitions</h2></div>
+        <div class="info-box">
+          <strong>How this works:</strong> Schedule a competition, hand-pick its theme and exact questions, set a ticket price and cash prize pool with a placement split. New competitions start as <strong>Draft</strong> — switch to <strong>Test</strong> to try the full flow yourself with payment skipped, then <strong>Published</strong> only when ready to charge real money.
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">All Competitions</div>
+            <button class="btn btn-p btn-sm" onclick="openCompetitionModal()">+ New Competition</button>
+          </div>
+          <div class="tw">
+            <table id="comp-table">
+              <thead><tr><th>Title</th><th>Date</th><th>Status</th><th>Ticket</th><th>Prize Pool</th><th>Questions</th><th>Tickets Sold</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="8">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- v5.5: PRICING — per-student price control (mutable anytime) -->
       <div class="tp" id="tp-pricing">
         <div class="sh"><h2>Per-Student Pricing</h2></div>
@@ -585,31 +678,132 @@
             <tbody id="pr-examples"></tbody>
           </table>
         </div>
+
+        <!-- Plan Configuration -->
+        <div class="card">
+          <div class="ct">Plan Configuration</div>
+          <p style="font-size:12px;color:var(--txt2);margin:4px 0 14px;line-height:1.6">
+            Define what each plan includes and how premium pricing is calculated. Changes reflect on <strong>Pricing.html</strong> immediately.
+          </p>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+            <div style="flex:1;min-width:180px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Premium Multiplier</label>
+              <input type="number" id="plan-prm-mult" min="1" max="10" step="0.1" value="1.5" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:14px;outline:none">
+              <div style="font-size:11px;color:var(--txt2);margin-top:4px">e.g. 1.5 → Premium costs 50% more than Standard</div>
+            </div>
+            <div style="flex:1;min-width:180px">
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Annual Billing Discount (%)</label>
+              <input type="number" id="plan-annual-disc" min="0" max="80" step="1" value="20" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:14px;outline:none">
+              <div style="font-size:11px;color:var(--txt2);margin-top:4px">Discount applied when customer pays for 12+ months</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="flex:1;min-width:260px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:13px;font-weight:600;color:var(--txt)">Standard Plan Features</div>
+                <button type="button" class="btn btn-g btn-sm" onclick="addFeatureRow('plan-std-features')">+ Add</button>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--bdr);border-radius:6px;overflow:hidden">
+                <table style="width:100%;border-collapse:collapse">
+                  <thead><tr>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px;width:32px">✓</th>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px">Feature Text</th>
+                    <th style="width:28px"></th>
+                  </tr></thead>
+                  <tbody id="plan-std-features"></tbody>
+                </table>
+              </div>
+            </div>
+            <div style="flex:1;min-width:260px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:13px;font-weight:600;color:var(--txt)">Premium Plan Features</div>
+                <button type="button" class="btn btn-g btn-sm" onclick="addFeatureRow('plan-prm-features')">+ Add</button>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--bdr);border-radius:6px;overflow:hidden">
+                <table style="width:100%;border-collapse:collapse">
+                  <thead><tr>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px;width:32px">✓</th>
+                    <th style="padding:6px 8px;font-size:11px;color:var(--txt2);text-align:left;text-transform:uppercase;letter-spacing:.4px">Feature Text</th>
+                    <th style="width:28px"></th>
+                  </tr></thead>
+                  <tbody id="plan-prm-features"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:14px">
+            <div id="plan-config-status" style="font-size:12px;display:none"></div>
+            <button class="btn btn-p" onclick="savePlanConfig()">Save Plan Config</button>
+          </div>
+        </div>
       </div>
 
       <!-- v5.5: SECURITY — change password -->
       <div class="tp" id="tp-security">
         <div class="sh"><h2>Account Security</h2></div>
         <div class="card">
-          <div class="ct">Change Password</div>
-          <p style="font-size:12px;color:var(--txt2);margin:4px 0 14px;line-height:1.6">
-            Use 12+ characters with a mix of letters, numbers, and symbols. You'll stay signed in on this device after the change.
-          </p>
+          <div class="ct">Change Password<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Use 12+ characters with a mix of letters, numbers, and symbols. You'll stay signed in on this device after the change.</span></span></div>
           <div style="max-width:420px;display:flex;flex-direction:column;gap:10px">
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Current password</label>
-              <input type="password" id="pwd-current" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+              <div style="position:relative">
+                <input type="password" id="pwd-current" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 36px 8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+                <button type="button" onclick="togglePw('pwd-current',this)" aria-label="Show password" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">👁</button>
+              </div>
             </div>
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">New password</label>
-              <input type="password" id="pwd-new" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+              <div style="position:relative">
+                <input type="password" id="pwd-new" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 36px 8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+                <button type="button" onclick="togglePw('pwd-new',this)" aria-label="Show password" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">👁</button>
+              </div>
             </div>
             <div>
               <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Confirm new password</label>
-              <input type="password" id="pwd-confirm" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+              <div style="position:relative">
+                <input type="password" id="pwd-confirm" autocomplete="new-password" minlength="8" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 36px 8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+                <button type="button" onclick="togglePw('pwd-confirm',this)" aria-label="Show password" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:14px;cursor:pointer;color:var(--txt2);padding:6px;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">👁</button>
+              </div>
             </div>
             <button class="btn btn-p" onclick="savePassword()" style="margin-top:6px;align-self:flex-start">Update Password</button>
             <div id="pwd-status" style="margin-top:4px;font-size:12px;display:none"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tp" id="tp-pronunciation">
+        <div class="sh"><h2>Pronunciation Demo</h2></div>
+        <div class="card">
+          <div class="ct">New Demo List<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Demo lists bypass the premium gate entirely — the practice link works for anyone, regardless of which school's plan it's opened under. Use these for sales demos.</span></span></div>
+          <div style="max-width:480px;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">List title</label>
+              <input type="text" id="pd-title" placeholder="e.g. Demo — Common English Words" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Practice type</label>
+              <select id="pd-mode" onchange="updateDemoPronunciationModeUI()" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+                <option value="word">Word Practice</option>
+                <option value="sentence">Sentence Practice</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px" id="pd-words-label">Words (one per line)</label>
+              <textarea id="pd-words" rows="6" placeholder="photosynthesis&#10;itinerary&#10;entrepreneur" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none;resize:vertical;line-height:1.7"></textarea>
+            </div>
+            <button class="btn btn-p" onclick="saveDemoPronunciationList()" style="align-self:flex-start">Create Demo List →</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="sh" style="padding:12px 14px;border-bottom:1px solid var(--bdr)">
+            <h2 style="font-size:14px;margin:0">Demo Lists</h2>
+            <button class="btn btn-sm" onclick="loadPronunciationDemoTab()">↻ Refresh</button>
+          </div>
+          <div id="pronunciation-demo-list" style="padding:14px">
+            <p style="color:var(--txt2);font-size:13px;text-align:center;padding:18px">Loading…</p>
           </div>
         </div>
       </div>
@@ -651,17 +845,13 @@
 
       <!-- School name — locked when editing, open when adding -->
       <div class="fg" style="margin-bottom:12px">
-        <label>School Name *</label>
+        <label>School Name *<span id="mo-name-hint" style="display:none"><span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">School name is locked. Use the <strong style="color:var(--yel)">Rename School</strong> section above to change it safely with full data migration.</span></span></span></label>
         <input type="text" id="mo-school-name" placeholder="e.g. Sunrise Academy">
-        <div class="hint" id="mo-name-hint" style="display:none">
-          School name is locked. Use the <strong style="color:var(--yel)">Rename School</strong> section above to change it safely with full data migration.
-        </div>
       </div>
 
       <div class="fg" style="margin-bottom:12px">
-        <label>Contact / Admin Email *</label>
+        <label>Contact / Admin Email *<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">This email receives the school admin account and welcome email</span></span></label>
         <input type="email" id="mo-contact-email" placeholder="admin@school.edu">
-        <div class="hint">This email receives the school admin account and welcome email</div>
       </div>
       <div class="fgrid" style="margin-bottom:12px">
         <div class="fg">
@@ -676,6 +866,10 @@
           <label>Subscription Expiry</label>
           <input type="date" id="mo-expiry">
         </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label>Student Slots (Paid)<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Caps how many students this school can register. Blank = unlimited (legacy default).</span></span></label>
+        <input type="number" id="mo-slots" min="0" placeholder="Leave blank for unlimited">
       </div>
       <div class="fg" style="margin-bottom:14px">
         <label>Internal Notes</label>
@@ -712,14 +906,176 @@
     <div class="mb">
       <p style="font-size:12.5px;color:var(--txt2);margin-bottom:14px">Extend access for <strong id="rn-school-name" style="color:var(--txt)"></strong></p>
       <div class="fg" style="margin-bottom:16px">
-        <label>New Expiry Date</label>
+        <label>New Expiry Date<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Subscription will extend to this date. Current expiry is shown below.</span></span></label>
         <input type="date" id="rn-date">
-        <div class="hint">Subscription will extend to this date. Current expiry is shown below.</div>
       </div>
       <div id="rn-current-expiry" style="font-size:11px;color:var(--txt2);margin-bottom:14px"></div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
         <button class="btn btn-g" onclick="closeMo('renew-mo')">Cancel</button>
         <button class="btn btn-ok" onclick="confirmRenew()">Confirm Renewal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPETITION EDIT MODAL -->
+<div class="mo" id="comp-mo">
+  <div class="mbox" style="width:640px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title" id="comp-mo-title">New Competition</span>
+      <button class="mc" onclick="closeMo('comp-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg" style="margin-bottom:10px"><label>Title *</label><input type="text" id="comp-title" placeholder="e.g. June Knowledge Cup" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none"></div>
+      <div class="fg" style="margin-bottom:10px"><label>Description</label><input type="text" id="comp-desc" placeholder="Optional — shown to participants" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none"></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Theme</label>
+          <select id="comp-theme" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none"><option value="">— Select —</option></select>
+        </div>
+        <div style="flex:1;min-width:120px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Tier</label>
+          <input type="text" id="comp-tier" placeholder="e.g. middle" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:120px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Status</label>
+          <select id="comp-status" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+            <option value="draft">Draft</option>
+            <option value="test">Test (bypass payment)</option>
+            <option value="published">Published (real money)</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Competition Date/Time *</label>
+          <input type="datetime-local" id="comp-date" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:180px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Lobby Opens At</label>
+          <input type="datetime-local" id="comp-lobby-open" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--font);font-size:13px;outline:none">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Questions *</label>
+          <input type="number" id="comp-qcount" min="1" value="10" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Time/Q (s)</label>
+          <input type="number" id="comp-timeq" min="5" max="60" value="12" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Target Lobby Size</label>
+          <input type="number" id="comp-lobby-size" min="1" placeholder="optional" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:100px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Max Tickets</label>
+          <input type="number" id="comp-max-tickets" min="1" placeholder="unlimited" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Ticket Price (₦) *</label>
+          <input type="number" id="comp-price" min="0" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+        <div style="flex:1;min-width:140px"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Prize Pool (₦)</label>
+          <input type="number" id="comp-prize-pool" min="0" value="0" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:6px"><label>Prize Split (%) — 1st / 2nd / 3rd</label></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px">
+        <input type="number" id="comp-split-1" min="0" max="100" value="50" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        <input type="number" id="comp-split-2" min="0" max="100" value="30" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+        <input type="number" id="comp-split-3" min="0" max="100" value="20" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:none">
+      </div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:14px">Must add up to 100% or less. Each percentage is applied to the prize pool above.</div>
+      <div id="comp-locked-notice" class="info-box warn" style="display:none;margin-bottom:14px">Tickets have already been sold — ticket price and prize terms are locked and can no longer be changed.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <button class="btn btn-g" id="comp-manage-q-btn" style="display:none" onclick="openQuestionPicker()">📝 Manage Questions</button>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button class="btn btn-g" onclick="closeMo('comp-mo')">Cancel</button>
+          <button class="btn btn-p" onclick="saveCompetition()">Save Competition</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION PICKER MODAL -->
+<div class="mo" id="qpick-mo">
+  <div class="mbox" style="width:680px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Pick Competition Questions</span>
+      <button class="mc" onclick="closeMo('qpick-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:end">
+        <div style="flex:1"><label style="display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Filter by theme</label>
+          <select id="qpick-theme-filter" onchange="loadQuestionPickerOptions()" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:7px 9px;color:var(--txt);font-family:var(--font);font-size:12.5px;outline:none"><option value="">— All approved questions —</option></select>
+        </div>
+        <div style="font-size:12px;color:var(--txt2)" id="qpick-selected-count">0 selected</div>
+      </div>
+      <div class="tw" style="max-height:50vh;overflow-y:auto">
+        <table id="qpick-table">
+          <thead><tr><th style="width:30px"></th><th>Theme</th><th>Format</th><th>Question</th></tr></thead>
+          <tbody><tr class="er"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button class="btn btn-g" onclick="closeMo('qpick-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="saveCompetitionQuestionPicks()">Save Question Set</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPETITION RESULTS / PAYOUTS MODAL -->
+<div class="mo" id="results-mo">
+  <div class="mbox" style="width:720px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Results &amp; Prize Payouts</span>
+      <button class="mc" onclick="closeMo('results-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="ct">Standings</div>
+      <div class="tw" style="margin-bottom:18px">
+        <table id="results-table">
+          <thead><tr><th>Rank</th><th>Name</th><th>School</th><th>Score</th><th>Correct</th><th>Email</th><th>Phone</th></tr></thead>
+          <tbody><tr class="er"><td colspan="7">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="ct">Prize Payouts</div>
+      <div class="tw">
+        <table id="payouts-table">
+          <thead><tr><th>Place</th><th>Amount</th><th>Status</th><th>Payout Details</th><th>Action</th></tr></thead>
+          <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDURENA BANK: EDIT A QUESTION -->
+<div class="mo" id="ebq-mo">
+  <div class="mbox" style="width:640px;max-width:96vw">
+    <div class="mh">
+      <span class="mh-title">Edit Question</span>
+      <button class="mc" onclick="closeMo('ebq-mo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fgrid" style="margin-bottom:12px">
+        <div class="fg"><label>Subject</label><input id="ebq-subject"></div>
+        <div class="fg"><label>Topic</label><input id="ebq-topic"></div>
+        <div class="fg"><label>Difficulty</label>
+          <select id="ebq-difficulty"><option value="easy">easy</option><option value="medium">medium</option><option value="hard">hard</option></select>
+        </div>
+        <div class="fg"><label>Type</label>
+          <select id="ebq-type" onchange="ebRenderOptFields()"><option value="MCQ">MCQ</option><option value="TF">TF</option><option value="SHORT">SHORT</option></select>
+        </div>
+        <div class="fg"><label>Points</label><input id="ebq-points" type="number" min="1" step="1"></div>
+        <div class="fg"><label>Tier</label>
+          <select id="ebq-tier"><option value="free">free</option><option value="premium">premium</option></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>Question</label><textarea id="ebq-question" style="width:100%;min-height:60px;font-family:inherit;background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:10px"></textarea></div>
+      <div id="ebq-opt-wrap" style="margin-bottom:12px"></div>
+      <div class="fg" style="margin-bottom:12px"><label>Correct Answer</label><input id="ebq-correct" style="width:100%"></div>
+      <div class="fg" style="margin-bottom:14px"><label>Explanation</label><textarea id="ebq-explanation" style="width:100%;min-height:100px;font-family:inherit;background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:10px"></textarea></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-g" onclick="closeMo('ebq-mo')">Cancel</button>
+        <button class="btn btn-p" onclick="ebSaveQuestion()">Save Changes</button>
       </div>
     </div>
   </div>
@@ -768,19 +1124,36 @@ function toast(type, msg) {
 }
 function spin(on) { document.getElementById('sp-ov').classList.toggle('on', on); }
 function setText(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+// Info tooltips — tap the (i) to open, tap anywhere else to close. Only one
+// open at a time.
+function toggleTip(btn, ev) {
+  if (ev) ev.stopPropagation();
+  var wrap = btn.closest('.itip');
+  var wasOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.itip.open').forEach(function(t){ t.classList.remove('open'); });
+  if (!wasOpen) wrap.classList.add('open');
+}
+document.addEventListener('click', function(){
+  document.querySelectorAll('.itip.open').forEach(function(t){ t.classList.remove('open'); });
+});
 function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function togglePw(id, btn) {
+  var el = document.getElementById(id); if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
 
 // ── AUTH ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   var token = '';
-  try { token = sessionStorage.getItem('qf_token') || ''; } catch(_) {}
+  try { token = localStorage.getItem('qf_token') || ''; } catch(_) {}
   if (!token) { var p = new URLSearchParams(window.location.search); token = p.get('token') || ''; }
   if (!token) { authFail('No active session.'); return; }
   callRaw('validateSuperadminSession', { token: token }, function(e, r) {
     if (e || !r || r.status !== 'success') { authFail((r && r.message) || 'Super-admin access denied.'); return; }
     S = Object.assign(S, r.data, { token: token });
-    try { sessionStorage.setItem('qf_token', token); } catch(_) {}
+    try { localStorage.setItem('qf_token', token); } catch(_) {}
     boot();
   });
 });
@@ -812,6 +1185,7 @@ function boot() {
 
 function doLogout() {
   callRaw('teacherLogout', { token: S.token }, function(){});
+  try { localStorage.removeItem('qf_token'); } catch(_) {}
   try { sessionStorage.clear(); } catch(_) {}
   goLogin();
 }
@@ -823,6 +1197,9 @@ var tabTitles = {
   activate: ['Activate School', 'Manually activate or renew a school subscription'],
   pricing:  ['Pricing', 'Per-student pricing — changes apply immediately'],
   settings: ['Global Settings', 'Platform configuration'],
+  questionbank: ['Question Bank', 'Import drafted questions into the parent/child question bank'],
+  edurenabank: ['Edurena Question Bank', 'Curated academic bank — Basic1 to SS3, JAMB/WAEC/NECO/SAT — hidden from schools until enabled'],
+  pronunciation: ['Pronunciation Demo', 'Demo word lists that work for any school, regardless of plan'],
   security: ['Account Security', 'Change your password']
 };
 
@@ -835,9 +1212,13 @@ function navTo(name, el) {
   var t = tabTitles[name] || [name, ''];
   setText('tb-title', t[0]);
   setText('tb-sub', t[1]);
-  if (name === 'settings') loadSettings();
-  if (name === 'pricing')  loadPricing();
-  if (name === 'security') loadSecurity();
+  if (name === 'settings')     loadSettings();
+  if (name === 'pricing')      loadPricing();
+  if (name === 'security')     loadSecurity();
+  if (name === 'questionbank') loadThemes();
+  if (name === 'competitions') loadCompetitions();
+  if (name === 'edurenabank')  { loadFlaggedQuestions(); ebLoadTopics(); }
+  if (name === 'pronunciation') loadPronunciationDemoTab();
 }
 
 // ── OVERVIEW ────────────────────────────────────────────────────
@@ -920,6 +1301,7 @@ function loadPricing() {
     renderPricingExamples(pr.pricePerStudentNgn || 0);
     var inp = document.getElementById('pr-new');
     if (inp) inp.value = pr.pricePerStudentNgn || '';
+    if (pr.planConfig) loadPlanConfig(pr.planConfig);
   });
 }
 
@@ -948,6 +1330,95 @@ function saveNewPricing() {
     statusEl.style.display = 'block';
     statusEl.style.color = 'var(--red)';
     statusEl.textContent = '✗ ' + (errMsg || 'Update failed');
+  });
+}
+
+// ── Plan Configuration ────────────────────────────────────────────
+function loadPlanConfig(pc) {
+  var mEl = document.getElementById('plan-prm-mult');
+  var dEl = document.getElementById('plan-annual-disc');
+  if (mEl) mEl.value = typeof pc.premiumMultiplier === 'number' ? pc.premiumMultiplier : 1.5;
+  if (dEl) dEl.value = typeof pc.annualDiscountPct === 'number' ? pc.annualDiscountPct : 20;
+  renderFeatureEditor('plan-std-features', pc.standardFeatures || []);
+  renderFeatureEditor('plan-prm-features', pc.premiumFeatures  || []);
+}
+
+function renderFeatureEditor(containerId, features) {
+  var tbody = document.getElementById(containerId);
+  if (!tbody) return;
+  tbody.innerHTML = features.map(function(f) {
+    return '<tr>'
+      + '<td style="padding:4px 6px;width:32px;text-align:center">'
+        + '<input type="checkbox" class="feat-ok"' + (f.ok ? ' checked' : '') + ' title="Included in plan">'
+      + '</td>'
+      + '<td style="padding:4px 6px">'
+        + '<input type="text" class="feat-text" value="' + escH(f.text||'') + '" '
+        + 'style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;color:var(--txt);font-size:13px">'
+      + '</td>'
+      + '<td style="padding:4px 6px;width:28px">'
+        + '<button type="button" onclick="removeFeatureRow(this)" title="Remove" '
+        + 'style="background:none;border:none;cursor:pointer;color:#e55;font-size:15px;padding:0;line-height:1">✕</button>'
+      + '</td>'
+    + '</tr>';
+  }).join('');
+}
+
+function addFeatureRow(containerId) {
+  var tbody = document.getElementById(containerId);
+  if (!tbody) return;
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td style="padding:4px 6px;width:32px;text-align:center"><input type="checkbox" class="feat-ok" checked title="Included in plan"></td>'
+    + '<td style="padding:4px 6px"><input type="text" class="feat-text" placeholder="Feature description…" style="width:100%;background:var(--surface);border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;color:var(--txt);font-size:13px"></td>'
+    + '<td style="padding:4px 6px;width:28px"><button type="button" onclick="removeFeatureRow(this)" title="Remove" style="background:none;border:none;cursor:pointer;color:#e55;font-size:15px;padding:0;line-height:1">✕</button></td>';
+  tbody.appendChild(tr);
+  tr.querySelector('.feat-text').focus();
+}
+
+function removeFeatureRow(btn) {
+  var tr = btn.closest ? btn.closest('tr') : btn.parentElement.parentElement;
+  if (tr) tr.remove();
+}
+
+function collectFeatures(containerId) {
+  var tbody = document.getElementById(containerId);
+  if (!tbody) return [];
+  var features = [];
+  tbody.querySelectorAll('tr').forEach(function(tr) {
+    var textEl = tr.querySelector('.feat-text');
+    var okEl   = tr.querySelector('.feat-ok');
+    var text = textEl ? textEl.value.trim() : '';
+    if (text) features.push({ text: text, ok: !!(okEl && okEl.checked) });
+  });
+  return features;
+}
+
+function savePlanConfig() {
+  var mult = parseFloat((document.getElementById('plan-prm-mult')   || {}).value);
+  var disc = parseFloat((document.getElementById('plan-annual-disc') || {}).value);
+  var statusEl = document.getElementById('plan-config-status');
+  if (isNaN(mult) || mult < 1) { toast('error', 'Premium multiplier must be ≥ 1'); return; }
+  if (isNaN(disc) || disc < 0 || disc > 80) { toast('error', 'Annual discount must be 0–80%'); return; }
+  var stdFeats = collectFeatures('plan-std-features');
+  var prmFeats = collectFeatures('plan-prm-features');
+  if (!stdFeats.length) { toast('error', 'Standard plan needs at least one feature'); return; }
+  if (!prmFeats.length) { toast('error', 'Premium plan needs at least one feature'); return; }
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--txt2)';
+  statusEl.textContent = 'Saving…';
+  call('updatePricing', {
+    planConfig: {
+      premiumMultiplier: mult,
+      annualDiscountPct: disc,
+      standardFeatures:  stdFeats,
+      premiumFeatures:   prmFeats
+    }
+  }, function() {
+    statusEl.style.color = 'var(--grn)';
+    statusEl.textContent = '✓ Plan configuration saved';
+    setTimeout(function() { statusEl.style.display = 'none'; }, 3500);
+  }, function(e) {
+    statusEl.style.color = '#e55';
+    statusEl.textContent = '✗ ' + (e || 'Failed to save');
   });
 }
 
@@ -1009,6 +1480,75 @@ function savePassword() {
   });
 }
 
+// ── PRONUNCIATION DEMO ────────────────────────────────────────
+function loadPronunciationDemoTab() {
+  var listEl = document.getElementById('pronunciation-demo-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<p style="text-align:center;color:var(--txt2);font-size:13px;padding:18px">Loading…</p>';
+  call('getPronunciationLists', {}, function(list) {
+    var demos = (list||[]).filter(function(p){ return p.isDemo; });
+    if (!demos.length) {
+      listEl.innerHTML = '<p style="text-align:center;color:var(--txt2);font-size:13px;padding:18px">No demo lists yet. Create one above.</p>';
+      return;
+    }
+    listEl.innerHTML = demos.map(function(p) {
+      var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(p.code) : '';
+      return '<div style="padding:12px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-weight:600;font-size:13px;margin-bottom:3px">'+escH(p.title)+' <span class="bdg by" style="margin-left:4px">'+(p.mode==='sentence'?'Sentence':'Word')+'</span></div>'
+          + '<div style="font-size:12px;color:var(--txt2);margin-bottom:4px">'+p.wordCount+' '+(p.mode==='sentence'?'sentence':'word')+(p.wordCount===1?'':'s')+'</div>'
+          + '<div style="font-size:11.5px;color:var(--acc);font-weight:500;font-family:var(--mono)">Code: '+escH(p.code)+'</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          + '<button class="btn btn-sm" onclick="copyDemoPronunciationLink(\''+escH(p.code)+'\')">Copy Link</button>'
+          + '<button class="btn btn-d btn-sm" onclick="deleteDemoPronunciationList(\''+escH(p.id)+'\',\''+escH(p.title)+'\')">Delete</button>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+  });
+}
+
+function updateDemoPronunciationModeUI() {
+  var isSentence = document.getElementById('pd-mode').value === 'sentence';
+  document.getElementById('pd-words-label').textContent = isSentence ? 'Sentences (one per line)' : 'Words (one per line)';
+  document.getElementById('pd-words').placeholder = isSentence
+    ? 'The quick brown fox jumps over the lazy dog.\nShe sells seashells by the seashore.'
+    : 'photosynthesis\nitinerary\nentrepreneur';
+}
+
+function saveDemoPronunciationList() {
+  var title = (document.getElementById('pd-title').value || '').trim();
+  var mode = document.getElementById('pd-mode').value;
+  var words = (document.getElementById('pd-words').value || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
+  if (!title) { toast('error','List title is required'); return; }
+  if (!words.length) { toast('error', mode==='sentence' ? 'Add at least one sentence' : 'Add at least one word'); return; }
+  call('savePronunciationList', { title:title, words:words, mode:mode, isDemo:true }, function(d) {
+    toast('success', 'Demo list created — code: ' + d.code);
+    document.getElementById('pd-title').value = '';
+    document.getElementById('pd-words').value = '';
+    document.getElementById('pd-mode').value = 'word';
+    updateDemoPronunciationModeUI();
+    loadPronunciationDemoTab();
+  });
+}
+
+function copyDemoPronunciationLink(code) {
+  var link = (window.DASH && DASH.pageUrl) ? DASH.pageUrl('Pronunciation.html')+'&code='+encodeURIComponent(code) : code;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function(){ toast('success','Practice link copied'); }, function(){ toast('error','Could not copy — code is '+code); });
+  } else {
+    toast('success', 'Practice code: ' + code);
+  }
+}
+
+function deleteDemoPronunciationList(id, title) {
+  if (!confirm('Delete demo list "'+title+'"? Its practice link will stop working.')) return;
+  call('deletePronunciationList', { id: id }, function() {
+    toast('success', 'Demo list deleted');
+    loadPronunciationDemoTab();
+  });
+}
+
 
 function renderPlanChart() {
   var counts = {};
@@ -1026,7 +1566,7 @@ function renderPlanChart() {
         borderColor: '#161c2d', borderWidth: 2
       }]
     },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ color:'#8b93ad', font:{size:11} } } } }
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ color:'#50453b', font:{size:11} } } } }
   });
 }
 
@@ -1090,15 +1630,15 @@ function renderSchoolRows(list) {
       : exp !== '—' ? '<span class="bdg bb">'+exp+'</span>'
       : '<span class="bdg bmute">None</span>';
     var planBadge = s.plan==='premium'?'bp':s.plan==='trial'?'by':'bb';
-    // Last activity = most recent teacher login at this school — a paid-up school can still have
-    // gone quiet, so this is the real "has this customer stopped using the app" signal.
+    // Churn signal, distinct from subscription status: a school can be fully paid up and
+    // still have gone quiet. Based on the most recent teacher login at that school.
     var actBadge;
     if (!s.lastActivity) {
       actBadge = '<span class="bdg bmute">Never</span>';
     } else {
-      var daysAgo = Math.floor((now - new Date(s.lastActivity)) / 86400000);
-      var actLabel = daysAgo <= 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : daysAgo + ' days ago';
-      var actCls = daysAgo > 30 ? 'br' : daysAgo > 14 ? 'by' : 'bg';
+      var actDays = Math.floor((now - new Date(s.lastActivity)) / 86400000);
+      var actCls = actDays <= 14 ? 'bg' : actDays <= 30 ? 'by' : 'br';
+      var actLabel = actDays <= 0 ? 'Today' : actDays === 1 ? '1 day ago' : actDays + ' days ago';
       actBadge = '<span class="bdg '+actCls+'">'+actLabel+'</span>';
     }
     return '<tr>' +
@@ -1106,7 +1646,7 @@ function renderSchoolRows(list) {
       '<td style="font-size:11px;color:var(--txt2)">'+escH(s.contactEmail||'—')+'</td>' +
       '<td><span class="bdg '+planBadge+'">'+escH(s.plan)+'</span></td>' +
       '<td>'+(s.aiEnabled?'<span class="bdg bg">On</span>':'<span class="bdg bmute">Off</span>')+'</td>' +
-      '<td style="font-family:var(--mono)">'+(s.studentCount||0)+'</td>' +
+      '<td style="font-family:var(--mono)">'+(s.studentCount||0)+(s.studentSlotsPaid!==''?' / '+s.studentSlotsPaid:'')+'</td>' +
       '<td>'+expBadge+'</td>' +
       '<td>'+actBadge+'</td>' +
       '<td style="display:flex;gap:4px;flex-wrap:wrap">' +
@@ -1143,6 +1683,7 @@ function openSchoolMo(idx) {
   document.getElementById('mo-contact-email').value = s ? (s.contactEmail || '') : '';
   document.getElementById('mo-plan').value          = s ? (s.plan || 'standard') : 'standard';
   document.getElementById('mo-notes').value         = s ? (s.notes || '')        : '';
+  document.getElementById('mo-slots').value         = s && s.studentSlotsPaid !== '' ? s.studentSlotsPaid : '';
   document.getElementById('mo-expiry').value        = s && s.subscriptionExpiry
     ? String(s.subscriptionExpiry).substring(0, 10) : '';
 
@@ -1169,6 +1710,8 @@ function saveSchool() {
   };
   var expiry = document.getElementById('mo-expiry').value;
   if (expiry) payload.subscriptionExpiry = expiry;
+  var slots = document.getElementById('mo-slots').value;
+  payload.studentSlots = slots; // '' clears to unlimited, a number sets the cap
 
   call('upsertSchool', payload, function() {
     toast('success', _editingSchool ? 'School updated' : 'School added');
@@ -1346,6 +1889,793 @@ function loadSettings() {
   });
 }
 
+// ── QUESTION BANK IMPORT ─────────────────────────────────────────
+var qbValidatedData = null;
+
+function qbValidate() {
+  var raw = document.getElementById('qb-paste').value.trim();
+  var previewCard = document.getElementById('qb-preview-card');
+  var resultCard = document.getElementById('qb-result-card');
+  var commitBtn = document.getElementById('qb-commit-btn');
+
+  resultCard.style.display = 'none';
+  qbValidatedData = null;
+  commitBtn.disabled = true;
+
+  if (!raw) {
+    alert('Paste a JSON batch first.');
+    return;
+  }
+
+  var parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    alert('Invalid JSON: ' + e.message);
+    return;
+  }
+
+  if (!Array.isArray(parsed)) {
+    alert('Expected a JSON array of question objects.');
+    return;
+  }
+
+  var requiredFields = ['theme', 'tier', 'format', 'question_text', 'correct_answer', 'explanation'];
+  var errors = [];
+  var approved = 0, flagged = 0;
+
+  parsed.forEach(function(q, i) {
+    requiredFields.forEach(function(field) {
+      if (!q[field]) errors.push('Row ' + (i + 1) + ': missing "' + field + '"');
+    });
+    if (q.review_status === 'flagged') flagged++;
+    else approved++;
+  });
+
+  if (errors.length) {
+    alert('Validation errors found:\n\n' + errors.slice(0, 10).join('\n') +
+          (errors.length > 10 ? '\n...and ' + (errors.length - 10) + ' more' : ''));
+    return;
+  }
+
+  // Build preview table
+  var tbody = document.querySelector('#qb-preview-table tbody');
+  tbody.innerHTML = parsed.map(function(q, i) {
+    var statusBadge = q.review_status === 'flagged'
+      ? '<span style="color:var(--yel)">⚠ Flagged</span>'
+      : '<span style="color:var(--grn)">✓ Approved</span>';
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escH(q.theme) + '</td>' +
+      '<td>' + escH(q.tier) + '</td>' +
+      '<td>' + escH(q.format) + '</td>' +
+      '<td style="max-width:280px">' + escH(q.question_text) + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td style="max-width:200px;font-size:11px;color:var(--txt2)">' + escH(q.reviewer_notes || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  document.getElementById('qb-preview-summary').textContent =
+    parsed.length + ' questions total — ' + approved + ' approved, ' + flagged + ' flagged for your review.';
+  previewCard.style.display = 'block';
+
+  qbValidatedData = parsed;
+  commitBtn.disabled = false;
+}
+
+function qbCommit() {
+  if (!qbValidatedData || !qbValidatedData.length) {
+    alert('Validate a batch first.');
+    return;
+  }
+  if (!confirm('Insert ' + qbValidatedData.length + ' questions into the database?')) return;
+
+  var commitBtn = document.getElementById('qb-commit-btn');
+  commitBtn.disabled = true;
+  commitBtn.textContent = 'Importing…';
+
+  call('importQuestionBatch', { questions: qbValidatedData }, function(d) {
+    commitBtn.textContent = '✅ Commit to Database';
+    var resultCard = document.getElementById('qb-result-card');
+    var resultSummary = document.getElementById('qb-result-summary');
+
+    if (d && d.success) {
+      resultSummary.innerHTML =
+        '<strong style="color:var(--grn)">Import complete.</strong><br>' +
+        'Inserted: ' + (d.inserted || 0) + ' / ' + qbValidatedData.length +
+        (d.errors && d.errors.length ? '<br><span style="color:var(--yel)">Errors: ' + d.errors.length + '</span>' : '');
+      qbValidatedData = null;
+      document.getElementById('qb-paste').value = '';
+      document.getElementById('qb-preview-card').style.display = 'none';
+    } else {
+      resultSummary.innerHTML = '<strong style="color:var(--red)">Import failed.</strong> ' +
+        ((d && d.message) || 'Unknown error. Check the console / backend logs.');
+      commitBtn.disabled = false;
+    }
+    resultCard.style.display = 'block';
+  });
+}
+
+function qbClear() {
+  document.getElementById('qb-paste').value = '';
+  document.getElementById('qb-preview-card').style.display = 'none';
+  document.getElementById('qb-result-card').style.display = 'none';
+  qbValidatedData = null;
+  document.getElementById('qb-commit-btn').disabled = true;
+}
+
+// ── EDURENA QUESTION BANK (global, syllabus-aligned) ───────────
+var ebValidatedData = null;
+function ebValidate() {
+  var raw = document.getElementById('eb-paste').value.trim();
+  var previewCard = document.getElementById('eb-preview-card');
+  var resultCard  = document.getElementById('eb-result-card');
+  var commitBtn   = document.getElementById('eb-commit-btn');
+
+  resultCard.style.display = 'none';
+  ebValidatedData = null;
+  commitBtn.disabled = true;
+
+  if (!raw) { alert('Paste a JSON batch or load .json files first.'); return; }
+
+  var parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) { alert('Invalid JSON: ' + e.message); return; }
+  if (!Array.isArray(parsed)) { alert('Expected a JSON array of question objects.'); return; }
+
+  // explanation is required: the worked solution is what makes this a
+  // learning platform, so a question without one is not allowed into the bank.
+  var requiredFields = ['subject', 'topic', 'question', 'correct_answer', 'explanation'];
+  var errors = [];
+  parsed.forEach(function(q, i) {
+    requiredFields.forEach(function(field) {
+      if (!q[field]) errors.push('Row ' + (i + 1) + ': missing "' + field + '"');
+    });
+  });
+  if (errors.length) {
+    alert('Validation errors found:\n\n' + errors.slice(0, 10).join('\n') +
+          (errors.length > 10 ? '\n...and ' + (errors.length - 10) + ' more' : ''));
+    return;
+  }
+
+  // Big batches (e.g. every topic file at once) would make thousands of table
+  // rows, so preview the first 100 and summarise the rest by subject/topic.
+  var tbody = document.querySelector('#eb-preview-table tbody');
+  tbody.innerHTML = parsed.slice(0, 100).map(function(q, i) {
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escH(q.subject || '') + '</td>' +
+      '<td>' + escH(q.topic || '—') + '</td>' +
+      '<td>' + escH(q.difficulty || '—') + '</td>' +
+      '<td style="max-width:280px">' + escH(q.question) + '</td>' +
+      '<td><span style="color:var(--grn)">✓ Ready</span></td>' +
+      '</tr>';
+  }).join('');
+  var topics = {};
+  parsed.forEach(function(q) { topics[q.subject + ' / ' + q.topic] = true; });
+  document.getElementById('eb-preview-summary').textContent =
+    parsed.length + ' question(s) across ' + Object.keys(topics).length + ' topic(s)' +
+    (parsed.length > 100 ? ' — showing the first 100.' : '.');
+  previewCard.style.display = 'block';
+
+  ebValidatedData = parsed;
+  commitBtn.disabled = false;
+}
+function ebCommit() {
+  if (!ebValidatedData || !ebValidatedData.length) { alert('Validate a batch first.'); return; }
+  if (!confirm('Insert ' + ebValidatedData.length + ' questions into the Edurena Question Bank?')) return;
+
+  var commitBtn = document.getElementById('eb-commit-btn');
+  commitBtn.disabled = true;
+
+  // Sent in slices of 300 so a large batch stays under the request-size limit
+  // and each Apps Script call finishes well inside its time limit.
+  var all = ebValidatedData, SLICE = 300, total = { imported: 0, duplicates: 0, skipped: 0 }, pos = 0;
+  function sendNext() {
+    if (pos >= all.length) {
+      commitBtn.textContent = '✅ Commit to Database';
+      var msg = 'Imported ' + total.imported + ' question(s)' +
+        (total.duplicates ? ', skipped ' + total.duplicates + ' already in the bank' : '') +
+        (total.skipped ? ', skipped ' + total.skipped + ' invalid' : '') + '.';
+      document.getElementById('eb-result-summary').innerHTML = '<strong style="color:var(--grn)">' + escH(msg) + '</strong>';
+      ebValidatedData = null;
+      document.getElementById('eb-paste').value = '';
+      document.getElementById('eb-preview-card').style.display = 'none';
+      document.getElementById('eb-result-card').style.display = 'block';
+      return;
+    }
+    commitBtn.textContent = 'Importing ' + Math.min(pos + SLICE, all.length) + ' of ' + all.length + '…';
+    call('importJSON', { scope: 'global', questions: all.slice(pos, pos + SLICE) }, function(d) {
+      total.imported += d.imported || 0; total.duplicates += d.duplicates || 0; total.skipped += d.skipped || 0;
+      pos += SLICE; sendNext();
+    }, function() {
+      commitBtn.textContent = '✅ Commit to Database';
+      commitBtn.disabled = false;
+      document.getElementById('eb-result-summary').innerHTML = '<strong style="color:var(--red,#f87171)">Stopped after ' + total.imported +
+        ' imported. Fix the error, then commit again: questions already imported are skipped.</strong>';
+      document.getElementById('eb-result-card').style.display = 'block';
+    });
+  }
+  sendNext();
+}
+
+// Reads one or more .json files (e.g. the per-topic files) and merges their
+// question arrays into the paste box, ready for Validate & Preview.
+function ebLoadFiles(input) {
+  var files = Array.prototype.slice.call(input.files || []);
+  if (!files.length) return;
+  var merged = [], bad = [], left = files.length;
+  files.forEach(function(f) {
+    var r = new FileReader();
+    r.onload = function() {
+      try {
+        var arr = JSON.parse(String(r.result).replace(/^﻿/, ''));
+        if (Array.isArray(arr)) merged = merged.concat(arr); else bad.push(f.name);
+      } catch (e) { bad.push(f.name); }
+      done();
+    };
+    r.onerror = function() { bad.push(f.name); done(); };
+    r.readAsText(f);
+  });
+  function done() {
+    if (--left) return;
+    input.value = '';
+    document.getElementById('eb-paste').value = merged.length ? JSON.stringify(merged) : '';
+    document.getElementById('eb-preview-card').style.display = 'none';
+    document.getElementById('eb-commit-btn').disabled = true;
+    ebValidatedData = null;
+    if (bad.length) toast('error', 'Could not read: ' + bad.join(', '));
+    if (merged.length) toast('success', 'Loaded ' + merged.length + ' question(s) from ' + (files.length - bad.length) + ' file(s). Click Validate & Preview.');
+  }
+}
+function ebClear() {
+  document.getElementById('eb-paste').value = '';
+  document.getElementById('eb-preview-card').style.display = 'none';
+  document.getElementById('eb-result-card').style.display = 'none';
+  ebValidatedData = null;
+  document.getElementById('eb-commit-btn').disabled = true;
+}
+
+// The complete, current schema importJSON actually reads (verified against
+// code.gs, not reconstructed from memory) — kept here so it's always one
+// click away instead of something to go dig up or re-ask for. The bank has
+// no class levels: subject + topic + difficulty are what organise it.
+var EB_JSON_TEMPLATE = JSON.stringify([{
+  subject: "Mathematics",
+  topic: "Algebra",
+  difficulty: "medium",
+  type: "MCQ",
+  question: "What is 2x + 3 = 7?",
+  option_A: "x = 1", option_B: "x = 2", option_C: "x = 3", option_D: "x = 4",
+  option_A_image: "", option_B_image: "", option_C_image: "", option_D_image: "",
+  correct_answer: "x = 2",
+  points: 1,
+  expected_items: null,
+  explanation: "Idea: undo what was done to x, in reverse order.\nStep 1: Subtract 3 from both sides: 2x + 3 - 3 = 7 - 3, so 2x = 4.\nStep 2: Divide both sides by 2: x = 4 / 2 = 2.\nAnswer: x = 2.\nCheck: 2 x 2 + 3 = 7, which matches.",
+  session: "",
+  term: "",
+  instruction_group: "",
+  instruction_text: "",
+  image_url: "",
+  passage_id: "",
+  tier: "free"
+}], null, 2);
+
+function ebCopyTemplate() {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(EB_JSON_TEMPLATE).then(
+      function(){ toast('success','Template copied — paste it into the box and edit.'); },
+      function(){ document.getElementById('eb-paste').value = EB_JSON_TEMPLATE; toast('success','Clipboard blocked — pasted the template into the box instead.'); }
+    );
+  } else {
+    document.getElementById('eb-paste').value = EB_JSON_TEMPLATE;
+    toast('success','Template inserted into the box.');
+  }
+}
+
+// ── EDURENA BANK: BROWSE / EDIT / DELETE ─────────────────────────
+var ebCurrentTopic = null;   // {subject, topic} of the currently-open question list
+var ebQuestionsCache = [];   // last-loaded question list, for the edit modal to read from
+
+function ebLoadTopics() {
+  var tb = document.querySelector('#eb-topics-table tbody');
+  tb.innerHTML = '<tr class="er"><td colspan="4">Loading…</td></tr>';
+  call('getEdurenaBankTopics', {}, function(rows) {
+    if (!rows.length) { tb.innerHTML = '<tr class="er"><td colspan="4">No questions in the bank yet.</td></tr>'; return; }
+    tb.innerHTML = rows.map(function(r) {
+      return '<tr><td>' + escH(r.subject) + '</td><td>' + escH(r.topic) + '</td><td>' + r.count + '</td>' +
+        '<td>' +
+        '<button class="btn btn-sm" onclick="ebViewTopic(\'' + escH(r.subject).replace(/'/g,"\\'") + '\',\'' + escH(r.topic).replace(/'/g,"\\'") + '\')">View</button> ' +
+        '<button class="btn btn-d btn-sm" onclick="ebDeleteTopicByName(\'' + escH(r.subject).replace(/'/g,"\\'") + '\',\'' + escH(r.topic).replace(/'/g,"\\'") + '\')">🗑 Delete Topic</button>' +
+        '</td></tr>';
+    }).join('');
+  }, function() { tb.innerHTML = '<tr class="er"><td colspan="4">Failed to load — try Refresh again.</td></tr>'; });
+}
+
+function ebDeleteTopicByName(subject, topic) {
+  if (!confirm('Delete ALL questions in "' + topic + '" (' + subject + ')? This cannot be undone.')) return;
+  call('deleteEdurenaBankTopic', { subject: subject, topic: topic }, function() {
+    toast('success', 'Deleted "' + topic + '".');
+    if (ebCurrentTopic && ebCurrentTopic.subject === subject && ebCurrentTopic.topic === topic) {
+      document.getElementById('eb-qlist-card').style.display = 'none';
+    }
+    ebLoadTopics();
+  });
+}
+
+function ebViewTopic(subject, topic) {
+  ebCurrentTopic = { subject: subject, topic: topic };
+  document.getElementById('eb-qlist-title').textContent = subject + ' — ' + topic;
+  document.getElementById('eb-qlist-card').style.display = 'block';
+  document.getElementById('eb-qlist-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var tb = document.querySelector('#eb-qlist-table tbody');
+  tb.innerHTML = '<tr class="er"><td colspan="5">Loading…</td></tr>';
+  call('getEdurenaBankQuestions', { subject: subject, topic: topic }, function(qs) {
+    ebQuestionsCache = qs;
+    if (!qs.length) { tb.innerHTML = '<tr class="er"><td colspan="5">No questions found.</td></tr>'; return; }
+    tb.innerHTML = qs.map(function(q, i) {
+      var preview = q.question.length > 90 ? q.question.slice(0, 90) + '…' : q.question;
+      return '<tr><td>' + (i + 1) + '</td><td>' + escH(q.type) + '</td><td>' + escH(q.difficulty) + '</td><td>' + escH(preview) + '</td>' +
+        '<td>' +
+        '<button class="btn btn-sm" onclick="ebOpenEdit(\'' + q.id + '\')">Edit</button> ' +
+        '<button class="btn btn-d btn-sm" onclick="ebDeleteOne(\'' + q.id + '\')">Del</button>' +
+        '</td></tr>';
+    }).join('');
+  }, function() { tb.innerHTML = '<tr class="er"><td colspan="5">Failed to load.</td></tr>'; });
+}
+
+// Called by the "Delete Entire Topic" button inside the open question-list card
+function ebDeleteTopic() {
+  if (!ebCurrentTopic) return;
+  ebDeleteTopicByName(ebCurrentTopic.subject, ebCurrentTopic.topic);
+}
+
+function ebDeleteOne(id) {
+  if (!confirm('Delete this question? This cannot be undone.')) return;
+  call('deleteQuestion', { questionId: id }, function() {
+    toast('success', 'Question deleted.');
+    if (ebCurrentTopic) ebViewTopic(ebCurrentTopic.subject, ebCurrentTopic.topic);
+    ebLoadTopics();
+  });
+}
+
+function ebOpenEdit(id) {
+  var q = ebQuestionsCache.find(function(x) { return x.id === id; });
+  if (!q) return;
+  document.getElementById('ebq-mo').dataset.id = id;
+  document.getElementById('ebq-subject').value = q.subject;
+  document.getElementById('ebq-topic').value = q.topic;
+  document.getElementById('ebq-difficulty').value = q.difficulty || 'medium';
+  document.getElementById('ebq-type').value = q.type;
+  document.getElementById('ebq-points').value = q.points || 1;
+  document.getElementById('ebq-tier').value = q.tier || 'free';
+  document.getElementById('ebq-question').value = q.question;
+  document.getElementById('ebq-correct').value = q.correctAnswer;
+  document.getElementById('ebq-explanation').value = q.explanation;
+  ebRenderOptFields(q);
+  document.getElementById('ebq-mo').classList.add('on');
+}
+
+// MCQ gets 4 option inputs; TF/SHORT don't need them (correct answer is typed directly above)
+function ebRenderOptFields(q) {
+  var type = document.getElementById('ebq-type').value;
+  var wrap = document.getElementById('ebq-opt-wrap');
+  if (type !== 'MCQ') { wrap.innerHTML = ''; return; }
+  var vals = q ? [q.optionA, q.optionB, q.optionC, q.optionD] : ['', '', '', ''];
+  wrap.innerHTML = '<div class="fgrid">' +
+    ['A', 'B', 'C', 'D'].map(function(L, i) {
+      return '<div class="fg"><label>Option ' + L + '</label><input id="ebq-opt' + L + '" value="' + escH(vals[i] || '') + '"></div>';
+    }).join('') + '</div>';
+}
+
+function ebSaveQuestion() {
+  var id = document.getElementById('ebq-mo').dataset.id;
+  var type = document.getElementById('ebq-type').value;
+  var payload = {
+    questionId: id,
+    subject: document.getElementById('ebq-subject').value.trim(),
+    topic: document.getElementById('ebq-topic').value.trim(),
+    difficulty: document.getElementById('ebq-difficulty').value,
+    type: type,
+    points: document.getElementById('ebq-points').value,
+    tier: document.getElementById('ebq-tier').value,
+    question: document.getElementById('ebq-question').value.trim(),
+    correctAnswer: document.getElementById('ebq-correct').value.trim(),
+    explanation: document.getElementById('ebq-explanation').value.trim()
+  };
+  if (type === 'MCQ') {
+    payload.optionA = document.getElementById('ebq-optA').value.trim();
+    payload.optionB = document.getElementById('ebq-optB').value.trim();
+    payload.optionC = document.getElementById('ebq-optC').value.trim();
+    payload.optionD = document.getElementById('ebq-optD').value.trim();
+  }
+  if (!payload.question || !payload.correctAnswer) { toast('error', 'Question and correct answer are required.'); return; }
+  call('updateEdurenaBankQuestion', payload, function() {
+    toast('success', 'Question updated.');
+    closeMo('ebq-mo');
+    if (ebCurrentTopic) ebViewTopic(ebCurrentTopic.subject, ebCurrentTopic.topic);
+  });
+}
+
+// ── FLAGGED QUESTIONS ───────────────────────────────────────────
+function loadFlaggedQuestions() {
+  var tb = document.querySelector('#eb-flags-table tbody'); if (!tb) return;
+  call('getFlaggedQuestions', {}, function(rows) {
+    if (!rows || !rows.length) {
+      tb.innerHTML = '<tr class="er"><td colspan="5">No flagged questions — nothing to review.</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function(r) {
+      return '<tr>' +
+        '<td style="font-family:var(--mono);font-size:11.5px">' + escH(r.question_id) + '</td>' +
+        '<td style="font-family:var(--mono);font-size:11.5px">' + escH(r.exam_code) + '</td>' +
+        '<td style="max-width:260px">' + escH(r.reason || '—') + '</td>' +
+        '<td style="font-size:11.5px;color:var(--txt2)">' + new Date(r.created_at).toLocaleDateString() + '</td>' +
+        '<td><button class="btn btn-g btn-sm" onclick="resolveFlag(' + r.id + ')">Resolve</button></td>' +
+        '</tr>';
+    }).join('');
+  }, function() {
+    tb.innerHTML = '<tr class="er"><td colspan="5">Failed to load flagged questions.</td></tr>';
+  });
+}
+function resolveFlag(flagId) {
+  call('resolveQuestionFlag', { flagId: flagId }, function() { loadFlaggedQuestions(); });
+}
+
+// ── CHALLENGE MODE THEMES ──────────────────────────────────────
+var allThemes = [];
+function loadThemes() {
+  call('getPcThemes', {}, function(d) {
+    allThemes = d || [];
+    renderThemeTable();
+    loadThemeCalendar();
+  });
+}
+
+// ── TOPIC OF THE DAY CALENDAR ──────────────────────────────────
+var calEntries = {}; // 'yyyy-mm-dd' -> theme
+function loadThemeCalendar() {
+  call('getThemeCalendar', {}, function(rows) {
+    calEntries = {};
+    (rows || []).forEach(function(r){ calEntries[r.date] = r.theme; });
+    renderCalendarTable();
+  });
+}
+function renderCalendarTable() {
+  var tb = document.querySelector('#cal-table tbody'); if (!tb) return;
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var today = new Date();
+  var rows = '';
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    var dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var current = calEntries[dateStr] || '';
+    var label = i===0 ? 'Today' : (i===1 ? 'Tomorrow' : dayNames[d.getDay()]);
+    var options = '<option value="">— Not set (random) —</option>' + allThemes.map(function(t) {
+      return '<option value="' + escH(t.theme) + '"' + (t.theme===current?' selected':'') + '>' + escH(t.label || t.theme) + '</option>';
+    }).join('');
+    rows += '<tr><td style="font-family:var(--mono);font-size:12px">' + dateStr + '</td>'
+      + '<td>' + label + '</td>'
+      + '<td><select onchange="setCalendarDay(\'' + dateStr + '\',this.value)" style="background:var(--surface);border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;color:var(--txt);font-family:var(--font);font-size:12px;outline:none;width:100%">' + options + '</select></td></tr>';
+  }
+  tb.innerHTML = rows;
+}
+function setCalendarDay(date, theme) {
+  call('setThemeCalendarEntry', { date: date, theme: theme }, function() {
+    toast('success', theme ? 'Theme scheduled' : 'Cleared — will use a random active theme');
+    calEntries[date] = theme;
+  });
+}
+function renderThemeTable() {
+  var tb = document.querySelector('#theme-table tbody'); if (!tb) return;
+  if (!allThemes.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="5">No themes configured yet — matches mix all approved questions for the tier.</td></tr>';
+    return;
+  }
+  tb.innerHTML = allThemes.map(function(t) {
+    var statusBadge = t.active
+      ? '<span class="bdg bg">Active</span>'
+      : '<span class="bdg" style="background:var(--surf2);color:var(--txt2)">Off</span>';
+    return '<tr>'
+      + '<td><code>' + escH(t.theme) + '</code></td>'
+      + '<td>' + escH(t.label || '—') + '</td>'
+      + '<td style="font-family:var(--mono)">' + (t.timePerQ || 12) + '</td>'
+      + '<td>' + statusBadge + '</td>'
+      + '<td style="display:flex;gap:4px;flex-wrap:wrap">'
+      + '<button class="btn btn-g btn-sm" onclick="editThemeForm(\'' + escH(t.theme) + '\')">Edit</button>'
+      + '<button class="btn btn-g btn-sm" onclick="toggleThemeActive(\'' + escH(t.theme) + '\',' + !t.active + ')">' + (t.active ? 'Deactivate' : 'Activate') + '</button>'
+      + '<button class="btn btn-d btn-sm" onclick="deleteTheme(\'' + escH(t.theme) + '\')">Del</button>'
+      + '</td></tr>';
+  }).join('');
+}
+function editThemeForm(theme) {
+  var t = allThemes.find(function(x){ return x.theme === theme; });
+  if (!t) return;
+  document.getElementById('theme-key').value = t.theme;
+  document.getElementById('theme-label').value = t.label || '';
+  document.getElementById('theme-time').value = t.timePerQ || 12;
+}
+function clearThemeForm() {
+  document.getElementById('theme-key').value = '';
+  document.getElementById('theme-label').value = '';
+  document.getElementById('theme-time').value = '12';
+}
+function saveTheme() {
+  var theme    = (document.getElementById('theme-key').value || '').trim();
+  var label    = (document.getElementById('theme-label').value || '').trim();
+  var timePerQ = parseInt(document.getElementById('theme-time').value, 10) || 12;
+  if (!theme) { toast('error', 'Theme key is required'); return; }
+  call('upsertPcTheme', { theme: theme, label: label, timePerQ: timePerQ, active: true }, function() {
+    toast('success', 'Theme saved');
+    clearThemeForm();
+    loadThemes();
+  });
+}
+function toggleThemeActive(theme, makeActive) {
+  call('upsertPcTheme', { theme: theme, active: makeActive }, function() { loadThemes(); });
+}
+function deleteTheme(theme) {
+  if (!confirm('Remove theme "' + theme + '"? Existing questions keep this theme tag but won\'t be picked for new matches.')) return;
+  call('deletePcTheme', { theme: theme }, function() { toast('success', 'Theme removed'); loadThemes(); });
+}
+
+// ── COMPETITIONS ────────────────────────────────────────────────
+var allCompetitions = [];
+var _editingCompetitionId = null;
+var _qpickAllRows = [];
+var _qpickSelectedOrder = []; // array of question id strings, in pick order
+
+function loadCompetitions() {
+  if (!allThemes.length) loadThemes();
+  call('getCompetitionsAdmin', {}, function(d) {
+    allCompetitions = d || [];
+    renderCompetitionsTable();
+  });
+}
+
+function renderCompetitionsTable() {
+  var tb = document.querySelector('#comp-table tbody'); if (!tb) return;
+  if (!allCompetitions.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="8">No competitions yet.</td></tr>';
+    return;
+  }
+  var badges = {
+    draft:     '<span class="bdg" style="background:var(--surf2);color:var(--txt2)">Draft</span>',
+    test:      '<span class="bdg by">Test</span>',
+    published: '<span class="bdg bg">Published</span>',
+    completed: '<span class="bdg bb">Completed</span>',
+    cancelled: '<span class="bdg br">Cancelled</span>'
+  };
+  tb.innerHTML = allCompetitions.map(function(c) {
+    var dateStr = c.competition_date ? new Date(c.competition_date).toLocaleString() : '—';
+    var actions = '<button class="btn btn-g btn-sm" onclick="openCompetitionModal(\'' + c.id + '\')">Edit</button>';
+    if (c.session_id && !c.finalized_at) actions += ' <button class="btn btn-ok btn-sm" onclick="finalizeCompetition(\'' + c.id + '\')">Finalize</button>';
+    if (c.finalized_at) actions += ' <button class="btn btn-g btn-sm" onclick="viewCompetitionResults(\'' + c.id + '\')">Results</button>';
+    if (!c.finalized_at) actions += ' <button class="btn btn-d btn-sm" onclick="deleteCompetitionRow(\'' + c.id + '\')">Del</button>';
+    return '<tr>'
+      + '<td style="font-weight:600">' + escH(c.title) + '</td>'
+      + '<td style="font-size:12px">' + dateStr + '</td>'
+      + '<td>' + (badges[c.status] || escH(c.status)) + '</td>'
+      + '<td style="font-family:var(--mono)">₦' + Number(c.price_per_ticket_ngn || 0).toLocaleString() + '</td>'
+      + '<td style="font-family:var(--mono)">₦' + Number(c.prize_pool_ngn || 0).toLocaleString() + '</td>'
+      + '<td>' + (c.total_question_count || 0) + '</td>'
+      + '<td style="font-family:var(--mono)">' + (c.ticketsSold || 0) + '</td>'
+      + '<td style="display:flex;gap:4px;flex-wrap:wrap">' + actions + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function openCompetitionModal(id) {
+  _editingCompetitionId = id || null;
+  var c = id ? allCompetitions.find(function(x){ return x.id === id; }) : null;
+
+  setText('comp-mo-title', c ? 'Edit Competition' : 'New Competition');
+
+  // Theme dropdown sourced from the same Themes list used elsewhere
+  var themeSel = document.getElementById('comp-theme');
+  themeSel.innerHTML = '<option value="">— Select —</option>' + allThemes.map(function(t) {
+    return '<option value="' + escH(t.theme) + '">' + escH(t.label || t.theme) + '</option>';
+  }).join('');
+
+  document.getElementById('comp-title').value = c ? (c.title || '') : '';
+  document.getElementById('comp-desc').value = c ? (c.description || '') : '';
+  themeSel.value = c ? (c.theme || '') : '';
+  document.getElementById('comp-tier').value = c ? (c.tier || '') : '';
+  document.getElementById('comp-status').value = c ? (c.status || 'draft') : 'draft';
+  document.getElementById('comp-date').value = c && c.competition_date ? toLocalDatetimeInput(c.competition_date) : '';
+  document.getElementById('comp-lobby-open').value = c && c.lobby_open_at ? toLocalDatetimeInput(c.lobby_open_at) : '';
+  document.getElementById('comp-qcount').value = c ? (c.total_question_count || 10) : 10;
+  document.getElementById('comp-timeq').value = c ? (c.time_per_question_sec || 12) : 12;
+  document.getElementById('comp-lobby-size').value = c && c.target_lobby_size ? c.target_lobby_size : '';
+  document.getElementById('comp-max-tickets').value = c && c.max_tickets ? c.max_tickets : '';
+  document.getElementById('comp-price').value = c ? (c.price_per_ticket_ngn || '') : '';
+  document.getElementById('comp-prize-pool').value = c ? (c.prize_pool_ngn || 0) : 0;
+
+  var split = { '1': 50, '2': 30, '3': 20 };
+  if (c && c.prize_split_json) { try { split = JSON.parse(c.prize_split_json); } catch (e2) {} }
+  document.getElementById('comp-split-1').value = split['1'] || 0;
+  document.getElementById('comp-split-2').value = split['2'] || 0;
+  document.getElementById('comp-split-3').value = split['3'] || 0;
+
+  var locked = !!(c && c.ticketsSold > 0);
+  document.getElementById('comp-locked-notice').style.display = locked ? 'block' : 'none';
+  document.getElementById('comp-price').disabled = locked;
+  document.getElementById('comp-prize-pool').disabled = locked;
+  document.getElementById('comp-split-1').disabled = locked;
+  document.getElementById('comp-split-2').disabled = locked;
+  document.getElementById('comp-split-3').disabled = locked;
+
+  document.getElementById('comp-manage-q-btn').style.display = id ? 'inline-flex' : 'none';
+
+  document.getElementById('comp-mo').classList.add('on');
+}
+
+function toLocalDatetimeInput(iso) {
+  var d = new Date(iso);
+  var p = function(n){ return String(n).padStart(2,'0'); };
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+function saveCompetition() {
+  var split1 = parseFloat(document.getElementById('comp-split-1').value) || 0;
+  var split2 = parseFloat(document.getElementById('comp-split-2').value) || 0;
+  var split3 = parseFloat(document.getElementById('comp-split-3').value) || 0;
+  var payload = {
+    id: _editingCompetitionId || undefined,
+    title: document.getElementById('comp-title').value,
+    description: document.getElementById('comp-desc').value,
+    theme: document.getElementById('comp-theme').value,
+    tier: document.getElementById('comp-tier').value,
+    status: document.getElementById('comp-status').value,
+    competitionDate: document.getElementById('comp-date').value,
+    lobbyOpenAt: document.getElementById('comp-lobby-open').value || null,
+    totalQuestionCount: document.getElementById('comp-qcount').value,
+    timePerQuestionSec: document.getElementById('comp-timeq').value,
+    targetLobbySize: document.getElementById('comp-lobby-size').value || null,
+    maxTickets: document.getElementById('comp-max-tickets').value || null,
+    pricePerTicketNgn: document.getElementById('comp-price').value,
+    prizePoolNgn: document.getElementById('comp-prize-pool').value,
+    prizeSplitJson: JSON.stringify({ '1': split1, '2': split2, '3': split3 })
+  };
+  call('upsertCompetitionAdmin', payload, function(d) {
+    toast('success', _editingCompetitionId ? 'Competition updated' : 'Competition created');
+    closeMo('comp-mo');
+    loadCompetitions();
+    if (d && d.id && !_editingCompetitionId) {
+      _editingCompetitionId = d.id;
+      setTimeout(function(){ openQuestionPicker(); }, 300);
+    }
+  });
+}
+
+function deleteCompetitionRow(id) {
+  var c = allCompetitions.find(function(x){ return x.id === id; });
+  if (!confirm('Delete competition "' + (c ? c.title : id) + '"? This only works if no tickets have been sold.')) return;
+  call('deleteCompetitionAdmin', { id: id }, function() { toast('success', 'Competition deleted'); loadCompetitions(); });
+}
+
+// ── QUESTION PICKER ─────────────────────────────────────────────
+function openQuestionPicker() {
+  if (!_editingCompetitionId) { toast('error', 'Save the competition first'); return; }
+  var themeFilter = document.getElementById('qpick-theme-filter');
+  themeFilter.innerHTML = '<option value="">— All approved questions —</option>' + allThemes.map(function(t) {
+    return '<option value="' + escH(t.theme) + '">' + escH(t.label || t.theme) + '</option>';
+  }).join('');
+  var c = allCompetitions.find(function(x){ return x.id === _editingCompetitionId; });
+  themeFilter.value = (c && c.theme) || '';
+
+  call('getCompetitionQuestionsAdmin', { competitionId: _editingCompetitionId }, function(existingRows) {
+    _qpickSelectedOrder = (existingRows || []).sort(function(a,b){ return a.question_order - b.question_order; }).map(function(r){ return String(r.pc_question_id); });
+    document.getElementById('qpick-mo').classList.add('on');
+    loadQuestionPickerOptions();
+  });
+}
+
+function loadQuestionPickerOptions() {
+  var theme = document.getElementById('qpick-theme-filter').value;
+  call('getCompetitionQuestionPicker', { theme: theme }, function(rows) {
+    _qpickAllRows = rows || [];
+    renderQuestionPickerTable();
+  });
+}
+
+function renderQuestionPickerTable() {
+  var tb = document.querySelector('#qpick-table tbody'); if (!tb) return;
+  if (!_qpickAllRows.length) {
+    tb.innerHTML = '<tr class="er"><td colspan="4">No approved questions for this filter.</td></tr>';
+  } else {
+    tb.innerHTML = _qpickAllRows.map(function(q) {
+      var qid = String(q.id);
+      var checked = _qpickSelectedOrder.indexOf(qid) !== -1;
+      return '<tr>'
+        + '<td><input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleQuestionPick(\'' + qid + '\',this.checked)"></td>'
+        + '<td><code>' + escH(q.theme) + '</code></td>'
+        + '<td>' + escH(q.format) + '</td>'
+        + '<td style="max-width:320px">' + escH(q.question_text) + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+  updateQpickCount();
+}
+
+function toggleQuestionPick(qid, checked) {
+  var idx = _qpickSelectedOrder.indexOf(qid);
+  if (checked && idx === -1) _qpickSelectedOrder.push(qid);
+  else if (!checked && idx !== -1) _qpickSelectedOrder.splice(idx, 1);
+  updateQpickCount();
+}
+
+function updateQpickCount() {
+  var el = document.getElementById('qpick-selected-count');
+  if (el) el.textContent = _qpickSelectedOrder.length + ' selected';
+}
+
+function saveCompetitionQuestionPicks() {
+  if (!_qpickSelectedOrder.length) { toast('error', 'Select at least one question'); return; }
+  call('setCompetitionQuestions', { competitionId: _editingCompetitionId, questionIds: _qpickSelectedOrder }, function(d) {
+    toast('success', (d.inserted || _qpickSelectedOrder.length) + ' questions saved');
+    closeMo('qpick-mo');
+  });
+}
+
+function finalizeCompetition(id) {
+  var c = allCompetitions.find(function(x){ return x.id === id; });
+  if (!confirm('Finalize results for "' + (c ? c.title : id) + '"? This locks the competition permanently and computes prize payouts. This cannot be undone.')) return;
+  call('finalizeCompetitionResults', { competitionId: id }, function(d) {
+    toast('success', 'Finalized — ' + (d.realPlayerCount||0) + ' real players ranked, ' + (d.payoutsCreated||0) + ' prize(s) created.');
+    loadCompetitions();
+  });
+}
+
+function viewCompetitionResults(id) {
+  document.getElementById('results-mo').classList.add('on');
+  call('getCompetitionResultsAdmin', { competitionId: id }, function(d) {
+    var tickets = (d && d.tickets) || [];
+    var payouts = (d && d.payouts) || [];
+
+    var rtb = document.querySelector('#results-table tbody');
+    rtb.innerHTML = tickets.length ? tickets.map(function(t) {
+      return '<tr>'
+        + '<td style="font-family:var(--mono)">#' + (t.final_rank||'—') + '</td>'
+        + '<td>' + escH(t.student_name||'—') + '</td>'
+        + '<td>' + escH(t.school_name||'—') + '</td>'
+        + '<td style="font-family:var(--mono)">' + (t.final_score||0) + '</td>'
+        + '<td style="font-family:var(--mono)">' + (t.final_correct_count||0) + '</td>'
+        + '<td style="font-size:11px">' + escH(t.student_email||'') + '</td>'
+        + '<td style="font-size:11px">' + escH(t.contact_phone||'—') + '</td>'
+        + '</tr>';
+    }).join('') : '<tr class="er"><td colspan="7">No results.</td></tr>';
+
+    var ptb = document.querySelector('#payouts-table tbody');
+    ptb.innerHTML = payouts.length ? payouts.map(function(p) {
+      var statusBadge = p.payout_status === 'paid' ? '<span class="bdg bg">Paid</span>'
+        : p.payout_status === 'submitted' ? '<span class="bdg by">Details In</span>'
+        : '<span class="bdg" style="background:var(--surf2);color:var(--txt2)">Awaiting Details</span>';
+      var details = p.payout_status === 'awaiting_details'
+        ? '<span style="color:var(--txt2)">Share payout link: ?payout=' + p.id + '</span>'
+        : (escH(p.payout_name||'') + ' · ' + escH(p.payout_bank_name||'') + ' · ' + escH(p.payout_account_number||''));
+      var action = p.payout_status === 'submitted'
+        ? '<button class="btn btn-ok btn-sm" onclick="markPayoutPaid(\'' + p.id + '\',\'' + escH(p.competition_id) + '\')">Mark Paid</button>'
+        : '—';
+      return '<tr>'
+        + '<td>#' + p.place + '</td>'
+        + '<td style="font-family:var(--mono)">₦' + Number(p.prize_amount_ngn||0).toLocaleString() + '</td>'
+        + '<td>' + statusBadge + '</td>'
+        + '<td style="font-size:11px">' + details + '</td>'
+        + '<td>' + action + '</td>'
+        + '</tr>';
+    }).join('') : '<tr class="er"><td colspan="5">No prizes configured.</td></tr>';
+  });
+}
+
+function markPayoutPaid(payoutId, competitionId) {
+  if (!confirm('Mark this prize as paid? Only do this after you\'ve actually sent the money.')) return;
+  call('markPrizePaid', { payoutId: payoutId }, function() {
+    toast('success', 'Marked as paid');
+    viewCompetitionResults(competitionId);
+  });
+}
+
 function toggleAI() {
   var tog = document.getElementById('tog-ai');
   tog.classList.toggle('on');
@@ -1412,7 +2742,7 @@ function qfhwOpen() {
   var s = _qfhwS();
   document.getElementById('qfhw-email').textContent = s.email || '—';
   document.getElementById('qfhw-role').textContent  = s.role  || '—';
-  var supportEmail = (window.DASH && DASH.superadminEmail) || 'adisa7oyebola@gmail.com';
+  var supportEmail = (window.DASH && DASH.supportEmail) || 'hello@edurena.online';
   document.getElementById('qfhw-email-link').href =
     'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
     + '&body=' + encodeURIComponent('My account: ' + (s.email || '-') + '\nRole: ' + (s.role || '-') + '\n\nWhat I need help with:\n');
@@ -1448,6 +2778,23 @@ function qfhwOpenBug() {
   })
   .catch(function(e){ onErr('Network error: ' + e.message); });
 }
+
+function openSidebar(){
+  document.getElementById('sb-aside').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
+  document.getElementById('sb-aside').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+/* Close sidebar when a nav item is tapped on mobile */
+document.querySelectorAll('.ni').forEach(function(el){
+  el.addEventListener('click',function(){
+    if(window.innerWidth<=860) closeSidebar();
+  });
+});
 </script>
 </body>
 </html>
