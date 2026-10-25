@@ -722,7 +722,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       <button class="ni on"         onclick="nav('overview',this);closeSidebar()"><span class="ico">◻</span>Overview</button>
       <button class="ni"            onclick="nav('create',this);closeSidebar()"><span class="ico">+</span>Create Quiz</button>
       <button class="ni"            onclick="nav('manage',this);closeSidebar()"><span class="ico">≡</span>Manage Quizzes</button>
-      <button class="ni"            onclick="nav('archive',this);closeSidebar()"><span class="ico">◷</span>Archived</button>
+      <button class="ni"            onclick="nav('archive',this);closeSidebar()"><span class="ico">◷</span>Question Bank Archive</button>
       <button class="ni"            onclick="nav('questions',this);closeSidebar()"><span class="ico">?</span>Question Bank</button>
       <button class="ni"            onclick="nav('passages',this);closeSidebar()"><span class="ico">📖</span>Passages</button>
       <button class="ni"            onclick="nav('pronunciation',this);closeSidebar()"><span class="ico">🎤</span>Pronunciation</button>
@@ -1129,15 +1129,30 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         </div>
       </div>
 
-      <!-- ARCHIVED -->
+      <!-- QUESTION BANK ARCHIVE -->
       <div class="tp" id="tp-archive">
-        <div class="sh"><h2>Archived Quizzes</h2><button class="btn" onclick="loadArchived()">↻ Refresh</button></div>
-        <p style="font-size:12.5px;color:var(--text2);margin-bottom:10px">Archived quizzes are not accessible to students.</p>
-        <div class="card" style="padding:0">
-          <div class="tw"><table id="t-archive">
-            <thead><tr><th>Title</th><th>Code</th><th>Class</th><th>Wk</th><th>Archived By</th><th>Date</th><th>Reason</th></tr></thead>
-            <tbody><tr class="er"><td colspan="7">Loading…</td></tr></tbody>
-          </table></div>
+        <div class="sh"><h2>Question Bank Archive</h2></div>
+        <p style="font-size:12.5px;color:var(--text2);margin-bottom:10px">Archive questions up to a date and name the batch (term &amp; session) — archived questions are hidden from normal browsing/import, and only show up in Create Quiz when you pick that archive as the question source.</p>
+        <div class="card">
+          <div class="sh" style="margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">Existing Archives</div>
+            <button class="btn btn-sm" onclick="loadQBArchives()">↻ Refresh</button>
+          </div>
+          <div id="qb-archive-list" style="margin-bottom:14px"><p style="color:var(--text2);font-size:12.5px">Loading…</p></div>
+          <div class="div" style="margin:4px 0 12px"></div>
+          <div class="ct" style="font-size:13px">Create New Archive</div>
+          <div class="fgrid c3" style="margin-bottom:10px">
+            <div class="fg"><label>Name *</label><input type="text" id="arc-name" placeholder="e.g. Term 1 2025/2026 Bank"></div>
+            <div class="fg"><label>Term</label><input type="text" id="arc-term" list="arc-term-list" placeholder="e.g. First Term"><datalist id="arc-term-list"><option value="First Term"><option value="Second Term"><option value="Third Term"></datalist></div>
+            <div class="fg"><label>Session</label><input type="text" id="arc-session" list="arc-session-list" placeholder="e.g. 2025/2026"><datalist id="arc-session-list"><option value="2024/2025"><option value="2025/2026"></datalist></div>
+          </div>
+          <div class="fg" style="max-width:220px">
+            <label>Archive questions created up to *</label>
+            <input type="date" id="arc-upto">
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px">
+            <button class="btn btn-p btn-sm" onclick="doCreateQBArchive()">Create Archive →</button>
+          </div>
         </div>
       </div>
 
@@ -1275,28 +1290,6 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             </div>
           </div>
           <div id="import-status"></div>
-        </div>
-
-        <div class="card">
-          <div class="sh" style="margin-bottom:10px">
-            <div><div class="ct" style="margin-bottom:2px">Question Bank Archives</div><div style="font-size:12px;color:var(--text2)">Archive questions up to a date and name the batch (term &amp; session) — archived questions are hidden from normal browsing/import, and only show up in Create Quiz when you pick that archive as the question source.</div></div>
-            <button class="btn btn-sm" onclick="loadQBArchives()">↻ Refresh</button>
-          </div>
-          <div id="qb-archive-list" style="margin-bottom:14px"><p style="color:var(--text2);font-size:12.5px">Loading…</p></div>
-          <div class="div" style="margin:4px 0 12px"></div>
-          <div class="ct" style="font-size:13px">Create New Archive</div>
-          <div class="fgrid c3" style="margin-bottom:10px">
-            <div class="fg"><label>Name *</label><input type="text" id="arc-name" placeholder="e.g. Term 1 2025/2026 Bank"></div>
-            <div class="fg"><label>Term</label><input type="text" id="arc-term" list="arc-term-list" placeholder="e.g. First Term"><datalist id="arc-term-list"><option value="First Term"><option value="Second Term"><option value="Third Term"></datalist></div>
-            <div class="fg"><label>Session</label><input type="text" id="arc-session" list="arc-session-list" placeholder="e.g. 2025/2026"><datalist id="arc-session-list"><option value="2024/2025"><option value="2025/2026"></datalist></div>
-          </div>
-          <div class="fg" style="max-width:220px">
-            <label>Archive questions created up to *</label>
-            <input type="date" id="arc-upto">
-          </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:10px">
-            <button class="btn btn-p btn-sm" onclick="doCreateQBArchive()">Create Archive →</button>
-          </div>
         </div>
 
         <div class="card">
@@ -2063,7 +2056,7 @@ function closeMo(id) { document.getElementById(id).classList.remove('on'); }
 function p2(n) { return String(n).padStart(2,'0'); }
 
 var TAB_NAMES = {
-  overview:'Overview', create:'Create Quiz', manage:'Manage Quizzes', archive:'Archived Quizzes',
+  overview:'Overview', create:'Create Quiz', manage:'Manage Quizzes', archive:'Question Bank Archive',
   questions:'Question Bank', passages:'Comprehension Passages', pronunciation:'Pronunciation Practice', students:'Student Register', practice:'Practice Results', teachers:'Teachers', classes:'Classes',
   profile:'My Profile', settings:'Platform Settings'
 };
@@ -2100,7 +2093,7 @@ setInterval(function() {
 var _tabLoadedAt = {};
 var TAB_CACHE_TTL = 30000;
 var TAB_LOADERS = {
-  overview: loadOverview, manage: loadQuizzes, archive: loadArchived,
+  overview: loadOverview, manage: loadQuizzes, archive: loadQBArchives,
   classes: loadClassesTab, questions: loadQBTab, passages: loadPassagesTab,
   pronunciation: loadPronunciationTab,
   teachers: loadTeachersTab, students: loadStudentsTab, practice: loadPracticeTab, settings: loadSettingsTab
@@ -2395,17 +2388,6 @@ function goLive(examCode) {
   window.open(url,'_blank');
 }
 
-/* ── Archived ── */
-function loadArchived() {
-  call('getArchivedQuizzes',{},function(list){
-    var tb=document.querySelector('#t-archive tbody'); if(!tb) return;
-    if(!list||!list.length){ tb.innerHTML='<tr class="er"><td colspan="7">No archived quizzes yet.</td></tr>'; return; }
-    tb.innerHTML=list.map(function(q){
-      return '<tr><td>'+esc(q.title)+'</td><td><code>'+esc(q.examCode)+'</code></td><td>'+esc(q.classId)+'</td><td>Wk '+esc(q.week)+'</td><td style="font-size:11.5px">'+esc(q.archivedBy||'—')+'</td><td style="font-size:11.5px">'+(q.archivedAt?q.archivedAt.substring(0,10):'—')+'</td><td style="font-size:11.5px;color:var(--text2)">'+esc(q.archiveReason||'—')+'</td></tr>';
-    }).join('');
-  });
-}
-
 /* ── Quiz Details Modal ── */
 function viewDetails(code) {
   var q=allQuizzes.find(function(x){ return x.examCode===code; });
@@ -2638,7 +2620,6 @@ function doDeleteQBArchive(id){
 }
 
 function loadQBTab() {
-  loadQBArchives();
   loadClasses(function(){
     populateClassDropdowns();
     var inlineSel=document.getElementById('inline-class');
