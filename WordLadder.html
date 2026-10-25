@@ -55,6 +55,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 .join-btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 1px 0 #b9760a}
 .join-btn:disabled{filter:saturate(.4) brightness(.75);cursor:not-allowed}
 .join-err{color:#ff8a8a;font-size:13px;margin-top:12px;text-align:center;min-height:18px}
+.mode-tabs{display:flex;gap:8px;margin-bottom:16px}
+.mode-tab{flex:1;padding:10px;border-radius:10px;border:1px solid var(--bdr2);background:rgba(3,7,17,.75);color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;font-family:var(--f);touch-action:manipulation;transition:all .15s}
+.mode-tab.on{background:linear-gradient(180deg,var(--acc2),var(--acc));border-color:var(--acc);color:#1a1002}
+.diff-row{display:flex;gap:8px;margin-bottom:16px}
+.diff-btn{flex:1;padding:10px;background:rgba(3,7,17,.75);border:1px solid var(--bdr2);border-radius:10px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;font-family:var(--f);touch-action:manipulation;transition:all .15s}
+.diff-btn.on{background:var(--acc);border-color:var(--acc);color:#1a1002}
 
 /* Lobby */
 .lobby-k{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:18px}
@@ -208,8 +214,24 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
   <div class="brand-title">Word <em>Ladder</em></div>
   <div class="brand-sub">Change one letter, make a new word, learn what it means.</div>
   <div class="join-card">
-    <div class="field-lbl">Game code</div>
-    <input class="inp inp-code" id="inp-code" type="text" placeholder="ABCDEF" maxlength="10" autocomplete="off" spellcheck="false">
+    <div class="mode-tabs">
+      <button type="button" class="mode-tab on" id="modeJoinBtn">Join a Game</button>
+      <button type="button" class="mode-tab" id="modeBotBtn">🤖 Play vs Bot</button>
+    </div>
+    <div id="field-code">
+      <div class="field-lbl">Game code</div>
+      <input class="inp inp-code" id="inp-code" type="text" placeholder="ABCDEF" maxlength="10" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="field-bot" style="display:none">
+      <div class="field-lbl">Starting word (3-9 letters)</div>
+      <input class="inp inp-code" id="inp-startword" type="text" placeholder="CAT" maxlength="9" autocomplete="off" spellcheck="false">
+      <div class="field-lbl">Bot difficulty</div>
+      <div class="diff-row">
+        <button type="button" class="diff-btn on" data-d="easy">Easy</button>
+        <button type="button" class="diff-btn" data-d="medium">Medium</button>
+        <button type="button" class="diff-btn" data-d="hard">Hard</button>
+      </div>
+    </div>
     <div class="field-lbl">Your name</div>
     <input class="inp" id="inp-name" type="text" placeholder="Your name" maxlength="20" autocomplete="given-name">
     <button class="join-btn" id="joinBtn">Join Game</button>
@@ -302,12 +324,33 @@ function gasPost(body, cb) {
 
 var sessionId = '', playerId = '', playerName = '', state = null, lastChainLen = 0, lastWord = '';
 
+// ── Join mode: a real room code, or solo vs a bot (nobody else around to play with) ──
+var joinMode = 'join', botDifficulty = 'easy';
+function setJoinMode(m) {
+  joinMode = m;
+  el('field-code').style.display = m === 'join' ? 'block' : 'none';
+  el('field-bot').style.display = m === 'bot' ? 'block' : 'none';
+  el('modeJoinBtn').classList.toggle('on', m === 'join');
+  el('modeBotBtn').classList.toggle('on', m === 'bot');
+  el('joinBtn').textContent = m === 'join' ? 'Join Game' : 'Start vs Bot';
+  el('joinErr').textContent = '';
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   if (preCode) el('inp-code').value = preCode;
   if (preName) el('inp-name').value = preName;
   el('inp-code').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('inp-name').focus(); });
-  el('inp-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') doJoin(); });
-  el('joinBtn').addEventListener('click', doJoin);
+  el('inp-startword').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('inp-name').focus(); });
+  el('inp-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') { joinMode === 'bot' ? doStartVsBot() : doJoin(); } });
+  el('modeJoinBtn').addEventListener('click', function () { setJoinMode('join'); });
+  el('modeBotBtn').addEventListener('click', function () { setJoinMode('bot'); });
+  Array.prototype.slice.call(document.querySelectorAll('.diff-btn')).forEach(function (b) {
+    b.addEventListener('click', function () {
+      botDifficulty = b.getAttribute('data-d');
+      document.querySelectorAll('.diff-btn').forEach(function (x) { x.classList.toggle('on', x === b); });
+    });
+  });
+  el('joinBtn').addEventListener('click', function () { joinMode === 'bot' ? doStartVsBot() : doJoin(); });
   el('wlSubmit').addEventListener('click', doSubmitMove);
   el('wlPlayAgainBtn').addEventListener('click', exitToJoin);
   el('wlCloseBtn').addEventListener('click', function () {
@@ -322,10 +365,29 @@ document.addEventListener('DOMContentLoaded', function () {
 function exitToJoin() {
   try { db.ref('wordladder/' + sessionId).off('value'); } catch (e) {}
   stopTimer();
-  sessionId = ''; playerId = ''; state = null; lastChainLen = 0; lastWord = '';
+  sessionId = ''; playerId = ''; state = null; lastChainLen = 0; lastWord = ''; botMoveSentFor = '';
   el('inp-code').value = '';
-  el('joinErr').textContent = '';
+  el('inp-startword').value = '';
+  setJoinMode('join');
   showScreen('s-join');
+}
+
+function doStartVsBot() {
+  var btn = el('joinBtn'), errE = el('joinErr');
+  var startWord = (el('inp-startword').value || '').trim().toUpperCase();
+  playerName = (el('inp-name').value || '').trim();
+  errE.textContent = '';
+  if (!/^[A-Z]{3,9}$/.test(startWord)) { errE.textContent = 'Enter a 3-9 letter starting word'; return; }
+  if (playerName.length < 2) { errE.textContent = 'Enter your name (min 2 chars)'; return; }
+  btn.disabled = true; btn.textContent = 'Starting…';
+  gasPost({ action: 'startWordLadderVsBot', startWord: startWord, playerName: playerName, difficulty: botDifficulty }, function (gErr, res) {
+    btn.disabled = false; btn.textContent = 'Start vs Bot';
+    if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not start — try a different word.'; return; }
+    sessionId = res.data.sessionId;
+    playerId = res.data.playerId;
+    listenFirebase();
+    applyState(res.data.state);
+  });
 }
 
 function doJoin() {
@@ -379,6 +441,28 @@ function listenFirebase() {
   });
 }
 
+// ── Bot turn ────────────────────────────────────────────────
+// Only the human's own tab exists in a vs-bot game, so it's the one that has to prompt the
+// server to play the bot's move — keyed on turnStartedAt (same dedupe pattern as the turn-timer's
+// own skip call) so repeated applyState calls (our own response + the Firebase echo of it) can't
+// double-fire it.
+var botMoveSentFor = '';
+var WL_BOT_DELAY = { easy: 2200, medium: 1400, hard: 700 };
+function maybeTriggerBot() {
+  if (!state || state.status === 'ended' || !state.started) return;
+  var tp = state.players[state.turnIndex];
+  if (!tp || !tp.isBot) return;
+  if (botMoveSentFor === state.turnStartedAt) return;
+  botMoveSentFor = state.turnStartedAt;
+  var delay = WL_BOT_DELAY[tp.difficulty] || WL_BOT_DELAY.medium;
+  setTimeout(function () {
+    gasPost({ action: 'playBotWordLadderTurn', sessionId: sessionId }, function (e, res) {
+      if (e || !res || res.status !== 'success') { botMoveSentFor = ''; return; } // allow a retry on the next render
+      if (res.data && res.data.state) applyState(res.data.state);
+    });
+  }, delay);
+}
+
 function applyState(v) {
   state = v;
   if (!state) return;
@@ -387,7 +471,7 @@ function applyState(v) {
   // lobby — previously this fired the instant a 2nd player's join landed, which stamped the turn
   // clock before either client had rendered the game screen, so on a slow connection the clock
   // could burn through most of round 1 before a player even finished loading.
-  if (state.started) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); startTimer(); return; }
+  if (state.started) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); startTimer(); maybeTriggerBot(); return; }
   stopTimer(); showScreen('s-lobby'); renderLobby();
 }
 
@@ -434,7 +518,8 @@ function render() {
   var mine = myTurn();
   var banner = el('wl-turn-banner');
   banner.className = 'wl-turn-banner ' + (mine ? 'mine' : 'theirs');
-  banner.textContent = mine ? 'Your turn — change one letter' : ((turnPlayer ? turnPlayer.name : '…') + '’s turn');
+  banner.textContent = mine ? 'Your turn — change one letter'
+    : (turnPlayer && turnPlayer.isBot ? '🤖 ' + turnPlayer.name + ' is thinking…' : ((turnPlayer ? turnPlayer.name : '…') + '’s turn'));
   el('wl-stage').classList.toggle('mine', !!mine);
   var goal = el('wl-goal'), gap = state.winGap || 0;
   goal.style.display = gap > 0 ? 'block' : 'none';
