@@ -585,7 +585,10 @@
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div class="ct" style="margin-bottom:0">Browse / Edit / Delete Existing Questions<span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Import only ever adds — re-importing a corrected batch will duplicate rows instead of fixing them unless the old topic is deleted here first.</span></span></div>
-            <button class="btn btn-g btn-sm" onclick="ebLoadTopics()">↻ Refresh</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-g btn-sm" onclick="ebLoadTopics()">↻ Refresh</button>
+              <button class="btn btn-d btn-sm" onclick="ebDeleteAll()">🗑 Delete ALL Bank Questions</button>
+            </div>
           </div>
           <div class="tw">
             <table id="eb-topics-table">
@@ -2190,6 +2193,20 @@ function ebLoadTopics() {
         '</td></tr>';
     }).join('');
   }, function() { tb.innerHTML = '<tr class="er"><td colspan="4">Failed to load — try Refresh again.</td></tr>'; });
+}
+
+// Wipes the WHOLE global bank in one go — for a full delete-then-reimport pass
+// (e.g. after a bulk content-quality rewrite) instead of deleting ~70-90 topics
+// one at a time. Type-to-confirm since there's no undo once committed.
+function ebDeleteAll() {
+  var typed = prompt('This permanently deletes EVERY question in the Edurena Question Bank (all subjects, all topics). This cannot be undone.\n\nType DELETE to confirm:');
+  if (typed !== 'DELETE') { if (typed !== null) toast('error', 'Not confirmed — nothing was deleted.'); return; }
+  call('deleteAllEdurenaBankQuestions', {}, function(d) {
+    toast('success', 'Deleted ' + (d.count || 0) + ' question(s) from the bank.');
+    document.getElementById('eb-qlist-card').style.display = 'none';
+    ebCurrentTopic = null;
+    ebLoadTopics();
+  });
 }
 
 function ebDeleteTopicByName(subject, topic) {
