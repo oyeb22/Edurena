@@ -201,7 +201,11 @@ function stopTimer() { if (timerHandle) { clearInterval(timerHandle); timerHandl
 function tickTimer() {
   if (!state || state.status === 'ended' || !state.turnStartedAt) return;
   var total = ((state.turnSeconds || 30) * 1000);
-  var left = total - (Date.now() + serverOffset - new Date(state.turnStartedAt).getTime());
+  // turnStartedAt can briefly sit in the future right after a word lands — the server holds it
+  // there for a few seconds so every player's screen gets a synced reveal of the new word before
+  // the next turn's clock actually starts. Clamp so the bar/number just sits full meanwhile
+  // instead of counting up past the real turn length.
+  var left = Math.min(total, total - (Date.now() + serverOffset - new Date(state.turnStartedAt).getTime()));
   var secs = Math.max(0, Math.ceil(left / 1000));
   el('wlh-timer-n').textContent = secs;
   el('wlh-timer-fill').style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / total)) + ')';

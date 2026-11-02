@@ -131,6 +131,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
 .wl-def-pop.show{display:block;animation:fadeUp .4s var(--ease)}
 .wl-def-word{font-family:var(--mono);font-weight:700;color:var(--grn);font-size:15px;letter-spacing:2px}
 .wl-def-text{font-size:14px;line-height:1.55;color:var(--txt);margin-top:4px}
+.wl-reveal-note{display:none;margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.5px;text-align:center}
+.wl-reveal-note b{color:var(--acc2)}
+.wl-def-pop.reveal .wl-reveal-note{display:block}
 .blurred{filter:blur(6px);user-select:none}
 
 /* Compact score strip — sits right under the top bar so standings never scroll out of view */
@@ -247,6 +250,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
   <div class="lobby-lbl">players joined</div>
   <div class="chips" id="lby-chips"></div>
   <div class="lobby-wait"><span class="dots3"><i></i><i></i><i></i></span><span id="lby-wait-text">Play starts when a second player joins</span></div>
+  <button class="join-btn" id="lbyStartBtn" style="display:none;max-width:260px;margin-top:18px">Start Game</button>
+  <div class="join-err" id="lbyStartErr"></div>
 </div>
 
 <div class="screen" id="s-game">
@@ -262,13 +267,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.05;mi
       <div class="wl-goal" id="wl-goal" style="display:none"></div>
       <div class="wl-timer" id="wl-timer"><div class="wl-timer-bar"><div class="wl-timer-fill" id="wl-timer-fill"></div></div><div class="wl-timer-n" id="wl-timer-n">--</div></div>
       <div class="wl-wheels" id="wl-wheels"></div>
-      <div class="wl-input-row">
+      <div class="wl-input-row" id="wl-input-row">
         <button class="wl-submit" id="wlSubmit">Submit</button>
       </div>
       <div class="wl-err" id="wl-err"></div>
       <div class="wl-def-pop" id="wl-def-pop">
         <div class="wl-def-word" id="wl-def-word">&mdash;</div>
         <div class="wl-def-text" id="wl-def-text"></div>
+        <div class="wl-reveal-note" id="wl-reveal-note">Next turn in <b id="wl-reveal-count">5s</b></div>
       </div>
     </div>
     <div class="panel">
@@ -351,6 +357,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
   el('joinBtn').addEventListener('click', function () { joinMode === 'bot' ? doStartVsBot() : doJoin(); });
+  el('lbyStartBtn').addEventListener('click', doStartGameFromLobby);
   el('wlSubmit').addEventListener('click', doSubmitMove);
   el('wlPlayAgainBtn').addEventListener('click', exitToJoin);
   el('wlCloseBtn').addEventListener('click', function () {
@@ -368,6 +375,8 @@ function exitToJoin() {
   sessionId = ''; playerId = ''; state = null; lastChainLen = 0; lastWord = ''; botMoveSentFor = '';
   el('inp-code').value = '';
   el('inp-startword').value = '';
+  el('lbyStartErr').textContent = '';
+  el('lbyStartBtn').style.display = 'none';
   setJoinMode('join');
   showScreen('s-join');
 }
@@ -411,10 +420,49 @@ function doJoin() {
 var timerHandle = null, skipSentFor = '';
 function turnMs() { return ((state && state.turnSeconds) || 30) * 1000; }
 function stopTimer() { if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
+
+// WL_REVEAL_MS must match code.gs's own constant — the server pushes turnStartedAt that far into
+// the future after a word is actually added to the chain, so every client (mover included) gets
+// the same synced window to read the full board + the new word's definition before the next
+// player's turn (and clock) actually begins, instead of a local, unsynced setTimeout guess.
+var WL_REVEAL_MS = 5000;
+var revealShowing = false;
+function isRevealing() {
+  if (!state || !state.turnStartedAt) return false;
+  return (new Date(state.turnStartedAt).getTime() - (Date.now() + serverOffset)) > 0;
+}
+function showReveal(msLeft) {
+  if (!revealShowing) {
+    revealShowing = true;
+    el('wl-wheels').classList.add('off');
+    el('wl-timer').style.visibility = 'hidden';
+    el('wl-input-row').style.visibility = 'hidden';
+    el('wl-def-pop').classList.add('show', 'reveal');
+    var turnPlayer = state.players[state.turnIndex];
+    var nextLabel = turnPlayer ? (turnPlayer.playerId === playerId ? 'you' : turnPlayer.name) : '…';
+    var banner = el('wl-turn-banner');
+    banner.className = 'wl-turn-banner theirs';
+    banner.textContent = 'Up next: ' + nextLabel;
+  }
+  el('wl-reveal-count').textContent = Math.max(1, Math.ceil(msLeft / 1000)) + 's';
+}
+function hideRevealIfShown() {
+  if (!revealShowing) return;
+  revealShowing = false;
+  el('wl-timer').style.visibility = '';
+  el('wl-input-row').style.visibility = '';
+  el('wl-def-pop').classList.remove('show', 'reveal');
+  render(); // rebuild the now-active turn's banner/wheels, which render() skipped while revealing
+}
+
 function tickTimer() {
   if (!state || state.status === 'ended' || !state.turnStartedAt) return;
+  var now = Date.now() + serverOffset;
+  var revealLeft = new Date(state.turnStartedAt).getTime() - now;
+  if (revealLeft > 0) { showReveal(revealLeft); return; }
+  hideRevealIfShown();
   var total = turnMs();
-  var left = total - (Date.now() + serverOffset - new Date(state.turnStartedAt).getTime());
+  var left = total - (now - new Date(state.turnStartedAt).getTime());
   var secs = Math.max(0, Math.ceil(left / 1000));
   el('wl-timer-n').textContent = secs;
   el('wl-timer-fill').style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / total)) + ')';
@@ -454,7 +502,12 @@ function maybeTriggerBot() {
   if (!tp || !tp.isBot) return;
   if (botMoveSentFor === state.turnStartedAt) return;
   botMoveSentFor = state.turnStartedAt;
-  var delay = WL_BOT_DELAY[tp.difficulty] || WL_BOT_DELAY.medium;
+  var thinkDelay = WL_BOT_DELAY[tp.difficulty] || WL_BOT_DELAY.medium;
+  // If the human's own move just landed, its reveal window is already counting down — let it
+  // finish before the bot's "thinking" delay even starts, so the human gets the full read time
+  // instead of the board flashing straight to the bot's word mid-reveal.
+  var revealLeft = state.turnStartedAt ? (new Date(state.turnStartedAt).getTime() - (Date.now() + serverOffset)) : 0;
+  var delay = Math.max(thinkDelay, revealLeft + 300);
   setTimeout(function () {
     gasPost({ action: 'playBotWordLadderTurn', sessionId: sessionId }, function (e, res) {
       if (e || !res || res.status !== 'success') { botMoveSentFor = ''; return; } // allow a retry on the next render
@@ -467,10 +520,11 @@ function applyState(v) {
   state = v;
   if (!state) return;
   if (state.status === 'ended') { stopTimer(); renderEnded(); showScreen('s-ended'); return; }
-  // Only the host's explicit Start (via WordLadderHost.html's projector) moves everyone off the
-  // lobby — previously this fired the instant a 2nd player's join landed, which stamped the turn
-  // clock before either client had rendered the game screen, so on a slow connection the clock
-  // could burn through most of round 1 before a player even finished loading.
+  // Only an explicit Start (any player's own "Start Game" button, or the WordLadderHost.html
+  // projector's) moves everyone off the lobby — previously this fired the instant a 2nd player's
+  // join landed, which stamped the turn clock before either client had rendered the game screen,
+  // so on a slow connection the clock could burn through most of round 1 before a player even
+  // finished loading.
   if (state.started) { if (!el('s-game').classList.contains('on')) showScreen('s-game'); render(); startTimer(); maybeTriggerBot(); return; }
   stopTimer(); showScreen('s-lobby'); renderLobby();
 }
@@ -480,7 +534,24 @@ function renderLobby() {
   var names = (state.players || []).map(function (p) { return p.name; });
   el('lby-count').textContent = names.length;
   el('lby-chips').innerHTML = names.map(function (n) { return '<div class="chip">' + esc(n) + '</div>'; }).join('');
-  el('lby-wait-text').textContent = names.length >= 2 ? 'Waiting for the host to start the game' : 'Play starts when a second player joins';
+  var ready = names.length >= 2;
+  // Any joined player can start the game, not just a projector host — most groups never open
+  // WordLadderHost.html at all, so making that the only way in meant a lot of players sat here
+  // not knowing how to actually begin.
+  el('lby-wait-text').textContent = ready ? 'Ready — tap Start when everyone is in' : 'Play starts when a second player joins';
+  el('lbyStartBtn').style.display = ready ? 'inline-block' : 'none';
+}
+
+function doStartGameFromLobby() {
+  var btn = el('lbyStartBtn'), errE = el('lbyStartErr');
+  errE.textContent = '';
+  btn.disabled = true; btn.textContent = 'Starting…';
+  gasPost({ action: 'startWordLadderGame', sessionId: sessionId }, function (gErr, res) {
+    btn.disabled = false; btn.textContent = 'Start Game';
+    if (gErr || !res || res.status !== 'success') { errE.textContent = (res && res.message) || 'Could not start — try again.'; return; }
+    // No need to act further — the Firebase listener re-renders the board for everyone the
+    // instant `started` flips, same as the projector's own Start button.
+  });
 }
 
 function myTurn() {
@@ -514,18 +585,9 @@ function render() {
     lastWord = current.word;
   }
 
-  var turnPlayer = state.players[state.turnIndex];
-  var mine = myTurn();
-  var banner = el('wl-turn-banner');
-  banner.className = 'wl-turn-banner ' + (mine ? 'mine' : 'theirs');
-  banner.textContent = mine ? 'Your turn — change one letter'
-    : (turnPlayer && turnPlayer.isBot ? '🤖 ' + turnPlayer.name + ' is thinking…' : ((turnPlayer ? turnPlayer.name : '…') + '’s turn'));
-  el('wl-stage').classList.toggle('mine', !!mine);
   var goal = el('wl-goal'), gap = state.winGap || 0;
   goal.style.display = gap > 0 ? 'block' : 'none';
   if (gap > 0) goal.innerHTML = 'Lead by <b>' + gap + '</b> point' + (gap === 1 ? '' : 's') + ' to win';
-  buildWheels(current.word, mine, state.turnStartedAt);
-  updateWheelState();
 
   el('wl-score-strip').innerHTML = (state.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).map(function (p, i) {
     return '<div class="wl-score-chip' + (i === 0 && (p.score || 0) > 0 ? ' lead' : '') + (p.playerId === playerId ? ' me' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score || 0) + '</span></div>';
@@ -550,10 +612,25 @@ function render() {
     el('wl-def-word').textContent = latest.word;
     el('wl-def-text').textContent = latest.definition || '';
     el('wl-def-text').classList.toggle('blurred', !!latest.flagged);
-    el('wl-def-pop').classList.add('show');
-    setTimeout(function () { el('wl-def-pop').classList.remove('show'); }, 4000);
+    // Visibility (and for how long) is driven by tickTimer's showReveal/hideRevealIfShown below,
+    // synced to the server's turnStartedAt — not a local setTimeout guess — so every player sees
+    // the same word+definition for the same real 5 seconds, not whoever's tab happened to render first.
   }
   lastChainLen = chain.length;
+
+  // While revealing, tickTimer owns the banner/wheels/timer (see showReveal/hideRevealIfShown) —
+  // don't let a stray Firebase push mid-reveal jump straight to "your turn" with live wheels.
+  if (isRevealing()) return;
+
+  var turnPlayer = state.players[state.turnIndex];
+  var mine = myTurn();
+  var banner = el('wl-turn-banner');
+  banner.className = 'wl-turn-banner ' + (mine ? 'mine' : 'theirs');
+  banner.textContent = mine ? 'Your turn — change one letter'
+    : (turnPlayer && turnPlayer.isBot ? '🤖 ' + turnPlayer.name + ' is thinking…' : ((turnPlayer ? turnPlayer.name : '…') + '’s turn'));
+  el('wl-stage').classList.toggle('mine', !!mine);
+  buildWheels(current.word, mine, state.turnStartedAt);
+  updateWheelState();
 }
 
 // ── Letter wheels ───────────────────────────────────────────
