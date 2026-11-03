@@ -98,6 +98,12 @@ label{display:block;font-size:12px;font-weight:500;color:var(--mute);margin-bott
   <div class="grid" id="topics"></div>
 </div>
 
+<div class="screen" id="s-tiers">
+  <div class="top"><button class="btn ghost" style="width:auto;padding:10px 16px" id="back-tiers">&larr; Topics</button></div>
+  <div class="card" style="margin-bottom:14px"><h2 id="tiers-title"></h2><p class="mute" style="margin-top:4px">Each tier is its own ladder — climb from basic to advanced.</p></div>
+  <div class="grid" id="tiers-list"></div>
+</div>
+
 <div class="screen" id="s-topic">
   <div class="top"><button class="btn ghost" style="width:auto;padding:10px 16px" id="back-home">&larr; Topics</button></div>
   <div class="card">
@@ -136,7 +142,7 @@ function post(action, payload){
     .then(function(j){ if (!j || j.status !== 'success') throw new Error((j && j.message) || 'Something went wrong'); return j.data; });
 }
 
-var S = { id: '', ladder: [], topics: [], subject: '', cur: null, diff: '', queue: [], qi: 0, batchRight: 0, batchDone: 0, trial: null, timer: null, answered: false };
+var S = { id: '', ladder: [], topics: [], subject: '', cur: null, curGroup: null, diff: '', queue: [], qi: 0, batchRight: 0, batchDone: 0, trial: null, timer: null, answered: false, groups: [] };
 var COLORS = ['#7d8794','#3fae6a','#1fa39a','#3b82d6','#8b5cf6','#f08a24','#d9a521','#e94f8b'];
 
 /* ---------- badges ---------- */
@@ -181,19 +187,62 @@ function login(){
     renderHome(); show('s-home'); celebrate();
   }).catch(function(e){ $('login-err').textContent = e.message; }).then(function(){ $('login-btn').disabled = false; });
 }
+// A topic with no tiers (subtopic='' on its one entry — every Maths topic today)
+// renders exactly as before: one card, straight into practice. A topic split into
+// tiers (e.g. English Language's parts of speech, Tier 1 -> Tier N) instead shows
+// one grouped card that opens the s-tiers screen, each tier getting its own ladder.
+function tcardHtml(t, idx, dataAttr){
+  return '<button class="tcard" '+dataAttr+'="'+idx+'">' + badge(t.started ? t.rank : 0, 60, !t.started) +
+    '<div style="flex:1;min-width:0"><div class="tname">'+esc(t.subtopic || t.topic)+'</div><div class="trank" style="color:'+rankColor(t)+'">'+rankLabel(t)+'</div>' +
+    '<div class="bar"><i style="width:'+progressPct(t)+'%;background:'+rankColor(t)+'"></i></div>' +
+    (t.pendingTrial && !t.trialLockedUntil ? '<span class="tag trial">Trial ready</span>' : '') + (t.rusty ? '<span class="tag rusty">Rusty</span>' : '') + '</div></button>';
+}
 function renderHome(){
   var subs = []; S.topics.forEach(function(t){ if (subs.indexOf(t.subject) === -1) subs.push(t.subject); });
   $('subjects').innerHTML = subs.map(function(s){ return '<button class="chip'+(s===S.subject?' on':'')+'" data-s="'+esc(s)+'">'+esc(s)+'</button>'; }).join('');
   var list = S.topics.filter(function(t){ return t.subject === S.subject; });
-  $('topics').innerHTML = list.map(function(t, i){
-    return '<button class="tcard" data-i="'+S.topics.indexOf(t)+'">' + badge(t.started ? t.rank : 0, 60, !t.started) +
-      '<div style="flex:1;min-width:0"><div class="tname">'+esc(t.topic)+'</div><div class="trank" style="color:'+rankColor(t)+'">'+rankLabel(t)+'</div>' +
-      '<div class="bar"><i style="width:'+progressPct(t)+'%;background:'+rankColor(t)+'"></i></div>' +
-      (t.pendingTrial && !t.trialLockedUntil ? '<span class="tag trial">Trial ready</span>' : '') + (t.rusty ? '<span class="tag rusty">Rusty</span>' : '') + '</div></button>';
+  var groups = [], byTopic = {};
+  list.forEach(function(t){
+    if (!byTopic[t.topic]) { byTopic[t.topic] = { topic: t.topic, items: [] }; groups.push(byTopic[t.topic]); }
+    byTopic[t.topic].items.push(t);
+  });
+  S.groups = groups;
+  $('topics').innerHTML = groups.map(function(g, gi){
+    if (g.items.length === 1 && !g.items[0].subtopic) {
+      return '<button class="tcard" data-g="'+gi+'" data-mode="single">' + badge(g.items[0].started ? g.items[0].rank : 0, 60, !g.items[0].started) +
+        '<div style="flex:1;min-width:0"><div class="tname">'+esc(g.topic)+'</div><div class="trank" style="color:'+rankColor(g.items[0])+'">'+rankLabel(g.items[0])+'</div>' +
+        '<div class="bar"><i style="width:'+progressPct(g.items[0])+'%;background:'+rankColor(g.items[0])+'"></i></div>' +
+        (g.items[0].pendingTrial && !g.items[0].trialLockedUntil ? '<span class="tag trial">Trial ready</span>' : '') + (g.items[0].rusty ? '<span class="tag rusty">Rusty</span>' : '') + '</div></button>';
+    }
+    // Multi-tier topic: the highest-ranked tier's badge stands in as the topic's
+    // own icon, plus how many tiers have been started at all.
+    var best = g.items.reduce(function(a,b){ return (b.started && b.rank > (a.started ? a.rank : -1)) ? b : a; }, g.items[0]);
+    var startedCount = g.items.filter(function(t){ return t.started; }).length;
+    return '<button class="tcard" data-g="'+gi+'" data-mode="group">' + badge(best.started ? best.rank : 0, 60, !best.started) +
+      '<div style="flex:1;min-width:0"><div class="tname">'+esc(g.topic)+'</div><div class="trank" style="color:'+rankColor(best)+'">'+(startedCount ? startedCount + ' of ' : '')+g.items.length+' tier'+(g.items.length===1?'':'s')+' started</div>' +
+      '<div class="bar"><i style="width:'+progressPct(best)+'%;background:'+rankColor(best)+'"></i></div></div>' +
+      '<span class="mute" style="font-size:20px;flex:none">&rsaquo;</span></button>';
   }).join('') || '<p class="mute">No topics are available yet.</p>';
 }
 $('subjects').addEventListener('click', function(e){ var b=e.target.closest('.chip'); if(!b) return; S.subject=b.getAttribute('data-s'); renderHome(); });
-$('topics').addEventListener('click', function(e){ var b=e.target.closest('.tcard'); if(!b) return; S.cur = S.topics[+b.getAttribute('data-i')]; renderTopic(); show('s-topic'); });
+$('topics').addEventListener('click', function(e){
+  var b=e.target.closest('.tcard'); if(!b) return;
+  var g = S.groups[+b.getAttribute('data-g')];
+  if (b.getAttribute('data-mode') === 'single') { S.cur = g.items[0]; S.curGroup = null; renderTopic(); show('s-topic'); }
+  else { S.curGroup = g; renderTiers(); show('s-tiers'); }
+});
+
+/* ---------- tiers screen (basic -> advanced ladders within one topic) ---------- */
+function renderTiers(){
+  var g = S.curGroup; if (!g) return;
+  $('tiers-title').textContent = g.topic;
+  $('tiers-list').innerHTML = g.items.map(function(t, i){ return tcardHtml(t, i, 'data-i'); }).join('');
+}
+$('tiers-list').addEventListener('click', function(e){
+  var b=e.target.closest('.tcard'); if(!b) return;
+  S.cur = S.curGroup.items[+b.getAttribute('data-i')]; renderTopic(); show('s-topic');
+});
+$('back-tiers').onclick = function(){ renderHome(); show('s-home'); };
 
 /* ---------- topic screen ---------- */
 function needText(t){
@@ -213,7 +262,9 @@ function needText(t){
 function renderTopic(){
   var t = S.cur; if (!t) return;
   $('t-badge').innerHTML = badge(t.started ? t.rank : 0, 96, !t.started);
-  $('t-subject').textContent = t.subject; $('t-name').textContent = t.topic;
+  $('t-subject').textContent = t.subject + (t.subtopic ? ' · ' + t.topic : '');
+  $('t-name').textContent = t.subtopic || t.topic;
+  $('back-home').textContent = S.curGroup ? '← ' + S.curGroup.topic + ' tiers' : '← Topics';
   $('t-rank').textContent = rankLabel(t); $('t-rank').style.color = rankColor(t);
   $('t-bar').style.width = progressPct(t) + '%'; $('t-bar').style.background = rankColor(t);
   $('t-barlabel').textContent = t.mp + ' of ' + t.totalMp + ' points' + (t.rusty ? ' · Rusty: answer a few questions to shake it off' : '');
@@ -235,13 +286,13 @@ function renderTopic(){
   $('topic-err').textContent = '';
 }
 $('diff-chips').addEventListener('click', function(e){ var b=e.target.closest('.chip'); if(!b) return; S.diff=b.getAttribute('data-d'); renderTopic(); });
-$('back-home').onclick = function(){ renderHome(); show('s-home'); };
+$('back-home').onclick = function(){ if (S.curGroup) { renderTiers(); show('s-tiers'); } else { renderHome(); show('s-home'); } };
 
 /* ---------- launch: practice sets and rank trials run in Exam.html ---------- */
 var EXAM_URL = 'https://edurena.online/Exam.html';
 function launch(kind, btn){
   btn.disabled = true; $('topic-err').textContent = '';
-  post('startPracticeExam', { subject: S.cur.subject, topic: S.cur.topic, kind: kind, difficulty: S.diff }).then(function(d){
+  post('startPracticeExam', { subject: S.cur.subject, topic: S.cur.topic, subtopic: S.cur.subtopic || '', kind: kind, difficulty: S.diff }).then(function(d){
     var back = location.origin + location.pathname;
     location.href = EXAM_URL + '?email=' + encodeURIComponent(S.id) + '&code=' + encodeURIComponent(d.examCode) + '&script=' + encodeURIComponent(GAS_URL) + '&back=' + encodeURIComponent(back);
   }).catch(function(e){ $('topic-err').textContent = e.message; btn.disabled = false; });

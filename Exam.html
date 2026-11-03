@@ -3141,6 +3141,10 @@ function showResults(data){
     // Shown for every question with a stored explanation, right answers included:
     // the worked solution is what turns a score into learning.
     var explainBlock=a.explanation?'<div class="explain-box"><div class="ai-label">💡 How to get the answer</div>'+esc(a.explanation)+'</div>':'';
+    // Only present for Topic Practice content tagged with a specific skill code (e.g.
+    // English Language's tiered bank) — every other quiz type leaves conceptTested
+    // unset, so this stays invisible everywhere else.
+    var conceptBlock=a.conceptTested?'<div class="review-row"><span class="review-label">Concept tested</span><span class="review-val">'+esc(a.conceptTested)+'</span></div>':'';
     var aiBlock=!a.isCorrect?'<div id="ai_wrap_'+i+'"><button class="ai-explain-btn" id="ai_btn_'+i+'" onclick="fetchAiExplanation('+i+')">✦ AI Explanation</button><div id="ai_box_'+i+'"></div></div>':'';
     
     // ── PARTIAL CREDIT DISPLAY (SHORT answer only) ─────────────────
@@ -3163,7 +3167,7 @@ function showResults(data){
       +'<div class="review-row"><span class="review-label">Your Answer</span><span class="review-val '+(a.isCorrect?'ok':skipped?'':'bad')+'">'+esc(a.studentAnswer||'(no answer)')+'</span></div>'
       +(!a.isCorrect?'<div class="review-row"><span class="review-label">Correct</span><span class="review-val ok">'+esc(correctDisplay)+'</span></div>':'')
       +'<div class="review-row"><span class="review-label">Points</span><span class="review-val">'+a.pointsEarned+' / '+a.maxPoints+'</span></div>'
-      + partialCreditBlock
+      + partialCreditBlock + conceptBlock
       +explainBlock+aiBlock+'</div>';
   }).join('');
 

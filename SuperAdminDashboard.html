@@ -2202,6 +2202,11 @@ function ebClear() {
 var EB_JSON_TEMPLATE = JSON.stringify([{
   subject: "Mathematics",
   topic: "Algebra",
+  // Optional — only set these for content organised into a basic -> advanced
+  // progression within a topic (e.g. "Tier 3: Pluralization Mechanics"). Leave
+  // both "" for ordinary content; every Maths topic today leaves them blank.
+  subtopic: "",
+  concept_tested: "",
   difficulty: "medium",
   type: "MCQ",
   question: "What is 2x + 3 = 7?",
