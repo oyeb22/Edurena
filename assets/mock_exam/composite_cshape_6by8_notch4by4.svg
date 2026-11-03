@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="110,30 230,30 230,70 150,70 150,150 230,150 230,190 110,190"
+           fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <!-- left height label -->
+  <text x="90" y="113" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="end">8cm</text>
+
+  <!-- bottom width label -->
+  <text x="170" y="212" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">6cm</text>
+
+  <!-- top-right strip label -->
+  <text x="245" y="54" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">2cm</text>
+
+  <!-- notch labels -->
+  <text x="190" y="64" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#2563eb" text-anchor="middle">4cm</text>
+  <text x="130" y="113" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#2563eb" text-anchor="middle">4cm</text>
+
+  <!-- bottom-right strip label -->
+  <text x="245" y="174" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">2cm</text>
+</svg>

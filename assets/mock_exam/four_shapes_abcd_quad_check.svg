@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- a: parallelogram -->
+  <polygon points="40,70 110,70 95,120 25,120" fill="none" stroke="#0f172a" stroke-width="2"/>
+  <text x="20" y="100" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">a</text>
+
+  <!-- b: triangle -->
+  <polygon points="200,65 240,120 160,120" fill="none" stroke="#0f172a" stroke-width="2"/>
+  <text x="248" y="118" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">b</text>
+
+  <!-- c: trapezium -->
+  <polygon points="40,160 110,160 95,210 25,210" fill="none" stroke="#0f172a" stroke-width="2"/>
+  <text x="20" y="190" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">c</text>
+
+  <!-- d: pentagon -->
+  <polygon points="220,155 255,175 242,215 198,215 185,175" fill="none" stroke="#0f172a" stroke-width="2"/>
+  <text x="265" y="178" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">d</text>
+</svg>

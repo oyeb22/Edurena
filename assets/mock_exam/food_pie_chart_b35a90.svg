@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<path d="M200,130 L200,40 A90,90 0 0,1 245,208 Z" fill="#2563eb" stroke="#0f172a" stroke-width="2"/>
+<path d="M200,130 L245,208 A90,90 0 0,1 115,161 Z" fill="#94a3b8" stroke="#0f172a" stroke-width="2"/>
+<path d="M200,130 L115,161 A90,90 0 0,1 142,61 Z" fill="#cbd5e1" stroke="#0f172a" stroke-width="2"/>
+<path d="M200,130 L142,61 A90,90 0 0,1 200,40 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+<text x="215" y="110" font-size="14" font-weight="700" fill="#ffffff">Mango</text>
+<text x="215" y="128" font-size="13" fill="#ffffff">150°</text>
+<text x="150" y="190" font-size="14" font-weight="700" fill="#0f172a">Orange</text>
+<text x="160" y="205" font-size="13" fill="#0f172a">100°</text>
+<text x="110" y="120" font-size="14" font-weight="700" fill="#0f172a">Banana</text>
+<text x="120" y="135" font-size="13" fill="#0f172a">70°</text>
+<text x="165" y="75" font-size="14" font-weight="700" fill="#0f172a">Pawpaw</text>
+<text x="175" y="90" font-size="13" fill="#0f172a">40°</text>
+</svg>

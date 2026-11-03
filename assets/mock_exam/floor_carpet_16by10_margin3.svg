@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- outer floor rectangle -->
+  <rect x="60" y="40" width="280" height="175" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <!-- inner carpet (margin 3 on all sides, drawn proportionally: 280*(10/16)=175 wide, 175*(4/10)=70 tall, centered) -->
+  <rect x="112.5" y="92.5" width="175" height="70" fill="none" stroke="#0f172a" stroke-width="2" stroke-dasharray="4 3"/>
+  <pattern id="hatch" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="#2563eb" stroke-width="1.5"/>
+  </pattern>
+  <rect x="112.5" y="92.5" width="175" height="70" fill="url(#hatch)" stroke="#0f172a" stroke-width="2"/>
+
+  <!-- labels -->
+  <text x="200" y="30" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">16m</text>
+  <text x="355" y="130" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">10m</text>
+
+  <!-- margin arrows: top -->
+  <line x1="200" y1="45" x2="200" y2="90" stroke="#0f172a" stroke-width="2"/>
+  <polygon points="200,45 195,55 205,55" fill="#0f172a"/>
+  <polygon points="200,90 195,80 205,80" fill="#0f172a"/>
+  <text x="212" y="70" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a">3</text>
+
+  <!-- margin arrows: left -->
+  <line x1="65" y1="127" x2="110" y2="127" stroke="#0f172a" stroke-width="2"/>
+  <polygon points="65,127 75,122 75,132" fill="#0f172a"/>
+  <polygon points="110,127 100,122 100,132" fill="#0f172a"/>
+  <text x="72" y="118" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a">3</text>
+
+  <!-- margin arrows: right -->
+  <line x1="290" y1="127" x2="335" y2="127" stroke="#0f172a" stroke-width="2"/>
+  <polygon points="290,127 300,122 300,132" fill="#0f172a"/>
+  <polygon points="335,127 325,122 325,132" fill="#0f172a"/>
+  <text x="302" y="118" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a">3</text>
+
+  <!-- margin arrows: bottom -->
+  <line x1="200" y1="165" x2="200" y2="210" stroke="#0f172a" stroke-width="2"/>
+  <polygon points="200,165 195,175 205,175" fill="#0f172a"/>
+  <polygon points="200,210 195,200 205,200" fill="#0f172a"/>
+  <text x="212" y="190" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a">3</text>
+
+  <text x="200" y="232" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Fig. 6 (all margins in metres)</text>
+</svg>

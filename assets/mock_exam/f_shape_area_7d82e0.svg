@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="140,40 220,40 220,60 160,60 160,110 210,110 210,130 160,130 160,160 140,160" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<line x1="140" y1="25" x2="220" y2="25" stroke="#2563eb" stroke-width="1.5"/>
+<text x="170" y="20" font-size="14" font-weight="700" fill="#0f172a">8cm</text>
+<line x1="230" y1="40" x2="230" y2="60" stroke="#2563eb" stroke-width="1.5"/>
+<text x="235" y="54" font-size="14" font-weight="700" fill="#0f172a">2cm</text>
+<line x1="220" y1="110" x2="220" y2="130" stroke="#2563eb" stroke-width="1.5"/>
+<text x="225" y="124" font-size="14" font-weight="700" fill="#0f172a">2cm</text>
+<text x="170" y="105" font-size="14" font-weight="700" fill="#0f172a">5cm</text>
+<line x1="125" y1="40" x2="125" y2="160" stroke="#2563eb" stroke-width="1.5"/>
+<text x="90" y="104" font-size="14" font-weight="700" fill="#0f172a">12cm</text>
+<text x="142" y="35" font-size="14" font-weight="700" fill="#0f172a">2cm</text>
+</svg>

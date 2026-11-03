@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- axes -->
+  <line x1="50" y1="20" x2="50" y2="210" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="50" y1="210" x2="370" y2="210" stroke="#0f172a" stroke-width="2.5"/>
+
+  <!-- y-axis ticks and labels: 2,4,6,8,10 -->
+  <line x1="44" y1="176" x2="50" y2="176" stroke="#0f172a" stroke-width="2"/>
+  <text x="38" y="181" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#0f172a" text-anchor="end">2</text>
+  <line x1="44" y1="142" x2="50" y2="142" stroke="#0f172a" stroke-width="2"/>
+  <text x="38" y="147" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#0f172a" text-anchor="end">4</text>
+  <line x1="44" y1="108" x2="50" y2="108" stroke="#0f172a" stroke-width="2"/>
+  <text x="38" y="113" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#0f172a" text-anchor="end">6</text>
+  <line x1="44" y1="74" x2="50" y2="74" stroke="#0f172a" stroke-width="2"/>
+  <text x="38" y="79" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#0f172a" text-anchor="end">8</text>
+  <line x1="44" y1="40" x2="50" y2="40" stroke="#0f172a" stroke-width="2"/>
+  <text x="38" y="45" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#0f172a" text-anchor="end">10</text>
+
+  <!-- bars: 0 pets=4, 1 pet=7, 2 pets=5, 3 pets=9, 4 pets=5 -->
+  <rect x="60" y="142" width="40" height="68" fill="#93c5fd" stroke="#0f172a" stroke-width="2"/>
+  <rect x="120" y="91" width="40" height="119" fill="#93c5fd" stroke="#0f172a" stroke-width="2"/>
+  <rect x="180" y="125" width="40" height="85" fill="#93c5fd" stroke="#0f172a" stroke-width="2"/>
+  <rect x="240" y="57" width="40" height="153" fill="#93c5fd" stroke="#0f172a" stroke-width="2"/>
+  <rect x="300" y="125" width="40" height="85" fill="#93c5fd" stroke="#0f172a" stroke-width="2"/>
+
+  <!-- x-axis category labels -->
+  <text x="80" y="225" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">0</text>
+  <text x="140" y="225" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">1</text>
+  <text x="200" y="225" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">2</text>
+  <text x="260" y="225" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">3</text>
+  <text x="320" y="225" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">4</text>
+
+  <text x="210" y="245" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">NUMBER OF PETS</text>
+  <text x="14" y="130" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle" transform="rotate(-90 14 130)">NUMBER OF STUDENTS</text>
+</svg>

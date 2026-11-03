@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<ellipse cx="200" cy="80" rx="75" ry="24" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+<line x1="125" y1="80" x2="125" y2="190" stroke="#0f172a" stroke-width="2.2"/>
+<line x1="275" y1="80" x2="275" y2="190" stroke="#0f172a" stroke-width="2.2"/>
+<path d="M125,190 A75,24 0 0,0 275,190" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+<line x1="200" y1="80" x2="275" y2="80" stroke="#0f172a" stroke-width="1.8"/>
+<text x="220" y="72" font-size="13" font-weight="700" fill="#0f172a">7cm</text>
+<text x="290" y="140" font-size="13" font-weight="700" fill="#0f172a">h = 4cm</text>
+</svg>

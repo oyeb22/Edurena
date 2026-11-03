@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<g stroke="#0f172a" stroke-width="2">
+<path d="M200,130 L200,40 A90,90 0 0,1 249,54 Z" fill="#2563eb"/>
+<path d="M200,130 L249,54 A90,90 0 0,1 282,93 Z" fill="#2563eb"/>
+<path d="M200,130 L282,93 A90,90 0 0,1 289,143 Z" fill="#2563eb"/>
+<path d="M200,130 L289,143 A90,90 0 0,1 268,189 Z" fill="#2563eb"/>
+<path d="M200,130 L268,189 A90,90 0 0,1 225,216 Z" fill="#ffffff"/>
+<path d="M200,130 L225,216 A90,90 0 0,1 175,216 Z" fill="#ffffff"/>
+<path d="M200,130 L175,216 A90,90 0 0,1 132,189 Z" fill="#ffffff"/>
+<path d="M200,130 L132,189 A90,90 0 0,1 111,143 Z" fill="#ffffff"/>
+<path d="M200,130 L111,143 A90,90 0 0,1 118,93 Z" fill="#ffffff"/>
+<path d="M200,130 L118,93 A90,90 0 0,1 151,54 Z" fill="#ffffff"/>
+<path d="M200,130 L151,54 A90,90 0 0,1 200,40 Z" fill="#ffffff"/>
+</g>
+</svg>

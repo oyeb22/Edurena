@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <circle cx="200" cy="120" r="85" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <!-- chord near the bottom of the circle -->
+  <line x1="127" y1="178" x2="273" y2="178" stroke="#0f172a" stroke-width="2"/>
+  <!-- shaded segment below the chord -->
+  <clipPath id="segClip">
+    <rect x="127" y="178" width="146" height="40"/>
+  </clipPath>
+  <circle cx="200" cy="120" r="85" fill="#93c5fd" clip-path="url(#segClip)"/>
+  <circle cx="200" cy="120" r="85" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="127" y1="178" x2="273" y2="178" stroke="#0f172a" stroke-width="2"/>
+</svg>

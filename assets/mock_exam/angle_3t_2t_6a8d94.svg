@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<line x1="60" y1="170" x2="340" y2="170" stroke="#0f172a" stroke-width="2.5"/>
+<line x1="150" y1="170" x2="330" y2="80" stroke="#0f172a" stroke-width="2.5"/>
+<text x="110" y="155" font-size="15" font-weight="700" fill="#0f172a">3t</text>
+<text x="235" y="140" font-size="15" font-weight="700" fill="#0f172a">2t</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<rect x="70" y="50" width="260" height="160" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<rect x="135" y="50" width="130" height="160" fill="#94a3b8" stroke="#0f172a" stroke-width="2"/>
+<text x="175" y="40" font-size="14" font-weight="700" fill="#0f172a">24m</text>
+<text x="40" y="135" font-size="13" font-weight="700" fill="#0f172a">12m</text>
+<line x1="70" y1="225" x2="135" y2="225" stroke="#0f172a" stroke-width="1.5"/>
+<line x1="70" y1="219" x2="70" y2="231" stroke="#0f172a" stroke-width="1.5"/>
+<line x1="135" y1="219" x2="135" y2="231" stroke="#0f172a" stroke-width="1.5"/>
+<text x="102" y="241" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">6m</text>
+<line x1="265" y1="225" x2="330" y2="225" stroke="#0f172a" stroke-width="1.5"/>
+<line x1="265" y1="219" x2="265" y2="231" stroke="#0f172a" stroke-width="1.5"/>
+<line x1="330" y1="219" x2="330" y2="231" stroke="#0f172a" stroke-width="1.5"/>
+<text x="297" y="241" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">6m</text>
+</svg>

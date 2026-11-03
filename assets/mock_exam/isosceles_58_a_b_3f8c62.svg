@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="200,50 320,210 90,210" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<text x="200" y="80" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">b</text>
+<line x1="153.9" y1="127.6" x2="144.0" y2="120.8" stroke="#0f172a" stroke-width="2"/>
+<line x1="146.0" y1="139.2" x2="136.1" y2="132.4" stroke="#0f172a" stroke-width="2"/>
+<line x1="260.6" y1="120.8" x2="251.0" y2="128.0" stroke="#0f172a" stroke-width="2"/>
+<line x1="269.0" y1="132.0" x2="259.4" y2="139.2" stroke="#0f172a" stroke-width="2"/>
+<text x="105" y="202" font-size="15" font-weight="700" fill="#0f172a">58°</text>
+<text x="285" y="202" font-size="15" font-weight="700" fill="#2563eb">a</text>
+</svg>

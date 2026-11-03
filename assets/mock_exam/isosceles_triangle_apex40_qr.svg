@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="200,30 80,210 320,210" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <line x1="145.0" y1="123.3" x2="135.0" y2="116.7" stroke="#0f172a" stroke-width="2"/>
+  <line x1="265.0" y1="116.7" x2="255.0" y2="123.3" stroke="#0f172a" stroke-width="2"/>
+
+  <text x="200" y="60" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">40°</text>
+  <text x="105" y="205" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#2563eb" text-anchor="middle">q°</text>
+  <text x="295" y="205" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#2563eb" text-anchor="middle">r°</text>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- 3/4 circle (quadrant removed, top-right) -->
+  <path d="M170,130 L170,35 A95,95 0 1,1 75,130 Z" fill="#93c5fd" fill-opacity="0.5" stroke="#0f172a" stroke-width="2.5"/>
+  <path d="M170,130 L265,130" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-dasharray="6,5"/>
+  <path d="M170,110 L190,110 L190,130" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <text x="170" y="245" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">diameter = 14cm</text>
+</svg>

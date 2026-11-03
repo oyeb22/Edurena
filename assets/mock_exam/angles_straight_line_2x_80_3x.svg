@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<line x1="50" y1="200" x2="350" y2="200" stroke="#0f172a" stroke-width="2.3"/>
+<line x1="200" y1="200" x2="108" y2="123" stroke="#0f172a" stroke-width="2.3"/>
+<line x1="200" y1="200" x2="260" y2="96" stroke="#0f172a" stroke-width="2.3"/>
+<text x="130" y="175" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">2x°</text>
+<text x="187" y="127" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">80°</text>
+<text x="264" y="163" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">3x°</text>
+</svg>
