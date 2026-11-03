@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="200,45 110,115 145,225 255,225 290,115" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="290" y1="115" x2="340" y2="150" stroke="#0f172a" stroke-width="2"/>
+  <line x1="255" y1="225" x2="330" y2="225" stroke="#0f172a" stroke-width="2"/>
+
+  <text x="200" y="68" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#2563eb" text-anchor="middle">x</text>
+  <text x="143" y="125" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">3x</text>
+  <text x="166" y="197" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">2x</text>
+  <text x="257" y="125" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">95°</text>
+  <path d="M 273 225 A 18 18 0 0 0 260.5 207.8" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="283" y="203" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">35°</text>
+</svg>

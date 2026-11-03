@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<ellipse cx="55" cy="90" rx="35" ry="12" fill="none" stroke="#0f172a" stroke-width="2"/>
+<line x1="20" y1="90" x2="20" y2="160" stroke="#0f172a" stroke-width="2"/>
+<line x1="90" y1="90" x2="90" y2="160" stroke="#0f172a" stroke-width="2"/>
+<path d="M 20 160 A 35 12 0 0 0 90 160" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="48" y="185" font-size="13" fill="#0f172a">I</text>
+<polygon points="155,80 185,160 125,160" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="150" y="185" font-size="13" fill="#0f172a">II</text>
+<polygon points="250,80 280,160 220,160" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="243" y="185" font-size="13" fill="#0f172a">III</text>
+<rect x="305" y="90" width="55" height="70" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="325" y="185" font-size="13" fill="#0f172a">IV</text>
+</svg>

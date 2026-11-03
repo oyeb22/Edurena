@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <line x1="60" y1="80" x2="320" y2="80" stroke="#0f172a" stroke-width="3"/>
+  <polygon points="320,80 308,74 308,86" fill="#0f172a"/>
+
+  <line x1="60" y1="190" x2="320" y2="190" stroke="#0f172a" stroke-width="3"/>
+  <polygon points="320,190 308,184 308,196" fill="#0f172a"/>
+
+  <line x1="110" y1="230" x2="260" y2="40" stroke="#0f172a" stroke-width="2.5"/>
+
+  <path d="M 150 80 A 26 26 0 0 0 170 62" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="178" y="62" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">130°</text>
+
+  <path d="M 178 190 A 26 26 0 0 0 198 172" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="198" y="165" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">a</text>
+</svg>

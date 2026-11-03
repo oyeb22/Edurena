@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="90,40 90,210 300,210" fill="#93c5fd" fill-opacity="0.5" stroke="#0f172a" stroke-width="2.5"/>
+  <rect x="90" y="190" width="20" height="20" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <text x="68" y="128" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="end">8cm</text>
+  <text x="195" y="232" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">9cm</text>
+</svg>

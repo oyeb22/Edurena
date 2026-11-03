@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<ellipse cx="85" cy="65" rx="35" ry="13" fill="none" stroke="#0f172a" stroke-width="2"/>
+<line x1="50" y1="65" x2="50" y2="145" stroke="#0f172a" stroke-width="2"/>
+<line x1="120" y1="65" x2="120" y2="145" stroke="#0f172a" stroke-width="2"/>
+<path d="M 50 145 A 35 13 0 0 0 120 145" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="85" y="170" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">X</text>
+<polygon points="215,50 265,190 165,190" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<text x="215" y="212" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">Y</text>
+<ellipse cx="335" cy="190" rx="35" ry="13" fill="none" stroke="#0f172a" stroke-width="2"/>
+<line x1="335" y1="50" x2="300" y2="190" stroke="#0f172a" stroke-width="2"/>
+<line x1="335" y1="50" x2="370" y2="190" stroke="#0f172a" stroke-width="2"/>
+<text x="335" y="212" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">Z</text>
+</svg>

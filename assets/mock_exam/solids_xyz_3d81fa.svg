@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="40,110 100,110 100,210 40,210" fill="none" stroke="#0f172a" stroke-width="2"/>
+<polygon points="40,110 60,90 120,90 100,110" fill="none" stroke="#0f172a" stroke-width="2"/>
+<polygon points="100,110 120,90 120,190 100,210" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="60" y="235" font-size="16" font-weight="700" fill="#0f172a">X</text>
+<text x="90" y="80" font-size="16" font-weight="700" fill="#2563eb">Y</text>
+<ellipse cx="300" cy="145" rx="30" ry="12" fill="none" stroke="#0f172a" stroke-width="2"/>
+<ellipse cx="300" cy="205" rx="30" ry="12" fill="none" stroke="#0f172a" stroke-width="2"/>
+<line x1="270" y1="145" x2="270" y2="205" stroke="#0f172a" stroke-width="2"/>
+<line x1="330" y1="145" x2="330" y2="205" stroke="#0f172a" stroke-width="2"/>
+<text x="295" y="235" font-size="16" font-weight="700" fill="#0f172a">Z</text>
+</svg>

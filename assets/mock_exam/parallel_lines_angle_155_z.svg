@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- two parallel horizontal rays -->
+  <line x1="40" y1="90" x2="340" y2="90" stroke="#0f172a" stroke-width="2.5"/>
+  <polygon points="340,90 328,84 328,96" fill="#0f172a"/>
+  <line x1="40" y1="190" x2="340" y2="190" stroke="#0f172a" stroke-width="2.5"/>
+  <polygon points="340,190 328,184 328,196" fill="#0f172a"/>
+
+  <!-- transversal -->
+  <line x1="130" y1="30" x2="280" y2="230" stroke="#0f172a" stroke-width="2.5"/>
+
+  <!-- angle labels -->
+  <text x="225" y="78" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">155°</text>
+  <text x="275" y="208" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#2563eb" text-anchor="middle">z°</text>
+</svg>

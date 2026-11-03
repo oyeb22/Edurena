@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="90,70 300,70 330,190 120,190" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <!-- parallel marks -->
+  <polyline points="185,64 195,70 185,76" fill="none" stroke="#0f172a" stroke-width="1.5" transform="translate(0,0)"/>
+  <polyline points="215,184 225,190 215,196" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <text x="110" y="95" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">4x°</text>
+  <text x="145" y="178" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">2x°</text>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Walking 150deg -->
+  <path d="M200,130 L200,40 A90,90 0 0,1 245,207.9 Z" fill="#93c5fd" stroke="#0f172a" stroke-width="1.5"/>
+  <!-- Bus 90deg -->
+  <path d="M200,130 L245,207.9 A90,90 0 0,1 122.1,175 Z" fill="#bbf7d0" stroke="#0f172a" stroke-width="1.5"/>
+  <!-- Cars 80deg -->
+  <path d="M200,130 L122.1,175 A90,90 0 0,1 142.1,61.1 Z" fill="#fde68a" stroke="#0f172a" stroke-width="1.5"/>
+  <!-- Okada 40deg -->
+  <path d="M200,130 L142.1,61.1 A90,90 0 0,1 200,40 Z" fill="#fca5a5" stroke="#0f172a" stroke-width="1.5"/>
+
+  <text x="246" y="118" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Walking</text>
+  <text x="246" y="133" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">150°</text>
+
+  <text x="184" y="193" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Bus</text>
+  <text x="184" y="208" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">90°</text>
+
+  <text x="141" y="125" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Cars</text>
+  <text x="141" y="140" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">80°</text>
+
+  <text x="179" y="78" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Okada</text>
+  <text x="179" y="93" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">40°</text>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="300" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<g transform="translate(200,150)">
+<path d="M0,0 L0,-95 A95,95 0 0,1 90.3,-29.4 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+<path d="M0,0 L90.3,-29.4 A95,95 0 0,1 61.5,72.3 Z" fill="#cbd5e1" stroke="#0f172a" stroke-width="2"/>
+<path d="M0,0 L61.5,72.3 A95,95 0 0,1 -47.5,82.3 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+<path d="M0,0 L-47.5,82.3 A95,95 0 0,1 -93.8,-16.5 Z" fill="#cbd5e1" stroke="#0f172a" stroke-width="2"/>
+<path d="M0,0 L-93.8,-16.5 A95,95 0 0,1 0,-95 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+<text x="20" y="-55" font-size="12" font-weight="700" fill="#0f172a">Medical</text>
+<text x="18" y="-38" font-size="11" fill="#0f172a">45°</text>
+<text x="55" y="20" font-size="12" font-weight="700" fill="#0f172a">Maintenance</text>
+<text x="55" y="37" font-size="11" fill="#0f172a">85°</text>
+<text x="-20" y="55" font-size="12" font-weight="700" fill="#0f172a">Feeding</text>
+<text x="-15" y="72" font-size="11" fill="#0f172a">100°</text>
+<text x="-85" y="-5" font-size="12" font-weight="700" fill="#0f172a">Saving</text>
+<text x="-75" y="12" font-size="11" fill="#0f172a">60°</text>
+<text x="-55" y="-55" font-size="12" font-weight="700" fill="#0f172a">Transport</text>
+<text x="-40" y="-38" font-size="11" fill="#0f172a">70°</text>
+</g>
+</svg>

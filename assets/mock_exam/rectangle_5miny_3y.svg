@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <rect x="90" y="70" width="220" height="110" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <text x="200" y="58" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle">5 - y</text>
+  <text x="340" y="130" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#2563eb" text-anchor="middle">3y</text>
+
+  <text x="200" y="225" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">Fig. 1</text>
+</svg>

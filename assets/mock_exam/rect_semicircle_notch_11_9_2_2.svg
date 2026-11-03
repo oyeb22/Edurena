@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <path d="M 100 60 L 160 60 A 40 40 0 0 0 240 60 L 300 60 L 300 200 L 100 200 Z"
+        fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <text x="130" y="48" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">2cm</text>
+  <text x="270" y="48" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">2cm</text>
+  <text x="200" y="218" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">11cm</text>
+  <text x="315" y="135" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">9cm</text>
+</svg>
