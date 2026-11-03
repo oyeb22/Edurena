@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- base is vertical on the left (15cm), apex points right -->
+  <polygon points="110,40 110,220 310,130" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <!-- height line from midpoint of base to apex -->
+  <line x1="110" y1="130" x2="310" y2="130" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,5"/>
+  <rect x="110" y="120" width="10" height="10" fill="none" stroke="#0f172a" stroke-width="1.2"/>
+
+  <!-- base measurement arrows -->
+  <line x1="80" y1="40" x2="80" y2="220" stroke="#0f172a" stroke-width="1.5"/>
+  <polygon points="80,40 75,50 85,50" fill="#0f172a"/>
+  <polygon points="80,220 75,210 85,210" fill="#0f172a"/>
+  <text x="65" y="135" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="end">15cm</text>
+
+  <text x="210" y="122" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#2563eb" text-anchor="middle">y</text>
+</svg>

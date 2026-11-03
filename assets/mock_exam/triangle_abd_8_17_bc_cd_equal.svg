@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="90,50 90,200 330,200" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="90" y1="50" x2="220" y2="200" stroke="#0f172a" stroke-width="2.5"/>
+  <rect x="90" y="185" width="15" height="15" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <line x1="148" y1="205" x2="148" y2="195" stroke="#0f172a" stroke-width="2"/>
+  <line x1="295" y1="205" x2="295" y2="195" stroke="#0f172a" stroke-width="2"/>
+
+  <text x="70" y="130" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">8cm</text>
+  <text x="165" y="115" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle" transform="rotate(49 165 115)">17cm</text>
+
+  <text x="80" y="220" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">B</text>
+  <text x="220" y="222" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">C</text>
+  <text x="340" y="222" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">D</text>
+  <text x="90" y="40" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">A</text>
+</svg>

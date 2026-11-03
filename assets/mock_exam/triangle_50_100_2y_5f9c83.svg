@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="310,200 90,150 150,60" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<text x="155.5" y="101.6" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">50°</text>
+<text x="129.0" y="134.4" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">100°</text>
+<text x="272.6" y="180.9" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">2y</text>
+</svg>

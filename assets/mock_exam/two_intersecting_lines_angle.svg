@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <line x1="70" y1="60" x2="330" y2="200" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="330" y1="60" x2="70" y2="200" stroke="#0f172a" stroke-width="2.5"/>
+
+  <!-- marked pair: top and bottom angles at the intersection (vertically opposite) -->
+  <path d="M 200,118 A 20,20 0 0 1 182,104" fill="none" stroke="#2563eb" stroke-width="2"/>
+  <path d="M 200,142 A 20,20 0 0 1 218,156" fill="none" stroke="#2563eb" stroke-width="2"/>
+</svg>

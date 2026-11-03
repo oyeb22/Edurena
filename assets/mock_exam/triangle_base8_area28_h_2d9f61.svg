@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="110,200 110,60 330,200" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<polyline points="110,185 125,185 125,200" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="70" y="135" font-size="14" font-weight="700" fill="#2563eb">h</text>
+<text x="200" y="222" font-size="14" font-weight="700" fill="#0f172a">8cm</text>
+<text x="200" y="100" font-size="13" font-weight="700" fill="#0f172a">Area = 28cm²</text>
+</svg>

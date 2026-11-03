@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- outer rectangle ABCD: A top-left, D top-right, C bottom-right, B bottom-left -->
+  <rect x="60" y="30" width="280" height="190" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <!-- inner rectangle EFCG, sharing corner C (bottom-right) -->
+  <rect x="165" y="105" width="175" height="115" fill="none" stroke="#0f172a" stroke-width="2"/>
+  <path d="M165,105 L340,105 L340,220 L165,220" fill="#93c5fd" fill-opacity="0.5"/>
+
+  <text x="52" y="38" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">A</text>
+  <text x="348" y="38" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">D</text>
+  <text x="348" y="230" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">C</text>
+  <text x="52" y="230" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">B</text>
+  <text x="155" y="98" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">E</text>
+  <text x="348" y="98" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">G</text>
+  <text x="165" y="230" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">F</text>
+
+  <text x="200" y="22" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">12cm</text>
+  <text x="112" y="234" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">5cm</text>
+  <text x="358" y="70" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">4cm</text>
+  <text x="44" y="128" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">10cm</text>
+</svg>

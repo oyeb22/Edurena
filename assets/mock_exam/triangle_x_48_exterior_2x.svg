@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="200,50 100,200 290,200" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="290" y1="200" x2="340" y2="200" stroke="#0f172a" stroke-width="2.5"/>
+
+  <path d="M 120 200 A 24 24 0 0 1 135 184" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="138" y="190" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">x°</text>
+
+  <path d="M 255 200 A 24 24 0 0 0 240 184" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="238" y="190" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">48°</text>
+
+  <path d="M 310 194 A 22 22 0 0 1 300 178" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="312" y="175" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">2x°</text>
+</svg>

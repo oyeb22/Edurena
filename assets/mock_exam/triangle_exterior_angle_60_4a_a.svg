@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="87,116 290,190 100,190" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <line x1="100" y1="190" x2="40" y2="190" stroke="#0f172a" stroke-width="2.5"/>
+
+  <text x="87" y="104" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">A</text>
+  <text x="305" y="200" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">B</text>
+  <text x="90" y="205" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">C</text>
+  <text x="40" y="205" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0f172a" text-anchor="middle">D</text>
+
+  <text x="106" y="139" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">60°</text>
+  <text x="236" y="180" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">a</text>
+  <text x="77" y="171" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">4a</text>
+</svg>

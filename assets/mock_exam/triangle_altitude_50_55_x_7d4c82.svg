@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" font-family="Arial, Helvetica, sans-serif">
+<rect width="400" height="260" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+<polygon points="200,50 80,200 320,200" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+<line x1="200" y1="50" x2="200" y2="200" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="4,3"/>
+<polyline points="200,188 212,188 212,200" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="192" y="40" font-size="14" font-weight="700" fill="#2563eb">x°</text>
+<text x="205" y="110" font-size="13" font-weight="700" fill="#0f172a">90°</text>
+<text x="105" y="190" font-size="13" font-weight="700" fill="#0f172a">50°</text>
+<text x="275" y="190" font-size="13" font-weight="700" fill="#0f172a">55°</text>
+</svg>

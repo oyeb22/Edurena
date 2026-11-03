@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <line x1="40" y1="200" x2="360" y2="200" stroke="#0f172a" stroke-width="2.5"/>
+  <polygon points="200,60 110,200 290,200" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <text x="200" y="95" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#2563eb" text-anchor="middle">p°</text>
+  <text x="141" y="183" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">m°</text>
+  <text x="259" y="183" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">n°</text>
+</svg>

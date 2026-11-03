@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- staircase polygon, scaled from coords (0,10)(5,10)(5,5)(13,5)(13,2)(17,2)(17,0)(0,0), scale x16, offset (40,220)-y -->
+  <polygon points="40,60 120,60 120,140 248,140 248,180 312,180 312,220 40,220"
+           fill="#93c5fd" fill-opacity="0.35" stroke="#0f172a" stroke-width="2.5"/>
+
+  <text x="80" y="52" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">5m</text>
+  <text x="130" y="105" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">5m</text>
+  <text x="184" y="132" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">8m</text>
+  <text x="258" y="163" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">2m</text>
+  <text x="280" y="172" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">4m</text>
+  <text x="322" y="202" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">2m</text>
+  <text x="28" y="142" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="end">10m</text>
+</svg>

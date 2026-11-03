@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- trapezium outline: bottom-left(30,200) top-left(114,88) top-right(254,88) bottom-right(338,200) -->
+  <polygon points="30,200 114,88 254,88 338,200" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+
+  <!-- internal verticals (height markers) -->
+  <line x1="114" y1="88" x2="114" y2="200" stroke="#0f172a" stroke-width="2"/>
+  <line x1="254" y1="88" x2="254" y2="200" stroke="#0f172a" stroke-width="2"/>
+
+  <!-- labels -->
+  <text x="184" y="78" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">10cm</text>
+  <text x="65" y="135" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle" transform="rotate(-54 65 135)">10cm</text>
+  <text x="128" y="145" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#2563eb" text-anchor="start">8cm</text>
+  <text x="72" y="216" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">6cm</text>
+  <text x="296" y="216" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">6cm</text>
+</svg>

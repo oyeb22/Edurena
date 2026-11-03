@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect x="4" y="4" width="392" height="252" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <polygon points="80,30 50,220 340,220" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+  <!-- cevian from apex A to point P on base BC -->
+  <line x1="80" y1="30" x2="230" y2="220" stroke="#0f172a" stroke-width="2"/>
+  <!-- cevian from base vertex B to point Q on side AC -->
+  <line x1="50" y1="220" x2="210" y2="125" stroke="#0f172a" stroke-width="2"/>
+
+  <text x="68" y="24" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">A</text>
+  <text x="36" y="232" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">B</text>
+  <text x="352" y="232" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">C</text>
+  <text x="235" y="236" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">P</text>
+  <text x="222" y="120" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">Q</text>
+</svg>
