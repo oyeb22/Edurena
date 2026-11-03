@@ -303,6 +303,10 @@
         <span class="ti"><svg><use href="#i-rank"/></svg></span>
         <span class="tt">Topic practice<small>Climb the ranks</small></span>
       </button>
+      <button class="tile btn-mockexams" onclick="openMockExams()">
+        <span class="ti"><svg><use href="#i-shield"/></svg></span>
+        <span class="tt">Mock Exams<small>Real past papers, by year</small></span>
+      </button>
     </div>
   </div>
 
@@ -360,6 +364,7 @@ var SHOOTOUT_URL  = 'https://edurena.online/PenaltyShootout.html';
 var TOWER_URL     = 'https://edurena.online/TowerDefense.html';
 var CHALLENGE_URL = 'https://edurena.online/ChallengeMode.html';
 var PRACTICE_URL  = 'https://edurena.online/TopicPractice.html';
+var MOCKEXAMS_URL = 'https://edurena.online/MockExams.html';
 var COMPETITION_URL = 'https://edurena.online/CompetitionMode.html';
 var RACE_URL      = 'https://edurena.online/Race3D.html';
 var WORDLADDER_URL = 'https://edurena.online/WordLadder.html';
@@ -536,6 +541,14 @@ function openTopicPractice() {
 
 function openSimLab() {
   window.open(SIMLAB_URL, '_blank');
+}
+
+function openMockExams() {
+  whenReady(function(){
+    var url = MOCKEXAMS_URL + (MOCKEXAMS_URL.indexOf('?') === -1 ? '?' : '&')
+            + 'script=' + encodeURIComponent(SCRIPT_URL);
+    window.open(url, '_blank');
+  });
 }
 
 // Competitions are per-event (each needs its own ?competitionId=), so

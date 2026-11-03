@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
+<title>Edurena — Mock Exams</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080C16;--card:#0F1523;--line:#2e3248;--ink:#e2e8f0;--mute:#7c85a2;--acc:#F97316;--good:#34d399;--bad:#f87171}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(ellipse at 30% 0%,rgba(108,99,255,.14) 0%,transparent 55%),var(--bg);color:var(--ink);min-height:100dvh;padding:20px 16px 48px}
+.wrap{max-width:760px;margin:0 auto}
+.screen{display:none}.screen.on{display:block}
+h1{font-size:24px;font-weight:800;color:#FB923C}
+h2{font-size:18px;font-weight:700}
+.mute{color:var(--mute);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.btn{width:100%;padding:14px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:700 15px 'Plus Jakarta Sans',system-ui,sans-serif;cursor:pointer;min-height:48px;touch-action:manipulation}
+.btn:hover:not(:disabled){background:#EA6B10}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);font-weight:500}
+.btn.ghost:hover{border-color:var(--acc);color:#FB923C}
+.btn.alt{background:#7c5cff}.btn.alt:hover:not(:disabled){background:#6a49ee}
+.row{display:flex;gap:10px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:12px}
+input[type=text]{width:100%;padding:13px 14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--ink);font:500 16px 'Plus Jakarta Sans',system-ui,sans-serif;outline:none;min-height:48px}
+input[type=text]:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+label{display:block;font-size:12px;font-weight:500;color:var(--mute);margin-bottom:6px}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;cursor:pointer;text-align:left;color:inherit;font-family:inherit;width:100%}
+.scard:hover{border-color:var(--acc)}
+.scard b{font-size:17px;font-weight:800}
+.ycard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.ycard .yinfo{flex:1;min-width:0}
+.ycard .yyear{font-size:17px;font-weight:800}
+.ycard .ymeta{font-size:12px;color:var(--mute);margin-top:2px}
+.ycard .yscore{font-size:12px;font-weight:700;margin-top:4px}
+.ycard .ystart{width:auto;padding:11px 18px;flex:none}
+.hint{font-size:12px;color:var(--mute);margin-top:10px}
+.hist-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.hist-row:first-child{border-top:none}
+.pct-pass{color:var(--good);font-weight:700}.pct-review{color:#fbbf24;font-weight:700}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1b2133;border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:14px;display:none;z-index:60;max-width:92vw}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="screen on" id="s-login">
+  <div class="card stack" style="max-width:440px;margin:8vh auto 0">
+    <div><h1>Mock Exams</h1><p class="mute" style="margin-top:4px">Practise with real past entrance exam papers — NCEE, ISE, AFSS, SCEE, CSSEE, ISEE and NNSS — reworded, picked by series and year.</p></div>
+    <div><label for="sid">Student ID or email (the one you use for exams)</label><input type="text" id="sid" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+    <div class="err" id="login-err"></div>
+    <button class="btn" id="login-btn">Continue</button>
+    <p class="hint">New here? Just type the email you'd like to use — you'll be asked for a few details the first time you start an exam.</p>
+  </div>
+</div>
+
+<div class="screen" id="s-series">
+  <div class="top"><div><h1>Mock Exams</h1><p class="mute" id="who"></p></div>
+    <div class="row" style="width:auto">
+      <button class="btn ghost" style="width:auto;padding:10px 16px" id="history-btn">My history</button>
+      <button class="btn ghost" style="width:auto;padding:10px 16px" id="switch-btn">Switch student</button>
+    </div>
+  </div>
+  <div class="grid" id="series-grid"></div>
+  <div class="err" id="series-err"></div>
+</div>
+
+<div class="screen" id="s-years">
+  <div class="top"><button class="btn ghost" style="width:auto;padding:10px 16px" id="back-series">&larr; Series</button></div>
+  <div class="card">
+    <h2 id="y-series"></h2>
+    <p class="mute" style="margin-top:4px">Each paper is the full set of questions from that real exam, in order, with answers and explanations shown after you submit.</p>
+    <div id="years-list" style="margin-top:16px"></div>
+    <div class="err" id="years-err"></div>
+  </div>
+</div>
+
+<div class="screen" id="s-register">
+  <div class="card stack" style="max-width:440px;margin:4vh auto 0">
+    <div><h2>One more step</h2><p class="mute" style="margin-top:4px" id="reg-note">We couldn't find that student ID — tell us a bit about yourself to get started.</p></div>
+    <div><label for="reg-name">Full name</label><input type="text" id="reg-name" autocomplete="name"></div>
+    <div><label for="reg-school">School</label><input type="text" id="reg-school" autocomplete="organization" placeholder="Type your school's name"></div>
+    <div><label for="reg-class">Class</label><input type="text" id="reg-class" placeholder="e.g. Primary 5"></div>
+    <div class="err" id="reg-err"></div>
+    <button class="btn" id="reg-submit">Continue to exam</button>
+    <button class="btn ghost" id="reg-cancel">Cancel</button>
+  </div>
+</div>
+
+<div class="screen" id="s-history">
+  <div class="top"><button class="btn ghost" style="width:auto;padding:10px 16px" id="back-history">&larr; Series</button></div>
+  <div class="card">
+    <h2>My Mock Exam history</h2>
+    <div id="hist-list" style="margin-top:12px"></div>
+    <p class="mute" id="hist-empty" style="display:none;margin-top:8px">No attempts yet — pick a series and year to get started.</p>
+  </div>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+var P = new URLSearchParams(location.search);
+var GAS_URL = (P.get('script') || sessionStorage.getItem('edurena_script_url') || '').trim();
+if (GAS_URL) { try { sessionStorage.setItem('edurena_script_url', GAS_URL); } catch(e){} }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function show(id){ Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(s){ s.classList.remove('on'); }); $(id).classList.add('on'); window.scrollTo(0,0); }
+function toast(msg){ var t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(function(){ t.style.display='none'; }, 3500); }
+function post(action, payload){
+  if (!GAS_URL) return Promise.reject(new Error('Missing backend URL. Open this page from the student portal.'));
+  payload = Object.assign({ action: action, email: S.id }, payload || {});
+  return fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if (!j || j.status !== 'success') throw new Error((j && j.message) || 'Something went wrong'); return j.data; });
+}
+
+var S = { id: '', series: '', pendingPaperId: null };
+
+/* ---------- login ---------- */
+function login(){
+  var id = $('sid').value.trim();
+  if (!id) { $('login-err').textContent = 'Enter your student ID or email.'; return; }
+  S.id = id.toLowerCase(); $('login-err').textContent = '';
+  try { localStorage.setItem('edurena_mock_id', S.id); } catch(e){}
+  $('who').textContent = S.id;
+  loadSeries();
+  show('s-series');
+}
+
+/* ---------- series ---------- */
+function loadSeries(){
+  $('series-grid').innerHTML = '<p class="mute">Loading…</p>';
+  post('getMockExamSeries').then(function(list){
+    if (!list.length) { $('series-grid').innerHTML = ''; $('series-err').textContent = 'No mock exam papers are published yet — check back soon.'; return; }
+    $('series-err').textContent = '';
+    $('series-grid').innerHTML = list.map(function(s){
+      return '<button class="scard" data-s="'+esc(s.series)+'"><b>'+esc(s.series)+'</b>'
+           + '<span class="mute">'+s.yearsAvailable+' year'+(s.yearsAvailable===1?'':'s')+' available</span></button>';
+    }).join('');
+  }).catch(function(e){ $('series-grid').innerHTML = ''; $('series-err').textContent = e.message; });
+}
+$('series-grid').addEventListener('click', function(e){
+  var b = e.target.closest('.scard'); if (!b) return;
+  S.series = b.getAttribute('data-s');
+  loadYears();
+  show('s-years');
+});
+
+/* ---------- years ---------- */
+function pctClass(pct){ return pct >= 50 ? 'pct-pass' : 'pct-review'; }
+function loadYears(){
+  $('y-series').textContent = S.series;
+  $('years-list').innerHTML = '<p class="mute">Loading…</p>';
+  post('getMockExamPapersForSeries', { series: S.series }).then(function(list){
+    if (!list.length) { $('years-list').innerHTML = '<p class="mute">No years published yet for this series.</p>'; return; }
+    $('years-list').innerHTML = list.map(function(p){
+      var score = p.bestPct != null
+        ? '<span class="yscore ' + pctClass(p.bestPct) + '">Best: ' + Math.round(p.bestPct) + '%' + (p.attempts > 1 ? ' (' + p.attempts + ' attempts)' : '') + '</span>'
+        : '<span class="yscore mute">Not attempted yet</span>';
+      return '<div class="ycard"><div class="yinfo"><div class="yyear">'+p.year+'</div>'
+           + '<div class="ymeta">'+p.questionCount+' questions · '+p.durationMinutes+' min</div>'
+           + score + '</div>'
+           + '<button class="btn ystart" data-id="'+p.paperId+'">Start</button></div>';
+    }).join('');
+  }).catch(function(e){ $('years-list').innerHTML = ''; $('years-err').textContent = e.message; });
+}
+$('back-series').onclick = function(){ show('s-series'); };
+$('years-list').addEventListener('click', function(e){
+  var b = e.target.closest('.ystart'); if (!b) return;
+  startExam(parseInt(b.getAttribute('data-id'), 10), b);
+});
+
+/* ---------- start / registration ---------- */
+var EXAM_URL = 'https://edurena.online/Exam.html';
+function startExam(paperId, btn){
+  if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
+  $('years-err').textContent = '';
+  post('startMockExam', { paperId: paperId }).then(function(d){
+    var back = location.origin + location.pathname;
+    location.href = EXAM_URL + '?email=' + encodeURIComponent(S.id) + '&code=' + encodeURIComponent(d.examCode) + '&script=' + encodeURIComponent(GAS_URL) + '&back=' + encodeURIComponent(back);
+  }).catch(function(e){
+    if (/could not find that student id/i.test(e.message)) {
+      S.pendingPaperId = paperId;
+      $('reg-err').textContent = '';
+      show('s-register');
+    } else {
+      $('years-err').textContent = e.message;
+      if (btn) { btn.disabled = false; btn.textContent = 'Start'; }
+    }
+  });
+}
+$('reg-cancel').onclick = function(){ S.pendingPaperId = null; show('s-years'); };
+$('reg-submit').onclick = function(){
+  var name = $('reg-name').value.trim(), school = $('reg-school').value.trim(), cls = $('reg-class').value.trim();
+  if (!name || !school || !cls) { $('reg-err').textContent = 'Please fill in your name, school and class.'; return; }
+  $('reg-submit').disabled = true; $('reg-err').textContent = '';
+  post('registerStudent', { name: name, school: school, className: cls }).then(function(){
+    toast('Registered! Starting your exam…');
+    startExam(S.pendingPaperId, null);
+  }).catch(function(e){ $('reg-err').textContent = e.message; $('reg-submit').disabled = false; });
+};
+
+/* ---------- history ---------- */
+$('history-btn').onclick = function(){
+  $('hist-list').innerHTML = '<p class="mute">Loading…</p>'; $('hist-empty').style.display = 'none';
+  show('s-history');
+  post('getMockExamHistory').then(function(list){
+    if (!list.length) { $('hist-list').innerHTML = ''; $('hist-empty').style.display = 'block'; return; }
+    $('hist-list').innerHTML = list.map(function(r){
+      var when = r.attemptedAt ? new Date(r.attemptedAt).toLocaleDateString() : '';
+      return '<div class="hist-row"><span>'+esc(r.series)+' '+r.year+'<br><span class="mute">'+when+'</span></span>'
+           + '<span class="'+pctClass(r.percentage)+'">'+Math.round(r.percentage)+'% · '+esc(r.status)+'</span></div>';
+    }).join('');
+  }).catch(function(e){ $('hist-list').innerHTML = ''; toast(e.message); });
+};
+$('back-history').onclick = function(){ show('s-series'); };
+
+/* ---------- boot ---------- */
+$('login-btn').onclick = login;
+$('sid').addEventListener('keydown', function(e){ if (e.key === 'Enter') login(); });
+$('switch-btn').onclick = function(){ try { localStorage.removeItem('edurena_mock_id'); } catch(e){} S.id=''; $('sid').value=''; show('s-login'); };
+try { var saved = localStorage.getItem('edurena_mock_id'); if (saved) { $('sid').value = saved; if (GAS_URL) login(); } } catch(e){}
+if (!GAS_URL) $('login-err').textContent = 'Open Mock Exams from the student portal so it can reach the server.';
+})();
+</script>
+</body>
+</html>

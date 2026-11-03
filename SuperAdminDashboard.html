@@ -264,6 +264,7 @@
       <button class="ni"    onclick="navTo('settings',this)"><span class="ico">⚙️</span>Global Settings</button>
       <button class="ni"    onclick="navTo('questionbank',this)"><span class="ico">📚</span>Question Bank</button>
       <button class="ni"    onclick="navTo('edurenabank',this)"><span class="ico">🎓</span>Edurena Bank</button>
+      <button class="ni"    onclick="navTo('mockexams',this)"><span class="ico">📝</span>Mock Exams</button>
       <button class="ni"    onclick="navTo('competitions',this)"><span class="ico">🏆</span>Competitions</button>
       <button class="ni"    onclick="navTo('pronunciation',this)"><span class="ico">🎤</span>Pronunciation Demo</button>
       <div class="nsec">Account</div>
@@ -620,6 +621,59 @@
             <table id="eb-flags-table">
               <thead><tr><th>Question ID</th><th>Exam Code</th><th>Reason</th><th>Flagged</th><th>Actions</th></tr></thead>
               <tbody><tr class="er"><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOCK EXAMS -->
+      <div class="tp" id="tp-mockexams">
+        <div class="sh"><h2>Mock Exams</h2></div>
+        <div class="info-box">
+          <strong>How this works:</strong> Each question's <code>source_exam</code> field (e.g. "NCEE 2019") is parsed into a series + year — the first time a series/year is seen it auto-creates that "paper", and every import call just adds more questions to it. A paper stays <strong>draft</strong> (invisible to students) until you publish it below. Questions with <code>review_status: "flagged"</code> are skipped automatically. Papers are never shuffled — students always get the real exam in its original order.
+        </div>
+
+        <div class="card">
+          <div class="ct">Paste Batch (JSON)</div>
+          <textarea id="mx-paste"
+            style="width:100%;min-height:240px;font-family:monospace;font-size:12px;
+                   background:var(--surf2);color:var(--txt);border:1px solid var(--bdr);
+                   border-radius:8px;padding:12px;resize:vertical"
+            placeholder='[ { "subject": "Mathematics", "topic": "Fractions", "difficulty": "medium", "type": "MCQ", "question": "...", "option_A": "...", "option_B": "...", "option_C": "...", "option_D": "...", "correct_answer": "...", "points": 1, "explanation": "...", "source_exam": "NCEE 2019", "original_question_number": 1 } ]'></textarea>
+          <input type="file" id="mx-files" accept=".json,application/json" multiple style="display:none" onchange="mxLoadFiles(this)">
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-g btn-sm" onclick="document.getElementById('mx-files').click()">📁 Load .json files</button>
+            <button class="btn btn-g btn-sm" onclick="mxValidate()">🔍 Validate &amp; Preview</button>
+            <button class="btn btn-p btn-sm" id="mx-commit-btn" onclick="mxCommit()" disabled>✅ Commit to Database</button>
+            <button class="btn btn-g btn-sm" onclick="mxClear()">🗑 Clear</button>
+          </div>
+        </div>
+
+        <div class="card" id="mx-preview-card" style="display:none">
+          <div class="ct">Preview</div>
+          <div id="mx-preview-summary" style="margin-bottom:12px;font-size:13px;color:var(--txt2)"></div>
+          <div class="tw">
+            <table id="mx-preview-table">
+              <thead><tr><th>#</th><th>Source Exam</th><th>Topic</th><th>Question</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="mx-result-card" style="display:none">
+          <div class="ct">Import Result</div>
+          <div id="mx-result-summary" style="font-size:13px;color:var(--txt2)"></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="ct" style="margin-bottom:0">Papers</div>
+            <button class="btn btn-g btn-sm" onclick="mxLoadPapers()">↻ Refresh</button>
+          </div>
+          <div class="tw">
+            <table id="mx-papers-table">
+              <thead><tr><th>Series</th><th>Year</th><th>Questions</th><th>Duration (min)</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody><tr class="er"><td colspan="6">Click Refresh to load papers</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1202,6 +1256,7 @@ var tabTitles = {
   settings: ['Global Settings', 'Platform configuration'],
   questionbank: ['Question Bank', 'Import drafted questions into the parent/child question bank'],
   edurenabank: ['Edurena Question Bank', 'Curated academic bank — Basic1 to SS3, JAMB/WAEC/NECO/SAT — hidden from schools until enabled'],
+  mockexams: ['Mock Exams', 'Real past-paper practice — NCEE, ISE, AFSS, SCEE, CSSEE, ISEE, NNSS'],
   pronunciation: ['Pronunciation Demo', 'Demo word lists that work for any school, regardless of plan'],
   security: ['Account Security', 'Change your password']
 };
@@ -1221,6 +1276,7 @@ function navTo(name, el) {
   if (name === 'questionbank') loadThemes();
   if (name === 'competitions') loadCompetitions();
   if (name === 'edurenabank')  { loadFlaggedQuestions(); ebLoadTopics(); }
+  if (name === 'mockexams')   mxLoadPapers();
   if (name === 'pronunciation') loadPronunciationDemoTab();
 }
 
@@ -2311,6 +2367,168 @@ function ebSaveQuestion() {
     toast('success', 'Question updated.');
     closeMo('ebq-mo');
     if (ebCurrentTopic) ebViewTopic(ebCurrentTopic.subject, ebCurrentTopic.topic);
+  });
+}
+
+// ── MOCK EXAMS (real past papers, by series/year) ────────────────
+var mxValidatedData = null;
+function mxValidate() {
+  var raw = document.getElementById('mx-paste').value.trim();
+  var previewCard = document.getElementById('mx-preview-card');
+  var resultCard  = document.getElementById('mx-result-card');
+  var commitBtn   = document.getElementById('mx-commit-btn');
+
+  resultCard.style.display = 'none';
+  mxValidatedData = null;
+  commitBtn.disabled = true;
+
+  if (!raw) { alert('Paste a JSON batch or load .json files first.'); return; }
+
+  var parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) { alert('Invalid JSON: ' + e.message); return; }
+  if (!Array.isArray(parsed)) { alert('Expected a JSON array of question objects.'); return; }
+
+  var requiredFields = ['subject', 'topic', 'question', 'correct_answer', 'explanation', 'source_exam', 'original_question_number'];
+  var errors = [];
+  parsed.forEach(function(q, i) {
+    requiredFields.forEach(function(field) {
+      if (!q[field] && q[field] !== 0) errors.push('Row ' + (i + 1) + ': missing "' + field + '"');
+    });
+  });
+  if (errors.length) {
+    alert('Validation errors found:\n\n' + errors.slice(0, 10).join('\n') +
+          (errors.length > 10 ? '\n...and ' + (errors.length - 10) + ' more' : ''));
+    return;
+  }
+
+  var kept = parsed.filter(function(q) { return q.review_status !== 'flagged'; });
+  var skippedFlagged = parsed.length - kept.length;
+
+  var tbody = document.querySelector('#mx-preview-table tbody');
+  tbody.innerHTML = kept.slice(0, 100).map(function(q, i) {
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escH(q.source_exam || '') + '</td>' +
+      '<td>' + escH(q.topic || '—') + '</td>' +
+      '<td style="max-width:280px">' + escH(q.question) + '</td>' +
+      '<td><span style="color:var(--grn)">✓ Ready</span></td>' +
+      '</tr>';
+  }).join('');
+  var papers = {};
+  kept.forEach(function(q) { papers[q.source_exam] = true; });
+  document.getElementById('mx-preview-summary').textContent =
+    kept.length + ' question(s) across ' + Object.keys(papers).length + ' paper(s)' +
+    (skippedFlagged ? ' — ' + skippedFlagged + ' flagged question(s) will be skipped' : '') +
+    (kept.length > 100 ? ' (showing the first 100).' : '.');
+  previewCard.style.display = 'block';
+
+  mxValidatedData = kept;
+  commitBtn.disabled = false;
+}
+function mxCommit() {
+  if (!mxValidatedData || !mxValidatedData.length) { alert('Validate a batch first.'); return; }
+  if (!confirm('Import ' + mxValidatedData.length + ' questions into Mock Exams?')) return;
+
+  var commitBtn = document.getElementById('mx-commit-btn');
+  commitBtn.disabled = true;
+
+  var all = mxValidatedData, SLICE = 300, total = { inserted: 0, papers: {}, errors: [] }, pos = 0;
+  function sendNext() {
+    if (pos >= all.length) {
+      commitBtn.textContent = '✅ Commit to Database';
+      var paperList = Object.keys(total.papers).map(function(k) { return k + ' (' + total.papers[k] + ' questions)'; });
+      var msg = 'Imported ' + total.inserted + ' question(s) across ' + paperList.length + ' paper(s): ' + paperList.join(', ') + '.' +
+        (total.errors.length ? ' Errors: ' + total.errors.slice(0, 5).join('; ') : '');
+      document.getElementById('mx-result-summary').innerHTML = '<strong style="color:var(--grn)">' + escH(msg) + '</strong>';
+      mxValidatedData = null;
+      document.getElementById('mx-paste').value = '';
+      document.getElementById('mx-preview-card').style.display = 'none';
+      document.getElementById('mx-result-card').style.display = 'block';
+      mxLoadPapers();
+      return;
+    }
+    commitBtn.textContent = 'Importing ' + Math.min(pos + SLICE, all.length) + ' of ' + all.length + '…';
+    call('importMockExamBatch', { questions: all.slice(pos, pos + SLICE) }, function(d) {
+      total.inserted += d.inserted || 0;
+      (d.papers || []).forEach(function(p) { total.papers[p.series + ' ' + p.year] = p.questionCount; });
+      total.errors = total.errors.concat(d.errors || []);
+      pos += SLICE; sendNext();
+    }, function() {
+      commitBtn.textContent = '✅ Commit to Database';
+      commitBtn.disabled = false;
+      document.getElementById('mx-result-summary').innerHTML = '<strong style="color:var(--red,#f87171)">Stopped after ' + total.inserted +
+        ' imported. Fix the error, then commit again.</strong>';
+      document.getElementById('mx-result-card').style.display = 'block';
+    });
+  }
+  sendNext();
+}
+function mxLoadFiles(input) {
+  var files = Array.prototype.slice.call(input.files || []);
+  if (!files.length) return;
+  var merged = [], bad = [], left = files.length;
+  files.forEach(function(f) {
+    var r = new FileReader();
+    r.onload = function() {
+      try {
+        var arr = JSON.parse(String(r.result).replace(/^﻿/, ''));
+        if (Array.isArray(arr)) merged = merged.concat(arr); else bad.push(f.name);
+      } catch (e) { bad.push(f.name); }
+      done();
+    };
+    r.onerror = function() { bad.push(f.name); done(); };
+    r.readAsText(f);
+  });
+  function done() {
+    if (--left) return;
+    input.value = '';
+    document.getElementById('mx-paste').value = merged.length ? JSON.stringify(merged) : '';
+    document.getElementById('mx-preview-card').style.display = 'none';
+    document.getElementById('mx-commit-btn').disabled = true;
+    mxValidatedData = null;
+    if (bad.length) toast('error', 'Could not read: ' + bad.join(', '));
+    if (merged.length) toast('success', 'Loaded ' + merged.length + ' question(s) from ' + (files.length - bad.length) + ' file(s). Click Validate & Preview.');
+  }
+}
+function mxClear() {
+  document.getElementById('mx-paste').value = '';
+  document.getElementById('mx-preview-card').style.display = 'none';
+  document.getElementById('mx-result-card').style.display = 'none';
+  mxValidatedData = null;
+  document.getElementById('mx-commit-btn').disabled = true;
+}
+
+function mxLoadPapers() {
+  var tb = document.querySelector('#mx-papers-table tbody');
+  tb.innerHTML = '<tr class="er"><td colspan="6">Loading…</td></tr>';
+  call('getMockExamPapersAdmin', {}, function(rows) {
+    if (!rows.length) { tb.innerHTML = '<tr class="er"><td colspan="6">No papers imported yet.</td></tr>'; return; }
+    tb.innerHTML = rows.map(function(r) {
+      var published = r.status === 'published';
+      return '<tr><td>' + escH(r.series) + '</td><td>' + r.year + '</td><td>' + r.questionCount + '</td>' +
+        '<td><input type="number" min="5" max="240" value="' + r.durationMinutes + '" style="width:70px;background:var(--surf2);border:1px solid var(--bdr);border-radius:6px;padding:4px 6px;color:var(--txt)" onchange="mxSetDuration(' + r.paperId + ',this.value)"></td>' +
+        '<td><button class="btn btn-sm ' + (published ? 'btn-p' : 'btn-g') + '" onclick="mxSetStatus(' + r.paperId + ',\'' + (published ? 'draft' : 'published') + '\')">' + (published ? '✓ Published' : 'Draft') + '</button></td>' +
+        '<td><button class="btn btn-d btn-sm" onclick="mxDeletePaper(' + r.paperId + ',\'' + escH(r.series) + ' ' + r.year + '\')">🗑 Delete</button></td></tr>';
+    }).join('');
+  }, function() { tb.innerHTML = '<tr class="er"><td colspan="6">Failed to load — try Refresh again.</td></tr>'; });
+}
+function mxSetStatus(paperId, status) {
+  call('updateMockExamPaper', { paperId: paperId, status: status }, function() {
+    toast('success', status === 'published' ? 'Paper published — students can now see it.' : 'Paper set back to draft.');
+    mxLoadPapers();
+  });
+}
+function mxSetDuration(paperId, minutes) {
+  call('updateMockExamPaper', { paperId: paperId, durationMinutes: minutes }, function() {
+    toast('success', 'Duration updated.');
+  });
+}
+function mxDeletePaper(paperId, label) {
+  if (!confirm('Delete "' + label + '" and all its questions? This cannot be undone.')) return;
+  call('deleteMockExamPaper', { paperId: paperId }, function() {
+    toast('success', 'Deleted "' + label + '".');
+    mxLoadPapers();
   });
 }
 
