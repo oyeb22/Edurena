@@ -1311,6 +1311,10 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none">
       <option value="">All Weeks</option>
     </select>
+    <select id="fil-topic" onchange="renderQBPage(0)"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;color:var(--text);font-family:var(--font);font-size:12px;outline:none">
+      <option value="">All Topics</option>
+    </select>
     <button class="btn btn-sm" id="qb-select-all-btn" onclick="toggleSelectAllQB()" style="display:none">☐ Select All</button>
     <button class="btn btn-d btn-sm" id="qb-bulk-delete-btn" onclick="bulkDeleteSelected()" style="display:none">🗑 Delete Selected (<span id="qb-sel-count">0</span>)</button>
     <button class="btn btn-d btn-sm" onclick="openBulkDeleteModal()">🗑 Bulk Wipe</button>
@@ -1354,6 +1358,9 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
       </div>
       <div class="fg" style="margin-bottom:10px"><label>Subject (optional)</label>
         <input type="text" id="bd-subject" placeholder="Leave blank to delete all subjects">
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label>Topic (optional)</label>
+        <input type="text" id="bd-topic" placeholder="Leave blank to delete all topics — must match exactly, e.g. a topic shown in Browse Questions">
       </div>
       <div class="fg" style="margin-bottom:14px"><label>Week (optional)</label>
         <input type="text" id="bd-week" placeholder="Leave blank to delete all weeks">
@@ -2676,8 +2683,8 @@ function loadQBTab() {
 function loadQB() {
   var cid=(document.getElementById('fil-class')||{}).value||'';
   var list=document.getElementById('qb-list'), weekSel=document.getElementById('fil-week');
-  var subjSel=document.getElementById('fil-subject');
-  if(!cid){ if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">Select a class above to browse questions.</p>'; var pg=document.getElementById('qb-pagination'); if(pg) pg.innerHTML=''; if(weekSel) weekSel.innerHTML='<option value="">All Weeks</option>'; if(subjSel) subjSel.innerHTML='<option value="">All Subjects</option>'; allQuestions=[]; hideBulkQBControls(); return; }
+  var subjSel=document.getElementById('fil-subject'), topicSel=document.getElementById('fil-topic');
+  if(!cid){ if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">Select a class above to browse questions.</p>'; var pg=document.getElementById('qb-pagination'); if(pg) pg.innerHTML=''; if(weekSel) weekSel.innerHTML='<option value="">All Weeks</option>'; if(subjSel) subjSel.innerHTML='<option value="">All Subjects</option>'; if(topicSel) topicSel.innerHTML='<option value="">All Topics</option>'; allQuestions=[]; hideBulkQBControls(); return; }
   if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">Loading…</p>';
   call('getQuestionBank',{classId:cid},function(qs){
     allQuestions=qs||[];
@@ -2685,6 +2692,10 @@ function loadQB() {
     if(weekSel){ var weeks={}; allQuestions.forEach(function(q){ if(q.week) weeks[q.week]=true; }); var sortedWeeks=Object.keys(weeks).sort(function(a,b){ return parseInt(a)-parseInt(b); }); weekSel.innerHTML='<option value="">All Weeks</option>'; sortedWeeks.forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent='Week '+w; weekSel.appendChild(o); }); }
     // Build subject filter
     if(subjSel){ var subjs={}; allQuestions.forEach(function(q){ if(q.subject) subjs[q.subject]=true; }); var sortedSubjs=Object.keys(subjs).sort(); subjSel.innerHTML='<option value="">All Subjects</option>'; sortedSubjs.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; subjSel.appendChild(o); }); }
+    // Build topic filter — most school-bank content has no topic tag (importCSV never
+    // sets one), so this dropdown only shows up with real options once a teacher has
+    // imported topic-tagged content (importJSON does set it, global or not).
+    if(topicSel){ var topics={}; allQuestions.forEach(function(q){ if(q.topic) topics[q.topic]=true; }); var sortedTopics=Object.keys(topics).sort(); topicSel.innerHTML='<option value="">All Topics</option>'; sortedTopics.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; topicSel.appendChild(o); }); }
     if(!allQuestions.length){ if(list) list.innerHTML='<p style="text-align:center;color:var(--text2);padding:22px">No questions found for this class.</p>'; var pg=document.getElementById('qb-pagination'); if(pg) pg.innerHTML=''; hideBulkQBControls(); return; }
     // Populate bulk delete class dropdown too
     var bdCls=document.getElementById('bd-class'); if(bdCls){ bdCls.innerHTML='<option value="">— All classes —</option>'; allClasses.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.id; bdCls.appendChild(o); }); bdCls.value=cid; }
@@ -2706,7 +2717,7 @@ function showBulkQBControls(){
 }
 function downloadQBCSV(){
   if(!allQuestions.length){ toast('error','Load a class first'); return; }
-  var cols=['subject','week','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','instruction_group','instruction_text','image_url','passage_id'];
+  var cols=['subject','topic','week','type','question','option_A','option_B','option_C','option_D','option_A_image','option_B_image','option_C_image','option_D_image','correct_answer','points','explanation','instruction_group','instruction_text','image_url','passage_id'];
   function csvCell(v){ var s=String(v==null?'':v); return s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0?'"'+s.replace(/"/g,'""')+'"':s; }
   var rows=[cols.join(',')];
   allQuestions.forEach(function(q){ rows.push(cols.map(function(c){ return csvCell(q[c]); }).join(',')); });
@@ -2761,11 +2772,12 @@ function doRecoverSubmission(){
 function doBulkWipe(){
   var cls=(document.getElementById('bd-class').value||'').trim();
   var subj=(document.getElementById('bd-subject').value||'').trim();
+  var topic=(document.getElementById('bd-topic').value||'').trim();
   var week=(document.getElementById('bd-week').value||'').trim();
-  if(!cls&&!subj&&!week){ toast('error','Select at least a class, subject, or week'); return; }
-  var desc='ALL questions'+(cls?' in class '+cls:'')+(subj?' with subject "'+subj+'"':'')+(week?' in week '+week:'');
+  if(!cls&&!subj&&!topic&&!week){ toast('error','Select at least a class, subject, topic, or week'); return; }
+  var desc='ALL questions'+(cls?' in class '+cls:'')+(subj?' with subject "'+subj+'"':'')+(topic?' with topic "'+topic+'"':'')+(week?' in week '+week:'');
   if(!confirm('⚠️ PERMANENTLY DELETE '+desc+'?\n\nThis cannot be undone.')) return;
-  call('deleteQuestion',{deleteAll:true,classId:cls||undefined,subject:subj||undefined,week:week||undefined},function(){ toast('success','Bulk delete complete'); closeMo('bulk-delete-mo'); loadQB(); });
+  call('deleteQuestion',{deleteAll:true,classId:cls||undefined,subject:subj||undefined,topic:topic||undefined,week:week||undefined},function(){ toast('success','Bulk delete complete'); closeMo('bulk-delete-mo'); loadQB(); });
 }
 
 function doDeleteQuestion(btn) {
@@ -2778,9 +2790,11 @@ function getQBFiltered() {
   var term=((document.getElementById('qb-search')||{}).value||'').trim().toLowerCase();
   var week=((document.getElementById('fil-week')||{}).value||'').trim();
   var subj=((document.getElementById('fil-subject')||{}).value||'').trim();
+  var topic=((document.getElementById('fil-topic')||{}).value||'').trim();
   var filtered=allQuestions;
   if(week) filtered=filtered.filter(function(r){ return String(r.week||'').trim()===week; });
   if(subj) filtered=filtered.filter(function(r){ return String(r.subject||'').trim()===subj; });
+  if(topic) filtered=filtered.filter(function(r){ return String(r.topic||'').trim()===topic; });
   if(!term) return filtered;
   return filtered.filter(function(r){ return (r.question&&r.question.toLowerCase().indexOf(term)!==-1)||(r.subject&&r.subject.toLowerCase().indexOf(term)!==-1)||(r.correctAnswer&&r.correctAnswer.toLowerCase().indexOf(term)!==-1); });
 }
@@ -2796,7 +2810,7 @@ function renderQBPage(page) {
   c.innerHTML=pageItems.map(function(r,i){
     var isSelected=!!_selectedQBIds[r.id];
     var delData='data-question="'+esc(r.question)+'" data-class="'+esc(r.classId)+'" data-subject="'+esc(r.subject)+'" data-week="'+esc(r.week)+'"';
-    return '<div class="qbi" style="'+(isSelected?'border-color:var(--accent);background:var(--accent-bg)':'')+'"><div class="qbi-meta" style="justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center"><input type="checkbox" '+(isSelected?'checked':'')+'  onchange="toggleQBSelect(\''+esc(r.id)+'\',this.checked)" style="accent-color:var(--text);width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-right:4px"><span class="bdg bp">'+esc(r.type)+'</span><span class="bdg by">'+esc(r.subject)+'</span><span class="bdg">Wk '+esc(r.week)+'</span><span class="bdg">'+esc(r.classId)+'</span></div><button class="btn btn-d btn-sm" style="flex-shrink:0;margin-left:8px" '+delData+' onclick="doDeleteQuestion(this)">Delete</button></div><div class="qbi-q">Q'+(start+i+1)+': '+hl(r.question)+'</div>'+(r.type==='MCQ'?'<div style="font-size:11.5px;color:var(--text2);margin:2px 0">A: '+esc(r.optionA)+' · B: '+esc(r.optionB)+' · C: '+esc(r.optionC)+' · D: '+esc(r.optionD)+'</div>':'')+'<div class="qbi-a">✓ '+hl(r.correctAnswer)+' · '+esc(r.points)+' pt'+(r.points!=1?'s':'')+'</div>'+(r.explanation?'<div style="font-size:11.5px;color:var(--accent-text);margin-top:3px;line-height:1.5">'+esc(r.explanation)+'</div>':'')+'</div>';
+    return '<div class="qbi" style="'+(isSelected?'border-color:var(--accent);background:var(--accent-bg)':'')+'"><div class="qbi-meta" style="justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center"><input type="checkbox" '+(isSelected?'checked':'')+'  onchange="toggleQBSelect(\''+esc(r.id)+'\',this.checked)" style="accent-color:var(--text);width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-right:4px"><span class="bdg bp">'+esc(r.type)+'</span><span class="bdg by">'+esc(r.subject)+'</span>'+(r.topic?'<span class="bdg">'+esc(r.topic)+'</span>':'')+'<span class="bdg">Wk '+esc(r.week)+'</span><span class="bdg">'+esc(r.classId)+'</span></div><button class="btn btn-d btn-sm" style="flex-shrink:0;margin-left:8px" '+delData+' onclick="doDeleteQuestion(this)">Delete</button></div><div class="qbi-q">Q'+(start+i+1)+': '+hl(r.question)+'</div>'+(r.type==='MCQ'?'<div style="font-size:11.5px;color:var(--text2);margin:2px 0">A: '+esc(r.optionA)+' · B: '+esc(r.optionB)+' · C: '+esc(r.optionC)+' · D: '+esc(r.optionD)+'</div>':'')+'<div class="qbi-a">✓ '+hl(r.correctAnswer)+' · '+esc(r.points)+' pt'+(r.points!=1?'s':'')+'</div>'+(r.explanation?'<div style="font-size:11.5px;color:var(--accent-text);margin-top:3px;line-height:1.5">'+esc(r.explanation)+'</div>':'')+'</div>';
   }).join('');
   renderQBPagination(total);
 }

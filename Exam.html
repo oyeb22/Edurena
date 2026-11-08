@@ -1,37 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<script>
-/* ── Global error reporter — sends uncaught JS errors to GAS for logging ── */
-(function(){
-  function _reportErr(d){
-    try{
-      var url=(window.DASH&&DASH.scriptUrl)||'';
-      if(!url)return;
-      var payload=JSON.stringify({action:'logClientError',page:window.location.pathname,ua:navigator.userAgent.substring(0,200),msg:d.msg||'',src:d.src||'',stack:d.stack||''});
-      navigator.sendBeacon?navigator.sendBeacon(url,new Blob([payload],{type:'application/json'})):null;
-    }catch(_){}
-  }
-  window.onerror=function(msg,src,line,col,err){
-    _reportErr({msg:String(msg||''),src:String(src||'')+':'+line+':'+col,stack:err&&err.stack||''});
-    return false;
-  };
-  window.onunhandledrejection=function(e){
-    _reportErr({msg:'UnhandledRejection: '+String(e.reason&&(e.reason.message||e.reason)||''),stack:e.reason&&e.reason.stack||''});
-  };
-})();
-</script>
   <meta charset="UTF-8">
-<link rel="icon" type="image/png" sizes="64x64" href="./assets/edurena_logo_64.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- Exam page must never be served stale from a browser cache after a
-       fix ships — bump the ?v= below on every deploy that touches this
-       file so edurena-dash.js is re-fetched too, not just this page. -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <title>Edurena — Secure Exam</title>
-  <script src="edurena-dash.js?v=20260729"></script>
+  <script src="edurena-dash.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -51,18 +24,6 @@
     body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overscroll-behavior:none;}
     #loadingScreen{display:none;position:fixed;inset:0;background:rgba(8,11,20,.92);z-index:99999;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(6px);}
     #loadingScreen.on{display:flex;}
-    #consentGate{display:none;position:fixed;inset:0;background:rgba(8,11,20,.94);z-index:99998;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
-    #consentGate.on{display:flex;}
-    .cg-box{max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 26px;}
-    .cg-box h3{font-size:16px;margin-bottom:12px;color:var(--text);}
-    .cg-box p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;}
-    .cg-check{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text);cursor:pointer;margin-bottom:20px;}
-    .cg-check input{margin-top:2px;width:16px;height:16px;flex-shrink:0;}
-    .cg-actions{display:flex;flex-direction:column;gap:10px;align-items:center;}
-    #cgContinueBtn{width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s;}
-    #cgContinueBtn:hover:not(:disabled){background:var(--accent2);}
-    #cgContinueBtn:disabled{opacity:.4;cursor:not-allowed;}
-    .cg-decline{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;}
     .ld-ring{width:52px;height:52px;border:3px solid var(--surface3);border-top-color:var(--accent);border-right-color:var(--accent2);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px;}
     #loadingText{color:var(--text2);font-size:13px;letter-spacing:.3px;}
     @keyframes spin{to{transform:rotate(360deg);}}
@@ -106,8 +67,7 @@
     .locked-inner{background:rgba(63,164,120,.06);border:1px solid rgba(63,164,120,.25);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--green);display:flex;align-items:center;gap:8px;}
 
     /* ══ EXAM SCREEN ══ */
-    #examScreen{background:var(--bg);min-height:100vh;min-height:100dvh;flex-direction:column;}
-    #examScreen.active{display:flex;}
+    #examScreen{background:var(--bg);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;}
     .exam-header{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
     .exam-header-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px;}
     .exam-title-block{flex:1;min-width:0;}
@@ -127,21 +87,7 @@
     .progress-strip{height:3px;background:var(--surface3);position:relative;}
     .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
     .monitor{position:fixed;top:120px;right:12px;z-index:200;width:176px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);}
-    /* Mobile: consolidate proctoring (title + video + status) into one
-       floating top-right widget instead of splitting video (bottom-right)
-       from status badges (header strip) — status badges already update
-       both #b-* and #sb-* in parallel, so this is CSS-only, no JS change. */
-    @media(max-width:768px){
-      .monitor{top:100px;bottom:auto;right:10px;width:132px;padding:7px;}
-      .monitor-title{font-size:8px;}
-      .mbadge{font-size:8px;padding:2px 5px;}
-      .exam-candidate-card{margin-right:144px;}
-      .subject-tabs{margin-right:144px;}
-      #statusStrip .sbadge:not(#sb-vio){display:none;}
-      .sym-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
-      .sym-bar::-webkit-scrollbar{display:none;}
-      .sym-bar button{flex-shrink:0;}
-    }
+    @media(max-width:768px){.monitor{display:none;}}
     .monitor-title{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:5px;margin-bottom:8px;}
     .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite;}
     .monitor-video{border-radius:8px;overflow:hidden;aspect-ratio:4/3;position:relative;margin-bottom:8px;border:1px solid var(--border);}
@@ -162,28 +108,6 @@
     .ecc-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .ecc-meta{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
     .ecc-vio{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--yellow);flex-shrink:0;text-align:right;}
-
-    /* ── Simulated bot competitors (cosmetic, &bots=N only) ── */
-    .bots-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;}
-    .bots-panel-head{font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-    .bots-panel-list{display:flex;flex-direction:column;gap:6px;}
-    .bot-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;}
-    .bot-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,rgba(84,104,224,.3),rgba(119,134,234,.2));border:1px solid rgba(84,104,224,.3);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
-    .bot-info{flex:1;min-width:0;}
-    .bot-name{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .bot-school{font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .bot-stat{text-align:right;flex-shrink:0;}
-    .bot-q{font-family:var(--mono);font-size:10px;color:var(--text2);}
-    .bot-pct{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent2);}
-    .bots-final-head{font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
-    .bots-final-list{display:flex;flex-direction:column;gap:5px;}
-    .bot-final-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;font-size:12px;}
-    .bot-final-row.is-you{border-color:rgba(84,104,224,.4);background:var(--accent-glow);}
-    .bot-final-rank{font-family:var(--mono);font-weight:700;color:var(--muted);width:24px;flex-shrink:0;}
-    .bot-final-name{flex:1;min-width:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .bot-you-tag{color:var(--accent2);font-size:10px;}
-    .bot-final-score{font-family:var(--mono);font-size:11px;color:var(--text2);flex-shrink:0;}
-
     .q-count{font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
     .q-count-right{display:flex;align-items:center;gap:6px;}
     .flag-btn{padding:3px 9px;font-size:10px;font-weight:700;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--muted);cursor:pointer;font-family:var(--font);transition:all .15s;}
@@ -222,15 +146,11 @@
     @keyframes waveAnim{0%,100%{transform:scaleY(0.5);opacity:.5}50%{transform:scaleY(1);opacity:1}}
     .audio-q-wave.hidden{display:none;}
 
-    .subject-tabs{display:none;gap:6px;flex-wrap:wrap;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);}
-    .stab{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;}
-    .stab.active{background:var(--accent-glow);border-color:var(--accent2);color:var(--accent2);font-weight:600;}
-    .q-subj-badge{font-size:10px;background:rgba(84,104,224,.12);border:1px solid rgba(84,104,224,.3);color:var(--accent2);padding:2px 7px;border-radius:10px;font-weight:600;margin-right:6px;}
     .q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(16px,4vw,24px);}
     .instruction-header{background:rgba(84,104,224,.08);border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;margin:0 0 16px;font-size:13px;line-height:1.5;color:var(--text);}
     .instruction-header .label{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;display:block;}
     .question-image{max-width:100%;margin:0 0 16px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border2);background:var(--surface2);}
-    .question-image img{width:100%;height:auto;display:block;object-fit:contain;max-height:60vh;}
+    .question-image img{width:100%;height:auto;display:block;object-fit:contain;max-height:300px;}
     .question-image .img-error{padding:12px;font-size:11px;color:var(--muted);text-align:center;}
     .passage-panel{border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2);margin:0 0 16px;}
     .passage-header{padding:8px 14px;background:rgba(84,104,224,.08);border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
@@ -251,12 +171,7 @@
     .q-type-badge{font-size:10px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);padding:2px 8px;border-radius:20px;color:var(--text2);margin-right:6px;}
     .q-text{font-size:clamp(14px,3.5vw,16px);font-weight:500;line-height:1.65;margin-bottom:20px;color:var(--text);}
     .options{display:flex;flex-direction:column;gap:9px;}
-    .options.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
     .option{display:flex;align-items:center;gap:12px;padding:clamp(11px,3vw,14px) clamp(12px,3vw,16px);background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;transition:all .18s;-webkit-user-select:none;user-select:none;}
-    .option.has-img{flex-direction:column;align-items:center;padding:14px;gap:10px}
-    .option.has-img .opt-letter{width:28px;height:28px;border-radius:6px;font-size:12px}
-    .option.has-img .opt-text{text-align:center;width:100%}
-    .option.has-img .opt-img-full{width:100%;max-height:160px;object-fit:contain;border-radius:8px;display:block}
     .option:active{transform:scale(.985);}
     .option:hover{border-color:var(--accent);background:rgba(84,104,224,.06);}
     .option.selected{border-color:var(--accent);background:rgba(84,104,224,.1);box-shadow:0 0 0 3px rgba(84,104,224,.1);}
@@ -269,11 +184,6 @@
     .opt-read-btn:hover{color:var(--accent2);border-color:rgba(84,104,224,.4);}
     .short-input{width:100%;padding:clamp(11px,3vw,13px) clamp(12px,3vw,14px);background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:var(--font);resize:vertical;min-height:100px;outline:none;transition:border-color .18s;-webkit-appearance:none;}
     .short-input:focus{border-color:var(--accent);}
-    .list-line{padding:9px 11px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color .18s;-webkit-appearance:none;}
-    .list-line:focus{border-color:var(--accent);}
-    .sym-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
-    .sym-bar button{padding:4px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;cursor:pointer;line-height:1;touch-action:manipulation;}
-    .sym-bar button:active{background:var(--surface3);}
     .q-dots-wrap{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
     .q-dot{width:10px;height:10px;border-radius:50%;background:var(--surface3);border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;flex-shrink:0;position:relative;}
     .q-dot.answered{background:var(--accent);border-color:var(--accent);}
@@ -342,7 +252,7 @@
     .review-badge.ok{background:var(--green-glow);color:var(--green);}
     .review-badge.bad{background:var(--red-glow);color:var(--red);}
     .review-badge.skip{background:var(--yellow-glow);color:var(--yellow);}
-    .explain-box{margin-top:10px;padding:12px 14px;background:rgba(84,104,224,.07);border:1px solid rgba(84,104,224,.22);border-radius:10px;font-size:13px;line-height:1.65;color:var(--text);white-space:pre-line;}
+    .explain-box{margin-top:10px;padding:12px 14px;background:rgba(84,104,224,.07);border:1px solid rgba(84,104,224,.22);border-radius:10px;font-size:13px;line-height:1.65;color:var(--text);}
     .explain-box .ai-label{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
     .ai-explain-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 14px;background:rgba(84,104,224,.1);border:1px solid rgba(84,104,224,.3);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;}
     .ai-explain-btn:hover{background:rgba(84,104,224,.18);}
@@ -465,33 +375,8 @@
       </button>
       <div id="subSendStatus" style="margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center"></div>
       <p style="font-size:11px;color:#7c85a2;margin-top:14px;line-height:1.6;border-top:1px solid #2e3248;padding-top:12px;">
-        If the button above keeps failing (e.g. no internet on this device), tap below to copy your saved answers as text — send that to your teacher (WhatsApp, email, etc.) and they can recover it from their dashboard.
+        If the button doesn't work, screenshot this screen and contact your teacher with the reference code above.
       </p>
-      <button id="subCopyDataBtn" onclick="copyRecoveryData()"
-              style="width:100%;padding:11px;background:transparent;color:#94a3b8;border:1px solid #2e3248;border-radius:10px;
-                     font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;">
-        📋 Copy Recovery Data for Teacher
-      </button>
-      <button id="subDismissBtn" onclick="dismissStuckSubmission()"
-              style="width:100%;padding:9px;background:transparent;color:#7c85a2;border:none;
-                     font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:10px;text-decoration:underline;">
-        Discard this and start a new exam
-      </button>
-    </div>
-  </div>
-</div>
-
-<div id="consentGate">
-  <div class="cg-box" id="cgBox">
-    <h3>📷 Before You Begin</h3>
-    <p>This exam uses webcam proctoring. A photo of you is captured when the exam starts, and again each time a violation (such as leaving fullscreen) is flagged. Photos are used only by your school's teachers and administrators to review exam integrity.</p>
-    <label class="cg-check">
-      <input type="checkbox" id="cgCheckbox" onchange="document.getElementById('cgContinueBtn').disabled=!this.checked">
-      <span>I understand and agree to proceed.</span>
-    </label>
-    <div class="cg-actions">
-      <button id="cgContinueBtn" disabled onclick="confirmProctoringConsent()">Continue</button>
-      <span class="cg-decline" onclick="declineProctoringConsent()">I do not agree</span>
     </div>
   </div>
 </div>
@@ -504,7 +389,7 @@
 <!-- PRE-EXAM -->
 <div id="preExam" class="screen active">
   <div class="candidate-banner">
-    <div class="cb-logo"><img src="assets/edurena_logo_64.png" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;"></div>
+    <div class="cb-logo">⚡</div>
     <div class="cb-info">
       <div class="cb-name" id="bannerName">Loading...</div>
       <div class="cb-meta" id="bannerMeta">Please wait...</div>
@@ -577,13 +462,6 @@
     </div>
   </div>
 
-  <div id="exam-instruction-box" style="display:none;max-width:860px;margin:0 auto 16px;padding:0 16px">
-    <div style="background:rgba(79,120,255,.07);border:1px solid rgba(79,120,255,.3);border-radius:var(--radius-sm);padding:14px 16px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📋 Exam Instructions</div>
-      <div id="exam-instruction-text" style="font-size:13px;color:var(--text);line-height:1.8;white-space:pre-wrap"></div>
-    </div>
-  </div>
-
   <div class="rules-box">
     <div class="rules-inner">
       <h4>⚠️ Exam Rules — Read Carefully</h4>
@@ -644,8 +522,6 @@
     <div class="progress-strip"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
   </div>
 
-  <div id="subjectTabs" class="subject-tabs"></div>
-
   <div class="question-wrap">
     <div class="exam-candidate-card">
       <div class="ecc-avatar">👤</div>
@@ -656,17 +532,10 @@
       <div class="ecc-vio" id="eccVio">0 / 3 strikes</div>
     </div>
 
-    <!-- Simulated bot competitors — cosmetic only, hidden unless ?bots= is on the exam URL -->
-    <div class="bots-panel hidden" id="botsPanel">
-      <div class="bots-panel-head">🤖 Live Competitors</div>
-      <div class="bots-panel-list" id="botsPanelList"></div>
-    </div>
-
     <div class="q-count">
       <span id="progressText">Question 0 of 0</span>
       <div class="q-count-right">
         <button class="flag-btn" id="flagBtn" onclick="toggleFlag()" title="Flag this question for review">🚩 Flag</button>
-        <button class="flag-btn hidden" id="reportBtn" onclick="reportQuestion()" title="Report a problem with this question">⚠ Report Issue</button>
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="answeredCount">0 answered</span>
       </div>
     </div>
@@ -694,25 +563,6 @@
     <button class="nav-btn nav-prev" id="prevBtn" onclick="prevQ()" disabled>← Prev</button>
     <button class="nav-btn nav-submit hidden" id="submitBtn" onclick="confirmSubmit()">Submit Exam ✓</button>
     <button class="nav-btn nav-next" id="nextBtn" onclick="nextQ()">Next →</button>
-  </div>
-</div>
-
-<!-- SUBJECT TRANSITION SCREEN (Subject-Sectioned per-subject timer + Subject-Adaptive) -->
-<div id="preSubject" class="screen">
-  <div class="candidate-banner" style="max-width:520px;margin:40px auto 0">
-    <div class="cb-info" style="text-align:center;width:100%">
-      <div class="cb-name">Next up: <span id="preSubjSubject">Subject</span></div>
-      <div class="cb-meta" id="preSubjDuration" style="display:none">Duration: <span id="preSubjMinutes">0</span> minutes</div>
-    </div>
-  </div>
-  <div id="preSubject-instruction-box" style="display:none;max-width:520px;margin:16px auto 0;padding:0 16px">
-    <div style="background:rgba(79,120,255,.07);border:1px solid rgba(79,120,255,.3);border-radius:var(--radius-sm);padding:14px 16px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📋 Exam Instructions</div>
-      <div id="preSubject-instruction-text" style="font-size:13px;color:var(--text);line-height:1.8;white-space:pre-wrap"></div>
-    </div>
-  </div>
-  <div style="text-align:center;margin:28px 0">
-    <button class="start-btn" id="startSubjectBtn">Start Section →</button>
   </div>
 </div>
 
@@ -755,12 +605,9 @@
       <div class="rstat"><div class="rstat-val" id="resViolations">0</div><div class="rstat-label">Violations</div></div>
     </div>
     <div class="flagged-notice" id="flaggedNotice">🚩 You had flagged questions — they are marked below for your reference.</div>
-    <div id="practiceResult" style="display:none;margin-bottom:14px;padding:12px 14px;border:1px solid rgba(63,164,120,.3);background:rgba(63,164,120,.07);border-radius:var(--radius-sm);font-size:14px;line-height:1.7;text-align:center"></div>
-    <div id="resSubjectBreakdown" style="display:none;margin-bottom:14px"></div>
-    <div id="botsResultPanel" style="display:none;margin-bottom:14px"></div>
     <div class="divider"></div>
     <div id="reviewSection">
-      <div class="review-section"><h3>📋 Question Review</h3><div id="aiCreditBar" style="display:none;margin-top:8px;font-size:12px;color:rgba(255,255,255,.45);"></div></div>
+      <div class="review-section"><h3>📋 Question Review</h3></div>
       <div id="reviewList"></div>
     </div>
    <div id="retakeNotice" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(63,164,120,.07);border:1px solid rgba(63,164,120,.25);border-radius:var(--radius-sm);font-size:12.5px;color:var(--green);text-align:center;line-height:1.6">
@@ -837,38 +684,10 @@ async function supabaseGet(table, filters, select) {
   if (!resp.ok) throw new Error('Supabase error: ' + resp.status);
   return resp.json();
 }
-var student    = { email: PARAMS.email || '', examCode: (PARAMS.code || '').toUpperCase() };
-// Topic Practice sets and rank trials are quizzes of type practice / practice_trial.
-function isPracticeQuiz(){ return !!(quizMeta && /^practice/.test(quizMeta.quizType || '')); }
-function goBackToPractice(pr){
-  var back = PARAMS.back || '';
-  if (back.indexOf(location.origin + '/') !== 0) back = 'https://edurena.online/TopicPractice.html'; // same-site only
-  var u = back + (back.indexOf('?') < 0 ? '?' : '&') + 'script=' + encodeURIComponent(SCRIPT_URL || '');
-  if (pr && pr.rankedUp && pr.mastery) u += '&ranked=' + pr.mastery.rank + '&rt=' + encodeURIComponent(pr.mastery.topic || '');
-  location.href = u;
-}
-function renderPracticeResult(pr, data){
-  var el = document.getElementById('practiceResult'); if (!el) return;
-  var m = pr.mastery || {}, lines = [];
-  if (pr.kind === 'trial') {
-    lines.push(pr.passed ? '🏅 Trial passed: ' + pr.correct + ' of ' + pr.total + ' correct (needed ' + pr.need + ').'
-      : '❌ Trial not passed: ' + pr.correct + ' of ' + pr.total + ' correct (needed ' + pr.need + '). ' + (pr.late ? 'You ran out of time. ' : '') + 'You can retry after 24 hours.');
-  } else lines.push('⭐ +' + (pr.awardedMp || 0) + ' Mastery Points');
-  if (pr.rankedUp) lines.push('🎉 Rank up! You are now <b>' + esc(pr.newRankName) + '</b>');
-  else if (m.rankName) lines.push('Your rank in this topic: <b>' + esc(m.rankName) + '</b> · ' + m.solved + ' of ' + m.total + ' questions solved');
-  el.innerHTML = lines.map(function(l){ return '<div>' + l + '</div>'; }).join('');
-  el.style.display = 'block';
-  var win = pr.kind === 'trial' ? pr.passed : parseFloat(data.percentage) >= 50;
-  safeText('resIcon', pr.rankedUp ? '🎉' : (win ? '👏' : '📚'));
-  safeText('resStatus', pr.kind === 'trial' ? (pr.passed ? 'TRIAL PASSED' : 'NOT YET') : (win ? 'GOOD WORK' : 'KEEP PRACTISING'));
-  safeText('resMsg', 'Read how to get each answer below. It is the fastest way to move up.');
-  var b = document.getElementById('closeBtn');
-  if (b) { b.textContent = '← Back to Topic Practice'; b.onclick = function(){ goBackToPractice(pr); }; }
-  var w = document.getElementById('closeWarning'); if (w) w.style.display = 'none';
-}
 console.log('[DEBUG] PARAMS:', JSON.stringify(PARAMS));
 console.log('[DEBUG] SCRIPT_URL:', SCRIPT_URL);
 console.log('[DEBUG] student:', JSON.stringify(student));
+var student    = { email: PARAMS.email || '', examCode: (PARAMS.code || '').toUpperCase() };
 
 var quizMeta      = null;
 var questions     = [];
@@ -893,171 +712,6 @@ var examSignature    = '';   // v5.2: HMAC binding (email+code+validUntil), used
 var examValidUntilMs = 0;    // v5.2: when the signature expires (~30 days from issue)
 var _explainCache = {};
 var _passageCache = {};
-var _subjectOrder = [];
-var _subjectFirst = {};
-
-// ================================================================
-// SIMULATED BOT COMPETITORS — cosmetic/motivational only.
-// Activated purely by the &bots=1 / &bots=N URL param (see BOTS.init).
-// Entirely client-side: a fixed local identity pool + a seeded PRNG, no
-// backend call, no Firebase, no Challenge Mode tables. Never reads or
-// writes `answers`, never touches the submit payload in doSubmit() — it
-// only reads questions.length / q.points / qIndex, all already in scope.
-// If ?bots= is absent, BOTS.active stays false and every BOTS.* call
-// below is a no-op — zero behavior change from today's Exam.html.
-// ================================================================
-var BOT_IDENTITIES = [
-  { name:'Tari Johnson',    school:'Greenfield Academy',           skillTier:'sharp',  accuracy:0.85 },
-  { name:'Chidinma Okafor', school:'Sunrise International School', skillTier:'sharp',  accuracy:0.85 },
-  { name:'Femi Adeyemi',    school:'Hilltop Academy',              skillTier:'sharp',  accuracy:0.85 },
-  { name:'Ngozi Eze',       school:'Westfield Secondary School',   skillTier:'sharp',  accuracy:0.85 },
-  { name:'Bolaji Olawale',  school:'Maple Grove High',             skillTier:'steady', accuracy:0.65 },
-  { name:'Amaka Nwosu',     school:'Riverside Secondary',          skillTier:'steady', accuracy:0.65 },
-  { name:'Segun Balogun',   school:'Cedar Valley High',            skillTier:'steady', accuracy:0.65 },
-  { name:'Zainab Yusuf',    school:'Oakridge Academy',             skillTier:'steady', accuracy:0.65 },
-  { name:'Emeka Udo',       school:'Northgate College',            skillTier:'casual', accuracy:0.45 },
-  { name:'Halima Bello',    school:'Lakeside Grammar School',      skillTier:'casual', accuracy:0.45 },
-  { name:'Obinna Chukwu',   school:'Brookside International',      skillTier:'casual', accuracy:0.45 },
-  { name:'Toyin Afolabi',   school:'Eastgate College',             skillTier:'casual', accuracy:0.45 }
-];
-// djb2-ish string hash → 32-bit seed. Deterministic: same string always
-// gives the same seed, which is what makes a bot replay identically on
-// every page load for the same exam code + bot name + bot count.
-function _botSeedFromString(s){
-  var h = 2166136261;
-  for (var i=0; i<s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
-}
-// mulberry32 seeded PRNG — small, dependency-free, deterministic. Never
-// Math.random() here: unseeded randomness would make a bot behave
-// differently on every reload, which would be an obvious tell.
-function _botMakeRng(seed){
-  var a = seed >>> 0;
-  return function(){
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    var t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-var BOTS = {
-  active: false,
-  bots: [],          // [{name,school,skillTier,accuracy,correct:[bool],timeSec:[num],cumPoints:[num],finalScore,finalMax,finalPct,avgTimeSec}]
-  totalQ: 0,
-  maxPoints: 0,
-  cumMaxPoints: [],   // prefix sum of q.points — same for every bot, used to turn a bot's running score into a %
-  // Called once from startExam(), right after questions are loaded (and
-  // after _initSubjectTabs has done any subject reordering) — so the bot
-  // timelines are built against the exact same question list/order the
-  // real student will see. Pure read of already-loaded state; writes
-  // nothing back into quizMeta/questions/answers.
-  init: function(){
-    this.active = false; this.bots = [];
-    var raw = (PARAMS.bots||'').trim();
-    if (!raw) return; // no &bots= param at all → feature off, no-op
-    // Adaptive quizzes don't have a fixed question count or point total
-    // known up front (the engine decides the next question as it goes), so
-    // an honest "Question X of N" / running-% panel can't be built for them.
-    // Design call: bots support standard / Subject-Sectioned / JAMB exams
-    // only, where totalQ and points are fixed and known in advance.
-    if (quizMeta && quizMeta.quizType==='adaptive') return;
-    if (!questions.length) return;
-    var n = (raw === '1') ? 3 : (parseInt(raw,10) || 3); // "&bots=1" = on-flag, default pool of 3
-    n = Math.max(1, Math.min(n, BOT_IDENTITIES.length));
-    this.totalQ = questions.length;
-    var cumMax = 0;
-    this.cumMaxPoints = questions.map(function(q){ cumMax += parseFloat(q.points)||1; return cumMax; });
-    this.maxPoints = cumMax;
-    var examCode = student.examCode || 'EXAM';
-    var self = this;
-    this.bots = BOT_IDENTITIES.slice(0, n).map(function(identity){
-      // Seed mixes exam code + bot name + bot count: same exam viewed again
-      // with the same &bots=N reproduces the exact same run; a different N
-      // (different roster composition) is free to simulate differently.
-      var rng = _botMakeRng(_botSeedFromString(examCode + '|' + identity.name + '|' + n));
-      var correct = [], timeSec = [], cumPoints = [], running = 0;
-      questions.forEach(function(q){
-        var isRight = rng() < identity.accuracy;
-        correct.push(isRight);
-        running += isRight ? (parseFloat(q.points)||1) : 0;
-        cumPoints.push(running);
-        // Plausible, non-robotic per-question pace by skill tier — cosmetic
-        // flavor only (shown as an "avg time" in the final summary). It
-        // deliberately does NOT drive the live panel's progress; see
-        // render() for why.
-        var base = identity.skillTier==='sharp' ? 18 : identity.skillTier==='steady' ? 28 : 40;
-        timeSec.push(Math.round(base + rng()*24));
-      });
-      var finalScore = cumPoints[cumPoints.length-1] || 0;
-      return {
-        name: identity.name, school: identity.school, skillTier: identity.skillTier,
-        accuracy: identity.accuracy, correct: correct, timeSec: timeSec, cumPoints: cumPoints,
-        finalScore: finalScore, finalMax: self.maxPoints,
-        finalPct: self.maxPoints>0 ? (finalScore/self.maxPoints*100) : 0,
-        avgTimeSec: Math.round(timeSec.reduce(function(a,b){return a+b;},0)/timeSec.length)
-      };
-    });
-    this.active = this.bots.length>0;
-    var panel = document.getElementById('botsPanel');
-    if (panel) panel.classList.toggle('hidden', !this.active);
-  },
-  // Called from renderQuestion() on every question render (initial render,
-  // Next/Prev, subject-transition resume, adaptive advance) — i.e. driven
-  // by the REAL student's own qIndex, never by a bot-side timer. Each bot
-  // is always shown on the SAME question number as the real student
-  // (qIndex+1): that's what guarantees a bot can never appear to race ahead
-  // or "finish" while the student is still reading — the exact tell this
-  // feature must avoid. Bots stay distinguishable from each other, and from
-  // the student, purely by their running % through the questions seen so
-  // far (driven by that bot's fixed accuracy), not by question count.
-  render: function(){
-    if (!this.active) return;
-    var list = document.getElementById('botsPanelList'); if (!list) return;
-    var atQ = Math.min(qIndex+1, this.totalQ); // 1-based — matches #progressText's own "Question N of M"
-    var possible = this.cumMaxPoints[atQ-1] || 1;
-    list.innerHTML = this.bots.map(function(b){
-      var pts = b.cumPoints[atQ-1]||0;
-      var pct = Math.round(pts/possible*100);
-      return '<div class="bot-row">'
-        +'<div class="bot-avatar">🤖</div>'
-        +'<div class="bot-info">'
-          +'<div class="bot-name">'+esc(b.name)+'</div>'
-          +'<div class="bot-school">'+esc(b.school)+'</div>'
-        +'</div>'
-        +'<div class="bot-stat">'
-          +'<div class="bot-q">Question '+atQ+' of '+BOTS.totalQ+'</div>'
-          +'<div class="bot-pct">'+pct+'%</div>'
-        +'</div>'
-      +'</div>';
-    }).join('');
-  },
-  // Called from showResults() once the real student's own final score is
-  // known — ranks the student against each bot's fully-precomputed final
-  // score. realScore/realMax/realPct are passed in from the already-final
-  // server result (data.score/data.totalPoints/data.percentage); this
-  // function only reads them, never feeds anything back into that data.
-  renderFinal: function(realScore, realMax, realPct){
-    if (!this.active) return;
-    var el = document.getElementById('botsResultPanel'); if (!el) return;
-    var rows = this.bots.map(function(b){
-      return { name:b.name, school:b.school, score:b.finalScore, max:b.finalMax, pct:b.finalPct, avgTimeSec:b.avgTimeSec, isYou:false };
-    });
-    rows.push({ name:(studentInfo.name||'You'), school:studentInfo.school||'', score:realScore, max:realMax, pct:realPct, isYou:true });
-    rows.sort(function(a,b){ return b.pct - a.pct; });
-    el.innerHTML = '<div class="bots-final-head">🏁 Here\'s how you did against the others</div>'
-      + '<div class="bots-final-list">'
-      + rows.map(function(r,i){
-          return '<div class="bot-final-row'+(r.isYou?' is-you':'')+'">'
-            +'<div class="bot-final-rank">#'+(i+1)+'</div>'
-            +'<div class="bot-final-name">'+esc(r.name)+(r.isYou?' <span class="bot-you-tag">(you)</span>':'')+'</div>'
-            +'<div class="bot-final-score">'+r.score+'/'+r.max+' · '+r.pct.toFixed(1)+'%</div>'
-          +'</div>';
-        }).join('')
-      + '</div>';
-    el.style.display = 'block';
-  }
-};
-
 // ================================================================
 // WAKE LOCK — prevent device screen from sleeping during exam
 // ================================================================
@@ -1119,42 +773,28 @@ function stopNoSleepFallback() {
     _noSleepVideo = null;
   }
 }
-function _sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 async function getQuizDataDirect(examCode) {
-  // A single transient hiccup (GAS returning a non-JSON error page under
-  // load, a dropped connection) used to end the exam before it started —
-  // "Failed to load questions: Unexpected token..." with no way forward.
-  // Retries a couple of times before actually giving up.
-  var lastErr = null;
-  for (var attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) { console.warn('[getQuizDataDirect] retry '+attempt, lastErr && lastErr.message); await _sleep(1500); }
-    try {
-      var result = await new Promise(function(resolve, reject) {
-        post('getQuizData', { examCode: examCode, shuffle: true }, function(e, r) {
-          if (e) return reject(e);
-          if (!r || r.status !== 'success') return reject(new Error((r && r.message) || 'Failed'));
-          resolve(r.data.questions || []);
-        });
+  try {
+    // Fetch from GAS (which now caches in CacheService — still fast)
+    // Direct Supabase read of quiz questions isn't done here because
+    // the QuizData sheet holds the shuffled/finalised question set.
+    // GAS caches it so only the first student triggers a sheet read.
+    var result = await new Promise(function(resolve, reject) {
+      post('getQuizData', { examCode: examCode, shuffle: true }, function(e, r) {
+        if (e) return reject(e);
+        if (!r || r.status !== 'success') return reject(new Error((r && r.message) || 'Failed'));
+        resolve(r.data.questions || []);
       });
-      return result;
-    } catch(e) {
-      lastErr = e;
-      console.error('[getQuizDataDirect] attempt '+(attempt+1)+' failed:', e.message);
-    }
+    });
+    return result;
+  } catch(e) {
+    console.error('[getQuizDataDirect]', e.message);
+    throw e;
   }
-  throw lastErr;
 }
-// A GAS validateExamCode call is unconditionally needed once an exam is
-// actually open — it alone does the retake check, the subscription check,
-// AND issues the examSessionToken every downstream proctoring call needs,
-// so there is no way to skip it once we get this far, and calling it twice
-// (as this function previously did, once per condition block) only doubled
-// the wait for no benefit. The one genuine win a direct read still buys:
-// when the exam ISN'T currently open (wrong code, not started, expired),
-// that's answered instantly from the fast direct read with NO GAS round
-// trip at all — the single most common reason a validation fails.
 async function validateExamDirect(examCode, studentEmail) {
   try {
+    // Fetch quiz meta directly from Supabase
     var rows = await supabaseGet('quizzes',
       { 'exam_code': 'eq.' + examCode.toUpperCase(),
         'status':    'eq.active' },
@@ -1164,6 +804,7 @@ async function validateExamDirect(examCode, studentEmail) {
     if (!rows || !rows.length) return { ok: false, message: 'Exam code not found' };
     var quiz = rows[0];
 
+    // Time window check
     var now   = new Date();
     var start = new Date(quiz.start_time);
     var end   = new Date(quiz.end_time);
@@ -1173,29 +814,109 @@ async function validateExamDirect(examCode, studentEmail) {
       return { ok: false, message: 'Exam has not started yet. Starts: ' + start.toLocaleString() };
     if (now > end)
       return { ok: false, message: 'Exam has expired' };
-  } catch(e) {
-    // Direct read failed — fall through to the single GAS call below,
-    // which is the authoritative path anyway.
-  }
 
-  // Exam is open (or the direct read above failed) — exactly ONE GAS call
-  // handles retake check, subscription check, and session-token issuance.
-  return new Promise(function(resolve) {
-    post('validateExamCode',
-      { studentEmail: studentEmail, examCode: examCode },
-      function(err, r) {
-        if (err || !r || r.status !== 'success') {
-          resolve({ ok: false, message: (r && r.message) || 'Validation failed' });
-          return;
-        }
-        if (r.data.examSessionToken) examSessionToken = r.data.examSessionToken;
-        if (r.data.examSignature) {
-          examSignature    = r.data.examSignature;
-          examValidUntilMs = r.data.validUntilMs || 0;
-        }
-        resolve({ ok: true, quizData: r.data.quizData });
+    // Duplicate submission check (only when retakes off)
+    if (!quiz.allow_retakes) {
+      var existing = await supabaseGet('exam_results',
+        { 'exam_code':     'eq.' + examCode,
+          'student_email': 'eq.' + studentEmail.toLowerCase() },
+        'id');
+      // Note: anon key has no SELECT policy on exam_results
+      // so this falls back to GAS for the duplicate check
+      var gasCheck = await new Promise(function(resolve) {
+        post('validateExamCode',
+          { studentEmail: studentEmail, examCode: examCode },
+          function(e, r) { resolve(r); });
       });
-  });
+      if (!gasCheck || gasCheck.status !== 'success') {
+        return { ok: false, message: (gasCheck && gasCheck.message) || 'Validation failed' };
+      }
+      // v5.1: capture examSessionToken for downstream proctoring calls
+      if (gasCheck.data && gasCheck.data.examSessionToken) {
+        examSessionToken = gasCheck.data.examSessionToken;
+      }
+      // v5.2: capture examSignature for offline-recovery auth
+      if (gasCheck.data && gasCheck.data.examSignature) {
+        examSignature    = gasCheck.data.examSignature;
+        examValidUntilMs = gasCheck.data.validUntilMs || 0;
+      }
+    }
+
+    // Subscription check via GAS (school data is protected)
+    if (quiz.school) {
+      var subCheck = await new Promise(function(resolve) {
+        post('validateExamCode',
+          { studentEmail: studentEmail, examCode: examCode },
+          function(e, r) { resolve(r); });
+      });
+      if (!subCheck || subCheck.status !== 'success') {
+        return { ok: false, message: (subCheck && subCheck.message) || 'Access denied' };
+      }
+      // v5.1: capture examSessionToken
+      if (subCheck.data && subCheck.data.examSessionToken) {
+        examSessionToken = subCheck.data.examSessionToken;
+      }
+      // v5.2: capture examSignature for offline-recovery auth
+      if (subCheck.data && subCheck.data.examSignature) {
+        examSignature    = subCheck.data.examSignature;
+        examValidUntilMs = subCheck.data.validUntilMs || 0;
+      }
+      // Trust GAS result fully when subscription or duplicate check is needed
+      return { ok: true, quizData: subCheck.data.quizData };
+    }
+
+    // v5.1: even on the all-clear happy path, we need an examSessionToken so
+    // savePhoto/logViolation/getExplanation will be accepted. The GAS call is
+    // cheap (cached) when both branches above also fired, and necessary when
+    // neither did (no-school + retakes-allowed exams).
+    if (!examSessionToken) {
+      await new Promise(function(resolve) {
+        post('validateExamCode',
+          { studentEmail: studentEmail, examCode: examCode },
+          function(e, r) {
+            if (r && r.status === 'success' && r.data) {
+              if (r.data.examSessionToken) examSessionToken = r.data.examSessionToken;
+              // v5.2: capture examSignature for offline-recovery auth
+              if (r.data.examSignature) {
+                examSignature    = r.data.examSignature;
+                examValidUntilMs = r.data.validUntilMs || 0;
+              }
+            }
+            resolve();
+          });
+      });
+    }
+
+    return {
+      ok: true,
+      quizData: {
+        title:              String(quiz.title || ''),
+        duration:           parseInt(quiz.duration) || 30,
+        faceDetection:      quiz.face_detection !== false,
+        showCorrectAnswers: quiz.show_correct_answers === true,
+        maxViolations:      parseInt(quiz.max_violations) || 3,
+        allowRetakes:       quiz.allow_retakes === true,
+        enableTTS:          quiz.enable_tts === true
+      }
+    };
+  } catch(e) {
+    // Fallback to GAS if direct fetch fails
+    return new Promise(function(resolve) {
+      post('validateExamCode',
+        { studentEmail: studentEmail, examCode: examCode },
+        function(err, r) {
+          if (err || !r || r.status !== 'success') {
+            resolve({ ok: false, message: (r && r.message) || 'Validation failed' });
+          } else {
+            // v5.1: capture examSessionToken in fallback path too
+            if (r.data && r.data.examSessionToken) {
+              examSessionToken = r.data.examSessionToken;
+            }
+            resolve({ ok: true, quizData: r.data.quizData });
+          }
+        });
+    });
+  }
 }
 
 // ================================================================
@@ -1447,21 +1168,14 @@ var subqueue = (function(){
   var STORAGE_KEY = 'edurena_pending_submission_v1';
   var RETRY_DELAYS_MS = [1000, 3000, 9000, 27000, 60000]; // 5 attempts, ~100s total
 
-  // FNV-1a 32-bit: lightweight integrity tag (no external deps)
-  function _fnv(str){
-    var h=0x811c9dc5;
-    for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=(h*0x01000193)>>>0;}
-    return h.toString(16);
-  }
-  function _computeTag(payload, sig){ return _fnv(JSON.stringify(payload)+'|'+(sig||'')); }
-
   function genRef(){
+    // 8-char human-readable reference: EDU-XXXXXX
     var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
     var s = '';
     for (var i = 0; i < 6; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
     return 'EDU-' + s;
   }
-  function save(payload, sInfo, sig){
+  function save(payload, sInfo){
     var entry = {
       ref: genRef(),
       savedAt: Date.now(),
@@ -1471,20 +1185,13 @@ var subqueue = (function(){
       payload: payload,
       attempts: 0
     };
-    if (sig) entry._tag = _computeTag(payload, sig);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entry)); } catch(_) {}
     return entry;
   }
   function get(){
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      var e = JSON.parse(raw);
-      if (e._tag) {
-        var expected = _computeTag(e.payload, (e.payload && e.payload.examSignature) || '');
-        if (expected !== e._tag) e._tampered = true;
-      }
-      return e;
+      return raw ? JSON.parse(raw) : null;
     } catch(_) { return null; }
   }
   function clear(){
@@ -1507,10 +1214,6 @@ var subqueue = (function(){
    * recovery so the server applies the signature check.
    */
   function send(entry, onProgress, onDone, opts){
-    if (entry._tampered) {
-      if (onDone) onDone(new Error('Submission data integrity check failed — possible tampering detected.'), null, entry);
-      return;
-    }
     opts = opts || {};
     var forceRecovery = !!opts.recovery;
     var attemptIndex = entry.attempts || 0;
@@ -1564,7 +1267,7 @@ var subqueue = (function(){
     attempt();
   }
 
-  return { save: save, get: get, clear: clear, send: send, computeTag: _computeTag };
+  return { save: save, get: get, clear: clear, send: send };
 })();
 
 // ── Submit progress overlay controller ─────────────────────────
@@ -1659,64 +1362,10 @@ function sendToTeacher(){
   }, { recovery: true });
 }
 
-// Exports the queued submission as a compact copyable blob — the ONLY copy
-// of the answers when the network truly can't reach the server, so it has
-// to leave the device some other way. TeacherDashboard's "Recover
-// Submission" tool pastes this back in and calls the same submitExam logic.
-function copyRecoveryData(){
-  var entry = subqueue.get();
-  var btn = document.getElementById('subCopyDataBtn');
-  if (!entry) { if (btn) btn.textContent = 'No saved submission found'; return; }
-  var blob = 'EDURENA-RECOVERY:' + JSON.stringify({ ref: entry.ref, payload: entry.payload });
-  function done(){ if (btn) { btn.textContent = '✓ Copied — paste to your teacher'; setTimeout(function(){ btn.textContent='📋 Copy Recovery Data for Teacher'; },3000); } }
-  navigator.clipboard.writeText(blob).then(done).catch(function(){
-    var ta=document.createElement('textarea'); ta.value=blob; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta); done();
-  });
-}
-
-// Manual escape hatch on the recovery card — a student should never be
-// permanently stuck behind a submission that won't deliver (e.g. for an
-// exam that's since expired). Discards the queued entry and returns to
-// the normal pre-exam screen underneath, same as if nothing was pending.
-function dismissStuckSubmission(){
-  subqueue.clear();
-  var banner = document.getElementById('subResumeBanner'); if (banner) banner.classList.remove('on');
-  hideSubmitProgress();
-}
-
 // ── Page-load resume hook (runs from DOMContentLoaded boot) ────
 function checkPendingSubmission(){
   var entry = subqueue.get();
   if (!entry) return false;
-
-  // A submission that failed to deliver used to sit in localStorage forever
-  // (only the success path cleared it) — meaning ONE bad submission would
-  // block every future exam attempt on this device/browser indefinitely,
-  // since this function runs on every page load. Anything old enough that
-  // it can't plausibly still be a legitimate in-progress recovery (24h) is
-  // auto-cleared instead of blocking a brand new, unrelated exam attempt.
-  var STALE_MS = 24 * 60 * 60 * 1000;
-  if (!entry.savedAt || (Date.now() - entry.savedAt) > STALE_MS) {
-    subqueue.clear();
-    return false;
-  }
-
-  // Shared-device / CBT-lab safeguard: only show the resume takeover if
-  // THIS page load's ?email=&code= (set by Webapp.html's launch link, or a
-  // returning student re-opening the same link) actually matches whose
-  // submission this is. A different student sitting down at the same
-  // browser for a different exam must never see — or be blocked by —
-  // someone else's stuck data. Not cleared in this case (just not shown):
-  // the original student can still recover it by reopening their own link,
-  // and it still expires naturally via the 24h check above.
-  var urlEmail = String(PARAMS.email || '').trim().toLowerCase();
-  var urlCode  = String(PARAMS.code  || '').trim().toUpperCase();
-  var entryEmail = String(entry.studentEmail || '').trim().toLowerCase();
-  var entryCode  = String(entry.examCode || '').trim().toUpperCase();
-  if ((urlEmail && urlEmail !== entryEmail) || (urlCode && urlCode !== entryCode)) {
-    return false;
-  }
 
   // There's an orphaned submission from a previous session.
   // Show the banner + overlay immediately so the user knows we're working.
@@ -1783,7 +1432,7 @@ function checkPendingSubmission(){
 }
 
 function showScreen(id){
-  ['preExam','examScreen','resultsScreen','preSubject'].forEach(function(s){
+  ['preExam','examScreen','resultsScreen'].forEach(function(s){
     var el=document.getElementById(s); if(!el)return;
     el.classList.remove('active'); el.style.display='none';
   });
@@ -1855,12 +1504,9 @@ window.addEventListener('load',function(){
       quizMeta    = result.quizData;
       faceEnabled = quizMeta.faceDetection !== false;
       safeText('preTitle', quizMeta.title);
-      if (quizMeta.examInstruction) {
-        var instrBox = document.getElementById('exam-instruction-box');
-        var instrTxt = document.getElementById('exam-instruction-text');
-        if (instrBox && instrTxt) { instrTxt.textContent = quizMeta.examInstruction; instrBox.style.display = 'block'; }
-      }
       safeText('bannerCode', student.examCode);
+      fetchStudentInfo();
+      initMedia();
       CFG.MAX_VIOLATIONS = quizMeta.maxViolations || 3;
       if (quizMeta.enableTTS) {
         post('getTeacherVoiceProfileForExam', { examCode: student.examCode }, function(e2, r2) {
@@ -1868,23 +1514,6 @@ window.addEventListener('load',function(){
             TTS._teacherVoiceProfile = r2.data.voiceProfile;
           }
         });
-      }
-      if (faceEnabled) {
-        // Gated BEFORE the camera activates — a first-time student must see
-        // and accept this before any proctoring data is captured, not after.
-        gateOnProctoringConsent(function(){
-          fetchStudentInfo();
-          initMedia();
-        });
-      } else {
-        // No live proctoring — skip consent gate and camera check UI
-        var monitorEl = document.querySelector('.monitor');
-        if (monitorEl) monitorEl.style.display = 'none';
-        var camCard = document.querySelector('.check-card');
-        if (camCard) camCard.style.display = 'none';
-        fetchStudentInfo();
-        if (isPracticeQuiz()) { safeText('camText', 'No camera needed for practice'); document.getElementById('startBtn').disabled = false; }
-        else initMedia(); // still needed for start-of-exam photo capture
       }
     }).catch(function(e) {
       hideLoading();
@@ -1902,28 +1531,6 @@ window.addEventListener('load',function(){
     safeText('preTitle','Configuration error'); safeText('camText','Server URL missing.');
   }
 });   // ← ADD THIS: closes the load event listener callback
-
-var _proctoringConsentCb = null;
-function gateOnProctoringConsent(cb){
-  post('getProctoringConsentStatus',{email:student.email,school:quizMeta.school||''},function(err,res){
-    if(!err && res && res.status==='success' && res.data && res.data.consented){ cb(); return; }
-    _proctoringConsentCb = cb;
-    document.getElementById('consentGate').classList.add('on');
-  });
-}
-function confirmProctoringConsent(){
-  var btn=document.getElementById('cgContinueBtn');
-  btn.disabled=true; btn.textContent='Please wait…';
-  post('recordProctoringConsent',{email:student.email,school:quizMeta.school||''},function(err,res){
-    document.getElementById('consentGate').classList.remove('on');
-    if(_proctoringConsentCb) _proctoringConsentCb();
-  });
-}
-function declineProctoringConsent(){
-  document.getElementById('cgBox').innerHTML = '<h3>Exam Not Started</h3>'
-    + '<p>You chose not to agree to webcam proctoring, so this exam cannot continue. '
-    + 'Please speak with your teacher if you have questions, then return to this link when you\'re ready.</p>';
-}
 
 function fetchStudentInfo(){
   var email=student.email;
@@ -2121,7 +1728,6 @@ function enterFullscreen() {
 }
 
 function startExam(){
-  if(!faceEnabled){ var m=document.querySelector('.monitor'); if(m) m.style.display='none'; }
   var ev=document.getElementById('examVideo');
   if(ev&&mediaStream){ev.srcObject=mediaStream;ev.play().catch(function(){});}
   var ec=document.getElementById('examCanvas'); if(ec){ec.width=320;ec.height=240;}
@@ -2145,22 +1751,11 @@ function startExam(){
     hideLoading();
     if (!qs || !qs.length) { alert('Failed to load questions. Please contact your teacher.'); return; }
     questions = qs;
-    _initSubjectTabs(); // sort by subject if Subject-Sectioned exam
-    // set up question/subject-adaptive branching if adaptive quiz type —
-    // on failure (thin/mismatched pool), stop cold here rather than fall
-    // through to rendering/timer-start against a half-initialized state,
-    // which previously led to an unexpected auto-submit after question 1.
-    if (!_initAdaptiveEngine()) return;
-    BOTS.init(); // no-op unless &bots= is on the URL — see BOTS.init() for why
     examStart = Date.now();
     requestWakeLock();
-    timeLeft  = _sectionDurationSec();
-    // Diagnostic only (no behavior change) — if the exam ends instantly,
-    // this line in the console tells us whether timeLeft was computed
-    // wrong or the quiz was just configured with a very short duration.
-    console.log('[exam] quizType='+(quizMeta&&quizMeta.quizType)+' timerMode='+(quizMeta&&quizMeta.timerMode)+' duration='+(quizMeta&&quizMeta.duration)+' timeLeft='+timeLeft+'s questions='+questions.length);
+    timeLeft  = (quizMeta.duration||30) * 60;
     safeText('examTitleBar', quizMeta.title);
-    updateCandidateDisplays(null); // ponytail: show email-derived fallback immediately; API overwrites below
+    safeText('examSubBar',   student.email);
     renderDots();
     renderQuestion();
     startTimer();
@@ -2177,12 +1772,10 @@ function startExam(){
         setTimeout(waitForVideoAndSnap, 500);
       }
     }
-    if (mediaStream) waitForVideoAndSnap();
+    waitForVideoAndSnap();
     }).catch(function(e) {
     hideLoading();
-    if (confirm('Failed to load questions after several tries: ' + e.message + '\n\nTry again?')) {
-      startExam();
-    }
+    alert('Failed to load questions: ' + e.message);
   });
 }
 
@@ -2193,72 +1786,8 @@ function startTimer(){
   updateTimer();
   timerHandle=setInterval(function(){
     timeLeft--; updateTimer();
-    if(timeLeft<=0){clearInterval(timerHandle);_sectionTimeUp();}
+    if(timeLeft<=0){clearInterval(timerHandle);doSubmit(true);}
   },1000);
-}
-// Fires when the running timer hits 0. For per-subject timing, that only
-// ends the CURRENT section (moving to the next subject), not the whole
-// exam — unless this was the last subject. Every other case (overall
-// timer, question-adaptive, standard/any other quiz type) submits the
-// whole exam immediately, exactly as before.
-function _sectionTimeUp(){
-  if(!quizMeta||quizMeta.timerMode!=='per_subject'){ doSubmit(true); return; }
-
-  if(quizMeta.quizType==='jamb'){
-    var curSubj=(questions[qIndex]&&questions[qIndex].subject||'').trim()||'General';
-    var curPos=_subjectOrder.indexOf(curSubj);
-    var nextSubj=curPos>=0?_subjectOrder[curPos+1]:undefined;
-    if(!nextSubj){ doSubmit(true); return; }
-    _sectionLockedBoundary=questions.length-1;
-    _showSubjectTransition(nextSubj,null,function(){ qIndex=_subjectFirst[nextSubj]; renderQuestion(); });
-    return;
-  }
-
-  if(quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode==='subject'){
-    // A per-subject timer running out cuts the current block short (fewer
-    // than its full cap answered) — same block-conclusion logic as
-    // _adaptiveSubjectAdvance, just triggered by the clock instead of
-    // reaching the cap. Judged against the block's own achievable max, so
-    // an incomplete block is scored on what was actually earned, not
-    // artificially padded.
-    var tierPoints={
-      easy:   parseInt(quizMeta.adaptivePointsEasy)  ||1,
-      medium: parseInt(quizMeta.adaptivePointsMedium)||2,
-      hard:   parseInt(quizMeta.adaptivePointsHard)  ||3
-    };
-    var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
-    var cap=_adaptiveSubjectCaps[_adaptiveSubjectIdx]||1;
-    var blockMax=cap*tierPoints[_adaptiveSubjectTier];
-    var passed=blockMax>0 && (_adaptiveSubjectPointsEarned/blockMax*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
-    var curRank=rank[_adaptiveSubjectTier]!==undefined?rank[_adaptiveSubjectTier]:1;
-    var nextRank=passed?Math.min(2,curRank+1):Math.max(0,curRank-1);
-
-    _adaptiveSubjectIdx++;
-    if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(true); return; }
-
-    var bestCaseRemaining=0;
-    for(var i=_adaptiveSubjectIdx;i<_adaptiveSubjects.length;i++){
-      bestCaseRemaining += (_adaptiveSubjectCaps[i]||0) * tierPoints.hard;
-    }
-    if(_adaptiveGrandTotalEarned+bestCaseRemaining < 0.5*_adaptiveSubjectTrueMax){
-      alert('Based on your answers so far, a passing score is no longer reachable — this exam has ended.');
-      doSubmit(true);
-      return;
-    }
-
-    _adaptiveSubjectTier=tiers[nextRank];
-    _adaptiveSubjectQServed=0;
-    _adaptiveSubjectPointsEarned=0;
-    _sectionLockedBoundary=questions.length-1;
-    _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],_adaptiveSubjectTier,function(){
-      var next=_pickAdaptiveQuestion(_adaptiveSubjectTier,_adaptiveSubjects[_adaptiveSubjectIdx]);
-      if(!next){ doSubmit(true); return; }
-      questions.push(next); qIndex++; renderDots(); renderQuestion();
-    });
-    return;
-  }
-
-  doSubmit(true);
 }
 function updateTimer(){
   var m=Math.floor(timeLeft/60),s=timeLeft%60;
@@ -2281,24 +1810,6 @@ function updateFlagBtn(){
   var isFlagged=!!flagged[q.id];
   btn.textContent=isFlagged?'🚩 Flagged':'🚩 Flag';
   btn.classList.toggle('flagged',isFlagged);
-  var reportBtn=document.getElementById('reportBtn');
-  if(reportBtn) reportBtn.classList.toggle('hidden', !(quizMeta&&quizMeta.questionSource==='edurena'));
-}
-// Reports a bad Edurena-Question-Bank question for superadmin review — a
-// content-quality flag, distinct from the personal "revisit later" flag above.
-function reportQuestion(){
-  var q=questions[qIndex]; if(!q)return;
-  var reason=prompt('What\'s wrong with this question? (optional)')||'';
-  post('flagQuestion',{
-    questionId:       q.id,
-    examCode:         student.examCode,
-    studentEmail:     student.email,
-    reason:           reason,
-    examSessionToken: examSessionToken
-  }, function(e,r){
-    if(!e&&r&&r.status==='success') alert('Reported — thank you.');
-    else alert('Could not report right now.');
-  });
 }
 
 // ================================================================
@@ -2327,30 +1838,23 @@ function renderQuestion(){
   if(!questions.length)return;
   ttsStop();
   var q=questions[qIndex];
-  var isAdaptive=quizMeta&&quizMeta.quizType==='adaptive';
-  // Adaptive quizzes don't know their final length in advance — show
-  // progress against the teacher-set question cap as an approximate ceiling
-  // (the exam may end sooner, e.g. once the points target is reached).
-  var displayTotal=isAdaptive?(parseInt(quizMeta.adaptiveQuestionCap)||questions.length):questions.length;
-  var pct=((qIndex+1)/displayTotal)*100;
-  safeText('progressText','Question '+(qIndex+1)+(isAdaptive?' (up to '+displayTotal+')':' of '+displayTotal));
+  var pct=((qIndex+1)/questions.length)*100;
+  safeText('progressText','Question '+(qIndex+1)+' of '+questions.length);
   var answered=Object.keys(answers).filter(function(k){return answers[k]!==undefined&&answers[k]!=='';}).length;
   safeText('answeredCount',answered+' answered');
   var pb=document.getElementById('progressBar'); if(pb)pb.style.width=pct+'%';
   updateFlagBtn();
-  BOTS.render(); // no-op unless &bots= is on the URL
 
   var bar=document.getElementById('ttsBar');
   if(bar) bar.classList.toggle('hidden', !(quizMeta && quizMeta.enableTTS && TTS.enabled));
 
-  _updateSubjectTab();
   var isPhonics = isPhonicsQuestion(q);
   var typeLabel = isPhonics ? 'Diction / Phonics' : (q.type==='MCQ'?'Multiple Choice':q.type==='TF'?'True / False':'Short Answer');
 
   var html='<div class="q-card">';
 
   if(q.instruction_text&&q.instruction_text.trim()){
-    html+='<div class="instruction-header"><span class="label">📋 Instructions</span>'+esc(q.instruction_text)+'</div>';
+    html+='<div class="instruction-header"><span class="label">📋 Instructions</span>'+q.instruction_text+'</div>';
   }
 
   if(isPhonics){
@@ -2373,74 +1877,35 @@ function renderQuestion(){
     }
   }
 
-  var subjBadge=(_subjectOrder.length>1&&q.subject)?'<span class="q-subj-badge">'+esc(q.subject)+'</span>':'';
   html+='<div class="q-meta">'
-    +'<span>'+subjBadge+'<span class="q-type-badge">'+typeLabel+'</span>'
+    +'<span><span class="q-type-badge">'+typeLabel+'</span>'
     +'<span class="q-num">Q'+(qIndex+1)+' of '+questions.length+'</span></span>'
     +'<span class="q-pts">'+q.points+' pt'+(q.points!==1?'s':'')+'</span></div>';
 
   if(!isPhonics){
-    html+='<div class="q-text">'+esc(q.question)+'</div>';
+    html+='<div class="q-text">'+q.question+'</div>';
   }
 
   if(q.type==='MCQ'||q.type==='TF'){
     var opts=q.options||[];
     if(q.type==='TF'&&opts.length===0)opts=['True','False'];
-    var hasAnyImg=opts.some(function(_,i){return !!(q.option_images&&q.option_images[i]);});
-    html+='<div class="options'+(hasAnyImg?' img-grid':'')+'">';
+    html+='<div class="options">';
     opts.forEach(function(opt, i) {
       var letter = String.fromCharCode(65 + i);
       var img = (q.option_images && q.option_images[i]) ? q.option_images[i] : '';
       var sel = answers[q.id] === letter ? ' selected' : '';
-      if(img){
-        html += '<div class="option has-img' + sel + '" data-qid="' + esc(String(q.id)) + '" data-letter="' + letter + '" onclick="selectAns(this.dataset.qid,this.dataset.letter,this)">'
-          + '<div class="opt-letter">' + letter + '</div>'
-          + '<div class="opt-text">'
-          + '<img class="opt-img-full" src="' + img + '" alt="Option ' + letter + '" onerror="this.closest(\'.option\').classList.remove(\'has-img\')">'
-          + (opt ? '<span style="font-size:13px;margin-top:6px;display:block">' + esc(opt) + '</span>' : '')
-          + '</div></div>';
-      } else {
-        html += '<div class="option' + sel + '" data-qid="' + esc(String(q.id)) + '" data-letter="' + letter + '" onclick="selectAns(this.dataset.qid,this.dataset.letter,this)">'
-          + '<div class="opt-letter">' + letter + '</div>'
-          + '<div class="opt-text">' + esc(opt || '') + '</div></div>';
-      }
+      var imgHtml = img
+        ? '<img src="' + img + '" style="max-width:100%;max-height:120px;border-radius:6px;margin-top:6px;display:block;object-fit:contain" onerror="this.remove()">'
+        : '';
+      html += '<div class="option' + sel + '" onclick="selectAns(\'' + q.id + '\',\'' + letter + '\',this)">'
+        + '<div class="opt-letter">' + letter + '</div>'
+        + '<div class="opt-text">' + (opt || '') + imgHtml + '</div></div>';
     });
     html+='</div>';
-  }else if(parseInt(q.expected_items)>1){
-    // List-answer SHORT question — one line per expected item instead of a
-    // single box, so the student can't accidentally give just one answer
-    // when several are wanted. Lines are joined with ", " into the exact
-    // same answers[q.id] string a plain textarea would produce — scoring
-    // and submission are completely unchanged either way.
-    var need=parseInt(q.expected_items);
-    var existing=(answers[q.id]||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-    var lineCount=Math.max(need,existing.length);
-    html+='<div class="list-answer-wrap" data-qid="'+esc(String(q.id))+'" data-max="'+(need+3)+'">';
-    for(var li=0; li<lineCount; li++){
-      html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
-        +'<span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:18px">'+(li+1)+'.</span>'
-        +'<input type="text" class="list-line" style="flex:1" placeholder="Answer '+(li+1)+'" value="'+esc(existing[li]||'')+'" oninput="updateListAnswer(this)">'
-        +'</div>';
-    }
-    html+='<button type="button" class="btn-sm" onclick="addListLine(this)">+ Add another</button>'
-      +'</div>';
   }else{
     var val=answers[q.id]||'';
-    html+='<div class="sym-bar">'
-      +'<button type="button" onclick="insertSym(\'%\')">%</button>'
-      +'<button type="button" onclick="insertSym(\'°\')">°</button>'
-      +'<button type="button" onclick="insertSym(\'²\')">²</button>'
-      +'<button type="button" onclick="insertSym(\'³\')">³</button>'
-      +'<button type="button" onclick="insertSym(\'√\')">√</button>'
-      +'<button type="button" onclick="insertSym(\'π\')">π</button>'
-      +'<button type="button" onclick="insertSym(\'×\')">×</button>'
-      +'<button type="button" onclick="insertSym(\'÷\')">÷</button>'
-      +'<button type="button" onclick="insertSym(\'≤\')">≤</button>'
-      +'<button type="button" onclick="insertSym(\'≥\')">≥</button>'
-      +'<button type="button" onclick="insertSym(\'≠\')">≠</button>'
-      +'</div>';
-    html+='<textarea class="short-input" data-qid="'+esc(String(q.id))+'" placeholder="Type your answer here…" '
-      +'oninput="answers[this.dataset.qid]=this.value.trim();updateDots();">'+esc(val)+'</textarea>';
+    html+='<textarea class="short-input" id="short_'+q.id+'" placeholder="Type your answer here…" '
+      +'onchange="answers[\''+q.id+'\']=this.value.trim();updateDots();">'+val+'</textarea>';
   }
   html+='</div>';
 
@@ -2449,19 +1914,10 @@ function renderQuestion(){
   var prev=document.getElementById('prevBtn');
   var next=document.getElementById('nextBtn');
   var submit=document.getElementById('submitBtn');
-  if(quizMeta&&quizMeta.quizType==='adaptive'){
-    // Adaptive quizzes end themselves (via doSubmit() inside the engine)
-    // once the cap/points target or last subject is reached — there's no
-    // user-facing Submit button, Next always drives the engine forward.
-    if(prev) prev.disabled=(quizMeta.adaptiveMode!=='subject')||(qIndex-1<=_sectionLockedBoundary);
-    if(next){next.classList.remove('hidden');next.textContent='Next →';}
-    if(submit) submit.classList.add('hidden');
-  } else {
-    var isLast=(qIndex===questions.length-1);
-    if(prev)prev.disabled=(qIndex===0)||(qIndex-1<=_sectionLockedBoundary);
-    if(next){if(isLast)next.classList.add('hidden');else{next.classList.remove('hidden');next.textContent='Next →';}}
-    if(submit){if(isLast)submit.classList.remove('hidden');else submit.classList.add('hidden');}
-  }
+  var isLast=(qIndex===questions.length-1);
+  if(prev)prev.disabled=(qIndex===0);
+  if(next){if(isLast)next.classList.add('hidden');else{next.classList.remove('hidden');next.textContent='Next →';}}
+  if(submit){if(isLast)submit.classList.remove('hidden');else submit.classList.add('hidden');}
   updateDots();
   updateVioDisplay();
 
@@ -2488,357 +1944,11 @@ function selectAns(qId,letter,el){
 
 function saveShort(){
   var q=questions[qIndex]; if(!q||q.type!=='SHORT')return;
-  var el=document.querySelector('.short-input[data-qid]'); if(el)answers[q.id]=el.value.trim();
+  var el=document.getElementById('short_'+q.id); if(el)answers[q.id]=el.value.trim();
 }
-// List-answer SHORT questions: join every non-empty line into one string,
-// same shape submitExam already expects from a plain textarea.
-function updateListAnswer(el){
-  var wrap=el.closest('.list-answer-wrap'); if(!wrap)return;
-  var qId=wrap.dataset.qid;
-  var parts=Array.prototype.map.call(wrap.querySelectorAll('.list-line'),function(i){return i.value.trim();}).filter(Boolean);
-  answers[qId]=parts.join(', ');
-  updateDots();
-}
-function addListLine(btn){
-  var wrap=btn.closest('.list-answer-wrap'); if(!wrap)return;
-  var lines=wrap.querySelectorAll('.list-line');
-  if(lines.length>=parseInt(wrap.dataset.max))return;
-  var n=lines.length+1;
-  var row=document.createElement('div');
-  row.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:6px';
-  row.innerHTML='<span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:18px">'+n+'.</span>'
-    +'<input type="text" class="list-line" style="flex:1" placeholder="Answer '+n+'" oninput="updateListAnswer(this)">';
-  wrap.insertBefore(row,btn);
-  row.querySelector('input').focus();
-}
-function insertSym(s){
-  var el=document.querySelector('.short-input[data-qid]'); if(!el) return;
-  var p=el.selectionStart||0;
-  el.value=el.value.slice(0,p)+s+el.value.slice(el.selectionEnd||p);
-  el.selectionStart=el.selectionEnd=p+s.length;
-  el.focus();
-  answers[el.dataset.qid]=el.value.trim(); updateDots();
-}
-function prevQ(){
-  if(quizMeta&&quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode!=='subject') return; // question-adaptive: forward-only
-  if(qIndex-1<=_sectionLockedBoundary) return; // can't step back into a completed/locked section
-  ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}
-}
-function nextQ(){
-  ttsStop();saveShort();
-  if(quizMeta&&quizMeta.quizType==='adaptive'){ _adaptiveAdvance(); return; }
-  if(quizMeta&&quizMeta.quizType==='jamb'&&quizMeta.timerMode==='per_subject'&&questions[qIndex+1]){
-    var curSubj=(questions[qIndex].subject||'').trim()||'General';
-    var nxtSubj=(questions[qIndex+1].subject||'').trim()||'General';
-    if(nxtSubj!==curSubj){
-      _sectionLockedBoundary=qIndex;
-      _showSubjectTransition(nxtSubj,null,function(){ qIndex++; renderQuestion(); });
-      return;
-    }
-  }
-  if(qIndex<questions.length-1){qIndex++;renderQuestion();}
-}
-function goToQ(i){
-  if(quizMeta&&quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode!=='subject') return; // question-adaptive: no jumping at all
-  if(i<=_sectionLockedBoundary) return; // can't jump back into a completed/locked section
-  if(quizMeta&&quizMeta.quizType==='jamb'&&quizMeta.timerMode==='per_subject'){
-    var curSubj=(questions[qIndex]&&questions[qIndex].subject||'').trim()||'General';
-    var tgtSubj=(questions[i]&&questions[i].subject||'').trim()||'General';
-    if(tgtSubj!==curSubj) return; // must advance via Next to trigger the section-timer transition
-  }
-  ttsStop();saveShort();qIndex=i;renderQuestion();
-}
-
-function _initSubjectTabs(){
-  // Adaptive quizzes manage their own subject flow (see _initAdaptiveEngine)
-  // — this whole-array-reordering tab builder doesn't apply to them.
-  if(quizMeta&&quizMeta.quizType==='adaptive') return;
-  var bySubj={}, order=[];
-  questions.forEach(function(q){
-    var s=(q.subject||'').trim()||'General';
-    if(!bySubj[s]){bySubj[s]=[];order.push(s);}
-    bySubj[s].push(q);
-  });
-  // Teacher-chosen subject order, when set — falls back to first-encountered
-  // order (today's behavior) for older quizzes with no subject_order saved.
-  var savedOrder=quizMeta&&quizMeta.subjectOrder;
-  if(Array.isArray(savedOrder)&&savedOrder.length){
-    var ranked=savedOrder.filter(function(s){ return bySubj[s]; });
-    order.forEach(function(s){ if(ranked.indexOf(s)===-1) ranked.push(s); });
-    order=ranked;
-  }
-  _subjectOrder=order;
-  var tabEl=document.getElementById('subjectTabs');
-  if(order.length<2){tabEl.style.display='none';return;}
-  // Reorder questions: all of subject1 first, then subject2, etc.
-  var reordered=[];
-  _subjectFirst={};
-  order.forEach(function(s){_subjectFirst[s]=reordered.length;(bySubj[s]||[]).forEach(function(q){reordered.push(q);});});
-  questions=reordered;
-  tabEl.style.display='flex';
-  tabEl.innerHTML=order.map(function(s){
-    var cnt=(bySubj[s]||[]).length;
-    return '<button class="stab" data-subj="'+esc(s)+'" onclick="goToQ('+_subjectFirst[s]+')">'+esc(s)+' <span style="opacity:.65">('+cnt+')</span></button>';
-  }).join('');
-}
-// ================================================================
-// ADAPTIVE ENGINE — question-adaptive (1-up-1-down ladder) and
-// subject-adaptive (per-subject point-allotment blocks with a trending
-// difficulty bias). Both modes fetch the FULL tagged pool up front via the
-// normal getQuizData call (no answer key included, same as every other
-// quiz type) but only ever show one question at a time, growing the live
-// `questions` array as the engine decides each next question — the
-// existing renderQuestion()/nextQ() machinery needs no other changes.
-// ================================================================
-var _adaptivePool               = [];   // full fetched pool, hidden from direct navigation
-var _adaptiveBusy               = false;
-var _adaptiveSubjects           = [];
-var _adaptiveSubjectIdx         = 0;
-var _adaptiveSubjectCaps        = [];   // fixed question cap per subject index, computed once in _initAdaptiveEngine
-var _adaptiveSubjectTier        = 'medium'; // current subject's single fixed difficulty tier
-var _adaptiveSubjectQServed     = 0;    // questions served so far within the current subject block
-var _adaptiveSubjectPointsEarned = 0;   // points earned so far within the current subject block (pass/fail %)
-var _adaptiveGrandTotalEarned    = 0;   // points earned across ALL subjects so far (early-termination check)
-var _adaptiveSubjectTrueMax      = 0;   // computed true max for this exam, for the early-termination check
-var _sectionLockedBoundary      = -1;   // subject-adaptive: can't navigate back past this qIndex
-
-// Returns true if the exam can proceed, false if it can't and the caller
-// (startExam) must stop cold rather than fall through to rendering/timer
-// start with a half-initialized adaptive state.
-function _initAdaptiveEngine(){
-  if(!quizMeta||quizMeta.quizType!=='adaptive') return true;
-  _adaptivePool = questions.slice();
-  // _pickAdaptiveQuestion treats every id currently in `questions` as
-  // "already served" — must be empty BEFORE the first pick, or the entire
-  // freshly-fetched pool looks served on question 1 and every pick fails.
-  questions = [];
-  var first;
-  if(quizMeta.adaptiveMode==='subject'){
-    var seen={}, subjs=[];
-    _adaptivePool.forEach(function(q){ var s=(q.subject||'').trim()||'General'; if(!seen[s]){seen[s]=true;subjs.push(s);} });
-    var order=quizMeta.subjectOrder;
-    if(Array.isArray(order)&&order.length){
-      var ranked=order.filter(function(s){return seen[s];});
-      subjs.forEach(function(s){ if(ranked.indexOf(s)===-1) ranked.push(s); });
-      subjs=ranked;
-    }
-    _adaptiveSubjects=subjs;
-    _adaptiveSubjectIdx=0;
-
-    // Fixed per-subject question cap: every subject gets the SAME cap
-    // (teacher-set directly as "Questions per Subject"), regardless of
-    // which tier it's actually served at — that's what differentiates a
-    // strong vs weak student (same question count everywhere, different
-    // point values), not question count. Subject 1 always starts medium;
-    // every subject after that reaches/stays at hard in the best case.
-    var pointsMedium=parseInt(quizMeta.adaptivePointsMedium)||2;
-    var pointsHard=parseInt(quizMeta.adaptivePointsHard)||3;
-    var cap=parseInt(quizMeta.adaptiveQuestionCap)||8;
-    var numSubjects=_adaptiveSubjects.length||1;
-    _adaptiveSubjectCaps=_adaptiveSubjects.map(function(){ return cap; });
-    _adaptiveSubjectTrueMax=cap*pointsMedium+cap*pointsHard*(numSubjects-1);
-
-    _adaptiveSubjectTier='medium';
-    _adaptiveSubjectQServed=0;
-    _adaptiveSubjectPointsEarned=0;
-    _adaptiveGrandTotalEarned=0;
-    first=_pickAdaptiveQuestion('medium',_adaptiveSubjects[0]);
-  } else {
-    first=_pickAdaptiveQuestion('medium',null);
-  }
-  if(!first){
-    alert('No questions available to start this adaptive exam. Please contact your teacher.');
-    return false;
-  }
-  questions=[first];
-  qIndex=0;
-  return true;
-}
-
-// Picks an unserved question matching the target tier (and subject, if
-// given) from the pool. Falls back to the nearest available tier rather
-// than aborting the exam early over a thin question bank, and — if a
-// subject was requested but has nothing left at any tier — falls back to
-// ignoring the subject filter too, rather than declaring the exam dead
-// over what the pool overall can still cover.
-function _pickAdaptiveQuestion(tier,subject){
-  var servedIds={}; questions.forEach(function(q){servedIds[q.id]=true;});
-  function match(t,useSubject){
-    return _adaptivePool.filter(function(q){
-      return !servedIds[q.id] && q.difficulty===t && (!useSubject||!subject||(q.subject||'').trim()===subject);
-    });
-  }
-  var tryOrder = tier==='hard' ? ['hard','medium','easy'] : tier==='easy' ? ['easy','medium','hard'] : ['medium','hard','easy'];
-  for(var i=0;i<tryOrder.length;i++){
-    var pool=match(tryOrder[i],true);
-    if(pool.length) return pool[Math.floor(Math.random()*pool.length)];
-  }
-  if(subject){
-    for(var j=0;j<tryOrder.length;j++){
-      var pool2=match(tryOrder[j],false);
-      if(pool2.length) return pool2[Math.floor(Math.random()*pool2.length)];
-    }
-  }
-  return null;
-}
-
-// Called instead of a plain array-advance when quizMeta.quizType==='adaptive'
-// (see nextQ()). Validates the current answer server-side (never exposes the
-// key), then branches to the question- or subject-adaptive advance logic.
-function _adaptiveAdvance(){
-  if(_adaptiveBusy) return;
-  var q=questions[qIndex]; if(!q) return;
-  var ans=String(answers[q.id]||'').trim();
-  _adaptiveBusy=true;
-  var nextBtn=document.getElementById('nextBtn');
-  var origLabel=nextBtn?nextBtn.textContent:'';
-  // Disabling the button alone was correct but invisible — a slow (not
-  // stuck) request looked identical to a click that didn't register, so
-  // students clicked again. The text change makes "it's working" visible;
-  // the timeout is a real safety net so a truly hung request can't leave
-  // the button disabled forever with no way forward.
-  if(nextBtn){ nextBtn.disabled=true; nextBtn.textContent='Checking…'; }
-  var settled=false;
-  var timeoutId=setTimeout(function(){
-    if(settled) return; settled=true;
-    _adaptiveBusy=false;
-    if(nextBtn){ nextBtn.disabled=false; nextBtn.textContent=origLabel; }
-    alert('That took longer than expected. Please check your connection and try Next again.');
-  },15000);
-  post('validateAdaptiveAnswer',{
-    examCode:student.examCode, studentEmail:student.email, examSessionToken:examSessionToken,
-    questionId:q.id, answer:ans, subject:q.subject||'', topic:q.topic||'', difficulty:q.difficulty||'medium',
-    points:q.points||1, orderIndex:qIndex
-  },function(err,res){
-    if(settled) return; // the 15s timeout already gave control back — ignore this late arrival
-    settled=true; clearTimeout(timeoutId);
-    _adaptiveBusy=false;
-    if(nextBtn){ nextBtn.disabled=false; nextBtn.textContent=origLabel; }
-    var isCorrect = !err && res && res.status==='success' && res.data && res.data.isCorrect===true;
-    var mustEnd   = !err && res && res.data && res.data.mustEnd===true;
-    if(mustEnd){
-      alert('Based on your answers so far, a passing score is no longer reachable — this exam has ended.');
-      doSubmit(false);
-      return;
-    }
-    if(quizMeta.adaptiveMode==='subject') _adaptiveSubjectAdvance(q,isCorrect);
-    else _adaptiveQuestionAdvance(q,isCorrect);
-  });
-}
-
-function _adaptiveQuestionAdvance(q,isCorrect){
-  var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
-  var cur=rank[q.difficulty]!==undefined?rank[q.difficulty]:1;
-  var nextRank=isCorrect?Math.min(2,cur+1):Math.max(0,cur-1);
-  var cap=parseInt(quizMeta.adaptiveQuestionCap)||20;
-  if(questions.length>=cap){ doSubmit(false); return; }
-  var next=_pickAdaptiveQuestion(tiers[nextRank],null);
-  if(!next){ doSubmit(false); return; }
-  questions.push(next); qIndex++; renderDots(); renderQuestion();
-}
-
-function _adaptiveSubjectAdvance(q,isCorrect){
-  var tierPoints={
-    easy:   parseInt(quizMeta.adaptivePointsEasy)  ||1,
-    medium: parseInt(quizMeta.adaptivePointsMedium)||2,
-    hard:   parseInt(quizMeta.adaptivePointsHard)  ||3
-  };
-  _adaptiveSubjectQServed++;
-  if(isCorrect){
-    _adaptiveSubjectPointsEarned+=(q.points||0);
-    _adaptiveGrandTotalEarned+=(q.points||0);
-  }
-
-  var cap=_adaptiveSubjectCaps[_adaptiveSubjectIdx]||1;
-  if(_adaptiveSubjectQServed<cap){
-    // Still mid-block — next question at the same fixed tier.
-    var mid=_pickAdaptiveQuestion(_adaptiveSubjectTier,_adaptiveSubjects[_adaptiveSubjectIdx]);
-    if(!mid){ doSubmit(false); return; }
-    questions.push(mid); qIndex++; renderDots(); renderQuestion();
-    return;
-  }
-
-  // Block finished — pass/fail is judged against THIS block's own
-  // achievable max (not the fixed fair-share budget), so a student who
-  // dropped to easy can still climb back up rather than being permanently
-  // locked out.
-  var rank={easy:0,medium:1,hard:2}, tiers=['easy','medium','hard'];
-  var blockMax=cap*tierPoints[_adaptiveSubjectTier];
-  var passed=blockMax>0 && (_adaptiveSubjectPointsEarned/blockMax*100)>=(parseInt(quizMeta.adaptivePromotionThreshold)||50);
-  var curRank=rank[_adaptiveSubjectTier]!==undefined?rank[_adaptiveSubjectTier]:1;
-  var nextRank=passed?Math.min(2,curRank+1):Math.max(0,curRank-1);
-
-  _adaptiveSubjectIdx++;
-  if(_adaptiveSubjectIdx>=_adaptiveSubjects.length){ doSubmit(false); return; }
-
-  // Early termination: even if every remaining subject is passed and stays
-  // at hard from here on, can a passing score (50% of true max) still be
-  // reached? If not, end the exam now instead of grinding through the rest.
-  var bestCaseRemaining=0;
-  for(var i=_adaptiveSubjectIdx;i<_adaptiveSubjects.length;i++){
-    bestCaseRemaining += (_adaptiveSubjectCaps[i]||0) * tierPoints.hard;
-  }
-  if(_adaptiveGrandTotalEarned+bestCaseRemaining < 0.5*_adaptiveSubjectTrueMax){
-    alert('Based on your answers so far, a passing score is no longer reachable — this exam has ended.');
-    doSubmit(false);
-    return;
-  }
-
-  _adaptiveSubjectTier=tiers[nextRank];
-  _adaptiveSubjectQServed=0;
-  _adaptiveSubjectPointsEarned=0;
-  _sectionLockedBoundary=questions.length-1;
-  _showSubjectTransition(_adaptiveSubjects[_adaptiveSubjectIdx],_adaptiveSubjectTier,function(){
-    var next=_pickAdaptiveQuestion(_adaptiveSubjectTier,_adaptiveSubjects[_adaptiveSubjectIdx]);
-    if(!next){ doSubmit(false); return; }
-    questions.push(next); qIndex++; renderDots(); renderQuestion();
-  });
-}
-
-// ── Section timer (shared by Subject-Sectioned exams and Subject-Adaptive) ──
-function _currentSectionSubject(){
-  if(!quizMeta) return '';
-  if(quizMeta.quizType==='adaptive'&&quizMeta.adaptiveMode==='subject') return _adaptiveSubjects[_adaptiveSubjectIdx]||'';
-  var q=questions[qIndex]; return q?((q.subject||'').trim()||'General'):'';
-}
-function _sectionDurationSec(){
-  var fallback=((quizMeta&&quizMeta.duration)||30)*60;
-  if(!quizMeta||quizMeta.timerMode!=='per_subject') return fallback;
-  var subject=_currentSectionSubject(); if(!subject) return fallback;
-  var perSubj=quizMeta.perSubjectDuration||{};
-  return (parseInt(perSubj[subject])||quizMeta.duration||30)*60;
-}
-// Shows the "next up: Subject X" screen, pausing question rendering until
-// the student clicks Start — resetting the timer first if this quiz uses
-// per-subject timing. `onStart` performs the actual question-advance.
-function _showSubjectTransition(subjectName,promotedOrNull,onStart){
-  safeText('preSubjSubject',subjectName||'Next Subject');
-  var durEl=document.getElementById('preSubjDuration');
-  if(quizMeta.timerMode==='per_subject'){
-    var perSubj=quizMeta.perSubjectDuration||{};
-    var mins=parseInt(perSubj[subjectName])||quizMeta.duration||30;
-    safeText('preSubjMinutes',mins);
-    if(durEl) durEl.style.display='';
-  } else if(durEl) durEl.style.display='none';
-  var instrBox=document.getElementById('preSubject-instruction-box');
-  var instrTxt=document.getElementById('preSubject-instruction-text');
-  if(instrBox&&instrTxt&&quizMeta.examInstruction){ instrTxt.textContent=quizMeta.examInstruction; instrBox.style.display='block'; }
-  else if(instrBox) instrBox.style.display='none';
-  showScreen('preSubject');
-  var btn=document.getElementById('startSubjectBtn');
-  btn.onclick=function(){
-    if(quizMeta.timerMode==='per_subject'){ timeLeft=_sectionDurationSec(); clearInterval(timerHandle); startTimer(); }
-    showScreen('examScreen');
-    onStart();
-  };
-}
-function _updateSubjectTab(){
-  if(_subjectOrder.length<2)return;
-  var s=(questions[qIndex]&&questions[qIndex].subject||'').trim()||'General';
-  document.querySelectorAll('#subjectTabs .stab').forEach(function(t){
-    t.classList.toggle('active',t.getAttribute('data-subj')===s);
-  });
-}
+function prevQ(){ttsStop();saveShort();if(qIndex>0){qIndex--;renderQuestion();}}
+function nextQ(){ttsStop();saveShort();if(qIndex<questions.length-1){qIndex++;renderQuestion();}}
+function goToQ(i){ttsStop();saveShort();qIndex=i;renderQuestion();}
 
 function renderDots(){
   var c=document.getElementById('navDots'); if(!c)return;
@@ -2874,14 +1984,7 @@ function updateVioDisplay(){
 // ================================================================
 // SECURITY
 // ================================================================
-var _securitySetUp=false;
 function setupSecurity(){
-  // startExam() can now retry itself after a failed question-load (see the
-  // getQuizDataDirect retry/confirm above) — without this guard, a retry
-  // would attach every one of these listeners a second time, silently
-  // double-counting every future violation.
-  if(_securitySetUp) return;
-  _securitySetUp=true;
   document.addEventListener('visibilitychange',function(){
     if(examSubmitted)return;
     if(document.hidden){
@@ -2903,12 +2006,7 @@ function setupSecurity(){
       setTimeout(function(){if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});},2500);
     }else{setBadge('b-fs',false,'⛶ Full');setMobileBadge('sb-fs','ok','⛶ Fullscreen');}
   });
-  window.addEventListener('blur',function(){
-    if(examSubmitted) return;
-    setBadge('b-tab',true,'🖥 Blur'); setMobileBadge('sb-tab','warn','🖥 Blur');
-    // Only trigger if tab is still visible — tab-switch is handled by visibilitychange
-    if(!document.hidden) triggerViolation('Switched to another application or pressed system key','app-switch');
-  });
+  window.addEventListener('blur',function(){if(!examSubmitted){setBadge('b-tab',true,'🖥 Blur');setMobileBadge('sb-tab','warn','🖥 Blur');}});
   window.addEventListener('focus',function(){setBadge('b-tab',false,'🖥 Focus');setMobileBadge('sb-tab','ok','🖥 Focus OK');});
   document.addEventListener('keydown',function(e){
     if(examSubmitted)return;
@@ -2988,8 +2086,8 @@ function capturePhoto(reason) {
       imageBase64:      dataUrl,
       examSessionToken: examSessionToken
     }, function(e, r) {
-      if (r && r.status === 'success' && r.data && r.data.url) {
-        photos.push(r.data.url);
+      if (r && r.status === 'success' && r.data && r.data.fileId) {
+        photos.push('https://drive.google.com/uc?id=' + r.data.fileId);
       }
     });
   } catch(e) {
@@ -3015,10 +2113,6 @@ function confirmSubmit(){
 
 function doSubmit(forced){
   if(examSubmitted)return;
-  // Diagnostic only — logs exactly what triggered submission and how far
-  // into the exam it happened, so a report of "submitted too early" can be
-  // matched to a specific cause instead of guessed at.
-  console.log('[exam] doSubmit called. forced='+forced+' timeLeft='+timeLeft+'s violations='+violations+' answered='+Object.keys(answers||{}).length+'/'+questions.length, new Error('doSubmit call stack').stack);
   examSubmitted=true;
   ttsStop();
   clearInterval(timerHandle);
@@ -3040,7 +2134,7 @@ function doSubmit(forced){
     validUntilMs:  examValidUntilMs
   };
   // ── v5.2: save to localStorage queue FIRST (safety net), then send ──
-  var entry = subqueue.save(payload, studentInfo, examSignature);
+  var entry = subqueue.save(payload, studentInfo);
   showSubmitProgress(entry);
   subqueue.send(entry, updateSubmitProgress, function(err, result){
     if(mediaStream)mediaStream.getTracks().forEach(function(t){t.stop();});
@@ -3077,11 +2171,8 @@ function showResults(data){
   ttsStop();
   _explainCache={};
   var pct=parseFloat(data.percentage); var passed=data.status==='Pass';
-  BOTS.renderFinal(parseFloat(data.score)||0, parseFloat(data.totalPoints)||0, pct); // no-op unless &bots= is on the URL
   safeText('resIcon',passed?'🎉':'📋');
-  var scoreText=data.score+' / '+data.totalPoints;
-  if(data.reportBase){ scoreText+=' ('+Math.round(pct/100*data.reportBase)+' / '+data.reportBase+')'; }
-  safeText('resScore',scoreText);
+  safeText('resScore',data.score+' / '+data.totalPoints);
   safeText('resPct',pct.toFixed(1)+'%');
   var rubricLabel = data.rubricComment || (passed ? 'PASSED' : 'NEEDS REVIEW');
   safeText('resStatus', rubricLabel);
@@ -3089,7 +2180,6 @@ function showResults(data){
     ? 'Congratulations! ' + rubricLabel + ' — you have passed this exam.'
     : rubricLabel + ' — keep studying, you can do better next time!');
   safeText('resExamName',quizMeta?quizMeta.title:'Exam');
-  if(data.practice) renderPracticeResult(data.practice, data);
   var attemptStr = (data.attemptNumber && data.attemptNumber > 1) ? ' · Attempt #'+data.attemptNumber : '';
   safeText('resCandidateName',[studentInfo.name,studentInfo.class,studentInfo.school].filter(Boolean).join(' · ')+(attemptStr)||student.email+attemptStr);
   safeText('resSchool',studentInfo.school||'Edurena');
@@ -3102,21 +2192,6 @@ function showResults(data){
   safeText('resWrong',detailedAnswers.length-correct);
   var flaggedCount=Object.values(flagged).filter(Boolean).length;
   var fn=document.getElementById('flaggedNotice'); if(fn)fn.classList.toggle('on',flaggedCount>0);
-  var breakdownEl=document.getElementById('resSubjectBreakdown');
-  var showBreakdown = data.quizType==='jamb' || (data.quizType==='adaptive' && data.adaptiveMode==='subject');
-  if(breakdownEl){
-    if(showBreakdown && detailedAnswers.length){
-      var bySubj={};
-      detailedAnswers.forEach(function(a){ var s=a.subject||'(no subject)'; if(!bySubj[s]) bySubj[s]={earned:0,max:0}; bySubj[s].earned+=parseInt(a.pointsEarned)||0; bySubj[s].max+=parseInt(a.maxPoints)||0; });
-      var subjNames=Object.keys(bySubj);
-      breakdownEl.innerHTML='<div class="result-stats" style="display:block;padding:10px 14px"><div style="font-size:12px;font-weight:600;color:var(--text2,#aaa);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px">Subject Breakdown</div>'
-        +subjNames.map(function(s){ var b=bySubj[s]; var p=b.max>0?Math.round(b.earned/b.max*100):0; return '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span>'+esc(s)+'</span><span>'+b.earned+'/'+b.max+' ('+p+'%)</span></div>'; }).join('')
-        +'</div>';
-      breakdownEl.style.display='block';
-    } else {
-      breakdownEl.style.display='none'; breakdownEl.innerHTML='';
-    }
-  }
   var rn=document.getElementById('retakeNotice');
   if(rn) rn.style.display=(quizMeta&&quizMeta.allowRetakes)?'block':'none';
   window._reviewAnswers=detailedAnswers;
@@ -3140,13 +2215,7 @@ function showResults(data){
       var letter=a.correctAnswerLetter||''; var text=a.correctAnswer||'';
       correctDisplay=(letter&&text&&text!==letter)?letter+' — '+text:(text||letter||'—');
     }
-    // Shown for every question with a stored explanation, right answers included:
-    // the worked solution is what turns a score into learning.
-    var explainBlock=a.explanation?'<div class="explain-box"><div class="ai-label">💡 How to get the answer</div>'+esc(a.explanation)+'</div>':'';
-    // Only present for Topic Practice content tagged with a specific skill code (e.g.
-    // English Language's tiered bank) — every other quiz type leaves conceptTested
-    // unset, so this stays invisible everywhere else.
-    var conceptBlock=a.conceptTested?'<div class="review-row"><span class="review-label">Concept tested</span><span class="review-val">'+esc(a.conceptTested)+'</span></div>':'';
+    var explainBlock=(!a.isCorrect&&a.explanation)?'<div class="explain-box"><div class="ai-label">💡 Explanation</div>'+a.explanation+'</div>':'';
     var aiBlock=!a.isCorrect?'<div id="ai_wrap_'+i+'"><button class="ai-explain-btn" id="ai_btn_'+i+'" onclick="fetchAiExplanation('+i+')">✦ AI Explanation</button><div id="ai_box_'+i+'"></div></div>':'';
     
     // ── PARTIAL CREDIT DISPLAY (SHORT answer only) ─────────────────
@@ -3169,7 +2238,7 @@ function showResults(data){
       +'<div class="review-row"><span class="review-label">Your Answer</span><span class="review-val '+(a.isCorrect?'ok':skipped?'':'bad')+'">'+esc(a.studentAnswer||'(no answer)')+'</span></div>'
       +(!a.isCorrect?'<div class="review-row"><span class="review-label">Correct</span><span class="review-val ok">'+esc(correctDisplay)+'</span></div>':'')
       +'<div class="review-row"><span class="review-label">Points</span><span class="review-val">'+a.pointsEarned+' / '+a.maxPoints+'</span></div>'
-      + partialCreditBlock + conceptBlock
+      + partialCreditBlock
       +explainBlock+aiBlock+'</div>';
   }).join('');
 
@@ -3205,15 +2274,6 @@ function fetchAiExplanation(idx){
       box.innerHTML = html;
       btn.style.display = 'none';
       if (TTS.enabled) ttsSpeak(r.data.explanation);
-      // Update credit bar if usage stats returned
-      if (r.data.used != null && r.data.limit) {
-        var bar = document.getElementById('aiCreditBar');
-        if (bar) {
-          var remaining = Math.max(0, r.data.limit - r.data.used);
-          bar.textContent = '⚡ AI explanations: ' + remaining + ' of ' + r.data.limit + ' remaining today';
-          bar.style.display = 'block';
-        }
-      }
     });
 }
 </script>
