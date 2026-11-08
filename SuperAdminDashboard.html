@@ -668,7 +668,10 @@
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div class="ct" style="margin-bottom:0">Papers</div>
-            <button class="btn btn-g btn-sm" onclick="mxLoadPapers()">↻ Refresh</button>
+            <div style="display:flex;gap:7px">
+              <button class="btn btn-g btn-sm" onclick="mxLoadPapers()">↻ Refresh</button>
+              <button class="btn btn-p btn-sm" id="mx-publish-all-btn" onclick="mxPublishAll()">📢 Publish All</button>
+            </div>
           </div>
           <div class="tw">
             <table id="mx-papers-table">
@@ -2504,10 +2507,12 @@ function mxClear() {
   document.getElementById('mx-commit-btn').disabled = true;
 }
 
+var mxPapersCache = [];
 function mxLoadPapers() {
   var tb = document.querySelector('#mx-papers-table tbody');
   tb.innerHTML = '<tr class="er"><td colspan="6">Loading…</td></tr>';
   call('getMockExamPapersAdmin', {}, function(rows) {
+    mxPapersCache = rows || [];
     if (!rows.length) { tb.innerHTML = '<tr class="er"><td colspan="6">No papers imported yet.</td></tr>'; return; }
     tb.innerHTML = rows.map(function(r) {
       var published = r.status === 'published';
@@ -2523,6 +2528,31 @@ function mxSetStatus(paperId, status) {
     toast('success', status === 'published' ? 'Paper published — students can now see it.' : 'Paper set back to draft.');
     mxLoadPapers();
   });
+}
+// Publishes every currently-draft paper in one go instead of clicking each
+// row's own toggle — uses mxPapersCache (the last Refresh/load result) so
+// it doesn't need its own fetch. Each paper still goes through the same
+// updateMockExamPaper call the per-row button uses, just looped.
+function mxPublishAll() {
+  var drafts = mxPapersCache.filter(function(r) { return r.status !== 'published'; });
+  if (!drafts.length) { toast('success', 'Everything is already published.'); return; }
+  if (!confirm('Publish all ' + drafts.length + ' draft paper(s)? Students will be able to see them immediately.')) return;
+  var btn = document.getElementById('mx-publish-all-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+  var done = 0, failed = 0;
+  drafts.forEach(function(r) {
+    call('updateMockExamPaper', { paperId: r.paperId, status: 'published' }, function() {
+      done++; mxPublishAllCheckDone(drafts.length, done, failed, btn);
+    }, function() {
+      failed++; mxPublishAllCheckDone(drafts.length, done, failed, btn);
+    });
+  });
+}
+function mxPublishAllCheckDone(total, done, failed, btn) {
+  if (done + failed < total) return;
+  if (btn) { btn.disabled = false; btn.textContent = '📢 Publish All'; }
+  toast(failed ? 'error' : 'success', 'Published ' + done + ' paper(s)' + (failed ? ', ' + failed + ' failed' : '') + '.');
+  mxLoadPapers();
 }
 function mxSetDuration(paperId, minutes) {
   call('updateMockExamPaper', { paperId: paperId, durationMinutes: minutes }, function() {
