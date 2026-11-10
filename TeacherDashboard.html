@@ -905,6 +905,16 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg" id="c-week-wrap"><label>Week *</label><select id="c-week" onchange="onWeekChange()" disabled><option value="">— Select —</option></select></div>
             <div class="fg" id="overall-duration-row"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
+          <div class="hidden" id="section-timer-block">
+            <div class="ct">Section Timer <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— Subject-Sectioned / Subject-Adaptive only</span><span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Set the "Order" for each subject below to control which comes first. When using a per-subject timer, also set each subject's own duration.</span></span></div>
+            <div class="fg" style="margin-bottom:10px;max-width:280px">
+              <label>Timer Mode</label>
+              <select id="c-timer-mode" onchange="updateDurationVisibility()">
+                <option value="overall">One overall timer for the whole exam</option>
+                <option value="per_subject">Separate timer per subject</option>
+              </select>
+            </div>
+          </div>
           <div class="fgrid" style="margin-top:10px">
             <div class="fg hidden" id="c-topics-basicinfo"><label>Topics</label><div class="td" style="font-size:11.5px;margin-top:6px;color:var(--text2)">Pick a class &amp; week, then choose which topics to include or exclude from the adaptive pool, below.</div></div>
             <div class="fg hidden" id="c-archive-wrap"><label>Archive *</label><select id="c-archive" onchange="onArchiveBankChange()"><option value="">— Select an archive —</option></select></div>
@@ -1024,17 +1034,6 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="MCQ" checked onchange="onTypeChange()"><span>Multiple Choice</span></label>
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="TF"  checked onchange="onTypeChange()"><span>True / False</span></label>
             <label class="type-chk-label"><input type="checkbox" class="type-chk" value="SHORT" checked onchange="onTypeChange()"><span>Short Answer</span></label>
-          </div>
-          <div class="div" style="margin:0 0 12px"></div>
-          <div class="hidden" id="section-timer-block">
-            <div class="ct">Section Timer <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— Subject-Sectioned / Subject-Adaptive only</span><span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Set the "Order" for each subject below to control which comes first. When using a per-subject timer, also set each subject's own duration.</span></span></div>
-            <div class="fg" style="margin-bottom:10px;max-width:280px">
-              <label>Timer Mode</label>
-              <select id="c-timer-mode" onchange="updateDurationVisibility()">
-                <option value="overall">One overall timer for the whole exam</option>
-                <option value="per_subject">Separate timer per subject</option>
-              </select>
-            </div>
           </div>
           <div class="div" style="margin:0 0 12px"></div>
           <div class="ct" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
