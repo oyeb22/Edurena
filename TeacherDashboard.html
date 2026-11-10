@@ -872,6 +872,15 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
               </select>
             </div>
           </div>
+          <div class="fg hidden" id="adaptive-mode-inline" style="margin-top:10px">
+            <label>Adaptive Mode
+              <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Every student starts at Medium and moves up or down from there. Points, question cap, and promotion threshold are further down in Content.</span></span>
+            </label>
+            <select id="ad-mode" onchange="onAdaptiveModeChange()">
+              <option value="question">Question-Adaptive — each question gets easier/harder based on the last answer (forward-only, no going back)</option>
+              <option value="subject">Subject-Adaptive — each subject's questions get easier/harder based on performance in that subject (free navigation within a subject, locked once you move on)</option>
+            </select>
+          </div>
         </div>
         <div class="card" id="question-source-card">
           <div class="ct"><span class="cq-ico">📚</span>Question Source</div>
@@ -897,7 +906,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="fg" id="overall-duration-row"><label>Duration (min)</label><input type="number" id="c-dur" value="30" min="5" max="180"></div>
           </div>
           <div class="fgrid" style="margin-top:10px">
-            <div class="fg"><label>Topics</label><div class="td" style="font-size:11.5px;margin-top:6px;color:var(--text2)">Pick a class &amp; week to list topics available in that range, below.</div></div>
+            <div class="fg hidden" id="c-topics-basicinfo"><label>Topics</label><div class="td" style="font-size:11.5px;margin-top:6px;color:var(--text2)">Pick a class &amp; week, then choose which topics to include or exclude from the adaptive pool, below.</div></div>
             <div class="fg hidden" id="c-archive-wrap"><label>Archive *</label><select id="c-archive" onchange="onArchiveBankChange()"><option value="">— Select an archive —</option></select></div>
           </div>
           <!-- Topics available for the picked class + week range — load up
@@ -983,16 +992,7 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
         <div class="cq-group">
           <div class="cq-group-head"><span class="cq-group-num">3</span><div><div class="cq-group-title">Content</div><div class="cq-group-desc">Adaptive settings, or how many questions come from where</div></div></div>
         <div class="card hidden" id="adaptive-card">
-          <div class="ct"><span class="cq-ico">🧠</span>Adaptive Difficulty Settings</div>
-          <div class="fg" style="margin-bottom:10px">
-            <label>Adaptive Mode
-              <span class="itip"><button type="button" class="itip-btn" onclick="toggleTip(this,event)">i</button><span class="itip-pop">Every student starts at Medium and moves up or down from there.</span></span>
-            </label>
-            <select id="ad-mode" onchange="onAdaptiveModeChange()">
-              <option value="question">Question-Adaptive — each question gets easier/harder based on the last answer (forward-only, no going back)</option>
-              <option value="subject">Subject-Adaptive — each subject's questions get easier/harder based on performance in that subject (free navigation within a subject, locked once you move on)</option>
-            </select>
-          </div>
+          <div class="ct"><span class="cq-ico">🧠</span>Adaptive Difficulty Settings <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">— Mode is set up above, in Quiz Type</span></div>
           <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px">
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="easy" checked><span>Easy</span></label>
             <label class="type-chk-label"><input type="checkbox" class="diff-chk" value="medium" checked><span>Medium</span></label>
@@ -3028,12 +3028,26 @@ function updateAllocHeaderLabel(){
   if (!label) return;
   label.textContent = (t === 'adaptive') ? 'Select Subjects to Include' : 'Question Allocation';
 }
+// The Basic Info "Topics" note only ever describes the adaptive-pool
+// include/exclude checkboxes further down (topic-checks-block, which
+// itself only renders for adaptive — see renderTopicChecksUI). For
+// Standard/Subject-Sectioned quizzes the real per-topic controls live in
+// Content's Question Allocation section instead, which explains itself —
+// so this note has nothing accurate to say there and just stays hidden.
+function updateTopicsBasicInfoVisibility(){
+  var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
+  var el = document.getElementById('c-topics-basicinfo');
+  if (el) el.classList.toggle('hidden', t !== 'adaptive');
+}
 function onQuizTypeChange(){
   var t = (document.getElementById('c-quiz-type')||{}).value || 'standard';
   var desc = document.getElementById('c-type-desc');
   if (desc) desc.textContent = _QUIZ_TYPE_DESC[t] || '';
   var adaptiveCard = document.getElementById('adaptive-card');
   if (adaptiveCard) adaptiveCard.classList.toggle('hidden', t !== 'adaptive');
+  var adaptiveModeInline = document.getElementById('adaptive-mode-inline');
+  if (adaptiveModeInline) adaptiveModeInline.classList.toggle('hidden', t !== 'adaptive');
+  updateTopicsBasicInfoVisibility();
   updateSectionTimerVisibility();
   updateAllocHeaderLabel();
   if (t === 'adaptive') updateAdaptiveMax();
@@ -3333,17 +3347,24 @@ function renderSubjAlloc(subjs,wk,weekMode){
     return;
   }
   if(bulkActions) bulkActions.style.display='inline-flex';
-  // Non-adaptive: one row per TOPIC (nested under its subject), each with
-  // its own exact question count and an optional difficulty restriction —
-  // "Any" (default) picks randomly across whatever difficulties exist,
-  // same as the old subject-only behaviour.
+  // Non-adaptive: each subject defaults to Simple — one total count, which
+  // createQuiz distributes randomly across whatever topics/difficulties are
+  // eligible (the original subject-only behaviour). "Allocate by topic
+  // instead" switches that one subject to Advanced — an exact count (+
+  // optional difficulty restriction) per topic, same as before. Mode is
+  // kept per-subject in _subjAllocMode so a re-render (week/type change)
+  // doesn't silently flip a teacher's choice back.
   document.getElementById('subj-list').innerHTML=Object.entries(subjs).map(function(e,i){
     var subjectName=e[0], counts=e[1]||{available:0,topics:{}};
     var available=counts.available||0;
     var subjAttr=subjectName.replace(/"/g,'&quot;');
+    var subjJsEsc=subjAttr.replace(/'/g,"\\'");
     var breakdown='E:'+(counts.easy||0)+' M:'+(counts.medium||0)+' H:'+(counts.hard||0);
     var topics=counts.topics||{};
     var topicNames=Object.keys(topics).sort();
+    if(!_subjAllocMode[subjectName]) _subjAllocMode[subjectName]='simple';
+    var isAdvanced=_subjAllocMode[subjectName]==='advanced';
+    var simpleSuggested=Math.min(available,10);
     var topicRows=topicNames.map(function(topicName){
       var tc=topics[topicName]||{available:0};
       var tAvail=tc.available||0, suggested=Math.min(tAvail,5);
@@ -3358,12 +3379,42 @@ function renderSubjAlloc(subjs,wk,weekMode){
         +'<input type="number" class="ttcount sinput" id="'+safeId+'" data-subject="'+subjAttr+'" data-topic="'+topicAttr+'" data-suggested="'+suggested+'" value="'+suggested+'" min="0" max="'+tAvail+'" onchange="updateTot()" aria-label="Number of questions from '+topicAttr+'" style="width:52px">'
         +'</div></div>';
     }).join('');
-    return '<div class="subj-group"><div class="subj-hdr"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+'</div></div>'
-      +'<span style="display:flex;align-items:center;gap:8px">'
-      +'<button type="button" class="btn btn-sm" onclick="setAllTopicCounts(0,'+"'"+subjAttr.replace(/'/g,"\\'")+"'"+')">Clear</button>'
-      +(showOrderDuration?orderDurationHtml(subjAttr,i):'')+'</span></div>'
+    var simpleRow='<div class="subj-simple-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0">'
+      +'<label style="font-size:12px;color:var(--text2)">Questions from this subject</label>'
+      +'<input type="number" class="ssimple-count sinput" data-subject="'+subjAttr+'" value="'+simpleSuggested+'" min="0" max="'+available+'" onchange="updateTot()" aria-label="Number of questions from '+subjAttr+'" style="width:60px">'
+      +'<span style="font-size:11.5px;color:var(--text3)">— picked at random across eligible topics</span>'
+      +'<button type="button" class="btn btn-sm" style="margin-left:auto" onclick="toggleSubjAllocMode(\''+subjJsEsc+'\')">🔧 Allocate by topic instead</button>'
+      +'</div>';
+    var advancedWrap='<div class="subj-advanced-wrap">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;gap:8px;flex-wrap:wrap">'
+      +'<span style="font-size:11px;color:var(--text2)">Allocating exact counts per topic</span>'
+      +'<span style="display:flex;gap:6px">'
+      +'<button type="button" class="btn btn-sm" onclick="setAllTopicCounts(0,\''+subjJsEsc+'\')">Clear</button>'
+      +'<button type="button" class="btn btn-sm" onclick="toggleSubjAllocMode(\''+subjJsEsc+'\')">↩ Back to simple</button>'
+      +'</span></div>'
       +topicRows+'</div>';
+    return '<div class="subj-group" data-subject="'+subjAttr+'"><div class="subj-hdr"><div><div class="sn">'+esc(subjectName)+'</div><div class="sa">'+available+' available — '+weekLabel+typeLabel+' · '+breakdown+'</div></div>'
+      +(showOrderDuration?'<span style="display:flex;align-items:center;gap:8px">'+orderDurationHtml(subjAttr,i)+'</span>':'')+'</div>'
+      +'<div class="subj-simple-wrap" style="display:'+(isAdvanced?'none':'block')+'">'+simpleRow+'</div>'
+      +'<div class="subj-advanced-toggle-wrap" style="display:'+(isAdvanced?'block':'none')+'">'+advancedWrap+'</div>'
+      +'</div>';
   }).join('');
+  updateTot();
+}
+// Per-subject allocation mode ('simple' = one random-distributed total,
+// 'advanced' = exact count per topic) — defaults to simple, persisted
+// across re-renders (week/type change) so flipping one subject to advanced
+// doesn't get silently reset the next time the Content section refreshes.
+var _subjAllocMode={};
+function toggleSubjAllocMode(subject){
+  _subjAllocMode[subject]=(_subjAllocMode[subject]==='advanced')?'simple':'advanced';
+  var group=document.querySelector('.subj-group[data-subject="'+CSS.escape(subject)+'"]');
+  if(!group){ return; }
+  var isAdvanced=_subjAllocMode[subject]==='advanced';
+  var simpleWrap=group.querySelector('.subj-simple-wrap');
+  var advWrap=group.querySelector('.subj-advanced-toggle-wrap');
+  if(simpleWrap) simpleWrap.style.display=isAdvanced?'none':'block';
+  if(advWrap) advWrap.style.display=isAdvanced?'block':'none';
   updateTot();
 }
 // mode: 0 clears every (or one subject's) topic count to 0; 'suggested'
@@ -3382,17 +3433,45 @@ function setAllTopicCounts(mode,subjectFilter){
 function getTopicAllocations(){
   var out=[];
   document.querySelectorAll('.ttcount').forEach(function(el){
+    var subject=el.getAttribute('data-subject');
+    if(_subjAllocMode[subject]!=='advanced') return; // this subject is in Simple mode — see getSimpleSubjectCounts
     var count=parseInt(el.value)||0;
     if(!count) return;
-    var subject=el.getAttribute('data-subject'), topic=el.getAttribute('data-topic');
+    var topic=el.getAttribute('data-topic');
     var diffSel=document.querySelector('.ttdiff[data-subject="'+CSS.escape(subject)+'"][data-topic="'+CSS.escape(topic)+'"]');
     out.push({ subject:subject, topic:topic, count:count, difficulty: diffSel?diffSel.value:'' });
   });
   return out;
 }
+// One random-distributed-across-topics total per Simple-mode subject —
+// the counterpart to getTopicAllocations() above for whichever subjects
+// the teacher left on Simple instead of switching to Advanced.
+function getSimpleSubjectCounts(){
+  var out={};
+  document.querySelectorAll('.ssimple-count').forEach(function(el){
+    var subject=el.getAttribute('data-subject');
+    if(_subjAllocMode[subject]==='advanced') return;
+    var count=parseInt(el.value)||0;
+    if(count) out[subject]=count;
+  });
+  return out;
+}
 function getSubjectOrder(){ var pairs=[]; document.querySelectorAll('.sorder').forEach(function(el){ pairs.push({subject:el.getAttribute('data-subject'),order:parseInt(el.value)||0}); }); pairs.sort(function(a,b){ return a.order-b.order; }); return pairs.map(function(p){ return p.subject; }); }
 function getPerSubjectDuration(){ var m={}; document.querySelectorAll('.sduration').forEach(function(el){ var s=el.getAttribute('data-subject'); if(s) m[s]=parseInt(el.value)||15; }); return m; }
-function updateTot(){ var t=0; document.querySelectorAll('.sinput').forEach(function(el){ t+=parseInt(el.value)||0; }); setText('tot-q',t); updateQuizSummary(); }
+// Sums only the ACTIVE input per subject's current mode — .ssimple-count
+// and .ttcount both carry the shared .sinput class for styling, but only
+// one of them is actually live per subject at a time (the other's hidden
+// and must not be double-counted or counted while inactive).
+function updateTot(){
+  var t=0;
+  document.querySelectorAll('.ssimple-count').forEach(function(el){
+    if(_subjAllocMode[el.getAttribute('data-subject')]!=='advanced') t+=parseInt(el.value)||0;
+  });
+  document.querySelectorAll('.ttcount').forEach(function(el){
+    if(_subjAllocMode[el.getAttribute('data-subject')]==='advanced') t+=parseInt(el.value)||0;
+  });
+  setText('tot-q',t); updateQuizSummary();
+}
 // Live-updates the Create Quiz sticky summary panel from whatever's
 // currently in the form — purely a read of already-computed DOM state
 // (tot-q / ad-max-display), never its own source of truth.
@@ -3431,10 +3510,13 @@ function doCreate(){
     if(!Object.keys(sc).length){ toast('error','Include at least 1 subject'); return; }
   } else {
     topicAllocs=getTopicAllocations();
+    var simpleCounts=getSimpleSubjectCounts();
     // subjectCounts kept in sync (summed per subject) purely as a fallback
-    // for createQuiz — topicAllocations is what actually drives selection.
+    // for createQuiz — topicAllocations is what actually drives selection
+    // for Advanced-mode subjects; simpleCounts drives Simple-mode ones.
+    Object.keys(simpleCounts).forEach(function(s){ sc[s]=(sc[s]||0)+simpleCounts[s]; });
     topicAllocs.forEach(function(a){ sc[a.subject]=(sc[a.subject]||0)+a.count; });
-    if(!topicAllocs.length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
+    if(!topicAllocs.length&&!Object.keys(simpleCounts).length&&!_selectedPassageId){ toast('error','Allocate at least 1 question or select a passage'); return; }
   }
   var rubric=collectRubricData(); if(!rubric){ return; }
   var diffLevels=[];
@@ -3512,6 +3594,9 @@ function resetCreate(){
   var tcl=document.getElementById('topic-checks-list'); if(tcl) tcl.innerHTML='';
   document.querySelectorAll('.diff-chk').forEach(function(cb){ cb.checked=true; });
   var ac=document.getElementById('adaptive-card'); if(ac) ac.classList.add('hidden');
+  var ami=document.getElementById('adaptive-mode-inline'); if(ami) ami.classList.add('hidden');
+  var ctbi=document.getElementById('c-topics-basicinfo'); if(ctbi) ctbi.classList.add('hidden');
+  _subjAllocMode={};
   var td=document.getElementById('c-type-desc'); if(td) td.textContent=_QUIZ_TYPE_DESC['standard']||'';
   var am=document.getElementById('ad-mode'); if(am) am.value='question';
   ['ad-pts-easy','ad-pts-medium','ad-pts-hard'].forEach(function(id,i){ var e=document.getElementById(id); if(e) e.value=[1,2,3][i]; });
