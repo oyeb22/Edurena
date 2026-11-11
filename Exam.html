@@ -34,18 +34,24 @@
   <script src="edurena-dash.js?v=20260729"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Math notation (fractions, powers, roots, equations) in question/option text written with $..$ or $$..$$ —
+       optional: if this fails to load (offline, CDN blocked), renderMathIn() below just no-ops and text shows plain, as before. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#0a0d16; --surface:#10141f; --surface2:#161b29; --surface3:#1d2332;
-      --border:#232840; --border2:#2b3150;
-      --accent:#5468e0; --accent2:#7786ea; --accent-glow:rgba(84,104,224,0.14);
-      --green:#3fa478; --green-glow:rgba(63,164,120,0.13);
-      --red:#d9655f; --red-glow:rgba(217,101,95,0.13);
-      --yellow:#cf9f3f; --yellow-glow:rgba(207,159,63,0.13);
-      --text:#e6e8f0; --text2:#949cb4; --muted:#5c637a;
-      --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
-      --radius:12px; --radius-sm:8px;
+      --bg:#F3F5F8; --surface:#FFFFFF; --surface2:#EEF1F5; --surface3:#E2E5EA;
+      --border:#E2E5EA; --border2:#D7DCE3;
+      --accent:#2459A6; --accent2:#17365D; --accent-glow:rgba(36,89,166,0.10);
+      --green:#27865C; --green-glow:rgba(39,134,92,0.12);
+      --red:#DC2626; --red-glow:rgba(220,38,38,0.10);
+      --yellow:#D99B2D; --yellow-glow:rgba(217,155,45,0.12);
+      --text:#17365D; --text2:#55606E; --muted:#8993A1;
+      --header-bg:#17365D; --header-text:#FFFFFF;
+      --font:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+      --radius:14px; --radius-sm:9px;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
     body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overscroll-behavior:none;}
@@ -69,12 +75,12 @@
     .screen{display:none;}
     .screen.active{display:block;}
     #preExam{min-height:100vh;min-height:100dvh;background:var(--bg);}
-    .candidate-banner{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:14px;}
+    .candidate-banner{background:var(--header-bg);color:var(--header-text);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:14px;}
     .cb-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
     .cb-info{flex:1;min-width:0;}
-    .cb-name{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .cb-meta{font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .cb-code{font-family:var(--mono);font-size:11px;background:var(--accent-glow);border:1px solid rgba(84,104,224,.3);color:var(--accent2);padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+    .cb-name{font-size:14px;font-weight:700;color:var(--header-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .cb-meta{font-size:11px;color:rgba(255,255,255,.72);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .cb-code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:var(--header-text);padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
     .pre-hero{text-align:center;padding:28px 20px 20px;}
     .pre-hero h2{font-size:clamp(18px,5vw,26px);font-weight:700;letter-spacing:-.3px;color:var(--text);margin-bottom:6px;}
     .pre-hero p{font-size:13px;color:var(--text2);}
@@ -108,25 +114,25 @@
     /* ══ EXAM SCREEN ══ */
     #examScreen{background:var(--bg);min-height:100vh;min-height:100dvh;flex-direction:column;}
     #examScreen.active{display:flex;}
-    .exam-header{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+    .exam-header{position:sticky;top:0;z-index:100;background:var(--header-bg);color:var(--header-text);border-bottom:1px solid var(--border);flex-shrink:0;}
     .exam-header-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px;}
     .exam-title-block{flex:1;min-width:0;}
     .exam-title-main{font-size:clamp(13px,3.5vw,15px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .exam-title-sub{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+    .exam-title-sub{font-size:11px;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
     .timer-block{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;}
-    .timer{font-family:var(--mono);font-size:clamp(20px,5vw,26px);font-weight:600;color:var(--accent2);letter-spacing:2px;line-height:1;}
+    .timer{font-family:var(--mono);font-size:clamp(20px,5vw,26px);font-weight:600;color:var(--header-text);letter-spacing:2px;line-height:1;}
     .timer.warn{color:var(--red);animation:flash 1s infinite;}
-    .timer-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+    .timer-label{font-size:9px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:.35}}
     .exam-status-strip{display:flex;align-items:center;gap:6px;padding:6px 16px 8px;overflow-x:auto;scrollbar-width:none;}
     .exam-status-strip::-webkit-scrollbar{display:none;}
-    .sbadge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;background:var(--surface2);border:1px solid var(--border);color:var(--text2);flex-shrink:0;}
-    .sbadge.ok{border-color:rgba(63,164,120,.3);color:var(--green);background:var(--green-glow);}
-    .sbadge.warn{border-color:rgba(217,101,95,.3);color:var(--red);background:var(--red-glow);}
+    .sbadge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);flex-shrink:0;}
+    .sbadge.ok{border-color:rgba(39,134,92,.5);color:#8FE0BC;background:rgba(39,134,92,.25);}
+    .sbadge.warn{border-color:rgba(220,38,38,.5);color:#FFB4B4;background:rgba(220,38,38,.25);}
     .sbadge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
     .progress-strip{height:3px;background:var(--surface3);position:relative;}
     .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
-    .monitor{position:fixed;top:120px;right:12px;z-index:200;width:176px;background:rgba(14,18,33,.96);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);}
+    .monitor{position:fixed;top:120px;right:12px;z-index:200;width:176px;background:rgba(255,255,255,.96);box-shadow:0 8px 28px rgba(23,54,93,.18);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;backdrop-filter:blur(10px);}
     /* Mobile: consolidate proctoring (title + video + status) into one
        floating top-right widget instead of splitting video (bottom-right)
        from status badges (header strip) — status badges already update
@@ -150,12 +156,34 @@
     .monitor-badges{display:flex;flex-wrap:wrap;gap:3px;}
     .mbadge{font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;background:var(--green-glow);color:var(--green);border:1px solid rgba(63,164,120,.2);}
     .mbadge.warn{background:var(--red-glow);color:var(--red);border-color:rgba(217,101,95,.2);}
-    .sec-log{position:fixed;bottom:90px;left:12px;z-index:200;width:220px;max-height:150px;overflow-y:auto;background:rgba(14,18,33,.93);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:10px;font-family:var(--mono);}
+    .sec-log{position:fixed;bottom:90px;left:12px;z-index:200;width:220px;max-height:150px;overflow-y:auto;background:rgba(255,255,255,.96);box-shadow:0 8px 28px rgba(23,54,93,.18);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:10px;font-family:var(--mono);}
     @media(max-width:768px){.sec-log{display:none;}}
-    .log-entry{padding:3px 0;border-bottom:1px solid rgba(37,42,66,.5);color:var(--muted);}
+    .log-entry{padding:3px 0;border-bottom:1px solid rgba(0,0,0,.08);color:var(--muted);}
     .log-entry.vio{color:var(--red);}
     .log-entry.warn{color:var(--yellow);}
+    .exam-body-grid{display:block;}
     .question-wrap{flex:1;max-width:700px;width:100%;margin:0 auto;padding:16px 14px 130px;}
+    .nav-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+    .nav-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .nav-panel-title{font-weight:800;font-size:14px;color:var(--text);}
+    .nav-panel-close{display:none;width:28px;height:28px;border-radius:50%;background:var(--surface2);border:none;align-items:center;justify-content:center;font-size:14px;color:var(--text2);cursor:pointer;}
+    .nav-legend{display:flex;gap:12px;font-size:10.5px;color:var(--text2);margin-bottom:12px;flex-wrap:wrap;}
+    .nav-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
+    .nav-panel-backdrop{display:none;}
+    @media(max-width:1023px){
+      .nav-panel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:5000;max-height:70vh;overflow:auto;border-radius:16px 16px 0 0;box-shadow:0 -8px 30px rgba(23,54,93,.25);}
+      .nav-panel.on{display:block;}
+      .nav-panel-close{display:flex;}
+      .nav-panel-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:4999;}
+      .nav-panel-backdrop.on{display:block;}
+    }
+    @media(min-width:1024px){
+      .exam-body-grid{display:grid;grid-template-columns:260px minmax(0,1fr) 300px;gap:18px;max-width:1440px;margin:0 auto;padding:18px 18px 110px;align-items:start;}
+      .nav-panel{position:sticky;top:94px;max-height:calc(100vh - 110px);overflow:auto;}
+      .question-wrap{max-width:none;width:auto;margin:0;padding:0;}
+      .monitor{position:sticky !important;top:94px !important;right:auto !important;left:auto !important;width:auto !important;}
+      .nav-grid{display:none;}
+    }
     .exam-candidate-card{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;}
     .ecc-avatar{width:34px;height:34px;background:linear-gradient(135deg,rgba(84,104,224,.3),rgba(119,134,234,.2));border:1px solid rgba(84,104,224,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
     .ecc-info{flex:1;min-width:0;}
@@ -274,12 +302,11 @@
     .sym-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
     .sym-bar button{padding:4px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;cursor:pointer;line-height:1;touch-action:manipulation;}
     .sym-bar button:active{background:var(--surface3);}
-    .q-dots-wrap{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
-    .q-dot{width:10px;height:10px;border-radius:50%;background:var(--surface3);border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;flex-shrink:0;position:relative;}
-    .q-dot.answered{background:var(--accent);border-color:var(--accent);}
-    .q-dot.current{background:var(--accent2);border-color:var(--accent2);box-shadow:0 0 0 3px rgba(119,134,234,.2);}
-    .q-dot.flagged{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(207,159,63,.3);}
-    .q-dot.flagged::after{content:'';position:absolute;top:-3px;right:-3px;width:5px;height:5px;background:var(--yellow);border-radius:50%;}
+    .q-dots-wrap{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:7px;}
+    .q-dot{aspect-ratio:1;border-radius:9px;background:var(--surface2);border:1.5px solid transparent;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--text);font-family:var(--font);}
+    .q-dot.answered{background:var(--green);color:#fff;}
+    .q-dot.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow);}
+    .q-dot.flagged::after{content:'';position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:var(--yellow);border-radius:50%;border:1.5px solid var(--surface);}
     .exam-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:clamp(10px,2.5vw,14px) clamp(12px,3vw,20px);display:flex;gap:8px;align-items:center;z-index:150;padding-bottom:calc(clamp(10px,2.5vw,14px) + env(safe-area-inset-bottom));}
     .nav-btn{padding:clamp(10px,2.5vw,12px) clamp(14px,3.5vw,20px);border:none;border-radius:var(--radius-sm);font-size:clamp(12px,3vw,14px);font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
     .nav-prev{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);flex-shrink:0;}
@@ -287,7 +314,8 @@
     .nav-prev:disabled{opacity:.3;cursor:not-allowed;}
     .nav-next{background:var(--accent);color:white;flex-shrink:0;transition:background .15s;}
     .nav-next:hover{background:var(--accent2);}
-    .nav-submit{background:var(--green);color:#08140f;font-weight:800;flex:1;transition:filter .15s;}
+    .nav-grid{background:var(--header-bg);color:#fff;flex-shrink:0;}
+    .nav-submit{background:var(--yellow);color:#fff;font-weight:800;flex:1;transition:filter .15s;}
     .nav-submit:hover{filter:brightness(1.08);}
     .nav-center{flex:1;display:flex;align-items:center;justify-content:center;}
     @media(max-width:460px){.nav-center{display:none;}}
@@ -300,6 +328,56 @@
     .vio-count{font-size:12px;font-family:var(--mono);color:var(--yellow);margin-bottom:22px;}
     .vio-btn{padding:13px 32px;background:var(--accent);border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;width:100%;transition:background .15s;}
     .vio-btn:hover{background:var(--accent2);}
+    #micWarnToast{display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-12px);z-index:9500;background:var(--surface);border:1.5px solid var(--yellow);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);max-width:min(90vw,420px);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .2s,opacity .2s;opacity:0;}
+
+    /* ══ EXAMINATION TOOLS ══ */
+    .tools-ribbon{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;}
+    .tool-btn{all:unset;display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:9px;font-size:12px;color:var(--text);background:var(--surface2);cursor:pointer;font-family:var(--font);}
+    .tool-btn:hover{border-color:var(--accent);}
+    .tool-panel-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:6000;}
+    .tool-panel-backdrop.on{display:block;}
+    .tool-panel{display:none;position:fixed;z-index:6001;background:var(--surface);box-shadow:0 24px 60px rgba(23,54,93,.3);border:1px solid var(--border);overflow:hidden;}
+    .tool-panel.on{display:flex;}
+    .tool-panel-rail{flex:0 0 52px;background:var(--surface2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;overflow-y:auto;}
+    .tool-rail-btn{all:unset;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;color:var(--text2);}
+    .tool-rail-btn.active{background:var(--accent);color:#fff;}
+    .tool-panel-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+    .tool-panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .tool-panel-title{font-weight:800;font-size:14px;color:var(--text);}
+    .tool-panel-close{all:unset;width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);cursor:pointer;}
+    .tool-panel-content{flex:1;min-height:0;overflow:auto;padding:16px;}
+    @media(min-width:1024px){
+      .tool-panel{top:84px;right:24px;width:400px;height:min(640px,calc(100vh - 110px));border-radius:16px;}
+    }
+    @media(max-width:1023px){
+      .tool-panel{left:0;right:0;bottom:0;top:8vh;border-radius:16px 16px 0 0;}
+    }
+    /* Calculator */
+    .calc-tabs{display:flex;gap:16px;font-size:12px;font-weight:700;margin-bottom:12px;}
+    .calc-tab{color:var(--muted);cursor:pointer;padding-bottom:5px;}
+    .calc-tab.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+    .calc-display{background:var(--surface2);border-radius:10px;padding:16px;text-align:right;font-family:var(--mono);margin-bottom:12px;overflow-x:auto;}
+    .calc-display .expr{font-size:12px;color:var(--text2);min-height:14px;white-space:nowrap;}
+    .calc-display .val{font-size:26px;font-weight:700;color:var(--text);white-space:nowrap;}
+    .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+    .calc-key{all:unset;display:flex;align-items:center;justify-content:center;height:44px;border-radius:9px;background:var(--surface2);font-weight:700;font-size:14px;color:var(--text);cursor:pointer;}
+    .calc-key.op{background:var(--accent-glow);color:var(--accent2);}
+    .calc-key.eq{background:var(--accent);color:#fff;grid-column:span 1;}
+    .calc-key:active{filter:brightness(0.92);}
+    /* Periodic table */
+    .ptable-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;}
+    .ptable-el{all:unset;aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:#fff;}
+    .ptable-el .sym{font-size:13px;font-weight:800;}
+    .ptable-detail{margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:12.5px;color:var(--text);display:none;}
+    .ptable-detail.on{display:block;}
+    /* Rough work pad */
+    .rough-toolbar{display:flex;gap:8px;margin-bottom:10px;}
+    .rough-toolbar button{all:unset;padding:7px 12px;border-radius:8px;background:var(--surface2);font-size:12px;cursor:pointer;color:var(--text);}
+    .rough-toolbar button.active{background:var(--accent);color:#fff;}
+    #roughCanvas{width:100%;height:320px;background:#fff;border:1px solid var(--border);border-radius:10px;touch-action:none;}
+    /* Formula sheet */
+    #formulaFrame{width:100%;height:100%;min-height:420px;border:none;border-radius:10px;background:#fff;}
+    #micWarnToast.on{display:block;opacity:1;transform:translateX(-50%) translateY(0);}
     #exitBlocker{display:none;position:fixed;inset:0;background:rgba(8,11,20,.97);z-index:8000;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px;}
     #exitBlocker.on{display:flex;}
     #exitBlocker .big-icon{font-size:56px;margin-bottom:16px;}
@@ -383,57 +461,57 @@
     }
     #subProgressOverlay.on{ display:flex; }
     .sub-card{
-      background:#0F1523; border:1px solid #2e3248; border-radius:20px;
+      background:var(--surface); border:1px solid var(--border); border-radius:20px;
       padding:36px 36px 30px; width:440px; max-width:96vw;
-      box-shadow:0 24px 80px rgba(0,0,0,0.6); text-align:center;
+      box-shadow:0 24px 80px rgba(23,54,93,0.25); text-align:center;
     }
     .sub-icon{ font-size:42px; margin-bottom:14px; display:block; }
-    .sub-title{ font-size:18px; font-weight:700; color:#e2e8f0; margin-bottom:8px; }
-    .sub-msg{ font-size:13px; color:#94a3b8; margin-bottom:22px; line-height:1.55; }
+    .sub-title{ font-size:18px; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .sub-msg{ font-size:13px; color:var(--text2); margin-bottom:22px; line-height:1.55; }
     .sub-bar-track{
-      width:100%; height:10px; background:#1a2030; border-radius:6px;
+      width:100%; height:10px; background:var(--surface2); border-radius:6px;
       overflow:hidden; position:relative;
     }
     .sub-bar-fill{
       height:100%;
-      background:linear-gradient(90deg, #F97316 0%, #FB923C 100%);
+      background:linear-gradient(90deg, #D99B2D 0%, #E6B04F 100%);
       border-radius:6px;
       width:0%;
       transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow:0 0 12px rgba(249,115,22,0.4);
+      box-shadow:0 0 12px rgba(217,155,45,0.35);
     }
     .sub-bar-fill.success{
-      background:linear-gradient(90deg, #34d399 0%, #10b981 100%);
-      box-shadow:0 0 12px rgba(52,211,153,0.4);
+      background:linear-gradient(90deg, #27865C 0%, #34A373 100%);
+      box-shadow:0 0 12px rgba(39,134,92,0.35);
     }
-    .sub-pct{ font-size:12px; color:#7c85a2; margin-top:10px; font-family:'DM Mono',monospace; }
+    .sub-pct{ font-size:12px; color:var(--muted); margin-top:10px; font-family:'DM Mono',monospace; }
     .sub-ref{
-      margin-top:18px; padding:10px; background:#080C16; border-radius:8px;
-      font-family:'DM Mono',monospace; font-size:11px; color:#7c85a2;
+      margin-top:18px; padding:10px; background:var(--surface2); border-radius:8px;
+      font-family:'DM Mono',monospace; font-size:11px; color:var(--text2);
     }
     .sub-recovery{
-      background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.3);
+      background:rgba(220,38,38,0.05); border:1px solid rgba(220,38,38,0.25);
       border-radius:12px; padding:18px; margin-top:18px; text-align:left;
     }
     .sub-recovery h3{
-      font-size:14px; color:#f87171; margin-bottom:10px; font-weight:700;
+      font-size:14px; color:var(--red); margin-bottom:10px; font-weight:700;
     }
     .sub-recovery p{
-      font-size:13px; color:#cbd5e1; line-height:1.6; margin-bottom:10px;
+      font-size:13px; color:var(--text2); line-height:1.6; margin-bottom:10px;
     }
     .sub-recovery .ref-big{
       display:block; font-family:'DM Mono',monospace; font-size:18px;
-      color:#FB923C; background:#080C16; padding:10px; border-radius:8px;
+      color:var(--text); background:var(--surface2); padding:10px; border-radius:8px;
       text-align:center; margin:10px 0; font-weight:700; letter-spacing:1.5px;
     }
 
     /* ── Page-load resume banner ─────────────────────────────────── */
     #subResumeBanner{
       position:fixed; top:0; left:0; right:0; z-index:99998;
-      background:linear-gradient(90deg, #F97316, #FB923C);
-      color:#03060f; font-weight:600; font-size:13px;
+      background:linear-gradient(90deg, #D99B2D, #E6B04F);
+      color:#1A1200; font-weight:600; font-size:13px;
       padding:10px 16px; text-align:center;
-      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      box-shadow:0 4px 12px rgba(23,54,93,0.2);
       display:none;
     }
     #subResumeBanner.on{ display:block; }
@@ -458,22 +536,22 @@
       <p>Reference code:</p>
       <span class="ref-big" id="subRecoveryRef">—</span>
       <button id="subSendToTeacherBtn" onclick="sendToTeacher()"
-              style="width:100%;padding:13px;background:#F97316;color:white;border:none;border-radius:10px;
+              style="width:100%;padding:13px;background:#D99B2D;color:white;border:none;border-radius:10px;
                      font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;
                      margin-top:6px;transition:all .15s">
         📤 Send to Teacher
       </button>
-      <div id="subSendStatus" style="margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center"></div>
-      <p style="font-size:11px;color:#7c85a2;margin-top:14px;line-height:1.6;border-top:1px solid #2e3248;padding-top:12px;">
+      <div id="subSendStatus" style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.5;text-align:center"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:14px;line-height:1.6;border-top:1px solid var(--border);padding-top:12px;">
         If the button above keeps failing (e.g. no internet on this device), tap below to copy your saved answers as text — send that to your teacher (WhatsApp, email, etc.) and they can recover it from their dashboard.
       </p>
       <button id="subCopyDataBtn" onclick="copyRecoveryData()"
-              style="width:100%;padding:11px;background:transparent;color:#94a3b8;border:1px solid #2e3248;border-radius:10px;
+              style="width:100%;padding:11px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:10px;
                      font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;">
         📋 Copy Recovery Data for Teacher
       </button>
       <button id="subDismissBtn" onclick="dismissStuckSubmission()"
-              style="width:100%;padding:9px;background:transparent;color:#7c85a2;border:none;
+              style="width:100%;padding:9px;background:transparent;color:var(--muted);border:none;
                      font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:10px;text-decoration:underline;">
         Discard this and start a new exam
       </button>
@@ -608,19 +686,6 @@
 
 <!-- EXAM SCREEN -->
 <div id="examScreen" class="screen">
-  <div class="monitor">
-    <div class="monitor-title"><div class="pulse-dot"></div> AI Proctor Live</div>
-    <div class="monitor-video">
-      <video id="examVideo" autoplay playsinline muted></video>
-      <canvas id="examCanvas"></canvas>
-    </div>
-    <div class="monitor-badges">
-      <span class="mbadge" id="b-cam">📷 Cam</span>
-      <span class="mbadge" id="b-face">👤 Face</span>
-      <span class="mbadge" id="b-tab">🖥 Focus</span>
-      <span class="mbadge" id="b-fs">⛶ Full</span>
-    </div>
-  </div>
   <div class="sec-log" id="secLog"></div>
 
   <div class="exam-header">
@@ -645,6 +710,22 @@
   </div>
 
   <div id="subjectTabs" class="subject-tabs"></div>
+
+  <div class="nav-panel-backdrop" id="navPanelBackdrop" onclick="toggleNavPanel(true)"></div>
+
+  <div class="exam-body-grid">
+  <div class="nav-panel" id="navPanel">
+    <div class="nav-panel-head">
+      <div class="nav-panel-title">Question Navigator</div>
+      <button type="button" class="nav-panel-close" onclick="toggleNavPanel(true)">✕</button>
+    </div>
+    <div class="nav-legend">
+      <span><span class="nav-legend-dot" style="background:var(--green)"></span>Answered</span>
+      <span><span class="nav-legend-dot" style="background:var(--yellow)"></span>Flagged</span>
+      <span><span class="nav-legend-dot" style="background:var(--surface2);border:1px solid var(--border2)"></span>Unanswered</span>
+    </div>
+    <div class="q-dots-wrap" id="navDots"></div>
+  </div>
 
   <div class="question-wrap">
     <div class="exam-candidate-card">
@@ -686,12 +767,37 @@
       <span class="tts-voice-badge" id="ttsVoiceBadge">—</span>
     </div>
 
+    <!-- Examination Tools — ribbon populated by setupExamTools() from quizMeta's
+         per-exam tool flags; a hidden button here never got enabled for this quiz. -->
+    <div class="tools-ribbon hidden" id="toolsRibbon">
+      <button type="button" class="tool-btn hidden" id="tool-btn-calc" onclick="openTool('calc')">🧮 Calculator</button>
+      <button type="button" class="tool-btn hidden" id="tool-btn-sci" onclick="openTool('sci')">📐 Scientific</button>
+      <button type="button" class="tool-btn hidden" id="tool-btn-formula" onclick="openTool('formula')">📄 Formula Sheet</button>
+      <button type="button" class="tool-btn hidden" id="tool-btn-rough" onclick="openTool('rough')">✏️ Rough Work</button>
+      <button type="button" class="tool-btn hidden" id="tool-btn-periodic" onclick="openTool('periodic')">⚗️ Periodic Table</button>
+    </div>
+
     <div id="questionArea"></div>
-    <div class="q-dots-wrap" id="navDots"></div>
+  </div>
+
+  <div class="monitor">
+    <div class="monitor-title"><div class="pulse-dot"></div> AI Proctor Live</div>
+    <div class="monitor-video">
+      <video id="examVideo" autoplay playsinline muted></video>
+      <canvas id="examCanvas"></canvas>
+    </div>
+    <div class="monitor-badges">
+      <span class="mbadge" id="b-cam">📷 Cam</span>
+      <span class="mbadge" id="b-face">👤 Face</span>
+      <span class="mbadge" id="b-tab">🖥 Focus</span>
+      <span class="mbadge" id="b-fs">⛶ Full</span>
+    </div>
+  </div>
   </div>
 
   <div class="exam-nav">
     <button class="nav-btn nav-prev" id="prevBtn" onclick="prevQ()" disabled>← Prev</button>
+    <button class="nav-btn nav-grid" id="gridBtn" onclick="toggleNavPanel()">▦ Grid</button>
     <button class="nav-btn nav-submit hidden" id="submitBtn" onclick="confirmSubmit()">Submit Exam ✓</button>
     <button class="nav-btn nav-next" id="nextBtn" onclick="nextQ()">Next →</button>
   </div>
@@ -724,6 +830,22 @@
     <div class="vio-msg"   id="vioMsg"></div>
     <div class="vio-count" id="vioCount"></div>
     <button class="vio-btn" id="vioBtn" onclick="ackViolation()">I Understand — Continue</button>
+  </div>
+</div>
+
+<!-- MIC WARNING TOAST (soft warning only — no strike, dismisses itself) -->
+<div id="micWarnToast">🎙️ Please avoid talking during the exam — if this continues, it will count as a violation.</div>
+
+<!-- EXAMINATION TOOLS PANEL -->
+<div class="tool-panel-backdrop" id="toolPanelBackdrop" onclick="closeToolPanel()"></div>
+<div class="tool-panel" id="toolPanel">
+  <div class="tool-panel-rail" id="toolPanelRail"></div>
+  <div class="tool-panel-body">
+    <div class="tool-panel-head">
+      <div class="tool-panel-title" id="toolPanelTitle">Tool</div>
+      <button type="button" class="tool-panel-close" onclick="closeToolPanel()">✕</button>
+    </div>
+    <div class="tool-panel-content" id="toolPanelContent"></div>
   </div>
 </div>
 
@@ -787,12 +909,12 @@
   });
   var scriptParam = params['script'] || '';
   if (!scriptParam || scriptParam.indexOf(ALLOWED_SCRIPT_ORIGIN) === -1) {
-    document.body.style.cssText = 'font-family:sans-serif;background:#080b14;color:#e8eaf4;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;';
+    document.body.style.cssText = 'font-family:sans-serif;background:#F3F5F8;color:#17365D;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;';
     document.body.innerHTML =
       '<div style="text-align:center;max-width:400px">'
       + '<div style="font-size:48px;margin-bottom:16px">🚫</div>'
-      + '<h2 style="color:#f06b6b;margin-bottom:10px">Invalid Exam Link</h2>'
-      + '<p style="color:#9ba3c0;font-size:14px;line-height:1.6">'
+      + '<h2 style="color:#DC2626;margin-bottom:10px">Invalid Exam Link</h2>'
+      + '<p style="color:#55606E;font-size:14px;line-height:1.6">'
       + 'This link is not valid or has been tampered with.<br>'
       + 'Please get the correct exam link from your teacher and try again.'
       + '</p>'
@@ -886,6 +1008,14 @@ var noFace        = 0;
 var multiFace     = 0;
 var faceEnabled   = true;
 var faceDetector  = null;
+var micProctoringEnabled = false;
+var micAboveSince = null;   // when the current run of speech-level audio started
+var micLastAbove  = 0;      // timestamp of the most recent above-threshold tick
+var micWarnedAt   = 0;      // timestamp of the last soft warning (0 = none pending)
+var MIC_TALK_THRESHOLD    = 25;    // analyser pct (0-100) treated as "speaking", not just ambient noise
+var MIC_SUSTAIN_MS        = 2500;  // how long that has to hold (with brief gaps) before it counts as "talking"
+var MIC_SILENCE_RESET_MS  = 1200;  // gap between words that still counts as the same run
+var MIC_ESCALATE_WINDOW_MS = 75000; // repeat sustained talking within this long after a warning -> real strike
 var examSubmitted = false;
 var studentInfo   = { name:'', class:'', school:'', locked:false };
 var examSessionToken = '';   // v5.1: issued by validateExamCode; required by savePhoto, logViolation, getExplanation
@@ -1854,6 +1984,8 @@ window.addEventListener('load',function(){
       }
       quizMeta    = result.quizData;
       faceEnabled = quizMeta.faceDetection !== false;
+      micProctoringEnabled = quizMeta.micProctoring === true;
+      setupExamTools();
       safeText('preTitle', quizMeta.title);
       if (quizMeta.examInstruction) {
         var instrBox = document.getElementById('exam-instruction-box');
@@ -2019,10 +2151,50 @@ function setupAudio(stream){
       var pct=Math.min((avg/128)*100,100);
       var fill=document.getElementById('audioFill'); if(fill)fill.style.width=pct+'%';
       if(pct>8){document.getElementById('audioDot').classList.add('ok');safeText('audioText','Microphone active');}
+      checkMicTalk(pct);
       requestAnimationFrame(tick);
     }
     tick();
   }catch(e){safeText('audioText','Mic error: '+e.message);}
+}
+
+// Mic Proctoring: a loudness-based heuristic (same analyser as the mic-level
+// meter above), not real speech recognition — it can't tell talking-to-someone
+// apart from a loud cough, so a single sustained run only warns. It becomes a
+// real strike (triggerViolation, same as tab-switch/face violations) only if
+// sustained talking happens AGAIN within MIC_ESCALATE_WINDOW_MS of the warning.
+function checkMicTalk(pct){
+  if(!micProctoringEnabled || examSubmitted) return;
+  var examEl=document.getElementById('examScreen');
+  if(!examEl || !examEl.classList.contains('active')) return; // not during the pre-exam camera check
+  var now=Date.now();
+  if(pct>MIC_TALK_THRESHOLD){
+    if(micAboveSince===null) micAboveSince=now;
+    micLastAbove=now;
+    if(now-micAboveSince>=MIC_SUSTAIN_MS){
+      handleSustainedTalk(now);
+      micAboveSince=now; // restart the run so this doesn't fire every frame while still talking
+    }
+  }else if(micAboveSince!==null && now-micLastAbove>MIC_SILENCE_RESET_MS){
+    micAboveSince=null; // gap was long enough that this wasn't one continuous run
+  }
+}
+function handleSustainedTalk(now){
+  if(micWarnedAt && (now-micWarnedAt)<=MIC_ESCALATE_WINDOW_MS){
+    micWarnedAt=0;
+    triggerViolation('Sustained talking detected again after a warning','mic');
+  }else{
+    micWarnedAt=now;
+    showMicWarning();
+    post('logViolation',{studentEmail:student.email,examCode:student.examCode,violationType:'mic-warning',message:'Sustained talking detected (warning only, not a strike)',violationCount:violations,userAgent:navigator.userAgent,url:window.location.href,examSessionToken:examSessionToken},function(){});
+  }
+}
+function showMicWarning(){
+  var el=document.getElementById('micWarnToast');
+  if(!el)return;
+  el.classList.add('on');
+  clearTimeout(showMicWarning._t);
+  showMicWarning._t=setTimeout(function(){el.classList.remove('on');},5000);
 }
 
 // ================================================================
@@ -2145,6 +2317,7 @@ function startExam(){
     hideLoading();
     if (!qs || !qs.length) { alert('Failed to load questions. Please contact your teacher.'); return; }
     questions = qs;
+    restoreProgress(); // resume answers/flags from this device if the student reloaded mid-exam
     _initSubjectTabs(); // sort by subject if Subject-Sectioned exam
     // set up question/subject-adaptive branching if adaptive quiz type —
     // on failure (thin/mismatched pool), stop cold here rather than fall
@@ -2323,6 +2496,18 @@ function fetchPassageContent(passageId,containerId){
 // ================================================================
 // RENDER QUESTION
 // ================================================================
+// Renders $inline$ and $$block$$ math (fractions, powers, roots, equations)
+// inside a container via KaTeX. If the CDN failed to load (offline, blocked),
+// window.renderMathInElement won't exist — no-op, text stays plain, nothing breaks.
+function renderMathIn(el){
+  if(!el||typeof window.renderMathInElement!=='function')return;
+  try{
+    window.renderMathInElement(el,{
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+      throwOnError:false
+    });
+  }catch(_){}
+}
 function renderQuestion(){
   if(!questions.length)return;
   ttsStop();
@@ -2444,7 +2629,7 @@ function renderQuestion(){
   }
   html+='</div>';
 
-  var area=document.getElementById('questionArea'); if(area)area.innerHTML=html;
+  var area=document.getElementById('questionArea'); if(area){area.innerHTML=html;renderMathIn(area);}
 
   var prev=document.getElementById('prevBtn');
   var next=document.getElementById('nextBtn');
@@ -2843,9 +3028,248 @@ function _updateSubjectTab(){
 function renderDots(){
   var c=document.getElementById('navDots'); if(!c)return;
   c.innerHTML=questions.map(function(_,i){
-    return '<div class="q-dot" id="dot_'+i+'" onclick="goToQ('+i+')" title="Question '+(i+1)+'"></div>';
+    return '<div class="q-dot" id="dot_'+i+'" onclick="goToQ('+i+');toggleNavPanel(true)" title="Question '+(i+1)+'">'+(i+1)+'</div>';
   }).join('');
   updateDots();
+}
+// Mobile: the navigator is a bottom-sheet opened by the Grid button in
+// exam-nav and closed by tapping a question, the backdrop, or the close
+// button; on desktop (see the min-width:1024px CSS) it's just a permanent
+// column and this toggle never runs since .nav-grid is hidden there.
+function toggleNavPanel(forceClose){
+  var p=document.getElementById('navPanel'), b=document.getElementById('navPanelBackdrop');
+  if(!p||!b)return;
+  var show = forceClose===true ? false : !p.classList.contains('on');
+  p.classList.toggle('on',show); b.classList.toggle('on',show);
+}
+
+// ================================================================
+// EXAMINATION TOOLS — calculator, scientific calculator, formula sheet,
+// rough-work pad, periodic table. Each is gated per-exam by a boolean on
+// quizMeta (set by the teacher in Create Quiz); a tool with no flag set
+// never shows a ribbon button and can't be opened.
+// ================================================================
+var TOOLS_DEFS=[
+  {id:'calc',icon:'🧮',label:'Calculator',flag:'toolCalculator'},
+  {id:'sci',icon:'📐',label:'Scientific Calculator',flag:'toolScientific'},
+  {id:'formula',icon:'📄',label:'Formula Sheet',flag:'toolFormulaSheet'},
+  {id:'rough',icon:'✏️',label:'Rough Work',flag:'toolRoughWork'},
+  {id:'periodic',icon:'⚗️',label:'Periodic Table',flag:'toolPeriodicTable'}
+];
+function setupExamTools(){
+  var any=false;
+  TOOLS_DEFS.forEach(function(t){
+    var enabled=!!(quizMeta&&quizMeta[t.flag]);
+    var btn=document.getElementById('tool-btn-'+t.id);
+    if(btn) btn.classList.toggle('hidden',!enabled);
+    if(enabled) any=true;
+  });
+  var ribbon=document.getElementById('toolsRibbon');
+  if(ribbon) ribbon.classList.toggle('hidden',!any);
+}
+function openTool(id){
+  var rail=document.getElementById('toolPanelRail');
+  if(rail){
+    rail.innerHTML=TOOLS_DEFS.filter(function(t){return quizMeta&&quizMeta[t.flag];}).map(function(t){
+      return '<button type="button" class="tool-rail-btn'+(t.id===id?' active':'')+'" onclick="openTool(\''+t.id+'\')" title="'+esc(t.label)+'">'+t.icon+'</button>';
+    }).join('');
+  }
+  var def=TOOLS_DEFS.filter(function(t){return t.id===id;})[0];
+  safeText('toolPanelTitle', def?def.label:'Tool');
+  var content=document.getElementById('toolPanelContent');
+  if(content) content.innerHTML=_toolContentHtml(id);
+  if(id==='calc'||id==='sci') _calcInit();
+  if(id==='rough') _roughInit();
+  if(id==='periodic') _periodicInit();
+  var panel=document.getElementById('toolPanel'), bd=document.getElementById('toolPanelBackdrop');
+  if(panel) panel.classList.add('on'); if(bd) bd.classList.add('on');
+}
+function closeToolPanel(){
+  var panel=document.getElementById('toolPanel'), bd=document.getElementById('toolPanelBackdrop');
+  if(panel) panel.classList.remove('on'); if(bd) bd.classList.remove('on');
+}
+function _toolContentHtml(id){
+  if(id==='calc'||id==='sci') return _calcHtml(id);
+  if(id==='rough') return '<div class="rough-toolbar">'
+    +'<button type="button" id="roughPenBtn" class="active" onclick="roughSetMode(\'pen\')">✏️ Pen</button>'
+    +'<button type="button" id="roughEraseBtn" onclick="roughSetMode(\'erase\')">🧹 Eraser</button>'
+    +'<button type="button" onclick="roughClear()">🗑 Clear</button>'
+    +'</div><canvas id="roughCanvas"></canvas>';
+  if(id==='periodic') return '<div class="ptable-grid" id="ptableGrid"></div><div class="ptable-detail" id="ptableDetail"></div>';
+  if(id==='formula') return (quizMeta&&quizMeta.formulaSheetUrl)
+    ? '<iframe id="formulaFrame" src="'+esc(quizMeta.formulaSheetUrl)+'"></iframe>'
+    : '<div style="color:var(--text2);font-size:13px;text-align:center;padding:40px 10px">No formula sheet was attached to this exam.</div>';
+  return '';
+}
+
+// ── Calculator (basic + scientific) — a classic accumulator calculator,
+// not a full expression parser: no operator precedence or brackets, same
+// limitation as a cheap physical calculator. Deliberately simple — this is
+// a student aid, not a grading-critical system, and avoids ever evaluating
+// a free-form expression string.
+var _calc={acc:null,op:null,display:'0',justEvaluated:false,memory:0};
+function _calcFmt(n){ if(typeof n!=='number'||!isFinite(n)) return 'Error'; return String(Math.round(n*1e10)/1e10); }
+function _calcApply(acc,op,val){
+  if(op==='^') return Math.pow(acc,val);
+  if(op==='+') return acc+val;
+  if(op==='−') return acc-val;
+  if(op==='×') return acc*val;
+  if(op==='÷') return val===0?NaN:acc/val;
+  return val;
+}
+function _calcHtml(mode){
+  var basicKeys=[['MC','MR','M+','C'],['7','8','9','÷'],['4','5','6','×'],['1','2','3','−'],['0','.','%','+'],['√','=']];
+  var opKeys=['÷','×','−','+','%','√','MC','MR','M+'];
+  var grid='<div class="calc-grid">'+basicKeys.map(function(row){
+    return row.map(function(k){
+      var cls='calc-key'+(opKeys.indexOf(k)>-1?' op':'')+(k==='='?' eq':'');
+      return '<button type="button" class="'+cls+'" onclick="calcPress(\''+k+'\')">'+k+'</button>';
+    }).join('');
+  }).join('')+'</div>';
+  var sciRow='';
+  if(mode==='sci'){
+    sciRow='<div class="calc-grid" style="margin-bottom:8px">'+['sin','cos','tan','log','ln','^','π','e'].map(function(k){
+      return '<button type="button" class="calc-key op" onclick="calcPress(\''+k+'\')">'+k+'</button>';
+    }).join('')+'</div>';
+  }
+  var tabs='';
+  if(quizMeta&&quizMeta.toolScientific&&quizMeta.toolCalculator){
+    tabs='<div class="calc-tabs">'
+      +'<span class="calc-tab'+(mode==='calc'?' active':'')+'" onclick="openTool(\'calc\')">Basic</span>'
+      +'<span class="calc-tab'+(mode==='sci'?' active':'')+'" onclick="openTool(\'sci\')">Scientific</span>'
+      +'</div>';
+  }
+  return tabs+'<div class="calc-display"><div class="expr" id="calcExpr"></div><div class="val" id="calcVal">0</div></div>'+sciRow+grid;
+}
+function _calcInit(){ _calc={acc:null,op:null,display:'0',justEvaluated:false,memory:_calc.memory||0}; _calcRender(); }
+function _calcRender(){
+  safeText('calcExpr', (_calc.acc!==null&&_calc.op) ? (_calcFmt(_calc.acc)+' '+_calc.op) : '');
+  safeText('calcVal', _calc.display);
+}
+function calcPress(k){
+  var s=_calc;
+  if(k==='C'){ s.acc=null; s.op=null; s.display='0'; s.justEvaluated=false; _calcRender(); return; }
+  if(k==='MR'){ s.display=_calcFmt(s.memory); s.justEvaluated=true; _calcRender(); return; }
+  if(k==='MC'){ s.memory=0; _calcRender(); return; }
+  if(k==='M+'){ s.memory=(s.memory||0)+(parseFloat(s.display)||0); _calcRender(); return; }
+  if(k==='√'){ s.display=_calcFmt(Math.sqrt(parseFloat(s.display)||0)); s.justEvaluated=true; _calcRender(); return; }
+  if(k==='%'){ s.display=_calcFmt((parseFloat(s.display)||0)/100); _calcRender(); return; }
+  if(k==='sin'||k==='cos'||k==='tan'||k==='log'||k==='ln'){
+    var v=parseFloat(s.display)||0, r;
+    if(k==='sin') r=Math.sin(v*Math.PI/180);
+    else if(k==='cos') r=Math.cos(v*Math.PI/180);
+    else if(k==='tan') r=Math.tan(v*Math.PI/180);
+    else if(k==='log') r=Math.log10(v);
+    else r=Math.log(v);
+    s.display=_calcFmt(r); s.justEvaluated=true; _calcRender(); return;
+  }
+  if(k==='π'){ s.display=_calcFmt(Math.PI); s.justEvaluated=true; _calcRender(); return; }
+  if(k==='e'){ s.display=_calcFmt(Math.E); s.justEvaluated=true; _calcRender(); return; }
+  if(k==='^'||k==='+'||k==='−'||k==='×'||k==='÷'){
+    var val=parseFloat(s.display)||0;
+    s.acc = s.acc===null ? val : _calcApply(s.acc,s.op,val);
+    s.op=k; s.display='0'; s.justEvaluated=false; _calcRender(); return;
+  }
+  if(k==='='){
+    var val2=parseFloat(s.display)||0;
+    if(s.acc!==null&&s.op) s.display=_calcFmt(_calcApply(s.acc,s.op,val2));
+    s.acc=null; s.op=null; s.justEvaluated=true; _calcRender(); return;
+  }
+  // digit or decimal point
+  if(s.justEvaluated){ s.display=(k==='.'?'0.':k); s.justEvaluated=false; }
+  else if(s.display==='0'&&k!=='.') s.display=k;
+  else if(k==='.'&&s.display.indexOf('.')>-1){ /* already has one */ }
+  else s.display+=k;
+  _calcRender();
+}
+
+// ── Rough-work pad — plain draw/erase, no stroke history or playback
+// (scoped down deliberately; see conversation). The snapshot is kept only
+// in memory for this tab, so it survives closing/reopening the panel but
+// not a page reload — never sent to the server.
+var _rough={mode:'pen',drawing:false,snapshot:null};
+function _roughInit(){
+  var cv=document.getElementById('roughCanvas'); if(!cv)return;
+  var rect=cv.getBoundingClientRect();
+  cv.width=rect.width; cv.height=rect.height;
+  var ctx=cv.getContext('2d');
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  if(_rough.snapshot){
+    var img=new Image();
+    img.onload=function(){ ctx.drawImage(img,0,0,cv.width,cv.height); };
+    img.src=_rough.snapshot;
+  }
+  function pos(e){
+    var r=cv.getBoundingClientRect(); var p=(e.touches&&e.touches[0])||e;
+    return {x:p.clientX-r.left,y:p.clientY-r.top};
+  }
+  function start(e){ e.preventDefault(); _rough.drawing=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+  function move(e){
+    if(!_rough.drawing)return; e.preventDefault();
+    var p=pos(e);
+    ctx.lineWidth=_rough.mode==='erase'?18:2.5;
+    ctx.strokeStyle=_rough.mode==='erase'?'#ffffff':'#17365D';
+    ctx.lineTo(p.x,p.y); ctx.stroke();
+  }
+  function end(){ if(!_rough.drawing)return; _rough.drawing=false; try{_rough.snapshot=cv.toDataURL();}catch(_){} }
+  cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
+  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
+}
+function roughSetMode(m){
+  _rough.mode=m;
+  var pen=document.getElementById('roughPenBtn'), er=document.getElementById('roughEraseBtn');
+  if(pen) pen.classList.toggle('active',m==='pen');
+  if(er) er.classList.toggle('active',m==='erase');
+}
+function roughClear(){
+  var cv=document.getElementById('roughCanvas'); if(!cv)return;
+  cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+  _rough.snapshot=null;
+}
+
+// ── Periodic table — a curated set of the elements actually covered by a
+// typical secondary-school chemistry curriculum, not all 118: better a
+// smaller table that's confidently accurate than a complete one risking
+// wrong atomic masses on the less common elements.
+var PTABLE=[
+  {z:1,s:'H',n:'Hydrogen',m:'1.01',c:'nonmetal'},{z:2,s:'He',n:'Helium',m:'4.00',c:'noble'},
+  {z:3,s:'Li',n:'Lithium',m:'6.94',c:'alkali'},{z:4,s:'Be',n:'Beryllium',m:'9.01',c:'alkaline'},
+  {z:5,s:'B',n:'Boron',m:'10.81',c:'metalloid'},{z:6,s:'C',n:'Carbon',m:'12.01',c:'nonmetal'},
+  {z:7,s:'N',n:'Nitrogen',m:'14.01',c:'nonmetal'},{z:8,s:'O',n:'Oxygen',m:'16.00',c:'nonmetal'},
+  {z:9,s:'F',n:'Fluorine',m:'19.00',c:'halogen'},{z:10,s:'Ne',n:'Neon',m:'20.18',c:'noble'},
+  {z:11,s:'Na',n:'Sodium',m:'22.99',c:'alkali'},{z:12,s:'Mg',n:'Magnesium',m:'24.31',c:'alkaline'},
+  {z:13,s:'Al',n:'Aluminium',m:'26.98',c:'post'},{z:14,s:'Si',n:'Silicon',m:'28.09',c:'metalloid'},
+  {z:15,s:'P',n:'Phosphorus',m:'30.97',c:'nonmetal'},{z:16,s:'S',n:'Sulfur',m:'32.07',c:'nonmetal'},
+  {z:17,s:'Cl',n:'Chlorine',m:'35.45',c:'halogen'},{z:18,s:'Ar',n:'Argon',m:'39.95',c:'noble'},
+  {z:19,s:'K',n:'Potassium',m:'39.10',c:'alkali'},{z:20,s:'Ca',n:'Calcium',m:'40.08',c:'alkaline'},
+  {z:21,s:'Sc',n:'Scandium',m:'44.96',c:'transition'},{z:22,s:'Ti',n:'Titanium',m:'47.87',c:'transition'},
+  {z:23,s:'V',n:'Vanadium',m:'50.94',c:'transition'},{z:24,s:'Cr',n:'Chromium',m:'52.00',c:'transition'},
+  {z:25,s:'Mn',n:'Manganese',m:'54.94',c:'transition'},{z:26,s:'Fe',n:'Iron',m:'55.85',c:'transition'},
+  {z:27,s:'Co',n:'Cobalt',m:'58.93',c:'transition'},{z:28,s:'Ni',n:'Nickel',m:'58.69',c:'transition'},
+  {z:29,s:'Cu',n:'Copper',m:'63.55',c:'transition'},{z:30,s:'Zn',n:'Zinc',m:'65.38',c:'transition'},
+  {z:31,s:'Ga',n:'Gallium',m:'69.72',c:'post'},{z:32,s:'Ge',n:'Germanium',m:'72.63',c:'metalloid'},
+  {z:33,s:'As',n:'Arsenic',m:'74.92',c:'metalloid'},{z:34,s:'Se',n:'Selenium',m:'78.97',c:'nonmetal'},
+  {z:35,s:'Br',n:'Bromine',m:'79.90',c:'halogen'},{z:36,s:'Kr',n:'Krypton',m:'83.80',c:'noble'},
+  {z:47,s:'Ag',n:'Silver',m:'107.87',c:'transition'},{z:50,s:'Sn',n:'Tin',m:'118.71',c:'post'},
+  {z:53,s:'I',n:'Iodine',m:'126.90',c:'halogen'},{z:54,s:'Xe',n:'Xenon',m:'131.29',c:'noble'},
+  {z:56,s:'Ba',n:'Barium',m:'137.33',c:'alkaline'},{z:74,s:'W',n:'Tungsten',m:'183.84',c:'transition'},
+  {z:78,s:'Pt',n:'Platinum',m:'195.08',c:'transition'},{z:79,s:'Au',n:'Gold',m:'196.97',c:'transition'},
+  {z:80,s:'Hg',n:'Mercury',m:'200.59',c:'transition'},{z:82,s:'Pb',n:'Lead',m:'207.2',c:'post'},
+  {z:83,s:'Bi',n:'Bismuth',m:'208.98',c:'post'},{z:92,s:'U',n:'Uranium',m:'238.03',c:'actinide'}
+];
+var PTABLE_COLORS={alkali:'#E05263',alkaline:'#E8935B',transition:'#2459A6',post:'#4F8FD1',metalloid:'#27865C',nonmetal:'#55A66B',halogen:'#D99B2D',noble:'#7A5FC4',actinide:'#6F5096'};
+function _periodicInit(){
+  var grid=document.getElementById('ptableGrid'); if(!grid)return;
+  grid.innerHTML=PTABLE.map(function(e){
+    return '<button type="button" class="ptable-el" style="background:'+(PTABLE_COLORS[e.c]||'#8993A1')+'" onclick="showElement('+e.z+')">'
+      +'<span class="sym">'+e.s+'</span><span>'+e.z+'</span></button>';
+  }).join('');
+}
+function showElement(z){
+  var e=PTABLE.filter(function(x){return x.z===z;})[0]; if(!e)return;
+  var d=document.getElementById('ptableDetail'); if(!d)return;
+  d.classList.add('on');
+  d.innerHTML='<strong>'+esc(e.n)+'</strong> ('+esc(e.s)+')<br>Atomic number: '+e.z+' &middot; Atomic mass: '+e.m+'<br>Category: '+esc(e.c);
 }
 
 function updateDots(){
@@ -2858,6 +3282,35 @@ function updateDots(){
     if(i===qIndex)d.classList.add('current');
   });
   safeText('answeredCount',answered+' answered');
+  persistProgress();
+}
+
+// ================================================================
+// IN-PROGRESS AUTOSAVE (v5.3) — answers/flags survive a crash, dead
+// battery or accidental tab close before Submit is ever pressed. Scoped
+// out for adaptive quizzes: the adaptive pool/pointer isn't rebuilt
+// identically on reload, so replaying a saved answer map there risks
+// mismatching a restored "answered" mark against a different question
+// at that index — not worth the risk for a convenience feature.
+// ================================================================
+function _examProgressKey(){
+  return 'edurena_exam_progress_v1_'+String(student.examCode||'')+'_'+String(student.email||'');
+}
+function persistProgress(){
+  if(!quizMeta||quizMeta.quizType==='adaptive')return;
+  try{ localStorage.setItem(_examProgressKey(),JSON.stringify({answers:answers,flagged:flagged,savedAt:Date.now()})); }catch(_){}
+}
+function restoreProgress(){
+  if(!quizMeta||quizMeta.quizType==='adaptive')return;
+  try{
+    var raw=localStorage.getItem(_examProgressKey()); if(!raw)return;
+    var saved=JSON.parse(raw);
+    if(saved&&saved.answers)Object.assign(answers,saved.answers);
+    if(saved&&saved.flagged)Object.assign(flagged,saved.flagged);
+  }catch(_){}
+}
+function clearProgress(){
+  try{ localStorage.removeItem(_examProgressKey()); }catch(_){}
 }
 
 function updateVioDisplay(){
@@ -2927,7 +3380,7 @@ function setupSecurity(){
 function triggerViolation(msg,type){
   if(examSubmitted)return;
   violations++; logSec(msg,'vio'); updateVioDisplay();
-  safeText('vioTitle',type==='face'?'Proctoring Alert':'Security Violation');
+  safeText('vioTitle',(type==='face'||type==='mic')?'Proctoring Alert':'Security Violation');
   safeText('vioMsg',msg);
   safeText('vioCount','Strike '+violations+' of '+CFG.MAX_VIOLATIONS);
   if(violations>=CFG.MAX_VIOLATIONS){
@@ -3020,6 +3473,7 @@ function doSubmit(forced){
   // matched to a specific cause instead of guessed at.
   console.log('[exam] doSubmit called. forced='+forced+' timeLeft='+timeLeft+'s violations='+violations+' answered='+Object.keys(answers||{}).length+'/'+questions.length, new Error('doSubmit call stack').stack);
   examSubmitted=true;
+  clearProgress();
   ttsStop();
   clearInterval(timerHandle);
   releaseWakeLock();

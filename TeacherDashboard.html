@@ -977,6 +977,44 @@ body.dark .tb-badge { background: rgba(35,209,139,.1); border-color: rgba(35,209
             <div class="tog on" id="tog-face" onclick="this.classList.toggle('on')"></div>
           </div>
           <div class="tr-row">
+            <div><div class="tl">Mic Proctoring</div><div class="td">Warns a student if sustained talking is picked up; a strike only if it keeps happening after the warning</div></div>
+            <div class="tog" id="tog-mic" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="div" style="margin:10px 0"></div>
+          <div class="ct" style="margin-bottom:8px">Examination Tools</div>
+          <div class="tr-row">
+            <div><div class="tl">Basic Calculator</div><div class="td">+ − × ÷, percentage, square root, memory</div></div>
+            <div class="tog" id="tog-tool-calc" onclick="this.classList.toggle('on');onToolCalcChange()"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Scientific Calculator</div><div class="td">Adds sin/cos/tan, log, powers — requires Basic Calculator above</div></div>
+            <div class="tog" id="tog-tool-sci" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Rough-Work Pad</div><div class="td">A blank canvas students can sketch/erase on during the exam</div></div>
+            <div class="tog" id="tog-tool-rough" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Periodic Table</div><div class="td">Interactive periodic table — for Chemistry exams</div></div>
+            <div class="tog" id="tog-tool-periodic" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="tr-row">
+            <div><div class="tl">Formula Sheet</div><div class="td">Attach a PDF students can open without leaving the exam</div></div>
+            <div class="tog" id="tog-tool-formula" onclick="this.classList.toggle('on');onToolFormulaChange()"></div>
+          </div>
+          <div class="fg hidden" id="formula-sheet-upload-wrap" style="margin-top:4px">
+            <label>Formula Sheet</label>
+            <select id="c-formula-sheet-select"><option value="">— Select a formula sheet —</option></select>
+            <div style="margin-top:8px">
+              <button type="button" class="btn btn-sm" onclick="toggleFormulaSheetUpload()">+ Upload New Formula Sheet</button>
+            </div>
+            <div class="hidden" id="formula-sheet-new-wrap" style="margin-top:8px;gap:8px;flex-wrap:wrap;align-items:center">
+              <input type="text" id="c-formula-sheet-title" placeholder="e.g. JSS2 Mathematics Formula Sheet" style="flex:1;min-width:160px">
+              <input type="file" id="c-formula-sheet-file" accept="application/pdf">
+              <button type="button" class="btn btn-sm" onclick="uploadNewFormulaSheet()">Upload</button>
+            </div>
+          </div>
+          <div class="tr-row">
             <div><div class="tl">Show Correct Answers After Exam</div><div class="td">Students can review their answers once submitted</div></div>
             <div class="tog" id="tog-ans" onclick="this.classList.toggle('on')"></div>
           </div>
@@ -3380,7 +3418,7 @@ function renderSubjAlloc(subjs,wk,weekMode){
     }).join('');
     var simpleRow='<div class="subj-simple-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0">'
       +'<label style="font-size:12px;color:var(--text2)">Questions from this subject</label>'
-      +'<input type="number" class="ssimple-count sinput" data-subject="'+subjAttr+'" value="'+simpleSuggested+'" min="0" max="'+available+'" onchange="updateTot()" aria-label="Number of questions from '+subjAttr+'" style="width:60px">'
+      +'<input type="number" class="ssimple-count sinput" data-subject="'+subjAttr+'" data-suggested="'+simpleSuggested+'" value="'+simpleSuggested+'" min="0" max="'+available+'" onchange="updateTot()" aria-label="Number of questions from '+subjAttr+'" style="width:60px">'
       +'<span style="font-size:11.5px;color:var(--text3)">— picked at random across eligible topics</span>'
       +'<button type="button" class="btn btn-sm" style="margin-left:auto" onclick="toggleSubjAllocMode(\''+subjJsEsc+'\')">🔧 Allocate by topic instead</button>'
       +'</div>';
@@ -3421,7 +3459,10 @@ function toggleSubjAllocMode(subject){
 // scopes either action to just that subject — used by each subject's own
 // "Clear" button so zeroing out Mathematics doesn't touch English too.
 function setAllTopicCounts(mode,subjectFilter){
-  document.querySelectorAll('.ttcount').forEach(function(el){
+  // Covers both allocation modes — .ttcount (Advanced, per-topic) and
+  // .ssimple-count (Simple, per-subject) — so Clear All/Reset Suggested
+  // actually affects whichever mode each subject currently has open.
+  document.querySelectorAll('.ttcount, .ssimple-count').forEach(function(el){
     if(subjectFilter && el.getAttribute('data-subject')!==subjectFilter) return;
     el.value = mode==='suggested' ? (el.getAttribute('data-suggested')||0) : 0;
   });
@@ -3495,6 +3536,51 @@ function toggleCqSection(headEl){
   var card=headEl.closest('.cq-collapsible');
   if(card) card.classList.toggle('open');
 }
+function onToolCalcChange(){
+  // Scientific is an extension of Basic — turning Basic off takes Scientific with it.
+  if(!document.getElementById('tog-tool-calc').classList.contains('on')){
+    document.getElementById('tog-tool-sci').classList.remove('on');
+  }
+}
+function onToolFormulaChange(){
+  var on=document.getElementById('tog-tool-formula').classList.contains('on');
+  document.getElementById('formula-sheet-upload-wrap').classList.toggle('hidden',!on);
+  if(on) loadFormulaSheets();
+}
+function loadFormulaSheets(selectId){
+  call('getFormulaSheets',{},function(sheets){
+    var sel=document.getElementById('c-formula-sheet-select'); if(!sel)return;
+    sel.innerHTML='<option value="">— Select a formula sheet —</option>'
+      +(sheets||[]).map(function(s){ return '<option value="'+s.id+'">'+esc(s.title)+'</option>'; }).join('');
+    if(selectId) sel.value=String(selectId);
+  });
+}
+function toggleFormulaSheetUpload(){
+  var wrap=document.getElementById('formula-sheet-new-wrap'); if(!wrap)return;
+  var show=wrap.classList.contains('hidden');
+  wrap.classList.toggle('hidden',!show);
+  wrap.style.display=show?'flex':'';
+}
+function uploadNewFormulaSheet(){
+  var title=(document.getElementById('c-formula-sheet-title').value||'').trim();
+  var file=document.getElementById('c-formula-sheet-file').files[0];
+  if(!title){ toast('error','Give the formula sheet a title'); return; }
+  if(!file){ toast('error','Choose a PDF file'); return; }
+  var reader=new FileReader();
+  reader.onload=function(){
+    spin(true,'Uploading formula sheet…');
+    call('createFormulaSheet',{title:title,pdfBase64:reader.result},function(d){
+      spin(false);
+      toast('success','Formula sheet uploaded');
+      document.getElementById('c-formula-sheet-title').value='';
+      document.getElementById('c-formula-sheet-file').value='';
+      toggleFormulaSheetUpload();
+      loadFormulaSheets(d.id);
+    });
+  };
+  reader.onerror=function(){ toast('error','Could not read the PDF file'); };
+  reader.readAsDataURL(file);
+}
 function doCreate(){
   var title=(document.getElementById('c-title').value||'').trim(), code=(document.getElementById('c-code').value||'').trim().toUpperCase(), cid=document.getElementById('c-class').value, wk=document.getElementById('c-week').value, dur=document.getElementById('c-dur').value, st=document.getElementById('c-start').value, en=document.getElementById('c-end').value;
   var questionSource=(document.getElementById('c-question-source')||{}).value||'school';
@@ -3542,6 +3628,13 @@ function doCreate(){
     quizType:            quizType,
     difficultyLevels:    diffLevels.length ? diffLevels : null,
     faceDetection:       document.getElementById('tog-face').classList.contains('on'),
+    micProctoring:       document.getElementById('tog-mic').classList.contains('on'),
+    toolCalculator:      document.getElementById('tog-tool-calc').classList.contains('on'),
+    toolScientific:      document.getElementById('tog-tool-sci').classList.contains('on'),
+    toolFormulaSheet:    document.getElementById('tog-tool-formula').classList.contains('on'),
+    toolRoughWork:       document.getElementById('tog-tool-rough').classList.contains('on'),
+    toolPeriodicTable:   document.getElementById('tog-tool-periodic').classList.contains('on'),
+    formulaSheetId:      (document.getElementById('c-formula-sheet-select')||{}).value || '',
     showCorrectAnswers:  document.getElementById('tog-ans').classList.contains('on'),
     allowRetakes:        document.getElementById('tog-retakes').classList.contains('on'),
     enableTTS:           document.getElementById('tog-tts').classList.contains('on'),
@@ -3570,8 +3663,16 @@ function resetCreate(){
   document.getElementById('c-dur').value='30'; var cl=document.getElementById('c-class'); if(cl) cl.value='';
   var wk=document.getElementById('c-week'); if(wk){ wk.innerHTML='<option value="">— Select —</option>'; wk.disabled=true; }
   document.getElementById('subj-card').classList.add('hidden'); document.getElementById('passage-card').classList.add('hidden');
-  document.getElementById('tog-face').classList.add('on'); document.getElementById('tog-ans').classList.remove('on');
+  document.getElementById('tog-face').classList.add('on'); document.getElementById('tog-mic').classList.remove('on'); document.getElementById('tog-ans').classList.remove('on');
   document.getElementById('tog-retakes').classList.remove('on'); document.getElementById('tog-tts').classList.remove('on');
+  ['tog-tool-calc','tog-tool-sci','tog-tool-rough','tog-tool-periodic','tog-tool-formula'].forEach(function(id){
+    var e=document.getElementById(id); if(e) e.classList.remove('on');
+  });
+  var fsw=document.getElementById('formula-sheet-upload-wrap'); if(fsw) fsw.classList.add('hidden');
+  var fsf=document.getElementById('c-formula-sheet-file'); if(fsf) fsf.value='';
+  var fst=document.getElementById('c-formula-sheet-title'); if(fst) fst.value='';
+  var fss=document.getElementById('c-formula-sheet-select'); if(fss) fss.value='';
+  var fsn=document.getElementById('formula-sheet-new-wrap'); if(fsn){ fsn.classList.add('hidden'); fsn.style.display=''; }
   document.querySelectorAll('.type-chk').forEach(function(cb){ cb.checked=true; });
   var mv = document.getElementById('c-max-violations'); if(mv) mv.value = '3';
   var ci = document.getElementById('c-instruction'); if(ci) ci.value = '';
@@ -4157,7 +4258,7 @@ function clearVoiceProfile(){
 <!-- ═══════════════════════════════════════════════════════════════
      EDURENA HELP & SUPPORT WIDGET (v5.1)
 ═══════════════════════════════════════════════════════════════ -->
-<div id="qfhw-fab" style="position:fixed;bottom:20px;right:20px;z-index:9000;cursor:pointer;width:54px;height:54px;border-radius:50%;background:#4f78ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(0,0,0,0.35);transition:transform .15s" onclick="qfhwOpen()" title="Need help?">?</div>
+<div id="qfhw-fab" style="position:fixed;bottom:20px;right:20px;z-index:300;cursor:pointer;width:54px;height:54px;border-radius:50%;background:#4f78ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(0,0,0,0.35);transition:transform .15s" onclick="qfhwOpen()" title="Need help?">?</div>
 
 <div id="qfhw-mo" class="mo" style="display:none">
   <div class="mbox" style="width:440px;max-width:96vw">
@@ -4190,7 +4291,7 @@ function qfhwOpen() {
     'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Help request — ' + (s.email || 'Edurena user'))
     + '&body=' + encodeURIComponent('My account: ' + (s.email || '-') + '\nRole: ' + (s.role || '-') + '\n\nWhat I need help with:\n');
   document.getElementById('qfhw-wa-link').href =
-    'https://wa.me/2348012345678?text=' + encodeURIComponent(
+    'https://wa.me/2348073303231?text=' + encodeURIComponent(
       'Hi Edurena, I need help. Account: ' + (s.email || '-') + ' (' + (s.role || '-') + ')'
     );
   document.getElementById('qfhw-mo').style.display = 'flex';
