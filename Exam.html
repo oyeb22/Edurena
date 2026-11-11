@@ -39,6 +39,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <!-- MathLive — the Rough Work pad's per-step formula editor. Registers the
+       <math-field> custom element; works fine loaded deferred since custom
+       elements "upgrade" any matching tag already in the DOM once defined. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathlive@0.104.1"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -116,6 +120,7 @@
     #examScreen.active{display:flex;}
     .exam-header{position:sticky;top:0;z-index:100;background:var(--header-bg);color:var(--header-text);border-bottom:1px solid var(--border);flex-shrink:0;}
     .exam-header-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px;}
+    .exam-avatar{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--header-text);text-transform:uppercase;}
     .exam-title-block{flex:1;min-width:0;}
     .exam-title-main{font-size:clamp(13px,3.5vw,15px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .exam-title-sub{font-size:11px;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
@@ -253,7 +258,7 @@
     .subject-tabs{display:none;gap:6px;flex-wrap:wrap;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);}
     .stab{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;}
     .stab.active{background:var(--accent-glow);border-color:var(--accent2);color:var(--accent2);font-weight:600;}
-    .q-subj-badge{font-size:10px;background:rgba(84,104,224,.12);border:1px solid rgba(84,104,224,.3);color:var(--accent2);padding:2px 7px;border-radius:10px;font-weight:600;margin-right:6px;}
+    .q-subj-badge{font-size:10px;background:rgba(84,104,224,.12);border:1px solid rgba(84,104,224,.3);color:var(--accent2);padding:2px 7px;border-radius:10px;font-weight:600;}
     .q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(16px,4vw,24px);}
     .instruction-header{background:rgba(84,104,224,.08);border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:12px 16px;margin:0 0 16px;font-size:13px;line-height:1.5;color:var(--text);}
     .instruction-header .label{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;display:block;}
@@ -273,10 +278,11 @@
     }
     .passage-q-pane{padding:14px;font-size:11px;color:var(--muted);font-style:italic;}
     .passage-placeholder{padding:14px;font-size:12px;color:var(--muted);font-style:italic;text-align:center;}
-    .q-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-    .q-num{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
-    .q-pts{font-size:11px;font-family:var(--mono);background:var(--accent-glow);border:1px solid rgba(84,104,224,.25);padding:3px 9px;border-radius:20px;color:var(--accent2);}
-    .q-type-badge{font-size:10px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);padding:2px 8px;border-radius:20px;color:var(--text2);margin-right:6px;}
+    .q-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+    .q-meta-left{display:flex;align-items:center;flex-wrap:wrap;gap:6px;row-gap:6px;}
+    .q-num{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;}
+    .q-pts{font-size:11px;font-family:var(--mono);background:var(--accent-glow);border:1px solid rgba(84,104,224,.25);padding:3px 9px;border-radius:20px;color:var(--accent2);flex-shrink:0;margin-left:auto;white-space:nowrap;}
+    .q-type-badge{font-size:10px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);padding:2px 8px;border-radius:20px;color:var(--text2);}
     .q-text{font-size:clamp(14px,3.5vw,16px);font-weight:500;line-height:1.65;margin-bottom:20px;color:var(--text);}
     .options{display:flex;flex-direction:column;gap:9px;}
     .options.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
@@ -370,11 +376,28 @@
     .ptable-el .sym{font-size:13px;font-weight:800;}
     .ptable-detail{margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:12.5px;color:var(--text);display:none;}
     .ptable-detail.on{display:block;}
-    /* Rough work pad */
+    /* Rough work pad — Steps (guided workbook) */
+    .rw-subtabs{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .rw-subtab{font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:999px;}
+    .rw-subtab.active{background:var(--accent);color:#fff;}
+    .rw-undo-redo{display:flex;gap:4px;}
+    .rw-ur-btn{all:unset;width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);cursor:pointer;}
+    .rw-step-row{margin-bottom:14px;}
+    .rw-step-top{display:flex;align-items:center;gap:8px;}
+    .rw-step-badge{flex:0 0 24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;}
+    .rw-mathfield{flex:1;min-width:0;border:1.5px solid var(--border2);border-radius:9px;padding:6px 10px;background:var(--surface2);font-size:17px;}
+    .rw-step-del{all:unset;flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:pointer;}
+    .rw-reason-input{all:unset;display:block;width:100%;box-sizing:border-box;margin:6px 0 0 32px;padding:6px 9px;font-size:12px;font-style:italic;color:var(--text2);background:transparent;border-bottom:1px dashed var(--border2);}
+    .rw-reason-input:focus{border-bottom-color:var(--accent);}
+    .rw-suggest-wrap{display:none;flex-wrap:wrap;gap:6px;margin:6px 0 0 32px;}
+    .rw-suggest-chip{all:unset;padding:4px 10px;border-radius:999px;background:var(--accent-glow);color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;}
+    .rw-add-step-btn{all:unset;display:block;width:100%;box-sizing:border-box;border:1.5px dashed var(--border2);border-radius:10px;padding:10px;text-align:center;font-size:12.5px;color:var(--text2);font-weight:600;cursor:pointer;}
     .rough-toolbar{display:flex;gap:8px;margin-bottom:10px;}
     .rough-toolbar button{all:unset;padding:7px 12px;border-radius:8px;background:var(--surface2);font-size:12px;cursor:pointer;color:var(--text);}
     .rough-toolbar button.active{background:var(--accent);color:#fff;}
-    #roughCanvas{width:100%;height:320px;background:#fff;border:1px solid var(--border);border-radius:10px;touch-action:none;}
+    #roughCanvas{width:100%;height:320px;background:#fff;border:1px solid var(--border);border-radius:10px;touch-action:none;cursor:crosshair;}
+    .rough-keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;}
+    .rough-keypad button{all:unset;display:flex;align-items:center;justify-content:center;height:36px;border-radius:8px;background:var(--surface2);font-weight:700;font-size:13px;color:var(--text);cursor:pointer;}
     /* Formula sheet */
     #formulaFrame{width:100%;height:100%;min-height:420px;border:none;border-radius:10px;background:#fff;}
     #micWarnToast.on{display:block;opacity:1;transform:translateX(-50%) translateY(0);}
@@ -690,6 +713,7 @@
 
   <div class="exam-header">
     <div class="exam-header-top">
+      <div class="exam-avatar" id="examAvatar">?</div>
       <div class="exam-title-block">
         <div class="exam-title-main" id="examTitleBar">Loading...</div>
         <div class="exam-title-sub"  id="examSubBar">—</div>
@@ -2101,7 +2125,8 @@ function updateCandidateDisplays(sInfo){
   var metaStr=[cls,school].filter(Boolean).join(' · ');
   safeText('bannerName',name); safeText('bannerMeta',(quizMeta?quizMeta.title:'')+(metaStr?' · '+metaStr:''));
   safeText('eccName',name); safeText('eccMeta',metaStr||student.email);
-  safeText('examSubBar',[name,metaStr].filter(Boolean).join(' · '));
+  safeText('examSubBar',[name,'ID: '+(student.examCode||''),metaStr].filter(Boolean).join(' · '));
+  safeText('examAvatar',(name||'?').trim().charAt(0));
   buildExamDetails();
   if(locked){ var n=document.getElementById('lockedNotice'); if(n)n.classList.add('on'); }
 }
@@ -2512,6 +2537,7 @@ function renderQuestion(){
   if(!questions.length)return;
   ttsStop();
   var q=questions[qIndex];
+  _roughSwapForQuestion(q.id);
   var isAdaptive=quizMeta&&quizMeta.quizType==='adaptive';
   // Adaptive quizzes don't know their final length in advance — show
   // progress against the teacher-set question cap as an approximate ceiling
@@ -2560,7 +2586,7 @@ function renderQuestion(){
 
   var subjBadge=(_subjectOrder.length>1&&q.subject)?'<span class="q-subj-badge">'+esc(q.subject)+'</span>':'';
   html+='<div class="q-meta">'
-    +'<span>'+subjBadge+'<span class="q-type-badge">'+typeLabel+'</span>'
+    +'<span class="q-meta-left">'+subjBadge+'<span class="q-type-badge">'+typeLabel+'</span>'
     +'<span class="q-num">Q'+(qIndex+1)+' of '+questions.length+'</span></span>'
     +'<span class="q-pts">'+q.points+' pt'+(q.points!==1?'s':'')+'</span></div>';
 
@@ -2663,12 +2689,17 @@ function togglePassagePanel(header){
   if(icon)icon.classList.toggle('open',!isOpen);
 }
 
+var _autoAdvanceTimer=null;
 function selectAns(qId,letter,el){
   answers[qId]=letter;
   var parent=el.closest('.options');
   if(parent)parent.querySelectorAll('.option').forEach(function(o){o.classList.remove('selected');});
   el.classList.add('selected');
   updateDots(); updateVioDisplay();
+  // Auto-advance after a brief pause so the selection is visibly registered first —
+  // re-picking a different option before it fires just reschedules, never stacks.
+  if(_autoAdvanceTimer) clearTimeout(_autoAdvanceTimer);
+  _autoAdvanceTimer=setTimeout(function(){ _autoAdvanceTimer=null; if(!examSubmitted) nextQ(); },550);
 }
 
 function saveShort(){
@@ -3067,7 +3098,9 @@ function setupExamTools(){
   var ribbon=document.getElementById('toolsRibbon');
   if(ribbon) ribbon.classList.toggle('hidden',!any);
 }
+var _activeToolId=null;
 function openTool(id){
+  _activeToolId=id;
   var rail=document.getElementById('toolPanelRail');
   if(rail){
     rail.innerHTML=TOOLS_DEFS.filter(function(t){return quizMeta&&quizMeta[t.flag];}).map(function(t){
@@ -3079,22 +3112,39 @@ function openTool(id){
   var content=document.getElementById('toolPanelContent');
   if(content) content.innerHTML=_toolContentHtml(id);
   if(id==='calc'||id==='sci') _calcInit();
-  if(id==='rough') _roughInit();
+  if(id==='rough') _roughPaneInit();
   if(id==='periodic') _periodicInit();
   var panel=document.getElementById('toolPanel'), bd=document.getElementById('toolPanelBackdrop');
   if(panel) panel.classList.add('on'); if(bd) bd.classList.add('on');
 }
 function closeToolPanel(){
+  _activeToolId=null;
   var panel=document.getElementById('toolPanel'), bd=document.getElementById('toolPanelBackdrop');
   if(panel) panel.classList.remove('on'); if(bd) bd.classList.remove('on');
 }
 function _toolContentHtml(id){
   if(id==='calc'||id==='sci') return _calcHtml(id);
-  if(id==='rough') return '<div class="rough-toolbar">'
-    +'<button type="button" id="roughPenBtn" class="active" onclick="roughSetMode(\'pen\')">✏️ Pen</button>'
-    +'<button type="button" id="roughEraseBtn" onclick="roughSetMode(\'erase\')">🧹 Eraser</button>'
-    +'<button type="button" onclick="roughClear()">🗑 Clear</button>'
-    +'</div><canvas id="roughCanvas"></canvas>';
+  if(id==='rough') return '<div class="rw-subtabs">'
+      +'<span><span class="rw-subtab'+(_roughSubTab==='steps'?' active':'')+'" onclick="roughSetSubTab(\'steps\')">📝 Steps</span>'
+      +'<span class="rw-subtab'+(_roughSubTab==='sketch'?' active':'')+'" onclick="roughSetSubTab(\'sketch\')">✏️ Sketch</span></span>'
+      +'<span class="rw-undo-redo"><button type="button" class="rw-ur-btn" onclick="roughUndo()" title="Undo">↺</button><button type="button" class="rw-ur-btn" onclick="roughRedo()" title="Redo">↻</button></span>'
+    +'</div>'
+    +'<div id="roughStepsPane" style="display:'+(_roughSubTab==='steps'?'block':'none')+'">'
+      +'<div id="roughStepsList"></div>'
+      +'<button type="button" class="rw-add-step-btn" onclick="roughAddStep()">+ Add Step</button>'
+    +'</div>'
+    +'<div id="roughSketchPane" style="display:'+(_roughSubTab==='sketch'?'block':'none')+'">'
+      +'<div class="rough-toolbar">'
+      +'<button type="button" id="roughPenBtn" class="active" onclick="roughSetMode(\'pen\')">✏️ Pen</button>'
+      +'<button type="button" id="roughEraseBtn" onclick="roughSetMode(\'erase\')">🧹 Eraser</button>'
+      +'<button type="button" id="roughTextBtn" onclick="roughSetMode(\'text\')">🔤 Text</button>'
+      +'<button type="button" onclick="roughClear()">🗑 Clear</button>'
+      +'</div><canvas id="roughCanvas"></canvas>'
+      +'<div class="rough-keypad" id="roughKeypad">'+['7','8','9','÷','4','5','6','×','1','2','3','−','0','.','=','+','(',')','²','√'].map(function(k){
+        return '<button type="button" onclick="roughInsertChar(\''+(k==="'"?"\\'":k)+'\')">'+k+'</button>';
+      }).join('')+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:8px">Tap Text, then tap the pad to place a cursor — type on your keyboard or use the keypad above. Pen/Eraser work with touch or mouse.</div>'
+    +'</div>';
   if(id==='periodic') return '<div class="ptable-grid" id="ptableGrid"></div><div class="ptable-detail" id="ptableDetail"></div>';
   if(id==='formula') return (quizMeta&&quizMeta.formulaSheetUrl)
     ? '<iframe id="formulaFrame" src="'+esc(quizMeta.formulaSheetUrl)+'"></iframe>'
@@ -3183,17 +3233,117 @@ function calcPress(k){
   _calcRender();
 }
 
-// ── Rough-work pad — plain draw/erase, no stroke history or playback
-// (scoped down deliberately; see conversation). The snapshot is kept only
-// in memory for this tab, so it survives closing/reopening the panel but
-// not a page reload — never sent to the server.
-var _rough={mode:'pen',drawing:false,snapshot:null};
+// ── Rough-work pad — two sub-tabs: Steps (a guided, numbered workbook with
+// a MathLive <math-field> per step for real editable formulas — fractions,
+// powers, roots, all click-into-and-edit, with MathLive's own undo/redo) and
+// Sketch (the original plain draw/erase/text canvas, for diagrams). Nothing
+// here is saved to the server — in-memory only for this tab, same as before.
+var _roughSubTab='steps';
+var _roughSteps=[]; var _roughStepSeq=0; var _roughActiveField=null;
+var RW_REASONS=['Subtracted from both sides','Added to both sides','Divided both sides','Multiplied both sides','Simplified','Expanded brackets','Factorised','Substituted values','Collected like terms'];
+// Steps and the Sketch drawing are scoped per QUESTION — switching questions
+// swaps them out, so Question 12's pad never shows Question 5's working.
+// The Steps/Sketch tab CHOICE itself stays a global preference (not reset
+// per question) since that's just a UI setting, not exam content.
+var _roughDataByQ={}; var _roughCurrentQId=null;
+function _roughSaveCurrentQ(){
+  if(_roughCurrentQId==null) return;
+  _roughDataByQ[_roughCurrentQId]={steps:_roughSteps,stepSeq:_roughStepSeq,sketchSnapshot:_rough.snapshot};
+}
+function _roughSwapForQuestion(qId){
+  if(qId===_roughCurrentQId) return;
+  _roughSaveCurrentQ();
+  var saved=_roughDataByQ[qId];
+  _roughSteps=saved?saved.steps:[];
+  _roughStepSeq=saved?saved.stepSeq:0;
+  _rough.snapshot=saved?saved.sketchSnapshot:null;
+  _roughCurrentQId=qId;
+  if(_activeToolId==='rough'){
+    var content=document.getElementById('toolPanelContent');
+    if(content){ content.innerHTML=_toolContentHtml('rough'); _roughPaneInit(); }
+  }
+}
+function _roughPaneInit(){
+  if(_roughSubTab==='sketch') _roughInit();
+  else _roughRenderSteps();
+}
+function roughSetSubTab(tab){
+  _roughSubTab=tab;
+  var sp=document.getElementById('roughStepsPane'), kp=document.getElementById('roughSketchPane');
+  if(sp) sp.style.display=tab==='steps'?'block':'none';
+  if(kp) kp.style.display=tab==='sketch'?'block':'none';
+  document.querySelectorAll('.rw-subtab').forEach(function(el){
+    el.classList.toggle('active', el.textContent.indexOf(tab==='steps'?'Steps':'Sketch')!==-1);
+  });
+  _roughPaneInit();
+}
+function _roughRenderSteps(){
+  if(!_roughSteps.length) _roughSteps.push({id:'rs'+(_roughStepSeq++),latex:'',reason:''});
+  var list=document.getElementById('roughStepsList'); if(!list)return;
+  list.innerHTML=_roughSteps.map(function(s,i){
+    return '<div class="rw-step-row">'
+      +'<div class="rw-step-top">'
+        +'<div class="rw-step-badge">'+(i+1)+'</div>'
+        +'<math-field id="mf_'+s.id+'" class="rw-mathfield">'+esc(s.latex)+'</math-field>'
+        +'<button type="button" class="rw-step-del" onclick="roughDeleteStep(\''+s.id+'\')" title="Delete step">&times;</button>'
+      +'</div>'
+      +'<input type="text" class="rw-reason-input" id="rr_'+s.id+'" placeholder="Why this step? e.g. Subtract 5 from both sides" value="'+esc(s.reason)+'" '
+        +'oninput="roughSetReason(\''+s.id+'\',this.value)" onfocus="roughShowSuggest(\''+s.id+'\')" onblur="roughHideSuggestSoon(\''+s.id+'\')">'
+      +'<div class="rw-suggest-wrap" id="sg_'+s.id+'"></div>'
+    +'</div>';
+  }).join('');
+  _roughSteps.forEach(function(s){
+    var mf=document.getElementById('mf_'+s.id); if(!mf)return;
+    mf.addEventListener('input',function(){ s.latex=mf.value; });
+    mf.addEventListener('focusin',function(){ _roughActiveField=mf; });
+  });
+}
+function roughAddStep(){
+  _roughSteps.push({id:'rs'+(_roughStepSeq++),latex:'',reason:''});
+  _roughRenderSteps();
+  var newest=_roughSteps[_roughSteps.length-1];
+  setTimeout(function(){ var mf=document.getElementById('mf_'+newest.id); if(mf&&mf.focus) mf.focus(); },50);
+}
+function roughDeleteStep(id){
+  _roughSteps=_roughSteps.filter(function(s){ return s.id!==id; });
+  _roughRenderSteps();
+}
+function roughSetReason(id,val){
+  var s=_roughSteps.filter(function(x){ return x.id===id; })[0]; if(s) s.reason=val;
+}
+function roughShowSuggest(id){
+  var wrap=document.getElementById('sg_'+id); if(!wrap)return;
+  wrap.style.display='flex';
+  wrap.innerHTML=RW_REASONS.map(function(r){
+    return '<button type="button" class="rw-suggest-chip" onmousedown="event.preventDefault()" onclick="roughPickReason(\''+id+'\',\''+r.replace(/'/g,"\\'")+'\')">'+esc(r)+'</button>';
+  }).join('');
+}
+function roughHideSuggestSoon(id){
+  // Short delay so a suggestion-chip click (which fires before this blur via
+  // the chip's own mousedown preventDefault) still lands before we hide it.
+  setTimeout(function(){ var w=document.getElementById('sg_'+id); if(w) w.style.display='none'; },150);
+}
+function roughPickReason(id,text){
+  var s=_roughSteps.filter(function(x){ return x.id===id; })[0]; if(s) s.reason=text;
+  var inp=document.getElementById('rr_'+id); if(inp) inp.value=text;
+  var wrap=document.getElementById('sg_'+id); if(wrap) wrap.style.display='none';
+}
+// Targets whichever math-field was last focused — MathLive's own undo/redo
+// history, not something we track ourselves. Wrapped in try/catch: if a
+// future MathLive version renames this command, these buttons just no-op
+// instead of throwing (Ctrl+Z/Ctrl+Y inside the field itself still work
+// natively either way).
+function roughUndo(){ try{ if(_roughActiveField) _roughActiveField.executeCommand('undo'); }catch(e){} }
+function roughRedo(){ try{ if(_roughActiveField) _roughActiveField.executeCommand('redo'); }catch(e){} }
+
+var _rough={mode:'pen',drawing:false,snapshot:null,ctx:null,canvas:null,textCursor:null};
 function _roughInit(){
   var cv=document.getElementById('roughCanvas'); if(!cv)return;
   var rect=cv.getBoundingClientRect();
   cv.width=rect.width; cv.height=rect.height;
   var ctx=cv.getContext('2d');
   ctx.lineCap='round'; ctx.lineJoin='round';
+  _rough.ctx=ctx; _rough.canvas=cv; _rough.textCursor=null;
   if(_rough.snapshot){
     var img=new Image();
     img.onload=function(){ ctx.drawImage(img,0,0,cv.width,cv.height); };
@@ -3203,9 +3353,14 @@ function _roughInit(){
     var r=cv.getBoundingClientRect(); var p=(e.touches&&e.touches[0])||e;
     return {x:p.clientX-r.left,y:p.clientY-r.top};
   }
-  function start(e){ e.preventDefault(); _rough.drawing=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+  function start(e){
+    e.preventDefault();
+    var p=pos(e);
+    if(_rough.mode==='text'){ _rough.textCursor={x:p.x,y:p.y}; return; }
+    _rough.drawing=true; ctx.beginPath(); ctx.moveTo(p.x,p.y);
+  }
   function move(e){
-    if(!_rough.drawing)return; e.preventDefault();
+    if(_rough.mode==='text'||!_rough.drawing)return; e.preventDefault();
     var p=pos(e);
     ctx.lineWidth=_rough.mode==='erase'?18:2.5;
     ctx.strokeStyle=_rough.mode==='erase'?'#ffffff':'#17365D';
@@ -3217,15 +3372,35 @@ function _roughInit(){
 }
 function roughSetMode(m){
   _rough.mode=m;
-  var pen=document.getElementById('roughPenBtn'), er=document.getElementById('roughEraseBtn');
+  var pen=document.getElementById('roughPenBtn'), er=document.getElementById('roughEraseBtn'), tx=document.getElementById('roughTextBtn');
   if(pen) pen.classList.toggle('active',m==='pen');
   if(er) er.classList.toggle('active',m==='erase');
+  if(tx) tx.classList.toggle('active',m==='text');
 }
 function roughClear(){
   var cv=document.getElementById('roughCanvas'); if(!cv)return;
   cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
-  _rough.snapshot=null;
+  _rough.snapshot=null; _rough.textCursor=null;
 }
+// Keypad buttons and the physical keyboard both feed this — a plain
+// draw-text-at-the-cursor scratchpad, not a real editor: no backspace
+// erase (use the Eraser for mistakes), simple wrap at the canvas edge.
+function roughInsertChar(ch){
+  var ctx=_rough.ctx, cv=_rough.canvas; if(!ctx||!cv)return;
+  if(!_rough.textCursor) _rough.textCursor={x:14,y:28};
+  if(ch==='\n'){ _rough.textCursor={x:14,y:_rough.textCursor.y+28}; return; }
+  ctx.font='20px sans-serif'; ctx.fillStyle='#17365D';
+  ctx.fillText(ch,_rough.textCursor.x,_rough.textCursor.y);
+  _rough.textCursor.x+=ctx.measureText(ch).width+2;
+  if(_rough.textCursor.x>cv.width-24){ _rough.textCursor.x=14; _rough.textCursor.y+=28; }
+  try{_rough.snapshot=cv.toDataURL();}catch(_){}
+}
+document.addEventListener('keydown',function(e){
+  if(_rough.mode!=='text'||!_rough.textCursor)return;
+  var panel=document.getElementById('toolPanel'); if(!panel||!panel.classList.contains('on'))return;
+  if(e.key==='Enter'){ roughInsertChar('\n'); e.preventDefault(); return; }
+  if(e.key.length===1){ roughInsertChar(e.key); e.preventDefault(); }
+});
 
 // ── Periodic table — a curated set of the elements actually covered by a
 // typical secondary-school chemistry curriculum, not all 118: better a
@@ -3601,7 +3776,7 @@ function showResults(data){
     // English Language's tiered bank) — every other quiz type leaves conceptTested
     // unset, so this stays invisible everywhere else.
     var conceptBlock=a.conceptTested?'<div class="review-row"><span class="review-label">Concept tested</span><span class="review-val">'+esc(a.conceptTested)+'</span></div>':'';
-    var aiBlock=!a.isCorrect?'<div id="ai_wrap_'+i+'"><button class="ai-explain-btn" id="ai_btn_'+i+'" onclick="fetchAiExplanation('+i+')">✦ AI Explanation</button><div id="ai_box_'+i+'"></div></div>':'';
+    var aiBlock=(!a.isCorrect&&quizMeta&&quizMeta.aiEnabled)?'<div id="ai_wrap_'+i+'"><button class="ai-explain-btn" id="ai_btn_'+i+'" onclick="fetchAiExplanation('+i+')">✦ AI Explanation</button><div id="ai_box_'+i+'"></div></div>':'';
     
     // ── PARTIAL CREDIT DISPLAY (SHORT answer only) ─────────────────
     var partialCreditBlock = '';
