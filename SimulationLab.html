@@ -72,12 +72,64 @@
   .pv-ten{width:16px;height:96px;background:#22b573;border-radius:4px}
   .pv-one{width:20px;height:20px;background:#f5a623;border-radius:5px}
 
+  @keyframes pvPopIn {
+    0% { transform: scale(0.4); opacity: 0; }
+    70% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pv-block-new {
+    animation: pvPopIn 0.35s ease-out;
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #eb6f2d;
+  }
+  .pv-col.highlight-col {
+    background: #fffbeb;
+    border: 1.5px solid #f5a623;
+    border-radius: 14px;
+    padding: 8px 6px;
+  }
+  .pv-banner {
+    background: #fff7e6;
+    border: 1.5px solid #f5a623;
+    color: #9a5b00;
+    font-family: var(--fd);
+    font-weight: 800;
+    font-size: 14px;
+    text-align: center;
+    padding: 8px 14px;
+    border-radius: 10px;
+    margin: 0 auto 14px;
+    max-width: 520px;
+  }
+  .pv-banner.bundle {
+    background: #e6f9f0;
+    border-color: #22b573;
+    color: #15803d;
+  }
+  .pv-expanded {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+    margin-top: 6px;
+  }
+
   /* Ten frame */
   .tf-wrap{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
   .tf-grid{display:grid;grid-template-columns:repeat(5,44px);grid-template-rows:repeat(2,44px);gap:5px;background:#dde6f5;padding:6px;border-radius:10px}
   .tf-cell{width:44px;height:44px;background:#fff;border:2px solid #c6d4ec;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .tf-cell.filled{background:#3355dd;border-color:#3355dd}
   .tf-cell.filled::after{content:'';width:20px;height:20px;border-radius:50%;background:#fff}
+  .tf-cell.red{background:#e5484d;border-color:#e5484d}
+  .tf-cell.red::after{content:'';width:20px;height:20px;border-radius:50%;background:#fff}
+  .tf-cell.locked-cell{cursor:default;box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}
+
+  .tf-frame-box{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .tf-frame-title{font-family:var(--fd);font-weight:700;font-size:12px;color:var(--muted)}
+  .tf-bond-bar{font-family:var(--fd);font-weight:800;font-size:18px;text-align:center;margin-top:14px;padding:8px 16px;background:#f8fafd;border:1.5px solid var(--border);border-radius:12px;display:inline-block}
+  .tf-color-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-family:var(--f);font-weight:700;font-size:13px;cursor:pointer}
+  .tf-color-pill.on-blue{border-color:#3355dd;background:#eef2ff;color:#3355dd}
+  .tf-color-pill.on-red{border-color:#e5484d;background:#fdeceb;color:#b91c1c}
+  .tf-dot-swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
 
   /* number line */
   #nl-svg{width:100%;max-width:760px;display:block;margin:0 auto}
@@ -85,13 +137,10 @@
 
   /* clock */
   .clock-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
-  #clock-svg{width:220px;height:220px}
+  #clock-svg{width:240px;height:240px}
   .digital-time{font-family:var(--fd);font-weight:800;font-size:28px;background:#0f172a;color:#4ade80;padding:8px 22px;border-radius:12px}
 
-  /* money — real coin (circular, metallic) and note (rectangular, tinted
-     per denomination) shapes, not text pills, both for the "add" buttons
-     and for what actually lands in the purse, so the purse visually reads
-     as a pile of coins and notes, not a list of tags. */
+  /* money */
   .coin-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;align-items:center}
   .coin-btn,.note-btn{border:none;font-family:var(--fd);font-weight:800;cursor:pointer;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35);box-shadow:0 2px 5px rgba(0,0,0,.25),inset 0 1px 2px rgba(255,255,255,.4)}
   .coin-btn{border-radius:50%;width:58px;height:58px;font-size:13px;background:radial-gradient(circle at 35% 30%,#f5cf6b,#b8860b 75%)}
@@ -107,16 +156,54 @@
   .purse{display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-height:66px;background:#f8fafd;border:1px dashed var(--border);border-radius:10px;padding:10px;justify-content:center}
   .purse-total{font-family:var(--fd);font-weight:800;font-size:20px;text-align:center;margin-top:10px;color:#3355dd}
 
+  .shop-shelf{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .shop-item{display:flex;flex-direction:column;align-items:center;gap:4px;background:#f8fafd;border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;min-width:105px;cursor:pointer;transition:transform .15s,border-color .15s}
+  .shop-item:active{transform:scale(.96)}
+  .shop-item.on{background:#ecfdf5;border-color:#0aa39a;box-shadow:0 4px 12px rgba(10,163,154,.16)}
+  .shop-icon{font-size:26px;line-height:1}
+  .shop-name{font-size:12px;font-weight:700;color:var(--ink)}
+  .shop-price{font-family:var(--fd);font-weight:800;font-size:14px;color:#0aa39a}
+  .shop-status{font-family:var(--fd);font-weight:800;font-size:14.5px;text-align:center;padding:8px 14px;border-radius:10px;margin:0 auto 14px;max-width:480px}
+  .shop-status.short{background:#fff7e6;border:1.5px solid #f5a623;color:#9a5b00}
+  .shop-status.exact{background:#e6f9f0;border:1.5px solid #22b573;color:#15803d}
+  .shop-status.over{background:#eef2ff;border:1.5px solid #3355dd;color:#3355dd}
+  .purse-breakdown{font-size:12px;font-weight:700;color:var(--muted);text-align:center;margin-top:4px}
+
   /* geoboard */
   #geo-svg{width:100%;max-width:420px;display:block;margin:0 auto;touch-action:manipulation}
   .geo-peg{fill:#c6d4ec;cursor:pointer}
-  .geo-peg.selected{fill:#3355dd}
+  .geo-peg.selected{fill:#7c3aed}
   .geo-peg.first{fill:#22b573}
 
-  /* array */
+  /* array & picnic */
   .arr-grid{display:inline-grid;gap:6px;margin:0 auto}
   .arr-dot{width:22px;height:22px;border-radius:50%;background:#3355dd}
   .arr-fact{font-family:var(--fd);font-weight:800;font-size:20px;text-align:center;margin-top:14px}
+
+  .picnic-tabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+  .picnic-tab{padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);background:#f1f5fc;font-family:var(--f);font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}
+  .picnic-tab.on{background:#eb6f2d;color:#fff;border-color:#eb6f2d}
+
+  .picnic-blanket{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;background:#fef9ee;border:2px dashed #f5c97b;border-radius:16px;padding:16px;margin:0 auto;max-width:740px}
+  .friend-card{background:#fff;border:2px solid var(--border);border-radius:14px;padding:10px 12px;min-width:108px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .2s,border-color .2s}
+  .friend-card.prev-group{border-color:#93c5fd;background:#f8fbff}
+  .friend-card.new-step{border-color:#f5a623;background:#fffbeb;box-shadow:0 4px 14px rgba(245,166,35,.22);transform:translateY(-2px)}
+  .friend-avatar{font-size:28px;line-height:1}
+  .friend-name{font-family:var(--fd);font-weight:700;font-size:12.5px;color:var(--muted)}
+  .friend-plate{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;background:#f1f5fc;border-radius:10px;padding:6px 8px;min-height:38px;min-width:84px}
+  .plate-item{position:relative;font-size:20px;line-height:1}
+  .plate-num{position:absolute;bottom:-4px;right:-4px;background:#233047;color:#fff;font-size:9px;font-weight:800;border-radius:99px;padding:1px 4px}
+  .friend-card.new-step .plate-num{background:#eb6f2d}
+
+  .step-callout{background:#fff7e6;border:1.5px solid #f5a623;color:#9a5b00;font-family:var(--fd);font-weight:800;font-size:15px;text-align:center;padding:8px 14px;border-radius:10px;margin:12px auto 0;max-width:540px}
+  .equation-bridge{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:14px;background:#f8fafd;border:1px solid var(--border);border-radius:12px;padding:12px}
+  .eq-words{font-size:13px;font-weight:700;color:var(--muted)}
+  .eq-repeat{font-family:var(--fd);font-weight:700;font-size:16px;color:#3355dd}
+  .eq-mult{font-family:var(--fd);font-weight:800;font-size:22px;color:var(--ink)}
+
+  .remainder-box{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:#fdeceb;border:1.5px dashed #e5484d;border-radius:12px;padding:10px 16px;margin:12px auto 0;max-width:480px;font-family:var(--fd);font-weight:700;color:#b91c1c}
+  .arr-icon-cell{font-size:22px;line-height:1;text-align:center;padding:2px;border-radius:6px}
+  .arr-icon-cell.new-row{background:#fff3d6;outline:1.5px solid #f5a623}
 
   /* converter */
   .conv-cats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
@@ -130,9 +217,6 @@
   .conv-result{font-family:var(--fd);font-weight:800;font-size:20px;color:#0891b2;min-width:120px;text-align:center}
   .conv-swap{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:18px;cursor:pointer}
 
-  /* converter — real container fill, so liquid/solid conversions show a
-     value physically rising in a container instead of only a calculator
-     result. Not just a number — you can see the amount happening. */
   .conv-container-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:24px}
   .conv-beaker{position:relative;width:140px;height:200px;border:4px solid #233047;border-top:none;border-radius:0 0 16px 16px;background:rgba(255,255,255,.5);overflow:hidden}
   .conv-beaker::before{content:'';position:absolute;top:-4px;left:-4px;right:-4px;height:6px;border:4px solid #233047;border-radius:8px;background:rgba(255,255,255,.6)}
@@ -157,6 +241,17 @@
   .as-icons span.removed{opacity:.2}
   .as-op{font-family:var(--fd);font-weight:800;font-size:30px;color:var(--muted);align-self:center}
 
+  @keyframes asMergePop {
+    0% { transform: scale(0.75); opacity: 0.4; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .as-merged-tray{display:flex;flex-direction:column;align-items:center;gap:10px;background:#eef2ff;border:2px solid #3355dd;border-radius:16px;padding:14px 18px;max-width:460px;margin:0 auto;animation:asMergePop .25s ease-out}
+  .as-merged-icons{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:42px}
+  .as-merged-icons span{font-size:24px;padding:2px 4px;border-radius:8px}
+  .as-merged-icons span.from-a{background:#dbeafe}
+  .as-merged-icons span.from-b{background:#fef3c7}
+  .as-eq-banner{font-family:var(--fd);font-weight:800;font-size:18px;text-align:center;color:var(--ink);margin-top:12px}
+
   /* compare and order */
   .cmp-row{display:flex;align-items:flex-end;justify-content:center;gap:18px;flex-wrap:wrap}
   .cmp-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -173,22 +268,39 @@
   .order-slot.filled{border-style:solid;border-color:#7c3aed;color:var(--ink)}
 
   /* counting */
-  .count-scatter{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:340px;margin:0 auto 16px;min-height:60px}
-  .count-scatter span{font-size:26px}
-  .count-scatter span.ord-target{outline:3px solid #16a34a;border-radius:8px}
+  .count-scatter{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;max-width:420px;margin:0 auto 16px;min-height:86px;background:#f8fafd;border:1.5px dashed var(--border);border-radius:16px;padding:14px}
+  .scatter-item{position:relative;font-size:28px;cursor:pointer;padding:4px 6px;border-radius:10px;transition:transform .15s,background .15s;user-select:none}
+  .scatter-item:active{transform:scale(.92)}
+  .scatter-item.counted{background:#dcfce7;outline:2px solid #22b573}
+  .scatter-badge{position:absolute;top:-6px;right:-6px;background:#15803d;color:#fff;font-family:var(--fd);font-weight:800;font-size:10px;border-radius:99px;padding:1px 5px;line-height:1.2}
+
   .ord-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 auto 16px}
-  .ord-row span{font-size:28px;cursor:pointer;padding:4px;border-radius:8px}
-  .ord-row span.picked{background:#dcfce7}
+  .ord-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px;border-radius:10px;border:1.5px solid transparent}
+  .ord-item.picked{background:#dcfce7;border-color:#22b573}
+  .ord-item.reveal-right{background:#dcfce7;border-color:#16a34a}
+  .ord-item.reveal-wrong{background:#fdeceb;border-color:#e5484d}
+  .ord-tag{font-family:var(--fd);font-weight:800;font-size:11px;color:var(--muted)}
 
   /* fractions */
-  .frac-bar{display:flex;height:70px;width:min(90vw,420px);margin:0 auto;border:2px solid #db2777;border-radius:8px;overflow:hidden}
+  .frac-bar{display:flex;height:70px;width:min(78vw,420px);margin:0 auto;border:2px solid #db2777;border-radius:8px;overflow:hidden}
   .frac-seg{flex:1;border-right:2px solid #db2777;cursor:pointer;background:#fff}
   .frac-seg:last-child{border-right:none}
   .frac-seg.shaded{background:#f9a8d4}
   .frac-label{font-family:var(--fd);font-weight:800;font-size:26px;text-align:center;margin-top:14px}
 
+  .frac-stack{display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 auto}
+  .frac-row-card{display:flex;flex-direction:column;align-items:center;gap:8px;background:#f8fafd;border:1.5px solid var(--border);border-radius:14px;padding:12px 14px}
+  .frac-row-card.ref-locked{background:#fff7e6;border-color:#f5c97b}
+  .frac-bar.bar-b{border-color:#0891b2}
+  .frac-bar.bar-b .frac-seg{border-right-color:#0891b2}
+  .frac-bar.bar-b .frac-seg.shaded{background:#67e8f9}
+  .frac-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+  .frac-badge{font-family:var(--fd);font-weight:800;font-size:20px;padding:4px 14px;border-radius:99px;background:#f1f5fc;color:var(--ink)}
+  .frac-badge.eq{background:#e6f9f0;color:#15803d;border:1.5px solid #22b573}
+  .frac-sub{font-size:12px;font-weight:700;color:var(--muted)}
+
   /* shapes */
-  #shape-svg{width:180px;height:180px;display:block;margin:0 auto 14px}
+  #shape-svg{width:200px;height:200px;display:block;margin:0 auto 10px}
   .shape-opts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
   .shape-opt-btn{padding:10px 16px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-family:var(--f);font-weight:700;font-size:13.5px;cursor:pointer;min-height:42px}
   .shape-opt-btn.on{background:#ea580c;color:#fff;border-color:#ea580c}
@@ -197,14 +309,18 @@
   #ruler-svg{width:100%;max-width:640px;display:block;margin:0 auto 10px}
 
   /* data / graphs */
-  .tally-row{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
-  .tally-line{display:flex;align-items:center;gap:10px}
-  .tally-label{width:80px;font-family:var(--fd);font-weight:700;font-size:14px}
-  .tally-icons span{font-size:18px}
-  .bar-chart{display:flex;align-items:flex-end;gap:28px;justify-content:center;height:160px;margin-bottom:8px}
+  .tally-card{background:#f8fafd;border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;max-width:520px;margin:0 auto 18px}
+  .tally-line{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border)}
+  .tally-line:last-child{border-bottom:none}
+  .tally-label{width:105px;font-family:var(--fd);font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:6px}
+  .tally-strokes{flex:1;display:flex;align-items:center;gap:10px;min-height:28px}
+  .tally-count-pill{font-family:var(--fd);font-weight:800;font-size:13px;background:#eef2ff;color:#3355dd;padding:2px 9px;border-radius:99px}
+
+  .bar-chart-wrap{position:relative;max-width:460px;margin:0 auto 10px;padding:12px 16px 8px;background:#fff;border:1.5px solid var(--border);border-radius:14px}
+  .bar-chart{display:flex;align-items:flex-end;gap:32px;justify-content:center;height:185px;margin-bottom:6px;border-bottom:2px solid #94a3b8;padding-bottom:2px}
   .bar-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px}
-  .bar-rect{width:40px;background:#4338ca;border-radius:4px 4px 0 0}
-  .bar-lbl{font-size:12px;color:var(--muted);font-weight:700}
+  .bar-rect{width:46px;border-radius:6px 6px 0 0;transition:height .25s ease;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;color:#fff;font-family:var(--fd);font-weight:800;font-size:13px}
+  .bar-lbl{font-size:12.5px;color:var(--ink);font-weight:700;text-align:center}
 
   @media(max-width:520px){
     .lab-title{font-size:17px}
@@ -244,11 +360,6 @@
 function el(id){ return document.getElementById(id); }
 function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-// Shared across every simulation that shows a group of countable objects —
-// lets a teacher pick counters, apples, stars, whatever suits the lesson,
-// without changing any of the underlying counting/maths logic. Each sim
-// keeps its own local `theme` id and re-renders its own icons; this just
-// standardises the picker UI and the icon lookup.
 var OBJECT_THEMES=[
   {id:'counter', label:'Counters', icon:'●'},
   {id:'apple',   label:'Apples',   icon:'\u{1F34E}'},
@@ -266,8 +377,6 @@ function objectThemePicker(selectedId){
     return '<button class="theme-btn'+(o.id===selectedId?' on':'')+'" data-theme="'+o.id+'" title="'+o.label+'">'+o.icon+'</button>';
   }).join('')+'</div>';
 }
-// Wires up a theme-row already in the DOM. `onPick(themeId)` should update
-// the caller's own theme variable and re-render.
 function wireThemePicker(container, onPick){
   Array.prototype.forEach.call(container.querySelectorAll('.theme-btn'),function(b){
     b.addEventListener('click',function(){ onPick(b.getAttribute('data-theme')); });
@@ -276,24 +385,24 @@ function wireThemePicker(container, onPick){
 
 var currentSimId=null;
 var currentMode='explore';
-var simInstance=null; // { onModeChange(mode) } returned by each sim's mount()
+var simInstance=null;
 
 var SIMS=[
-  {id:'placevalue', name:'Place Value Blocks', desc:'Build numbers with ones, tens and hundreds, and watch them regroup.', color:'#3355dd', icon:'\u{1F9F1}'},
-  {id:'tenframe', name:'Ten Frame', desc:'Fill the frame to build number sense, up to twenty.', color:'#22b573', icon:'⚪'},
-  {id:'numberline', name:'Number Line Jumps', desc:'Jump along the line to discover multiplication and division.', color:'#f5a623', icon:'\u{1F438}'},
-  {id:'clock', name:'Clock Explorer', desc:'Set the hands and read the time.', color:'#e5484d', icon:'\u{1F550}'},
-  {id:'money', name:'Money and Coins', desc:'Combine coins and notes to reach an amount.', color:'#0aa39a', icon:'\u{1F4B0}'},
-  {id:'geoboard', name:'Geoboard', desc:'Build shapes and discover their area and perimeter.', color:'#a855f7', icon:'\u{1F4D0}'},
-  {id:'array', name:'Array Builder', desc:'Build rows and columns to see multiplication and division as shape.', color:'#eb6f2d', icon:'▦'},
+  {id:'placevalue', name:'Place Value Blocks', desc:'Build numbers with ones, tens and hundreds, and watch them regroup or borrow.', color:'#3355dd', icon:'\u{1F9F1}'},
+  {id:'tenframe', name:'Ten Frame', desc:'Fill the frame with two-color counters to explore partners to 10 and teen numbers.', color:'#22b573', icon:'⚪'},
+  {id:'numberline', name:'Number Line Jumps', desc:'Hop the frog along the line with jump arcs to discover repeated addition and subtraction.', color:'#f5a623', icon:'\u{1F438}'},
+  {id:'clock', name:'Clock Explorer', desc:'Drag the hands directly on the clock face and read 12-hour or 24-hour time.', color:'#e5484d', icon:'\u{1F550}'},
+  {id:'money', name:'Money and Coins', desc:'Shop for items or combine Naira coins and notes to reach an amount or give change.', color:'#0aa39a', icon:'\u{1F4B0}'},
+  {id:'geoboard', name:'Geoboard', desc:'Build shapes and count the shaded unit squares inside to discover area and perimeter.', color:'#a855f7', icon:'\u{1F4D0}'},
+  {id:'array', name:'Picnic & Array Builder', desc:'Share items with friends or arrange arrays to discover multiplication, division, and remainders.', color:'#eb6f2d', icon:'🧺'},
   {id:'convert', name:'Unit Converter', desc:'Convert between units of liquid, mass, length, time and money, freely.', color:'#0891b2', icon:'⇄'},
   {id:'addsub', name:'Addition and Subtraction', desc:'Combine or take away groups of objects and watch numbers regroup.', color:'#3355dd', icon:'➕'},
   {id:'compare', name:'Compare and Order', desc:'Greater than, less than, equal to, and putting numbers in order.', color:'#7c3aed', icon:'⚖️'},
-  {id:'counting', name:'Counting and Ordinals', desc:'Count a group of objects, and find the first, second and third.', color:'#16a34a', icon:'🔢'},
-  {id:'fractions', name:'Fractions', desc:'Shade parts of a bar to build and compare fractions.', color:'#db2777', icon:'▬'},
-  {id:'shapes', name:'Shape Sorter', desc:'Name shapes and count their sides and corners.', color:'#ea580c', icon:'🔺'},
-  {id:'ruler', name:'Measuring Ruler', desc:'Read the length of an object against a real ruler.', color:'#0d9488', icon:'📏'},
-  {id:'databar', name:'Data and Graphs', desc:'Turn a tally into a bar graph.', color:'#4338ca', icon:'📊'}
+  {id:'counting', name:'Counting and Ordinals', desc:'Tap scattered objects to count one by one, and find the 1st, 2nd and 3rd.', color:'#16a34a', icon:'🔢'},
+  {id:'fractions', name:'Fractions', desc:'Shade parts of aligned bars to build and compare equivalent fractions.', color:'#db2777', icon:'▬'},
+  {id:'shapes', name:'Shape Sorter', desc:'Name shapes and tap their corners and edges to count sides and vertices.', color:'#ea580c', icon:'🔺'},
+  {id:'ruler', name:'Measuring Ruler', desc:'Measure real objects like a pencil or crayon against a centimetre ruler.', color:'#0d9488', icon:'📏'},
+  {id:'databar', name:'Data and Graphs', desc:'Read 5-gate tally marks and build matching bar graphs.', color:'#4338ca', icon:'📊'}
 ];
 
 function buildMenu(){
@@ -362,9 +471,6 @@ function mountCurrentSim(){
   if(fn) simInstance=fn(stage, currentMode);
 }
 
-// Shared challenge-bar builder. `promptText` is shown to the student,
-// `onCheck` runs when Check is pressed and returns true/false,
-// `onNew` builds a fresh target and should reset the sim's own state.
 function buildChallengeBar(stage, getPromptText, onCheck, onNew){
   var bar=document.createElement('div');
   bar.className='challenge-bar';
@@ -394,47 +500,177 @@ function buildChallengeBar(stage, getPromptText, onCheck, onNew){
 function mountPlaceValue(stage, mode){
   var state={ones:0,tens:0,hundreds:0};
   var target=null;
+  var eventMsg='';
+  var eventType='';
+  var highlightCol='';
+  var highlightCount=0;
 
   var host=document.createElement('div');
   stage.appendChild(host);
 
   function total(){ return state.hundreds*100+state.tens*10+state.ones; }
 
-  function addOnes(n){
-    state.ones+=n;
-    while(state.ones>=10){ state.ones-=10; state.tens++; }
-    while(state.tens>=10){ state.tens-=10; state.hundreds++; }
-    render();
+  function clearEvent(){
+    eventMsg=''; eventType=''; highlightCol=''; highlightCount=0;
   }
-  function addTens(n){
-    state.tens+=n;
-    while(state.tens>=10){ state.tens-=10; state.hundreds++; }
-    render();
-  }
-  function addHundreds(n){ state.hundreds+=n; render(); }
-  function subOnes(){ if(state.ones>0){ state.ones--; render(); } }
-  function subTens(){ if(state.tens>0){ state.tens--; render(); } }
-  function subHundreds(){ if(state.hundreds>0){ state.hundreds--; render(); } }
 
-  function blockRow(kind,count){
+  function addOnes(n){
+    clearEvent();
+    state.ones+=n;
+    if(state.ones>=10){
+      var bundledTens=Math.floor(state.ones/10);
+      state.ones=state.ones%10;
+      state.tens+=bundledTens;
+      eventType='bundle';
+      highlightCol='tens';
+      highlightCount=bundledTens;
+      eventMsg='10 Ones snapped together into 1 Ten rod!';
+    }
+    if(state.tens>=10){
+      var bundledHundreds=Math.floor(state.tens/10);
+      state.tens=state.tens%10;
+      state.hundreds+=bundledHundreds;
+      eventType='bundle';
+      highlightCol='hundreds';
+      highlightCount=bundledHundreds;
+      eventMsg='10 Tens snapped together into 1 Hundred flat!';
+    }
+    render();
+  }
+
+  function addTens(n){
+    clearEvent();
+    state.tens+=n;
+    if(state.tens>=10){
+      var bundledHundreds=Math.floor(state.tens/10);
+      state.tens=state.tens%10;
+      state.hundreds+=bundledHundreds;
+      eventType='bundle';
+      highlightCol='hundreds';
+      highlightCount=bundledHundreds;
+      eventMsg='10 Tens snapped together into 1 Hundred flat!';
+    }
+    render();
+  }
+
+  function addHundreds(n){
+    clearEvent();
+    if(state.hundreds<9){
+      state.hundreds+=n;
+      highlightCol='hundreds';
+      highlightCount=1;
+    }
+    render();
+  }
+
+  function subOnes(){
+    clearEvent();
+    if(state.ones>0){
+      state.ones--;
+      render();
+      return;
+    }
+    if(state.tens>0){
+      state.tens--;
+      state.ones=9;
+      eventType='unbundle';
+      highlightCol='ones';
+      highlightCount=9;
+      eventMsg='Borrowed 1 Ten and broke it into 10 Ones, then took 1 away (9 left)!';
+      render();
+    } else if(state.hundreds>0){
+      state.hundreds--;
+      state.tens=9;
+      state.ones=9;
+      eventType='unbundle';
+      highlightCol='ones';
+      highlightCount=9;
+      eventMsg='Broke 1 Hundred into 10 Tens, then broke 1 Ten into 10 Ones, and took 1 away!';
+      render();
+    }
+  }
+
+  function subTens(){
+    clearEvent();
+    if(state.tens>0){
+      state.tens--;
+      render();
+      return;
+    }
+    if(state.hundreds>0){
+      state.hundreds--;
+      state.tens=9;
+      eventType='unbundle';
+      highlightCol='tens';
+      highlightCount=9;
+      eventMsg='Borrowed 1 Hundred and broke it into 10 Tens, then took 1 away (9 left)!';
+      render();
+    }
+  }
+
+  function subHundreds(){
+    clearEvent();
+    if(state.hundreds>0){
+      state.hundreds--;
+      render();
+    }
+  }
+
+  function blockRow(kind, count, colName){
     var out='';
+    var newStartIndex = (highlightCol===colName && highlightCount>0) ? (count - highlightCount) : count;
     for(var i=0;i<count;i++){
-      out+='<div class="pv-'+kind+'"></div>';
+      var isNew = i >= newStartIndex;
+      out+='<div class="pv-'+kind+(isNew?' pv-block-new':'')+'"></div>';
     }
     return out;
   }
 
   function render(){
+    var canSubOnes = total() > 0;
+    var canSubTens = (state.tens > 0 || state.hundreds > 0);
+    var canSubHundreds = state.hundreds > 0;
+
+    var bannerHtml = eventMsg
+      ? '<div class="pv-banner '+(eventType==='bundle'?'bundle':'')+'">'+eventMsg+'</div>'
+      : '';
+
+    var expandedParts=[];
+    if(state.hundreds>0) expandedParts.push((state.hundreds*100)+' ('+state.hundreds+'H)');
+    if(state.tens>0) expandedParts.push((state.tens*10)+' ('+state.tens+'T)');
+    if(state.ones>0 || expandedParts.length===0) expandedParts.push(state.ones+' ('+state.ones+'O)');
+
     host.innerHTML=
-      '<div class="pv-cols">'
-      +'<div class="pv-col"><div class="pv-col-label">Hundreds</div><div class="pv-blocks">'+blockRow('hundred',state.hundreds)+'</div>'
-      +'<div class="ctrl-btns"><button class="step-btn minus" id="pv-h-minus">&minus;</button><button class="step-btn" id="pv-h-plus">+</button></div></div>'
-      +'<div class="pv-col"><div class="pv-col-label">Tens</div><div class="pv-blocks">'+blockRow('ten',state.tens)+'</div>'
-      +'<div class="ctrl-btns"><button class="step-btn minus" id="pv-t-minus">&minus;</button><button class="step-btn" id="pv-t-plus">+</button></div></div>'
-      +'<div class="pv-col"><div class="pv-col-label">Ones</div><div class="pv-blocks">'+blockRow('one',state.ones)+'</div>'
-      +'<div class="ctrl-btns"><button class="step-btn minus" id="pv-o-minus">&minus;</button><button class="step-btn" id="pv-o-plus">+</button></div></div>'
+      bannerHtml
+      +'<div class="pv-cols">'
+      +'<div class="pv-col'+(highlightCol==='hundreds'?' highlight-col':'')+'">'
+        +'<div class="pv-col-label">Hundreds ('+state.hundreds+')</div>'
+        +'<div class="pv-blocks">'+blockRow('hundred',state.hundreds,'hundreds')+'</div>'
+        +'<div class="ctrl-btns">'
+          +'<button class="step-btn minus" id="pv-h-minus" '+(canSubHundreds?'':'disabled')+'>&minus;</button>'
+          +'<button class="step-btn" id="pv-h-plus" '+(state.hundreds>=9?'disabled':'')+'>+</button>'
+        +'</div>'
       +'</div>'
-      +'<div class="stat-row"><div class="stat-pill">Number: '+total()+'</div></div>';
+      +'<div class="pv-col'+(highlightCol==='tens'?' highlight-col':'')+'">'
+        +'<div class="pv-col-label">Tens ('+state.tens+')</div>'
+        +'<div class="pv-blocks">'+blockRow('ten',state.tens,'tens')+'</div>'
+        +'<div class="ctrl-btns">'
+          +'<button class="step-btn minus" id="pv-t-minus" '+(canSubTens?'':'disabled')+'>&minus;</button>'
+          +'<button class="step-btn" id="pv-t-plus">+</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="pv-col'+(highlightCol==='ones'?' highlight-col':'')+'">'
+        +'<div class="pv-col-label">Ones ('+state.ones+')</div>'
+        +'<div class="pv-blocks">'+blockRow('one',state.ones,'ones')+'</div>'
+        +'<div class="ctrl-btns">'
+          +'<button class="step-btn minus" id="pv-o-minus" '+(canSubOnes?'':'disabled')+'>&minus;</button>'
+          +'<button class="step-btn" id="pv-o-plus">+</button>'
+        +'</div>'
+      +'</div>'
+      +'</div>'
+      +'<div class="stat-row"><div class="stat-pill">Number: '+total()+'</div></div>'
+      +'<div class="pv-expanded">'+expandedParts.join(' + ')+'</div>';
+
     el('pv-h-plus').onclick=function(){ addHundreds(1); };
     el('pv-h-minus').onclick=subHundreds;
     el('pv-t-plus').onclick=function(){ addTens(1); };
@@ -446,195 +682,410 @@ function mountPlaceValue(stage, mode){
   render();
 
   if(mode==='challenge'){
-    function newTarget(){ target=rand(11,899); state.ones=0; state.tens=0; state.hundreds=0; render(); }
+    var chalVariant='build', startVal=0, subVal=0;
+    function newTarget(){
+      clearEvent();
+      chalVariant = Math.random()<0.5 ? 'build' : 'subtract';
+      if(chalVariant==='build'){
+        target=rand(11,899);
+        state.ones=0; state.tens=0; state.hundreds=0;
+      } else {
+        var h=rand(1,4), t=rand(1,5);
+        startVal = h*100 + t*10;
+        subVal = rand(2,9);
+        target = startVal - subVal;
+        state.hundreds = h;
+        state.tens = t;
+        state.ones = 0;
+      }
+      render();
+    }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Build the number '+target+' using the blocks.'; },
-      function(){ return total()===target; }, newTarget);
+    var barObj = buildChallengeBar(stage, function(){
+      return chalVariant==='build'
+        ? 'Build the number '+target+' using the blocks.'
+        : 'Start at '+startVal+' and take away '+subVal+' (watch the Tens unbundle into Ones!).';
+    }, function(){
+      return total()===target;
+    }, newTarget);
+
+    el('chal-check').addEventListener('click', function(){
+      var cur=total();
+      if(cur!==target){
+        var diff=Math.abs(cur-target);
+        barObj.feedback.textContent = cur < target
+          ? 'You built '+cur+' — that is '+diff+' too low. Add more blocks!'
+          : 'You built '+cur+' — that is '+diff+' too high. Take away '+diff+'!';
+      }
+    });
   }
 }
 
 /* ══════════════ 2. TEN FRAME ══════════════ */
 function mountTenFrame(stage, mode){
-  var filled=new Array(20).fill(false);
+  var cells=new Array(20).fill(null);
+  var locked=new Array(20).fill(false);
+  var activeColor='blue';
   var host=document.createElement('div');
   stage.appendChild(host);
-  var target=null;
 
-  function count(){ return filled.filter(Boolean).length; }
+  function countColor(c){ return cells.filter(function(v){ return v===c; }).length; }
+  function totalCount(){ return cells.filter(Boolean).length; }
 
   function render(){
+    var blueN=countColor('blue');
+    var redN=countColor('red');
+    var tot=blueN+redN;
+
     var cellsA='', cellsB='';
     for(var i=0;i<10;i++){
-      cellsA+='<div class="tf-cell'+(filled[i]?' filled':'')+'" data-i="'+i+'"></div>';
+      var cls='tf-cell'+(cells[i]==='blue'?' filled':(cells[i]==='red'?' red':''))+(locked[i]?' locked-cell':'');
+      cellsA+='<div class="'+cls+'" data-i="'+i+'"></div>';
     }
     for(var j=10;j<20;j++){
-      cellsB+='<div class="tf-cell'+(filled[j]?' filled':'')+'" data-i="'+j+'"></div>';
+      var clsB='tf-cell'+(cells[j]==='blue'?' filled':(cells[j]==='red'?' red':''))+(locked[j]?' locked-cell':'');
+      cellsB+='<div class="'+clsB+'" data-i="'+j+'"></div>';
     }
-    host.innerHTML='<div class="tf-wrap">'
-      +'<div class="tf-grid">'+cellsA+'</div>'
-      +'<div class="tf-grid">'+cellsB+'</div>'
+
+    var eqHtml='';
+    if(tot===0){
+      eqHtml='Tap squares to place counters';
+    } else if(blueN>0 && redN>0){
+      eqHtml='<span style="color:#3355dd">'+blueN+' Blue</span> + <span style="color:#e5484d">'+redN+' Red</span> = <strong>'+tot+'</strong>'
+        +(tot===10 ? ' &nbsp;🎯 Partner to 10!' : (tot>10 ? ' &nbsp;(10 + '+(tot-10)+')' : ''));
+    } else {
+      var label=blueN>0?'Blue':'Red';
+      var col=blueN>0?'#3355dd':'#e5484d';
+      eqHtml='<span style="color:'+col+'">'+tot+' '+label+'</span>'
+        +(tot>10 ? ' = <strong>10 + '+(tot-10)+'</strong>' : (tot===10 ? ' = <strong>1 Full Ten!</strong>' : ''));
+    }
+
+    var firstFrameCount=cells.slice(0,10).filter(Boolean).length;
+    var canCompleteTen=(mode==='explore' && firstFrameCount>0 && firstFrameCount<10);
+
+    var colorControls = '<div class="ctrl-row" style="margin-top:0;margin-bottom:14px">'
+      +'<button class="tf-color-pill'+(activeColor==='blue'?' on-blue':'')+'" id="tf-pick-blue">'
+        +'<span class="tf-dot-swatch" style="background:#3355dd"></span> Blue Counter'
+      +'</button>'
+      +'<button class="tf-color-pill'+(activeColor==='red'?' on-red':'')+'" id="tf-pick-red">'
+        +'<span class="tf-dot-swatch" style="background:#e5484d"></span> Red Counter'
+      +'</button>'
+      +(canCompleteTen
+        ? '<button class="btn btn-ghost" id="tf-fill-ten">Fill Frame 1 to 10 (+'+(10-firstFrameCount)+' Red)</button>'
+        : '')
+      +'</div>';
+
+    host.innerHTML=colorControls
+      +'<div class="tf-wrap">'
+        +'<div class="tf-frame-box"><div class="tf-frame-title">First Ten (1–10)</div><div class="tf-grid">'+cellsA+'</div></div>'
+        +'<div class="tf-frame-box"><div class="tf-frame-title">Second Ten (11–20)</div><div class="tf-grid">'+cellsB+'</div></div>'
       +'</div>'
-      +'<div class="stat-row"><div class="stat-pill">Filled: '+count()+'</div></div>'
-      +'<div class="stat-row"><button class="btn btn-ghost" id="tf-clear">Clear All</button></div>';
+      +'<div style="text-align:center"><div class="tf-bond-bar">'+eqHtml+'</div></div>'
+      +'<div class="stat-row"><button class="btn btn-ghost" id="tf-clear">Clear Unlocked</button></div>';
+
+    el('tf-pick-blue').onclick=function(){ activeColor='blue'; render(); };
+    el('tf-pick-red').onclick=function(){ activeColor='red'; render(); };
+
+    if(canCompleteTen){
+      el('tf-fill-ten').onclick=function(){
+        for(var k=0;k<10;k++){
+          if(!cells[k]) cells[k]='red';
+        }
+        render();
+      };
+    }
+
     Array.prototype.forEach.call(host.querySelectorAll('.tf-cell'),function(c){
       c.addEventListener('click',function(){
-        var i=parseInt(c.getAttribute('data-i'),10);
-        filled[i]=!filled[i];
+        var idx=parseInt(c.getAttribute('data-i'),10);
+        if(locked[idx]) return;
+        cells[idx] = (cells[idx]===activeColor) ? null : activeColor;
         render();
       });
     });
-    el('tf-clear').onclick=function(){ filled=new Array(20).fill(false); render(); };
+
+    el('tf-clear').onclick=function(){
+      for(var k=0;k<20;k++){
+        if(!locked[k]) cells[k]=null;
+      }
+      render();
+    };
   }
   render();
 
   if(mode==='challenge'){
+    var chalVariant='build', targetTotal=0, startBlue=0, addRed=0;
+
     function newTarget(){
-      target=rand(3,20);
-      filled=new Array(20).fill(false);
+      var pick=rand(1,3);
+      chalVariant = pick===1 ? 'build' : (pick===2 ? 'make10' : 'bond');
+      cells=new Array(20).fill(null);
+      locked=new Array(20).fill(false);
+
+      if(chalVariant==='build'){
+        targetTotal=rand(4,19);
+        activeColor='blue';
+      } else if(chalVariant==='make10'){
+        startBlue=rand(2,9);
+        addRed=10-startBlue;
+        targetTotal=10;
+        for(var i=0;i<startBlue;i++){
+          cells[i]='blue';
+          locked[i]=true;
+        }
+        activeColor='red';
+      } else {
+        startBlue=rand(5,9);
+        addRed=rand(10-startBlue+1, 8);
+        targetTotal=startBlue+addRed;
+        activeColor='blue';
+      }
       render();
     }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Fill exactly '+target+' counters.'; },
-      function(){ return count()===target; }, newTarget);
+
+    var barObj = buildChallengeBar(stage, function(){
+      if(chalVariant==='build'){
+        return 'Fill '+targetTotal+' counters using the ten-frames.';
+      }
+      if(chalVariant==='make10'){
+        return 'There are '+startBlue+' Blue counters. Add Red counters to make 10!';
+      }
+      return 'Show '+startBlue+' Blue + '+addRed+' Red counters to find the total.';
+    }, function(){
+      if(chalVariant==='build'){
+        return totalCount()===targetTotal;
+      }
+      if(chalVariant==='make10'){
+        return countColor('blue')===startBlue && countColor('red')===addRed && totalCount()===10;
+      }
+      return countColor('blue')===startBlue && countColor('red')===addRed;
+    }, newTarget);
+
+    el('chal-check').addEventListener('click',function(){
+      if(chalVariant==='make10'){
+        var r=countColor('red');
+        if(r!==addRed || totalCount()!==10){
+          barObj.feedback.textContent='You have '+startBlue+' Blue and '+r+' Red ('+(startBlue+r)+' total). Fill only the empty spaces in the first frame to make 10!';
+        }
+      } else if(chalVariant==='bond'){
+        var b=countColor('blue'), rd=countColor('red');
+        if(b!==startBlue || rd!==addRed){
+          barObj.feedback.textContent='You placed '+b+' Blue and '+rd+' Red — adjust them to '+startBlue+' Blue and '+addRed+' Red!';
+        }
+      }
+    });
   }
 }
 
 /* ══════════════ 3. NUMBER LINE JUMPS ══════════════ */
 function mountNumberLine(stage, mode){
-  // Range is a control, not a hardcoded cap — a teacher can widen it to
-  // whatever a lesson needs (negative numbers included), rather than being
-  // stuck with a fixed 0-40 window.
-  var MINV=-20, MAXV=20;
+  var MINV=-10, MAXV=20;
   var pos=0;
+  var history=[];
   var host=document.createElement('div');
   stage.appendChild(host);
-  var jumpSize=1, targetVal=null, jumpsMade=0;
+  var jumpSize=1, targetVal=null;
 
   function clamp(v){ return Math.max(MINV,Math.min(MAXV,v)); }
 
+  function recordJump(delta){
+    var next=clamp(pos+delta);
+    var actualDelta=next-pos;
+    if(actualDelta===0) return;
+    history.push({from:pos, to:next, step:actualDelta});
+    pos=next;
+    render();
+  }
+
+  function undoJump(){
+    if(history.length===0) return;
+    var last=history.pop();
+    pos=last.from;
+    render();
+  }
+
   function svgLine(){
-    var w=740,h=100,padding=20,usable=w-padding*2,span=MAXV-MINV;
+    var w=740, h=145, padding=28, usable=w-padding*2, span=MAXV-MINV;
+    var lineY=96;
     function xFor(v){ return padding+((v-MINV)/span)*usable; }
+
     var ticks='', step=span<=20?1:span<=60?2:span<=200?5:Math.ceil(span/40);
     var labelEvery=step*(span<=20?2:5);
     for(var v=MINV;v<=MAXV;v+=step){
       var x=xFor(v);
-      ticks+='<line x1="'+x+'" y1="42" x2="'+x+'" y2="52" stroke="#c6d4ec" stroke-width="2"/>';
-      if(v%labelEvery===0){ ticks+='<text x="'+x+'" y="70" font-size="12" fill="#6b7896" text-anchor="middle">'+v+'</text>'; }
+      var isMajor=(v%labelEvery===0);
+      ticks+='<line x1="'+x+'" y1="'+(lineY-6)+'" x2="'+x+'" y2="'+(lineY+6)+'" stroke="'+(isMajor?'#6b7896':'#c6d4ec')+'" stroke-width="'+(isMajor?2.5:1.5)+'"/>';
+      if(isMajor){
+        ticks+='<text x="'+x+'" y="'+(lineY+22)+'" font-size="12" font-weight="700" fill="#6b7896" text-anchor="middle">'+v+'</text>';
+      }
     }
+
+    var arcs='';
+    history.forEach(function(hop, idx){
+      var x1=xFor(hop.from), x2=xFor(hop.to);
+      var midX=(x1+x2)/2;
+      var distPx=Math.abs(x2-x1);
+      var arcHeight=Math.min(58, Math.max(24, distPx*0.42));
+      var ctrlY=lineY - arcHeight;
+      var peakY=lineY - arcHeight*0.52;
+      var isPos=hop.step>0;
+      var color=isPos ? '#22b573' : '#eb6f2d';
+      var isLatest=(idx===history.length-1);
+
+      arcs+='<path d="M '+x1+' '+lineY+' Q '+midX+' '+ctrlY+' '+x2+' '+lineY+'" fill="none" stroke="'+color+'" stroke-width="'+(isLatest?3:2.2)+'" stroke-dasharray="'+(isLatest?'none':'4,3')+'"/>';
+      if(!isLatest){
+        arcs+='<circle cx="'+x2+'" cy="'+lineY+'" r="3.5" fill="'+color+'"/>';
+      }
+      var labelTxt=(hop.step>0?'+':'')+hop.step;
+      arcs+='<text x="'+midX+'" y="'+(peakY-5)+'" font-size="11.5" font-weight="800" fill="'+color+'" text-anchor="middle">'+labelTxt+'</text>';
+    });
+
     var zeroX=xFor(0);
     var markerX=xFor(pos);
+
     return '<svg id="nl-svg" viewBox="0 0 '+w+' '+h+'">'
-      +'<line x1="'+padding+'" y1="47" x2="'+(w-padding)+'" y2="47" stroke="#8896b3" stroke-width="3"/>'
+      +'<line x1="'+padding+'" y1="'+lineY+'" x2="'+(w-padding)+'" y2="'+lineY+'" stroke="#8896b3" stroke-width="3" stroke-linecap="round"/>'
       +ticks
-      +(MINV<0&&MAXV>0?'<line x1="'+zeroX+'" y1="30" x2="'+zeroX+'" y2="64" stroke="#3355dd" stroke-width="2"/>':'')
-      +'<circle cx="'+markerX+'" cy="47" r="10" fill="#f5a623" stroke="#fff" stroke-width="2"/>'
+      +(MINV<=0&&MAXV>=0?'<line x1="'+zeroX+'" y1="'+(lineY-14)+'" x2="'+zeroX+'" y2="'+(lineY+14)+'" stroke="#3355dd" stroke-width="2.5"/>':'')
+      +arcs
+      +'<circle cx="'+markerX+'" cy="'+lineY+'" r="5" fill="#f5a623"/>'
+      +'<text x="'+markerX+'" y="'+(lineY-10)+'" font-size="24" text-anchor="middle" style="user-select:none">🐸</text>'
       +'</svg>';
+  }
+
+  function equationTrail(){
+    if(history.length===0) return 'Tap a jump button to hop from 0!';
+    var terms=['0'];
+    var allSame=true;
+    var firstStep=history[0].step;
+    history.forEach(function(h){
+      if(h.step!==firstStep) allSame=false;
+      terms.push((h.step>=0?'+ ':'− ')+Math.abs(h.step));
+    });
+    var chain=terms.join(' ')+' = '+pos;
+    if(allSame && history.length>1){
+      return chain+'  &nbsp;•&nbsp;  '+history.length+' jumps of '+(firstStep>=0?'+':'')+firstStep+' = '+pos;
+    }
+    return chain;
   }
 
   function render(){
     var jumpControls = mode==='challenge'
-      ? '<button class="btn btn-primary" id="nl-jump">Jump '+(jumpSize>=0?'+':'')+jumpSize+'</button><button class="btn btn-ghost" id="nl-undo">Undo Jump</button>'
+      ? '<button class="btn btn-primary" id="nl-jump">Hop '+(jumpSize>=0?'+':'')+jumpSize+'</button>'
+        +'<button class="btn btn-ghost" id="nl-undo" '+(history.length===0?'disabled':'')+'>Undo Hop</button>'
       : '<button class="btn btn-primary" id="nl-j1">+1</button>'
         +'<button class="btn btn-primary" id="nl-j2">+2</button>'
         +'<button class="btn btn-primary" id="nl-j5">+5</button>'
         +'<button class="btn btn-ghost" id="nl-jm1">&minus;1</button>'
         +'<button class="btn btn-ghost" id="nl-jm2">&minus;2</button>'
-        +'<button class="btn btn-ghost" id="nl-jm5">&minus;5</button>';
+        +'<button class="btn btn-ghost" id="nl-jm5">&minus;5</button>'
+        +'<button class="btn btn-ghost" id="nl-undo" '+(history.length===0?'disabled':'')+'>Undo</button>';
+
     var rangeControls = mode==='explore'
       ? '<div class="ctrl-row"><div class="ctrl-group"><div class="ctrl-label">Line range</div>'
-        +'<input type="number" id="nl-min" value="'+MINV+'" style="width:70px" class="conv-input"> to '
-        +'<input type="number" id="nl-max" value="'+MAXV+'" style="width:70px" class="conv-input"></div></div>'
+        +'<div><input type="number" id="nl-min" value="'+MINV+'" style="width:74px" class="conv-input"> to '
+        +'<input type="number" id="nl-max" value="'+MAXV+'" style="width:74px" class="conv-input"></div></div></div>'
       : '';
-    host.innerHTML=(mode==='challenge'?'<div class="nl-jump-label">Jumps made: '+jumpsMade+'</div>':'')
+
+    host.innerHTML=(mode==='challenge'?'<div class="nl-jump-label">Hops made: '+history.length+'</div>':'')
       +svgLine()
-      +'<div class="stat-row"><div class="stat-pill">Value: '+pos+'</div></div>'
+      +'<div class="stat-row"><div class="stat-pill">Frog Position: '+pos+'</div>'
+      +'<div class="stat-pill" style="color:#3355dd">'+equationTrail()+'</div></div>'
       +'<div class="ctrl-row">'+jumpControls+'<button class="btn btn-ghost" id="nl-reset">Reset</button></div>'
       +rangeControls;
-    el('nl-reset').onclick=function(){ pos=0; jumpsMade=0; render(); };
+
+    el('nl-reset').onclick=function(){ pos=0; history=[]; render(); };
+    el('nl-undo').onclick=undoJump;
+
     if(mode==='challenge'){
-      el('nl-jump').onclick=function(){ var np=pos+jumpSize; if(np>=MINV&&np<=MAXV){ pos=np; jumpsMade++; render(); } };
-      el('nl-undo').onclick=function(){ if(jumpsMade>0){ pos-=jumpSize; jumpsMade--; render(); } };
+      el('nl-jump').onclick=function(){ recordJump(jumpSize); };
     } else {
-      el('nl-j1').onclick=function(){ pos=clamp(pos+1); render(); };
-      el('nl-j2').onclick=function(){ pos=clamp(pos+2); render(); };
-      el('nl-j5').onclick=function(){ pos=clamp(pos+5); render(); };
-      el('nl-jm1').onclick=function(){ pos=clamp(pos-1); render(); };
-      el('nl-jm2').onclick=function(){ pos=clamp(pos-2); render(); };
-      el('nl-jm5').onclick=function(){ pos=clamp(pos-5); render(); };
+      el('nl-j1').onclick=function(){ recordJump(1); };
+      el('nl-j2').onclick=function(){ recordJump(2); };
+      el('nl-j5').onclick=function(){ recordJump(5); };
+      el('nl-jm1').onclick=function(){ recordJump(-1); };
+      el('nl-jm2').onclick=function(){ recordJump(-2); };
+      el('nl-jm5').onclick=function(){ recordJump(-5); };
       el('nl-min').addEventListener('change',function(){
         var v=parseInt(el('nl-min').value,10);
-        if(!isNaN(v)&&v<MAXV){ MINV=v; pos=clamp(pos); render(); }
+        if(!isNaN(v)&&v<MAXV){ MINV=v; pos=clamp(pos); history=[]; render(); }
       });
       el('nl-max').addEventListener('change',function(){
         var v=parseInt(el('nl-max').value,10);
-        if(!isNaN(v)&&v>MINV){ MAXV=v; pos=clamp(pos); render(); }
+        if(!isNaN(v)&&v>MINV){ MAXV=v; pos=clamp(pos); history=[]; render(); }
       });
     }
   }
   render();
 
   if(mode==='challenge'){
-    // Fixed, symmetric, negative-inclusive range for challenges — kept
-    // separate from Explore's teacher-adjustable range so the jump/target
-    // math below (which needs a KNOWN boundary distance in the jump's own
-    // direction to guarantee a reachable target) stays simple and correct,
-    // rather than trying to re-derive bounds for an arbitrary asymmetric
-    // range every time.
     MINV=-20; MAXV=20;
     function newTarget(){
-      // Jumps can go either direction, and the target lands anywhere in
-      // range, negative included — no "must be reachable going up from
-      // zero" restriction. jumpSize is picked small enough relative to the
-      // boundary in ITS OWN direction that the target is always reachable
-      // in a whole number of jumps, never clamped/adjusted after the fact.
       var dir=Math.random()<0.5?1:-1;
-      var room=dir>0?MAXV:-MINV; // distance from 0 to the boundary this jump direction is heading toward
+      var room=dir>0?MAXV:-MINV;
       var jumpMag=rand(2,Math.max(2,Math.min(9,Math.floor(room/2))));
       jumpSize=dir*jumpMag;
       var maxJumps=Math.max(2,Math.min(6,Math.floor(room/jumpMag)));
       var jumps=rand(2,maxJumps);
-      pos=0; jumpsMade=0;
+      pos=0; history=[];
       targetVal=jumpSize*jumps;
       render();
     }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Using jumps of '+(jumpSize>=0?'+':'')+jumpSize+', land exactly on '+targetVal+'.'; },
+    buildChallengeBar(stage, function(){ return 'Using hops of '+(jumpSize>=0?'+':'')+jumpSize+', land the frog exactly on '+targetVal+'.'; },
       function(){ return pos===targetVal; }, newTarget);
   }
 }
 
 /* ══════════════ 4. CLOCK EXPLORER ══════════════ */
 function mountClock(stage, mode){
-  // hour24 (0-23) is the single source of truth regardless of which format
-  // is on screen — a 12-hour DISPLAY still needs to distinguish morning
-  // from afternoon internally, otherwise "set it to 2 AM" and "set it to
-  // 2 PM" would be indistinguishable targets. The analog face only ever
-  // has 12 numbers on it, same as a real clock — 24-hour support means the
-  // DIGITAL readout and the underlying value, not a second dial.
   var hour24=15, minute=0;
   var use24=false;
+  var hideDigital=false;
+  var draggingHand=null;
   var host=document.createElement('div');
   stage.appendChild(host);
   var targetHour24=null, targetMinute=null;
 
   function clockSvg(){
-    var cx=110,cy=110,r=100;
+    var cx=120, cy=120, r=108;
     var minuteAngle=minute*6;
     var hourAngle=(hour24%12)*30+minute*0.5;
-    var ticks='';
-    for(var i=0;i<12;i++){
-      var a=i*30*Math.PI/180;
-      var x1=cx+Math.sin(a)*(r-8), y1=cy-Math.cos(a)*(r-8);
-      var x2=cx+Math.sin(a)*(r-16), y2=cy-Math.cos(a)*(r-16);
-      ticks+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#8896b3" stroke-width="3"/>';
+    var marks='';
+
+    for(var m=0; m<60; m++){
+      var a=(m*6)*Math.PI/180;
+      var isHour=(m%5===0);
+      var rOuter=r-6;
+      var rInner=isHour ? r-16 : r-11;
+      var x1=cx+Math.sin(a)*rOuter, y1=cy-Math.cos(a)*rOuter;
+      var x2=cx+Math.sin(a)*rInner, y2=cy-Math.cos(a)*rInner;
+      marks+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+(isHour?'#475569':'#cbd5e1')+'" stroke-width="'+(isHour?2.5:1.2)+'"/>';
+
+      if(isHour){
+        var num=(m===0)?12:(m/5);
+        var rNum=r-29;
+        var nx=cx+Math.sin(a)*rNum;
+        var ny=cy-Math.cos(a)*rNum + 4.5;
+        marks+='<text x="'+nx.toFixed(1)+'" y="'+ny.toFixed(1)+'" font-size="13" font-weight="800" fill="#233047" text-anchor="middle" style="user-select:none">'+num+'</text>';
+      }
     }
-    return '<svg id="clock-svg" viewBox="0 0 220 220">'
+
+    return '<svg id="clock-svg" viewBox="0 0 240 240" style="width:240px;height:240px;touch-action:none;cursor:grab">'
       +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#fff" stroke="#3355dd" stroke-width="4"/>'
-      +ticks
-      +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-46)+'" stroke="#233047" stroke-width="6" stroke-linecap="round" transform="rotate('+hourAngle+' '+cx+' '+cy+')"/>'
-      +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-72)+'" stroke="#e5484d" stroke-width="4" stroke-linecap="round" transform="rotate('+minuteAngle+' '+cx+' '+cy+')"/>'
-      +'<circle cx="'+cx+'" cy="'+cy+'" r="6" fill="#233047"/>'
+      +marks
+      +'<g transform="rotate('+hourAngle+' '+cx+' '+cy+')" data-hand="hour" style="cursor:pointer">'
+        +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-50)+'" stroke="transparent" stroke-width="20"/>'
+        +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-50)+'" stroke="#233047" stroke-width="6.5" stroke-linecap="round"/>'
+        +'<circle cx="'+cx+'" cy="'+(cy-44)+'" r="6" fill="#233047"/>'
+      +'</g>'
+      +'<g transform="rotate('+minuteAngle+' '+cx+' '+cy+')" data-hand="minute" style="cursor:pointer">'
+        +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-76)+'" stroke="transparent" stroke-width="20"/>'
+        +'<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-76)+'" stroke="#e5484d" stroke-width="4" stroke-linecap="round"/>'
+        +'<circle cx="'+cx+'" cy="'+(cy-72)+'" r="6.5" fill="#e5484d" stroke="#fff" stroke-width="1.5"/>'
+      +'</g>'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="#233047"/>'
       +'</svg>';
   }
 
@@ -648,24 +1099,106 @@ function mountClock(stage, mode){
     return h12+':'+mm+' '+(h24<12?'AM':'PM');
   }
 
+  function angleFromPointer(svgEl, clientX, clientY){
+    var rect=svgEl.getBoundingClientRect();
+    var cx=rect.left + rect.width/2;
+    var cy=rect.top + rect.height/2;
+    var dx=clientX - cx;
+    var dy=clientY - cy;
+    var deg=(Math.atan2(dx, -dy)*180/Math.PI + 360)%360;
+    return deg;
+  }
+
+  function applyDragAngle(deg){
+    if(draggingHand==='minute'){
+      var newMin=(Math.round(deg/30)*5)%60;
+      if(newMin!==minute){
+        if(minute>=45 && newMin<=15){
+          hour24=(hour24+1)%24;
+        } else if(minute<=15 && newMin>=45){
+          hour24=(hour24+23)%24;
+        }
+        minute=newMin;
+        render();
+      }
+    } else if(draggingHand==='hour'){
+      var h12=Math.round(deg/30)%12;
+      var isPM=(hour24>=12);
+      var newH24=h12 + (isPM?12:0);
+      if(newH24!==hour24){
+        hour24=newH24;
+        render();
+      }
+    }
+  }
+
+  function wireClockDrag(){
+    var svgEl=el('clock-svg');
+    if(!svgEl) return;
+
+    svgEl.addEventListener('pointerdown',function(e){
+      var handGroup=e.target.closest('[data-hand]');
+      if(handGroup){
+        draggingHand=handGroup.getAttribute('data-hand');
+      } else {
+        draggingHand='minute';
+      }
+      svgEl.setPointerCapture(e.pointerId);
+      applyDragAngle(angleFromPointer(svgEl, e.clientX, e.clientY));
+    });
+
+    svgEl.addEventListener('pointermove',function(e){
+      if(!draggingHand) return;
+      applyDragAngle(angleFromPointer(svgEl, e.clientX, e.clientY));
+    });
+
+    function endDrag(){ draggingHand=null; }
+    svgEl.addEventListener('pointerup',endDrag);
+    svgEl.addEventListener('pointercancel',endDrag);
+  }
+
   function render(){
+    var isPM=(hour24>=12);
+    var digitalHtml = hideDigital
+      ? '<div class="digital-time" style="color:#64748b;letter-spacing:2px">-- : --</div>'
+      : '<div class="digital-time">'+digital(hour24,minute)+'</div>';
+
     host.innerHTML='<div class="clock-wrap">'
-      +'<div class="ctrl-row" style="margin-bottom:10px">'
+      +'<div class="ctrl-row" style="margin-top:0;margin-bottom:6px">'
         +'<button class="btn '+(use24?'btn-ghost':'btn-primary')+'" id="cl-mode-12">12-hour</button>'
         +'<button class="btn '+(use24?'btn-primary':'btn-ghost')+'" id="cl-mode-24">24-hour</button>'
+        +'<button class="btn '+(hideDigital?'btn-primary':'btn-ghost')+'" id="cl-hide-dig">'
+          +(hideDigital ? '👁 Show Digital' : '🙈 Hide Digital')
+        +'</button>'
       +'</div>'
       +clockSvg()
-      +'<div class="digital-time">'+digital(hour24,minute)+'</div>'
+      +'<div style="font-size:12px;color:var(--muted);font-weight:700">Drag the red minute hand or dark hour hand, or use the buttons below</div>'
+      +digitalHtml
       +'<div class="ctrl-row">'
-      +'<div class="ctrl-group"><div class="ctrl-label">Hour</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-h-minus">&minus;</button><button class="step-btn" id="cl-h-plus">+</button></div></div>'
-      +'<div class="ctrl-group"><div class="ctrl-label">Minute</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-m-minus">&minus;</button><button class="step-btn" id="cl-m-plus">+</button></div></div>'
+        +'<div class="ctrl-group"><div class="ctrl-label">Hour</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-h-minus">&minus;</button><button class="step-btn" id="cl-h-plus">+</button></div></div>'
+        +'<div class="ctrl-group"><div class="ctrl-label">Minute</div><div class="ctrl-btns"><button class="step-btn minus" id="cl-m-minus">&minus;</button><button class="step-btn" id="cl-m-plus">+</button></div></div>'
+        +'<div class="ctrl-group"><div class="ctrl-label">Period</div><div class="ctrl-btns"><button class="btn '+(isPM?'btn-ghost':'btn-primary')+'" id="cl-am" style="padding:6px 10px;min-height:38px">AM</button><button class="btn '+(isPM?'btn-primary':'btn-ghost')+'" id="cl-pm" style="padding:6px 10px;min-height:38px">PM</button></div></div>'
       +'</div></div>';
+
+    wireClockDrag();
+
     el('cl-mode-12').onclick=function(){ use24=false; render(); };
     el('cl-mode-24').onclick=function(){ use24=true; render(); };
+    el('cl-hide-dig').onclick=function(){ hideDigital=!hideDigital; render(); };
     el('cl-h-plus').onclick=function(){ hour24=(hour24+1)%24; render(); };
     el('cl-h-minus').onclick=function(){ hour24=(hour24+23)%24; render(); };
-    el('cl-m-plus').onclick=function(){ minute=(minute+5)%60; render(); };
-    el('cl-m-minus').onclick=function(){ minute=(minute+55)%60; render(); };
+    el('cl-m-plus').onclick=function(){
+      if(minute+5>=60) hour24=(hour24+1)%24;
+      minute=(minute+5)%60;
+      render();
+    };
+    el('cl-m-minus').onclick=function(){
+      if(minute-5<0) hour24=(hour24+23)%24;
+      minute=(minute+55)%60;
+      render();
+    };
+    el('cl-am').onclick=function(){ if(hour24>=12){ hour24-=12; render(); } };
+    el('cl-pm').onclick=function(){ if(hour24<12){ hour24+=12; render(); } };
   }
   render();
 
@@ -678,12 +1211,9 @@ function mountClock(stage, mode){
         targetMinute=rand(0,11)*5;
         hour24=0; minute=0;
       } else {
-        // Elapsed time: start the clock already showing a start time, ask
-        // the student to move it forward by a stated duration. Now wraps
-        // across the full 24-hour day, not just a 12-hour dial cycle.
         hour24=rand(0,23);
         minute=rand(0,11)*5;
-        duration=rand(1,47)*5; // 5 to 235 minutes
+        duration=rand(1,47)*5;
         var totalStart=hour24*60+minute;
         var totalEnd=(totalStart+duration)%1440;
         targetHour24=Math.floor(totalEnd/60);
@@ -703,36 +1233,98 @@ function mountClock(stage, mode){
 /* ══════════════ 5. MONEY AND COINS ══════════════ */
 function mountMoney(stage, mode){
   var DENOMS=[1,2,5,10,20,50,100,200];
-  var purse=[]; // array of {id,value}
+  var SHOP_ITEMS=[
+    {id:'biscuit',  name:'Biscuit',       price:35,  icon:'🍪'},
+    {id:'juice',    name:'Fruit Juice',   price:80,  icon:'🧃'},
+    {id:'book',     name:'Exercise Book', price:150, icon:'📓'},
+    {id:'lunchbox', name:'Lunch Pack',    price:285, icon:'🍱'}
+  ];
+
+  var purse=[];
   var seq=0;
+  var selectedShopId=null;
   var host=document.createElement('div');
   stage.appendChild(host);
   var target=null;
 
   function total(){ return purse.reduce(function(s,p){return s+p.value;},0); }
 
+  function breakdownText(){
+    if(purse.length===0) return '';
+    var counts={};
+    purse.forEach(function(p){ counts[p.value]=(counts[p.value]||0)+1; });
+    var parts=DENOMS.slice().reverse().filter(function(v){ return counts[v]>0; }).map(function(v){
+      return counts[v]+' &times; ₦'+v;
+    });
+    return parts.join(' + ');
+  }
+
   function render(){
+    var curTotal=total();
+    var selectedItem = selectedShopId
+      ? SHOP_ITEMS.filter(function(it){ return it.id===selectedShopId; })[0]
+      : null;
+
+    var shopHtml='';
+    if(mode==='explore'){
+      shopHtml='<div style="font-size:11.5px;font-weight:700;color:var(--muted);text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Tap an item to pay for it (or tap again for free play)</div>'
+        +'<div class="shop-shelf">'
+        +SHOP_ITEMS.map(function(it){
+          return '<button class="shop-item'+(it.id===selectedShopId?' on':'')+'" data-shop="'+it.id+'">'
+            +'<div class="shop-icon">'+it.icon+'</div>'
+            +'<div class="shop-name">'+it.name+'</div>'
+            +'<div class="shop-price">₦'+it.price+'</div>'
+            +'</button>';
+        }).join('')
+        +'</div>';
+
+      if(selectedItem){
+        var diff = curTotal - selectedItem.price;
+        if(diff < 0){
+          shopHtml+='<div class="shop-status short">Buying '+selectedItem.icon+' '+selectedItem.name+' (₦'+selectedItem.price+') — Add <strong>₦'+Math.abs(diff)+'</strong> more</div>';
+        } else if(diff === 0){
+          shopHtml+='<div class="shop-status exact">Exact payment for '+selectedItem.icon+' '+selectedItem.name+' (₦'+selectedItem.price+')!</div>';
+        } else {
+          shopHtml+='<div class="shop-status over">Paid ₦'+curTotal+' for ₦'+selectedItem.price+' '+selectedItem.name+' — Change due: <strong>₦'+diff+'</strong></div>';
+        }
+      }
+    }
+
     var coinsHtml=DENOMS.map(function(v){
       var isCoin=v<20;
       return '<button class="'+(isCoin?'coin-btn':'note-btn')+'" data-v="'+v+'">₦'+v+'</button>';
     }).join('');
+
     var purseHtml=purse.map(function(p){
-      // Reuses the exact coin-btn/note-btn shape+colour rules (keyed off
-      // data-v) so a coin or note in the purse looks identical to the one
-      // that was tapped to add it — a real pile, not a list of text tags.
       var isCoin=p.value<20;
       return '<div class="purse-item '+(isCoin?'coin-btn':'note-btn')+'" data-id="'+p.id+'" data-v="'+p.value+'" title="Tap to remove">₦'+p.value+'</div>';
-    }).join('') || '<span style="color:#8896b3;font-size:12.5px">Tap a coin or note to add it here</span>';
-    host.innerHTML='<div class="coin-row">'+coinsHtml+'</div>'
+    }).join('') || '<span style="color:#8896b3;font-size:12.5px">Tap a coin or note above to add it here (tap inside to remove)</span>';
+
+    host.innerHTML=shopHtml
+      +'<div class="coin-row">'+coinsHtml+'</div>'
       +'<div class="purse">'+purseHtml+'</div>'
-      +'<div class="purse-total">Total: ₦'+total()+'</div>'
-      +'<div class="stat-row"><button class="btn btn-ghost" id="money-clear">Empty Purse</button></div>';
-    Array.prototype.forEach.call(host.querySelectorAll('.coin-btn,.note-btn'),function(b){
+      +'<div class="purse-total">Total in Purse: ₦'+curTotal+'</div>'
+      +(purse.length>0 ? '<div class="purse-breakdown">'+breakdownText()+'</div>' : '')
+      +'<div class="stat-row"><button class="btn btn-ghost" id="money-clear" '+(purse.length===0?'disabled':'')+'>Empty Purse</button></div>';
+
+    if(mode==='explore'){
+      Array.prototype.forEach.call(host.querySelectorAll('[data-shop]'),function(b){
+        b.addEventListener('click',function(){
+          var id=b.getAttribute('data-shop');
+          selectedShopId = (selectedShopId===id) ? null : id;
+          purse=[];
+          render();
+        });
+      });
+    }
+
+    Array.prototype.forEach.call(host.querySelectorAll('.coin-row .coin-btn,.coin-row .note-btn'),function(b){
       b.addEventListener('click',function(){
         purse.push({id:++seq, value:parseInt(b.getAttribute('data-v'),10)});
         render();
       });
     });
+
     Array.prototype.forEach.call(host.querySelectorAll('.purse-item'),function(p){
       p.addEventListener('click',function(){
         var id=parseInt(p.getAttribute('data-id'),10);
@@ -740,46 +1332,62 @@ function mountMoney(stage, mode){
         render();
       });
     });
+
     el('money-clear').onclick=function(){ purse=[]; render(); };
   }
   render();
 
   if(mode==='challenge'){
-    var variant='make', changePrice=0, changePayment=0;
+    var variant='make', changePrice=0, changePayment=0, changeItem=SHOP_ITEMS[0];
     function newTarget(){
       variant=Math.random()<0.5?'make':'change';
       purse=[];
       if(variant==='make'){
         target=rand(5,300);
       } else {
-        // Give change: pick a note to "pay with", then a price strictly
-        // less than it so the change owed is always a positive amount.
-        var payOptions=DENOMS.filter(function(v){ return v>=20; });
+        var payOptions=DENOMS.filter(function(v){ return v>=50; });
         changePayment=payOptions[rand(0,payOptions.length-1)];
+        changeItem=SHOP_ITEMS[rand(0,SHOP_ITEMS.length-1)];
         changePrice=rand(1,changePayment-1);
         target=changePayment-changePrice;
       }
       render();
     }
     newTarget();
-    buildChallengeBar(stage, function(){
+
+    var barObj = buildChallengeBar(stage, function(){
       return variant==='make'
         ? 'Make exactly ₦'+target+' using any coins and notes.'
-        : 'An item costs ₦'+changePrice+'. The customer pays with a ₦'+changePayment+' note. Put the correct change in the purse.';
+        : 'A '+changeItem.name.toLowerCase()+' '+changeItem.icon+' costs ₦'+changePrice+'. The customer pays with a ₦'+changePayment+' note. Put the correct change in the purse.';
     }, function(){ return total()===target; }, newTarget);
+
+    el('chal-check').addEventListener('click',function(){
+      var cur=total();
+      if(cur!==target){
+        var diff=Math.abs(cur-target);
+        if(variant==='change'){
+          barObj.feedback.textContent = cur < target
+            ? 'You put ₦'+cur+' in the purse — that is ₦'+diff+' short! (Hint: ₦'+changePayment+' − ₦'+changePrice+' = ₦'+target+')'
+            : 'You put ₦'+cur+' in the purse — that is ₦'+diff+' too much! Tap a coin or note inside the purse to remove it.';
+        } else {
+          barObj.feedback.textContent = cur < target
+            ? 'You have ₦'+cur+' — add ₦'+diff+' more to reach ₦'+target+'.'
+            : 'You have ₦'+cur+' — remove ₦'+diff+' to reach ₦'+target+'.';
+        }
+      }
+    });
   }
 }
 
 /* ══════════════ 6. GEOBOARD ══════════════ */
 function mountGeoboard(stage, mode){
-  var GRID=6; // 0..5 pegs each axis
-  var spacing=64, pad=20;
-  var picked=[]; // list of {x,y} grid coords in order
+  var GRID=6;
+  var spacing=64, pad=24;
+  var picked=[];
+  var warnMsg='';
   var host=document.createElement('div');
   stage.appendChild(host);
   var target=null;
-
-  function pegKey(x,y){ return x+'_'+y; }
 
   function shoelaceArea(pts){
     if(pts.length<3) return 0;
@@ -790,6 +1398,7 @@ function mountGeoboard(stage, mode){
     }
     return Math.abs(sum)/2;
   }
+
   function perimeter(pts){
     if(pts.length<2) return 0;
     var sum=0;
@@ -802,133 +1411,412 @@ function mountGeoboard(stage, mode){
     return sum;
   }
 
-  function svg(){
-    var size=pad*2+spacing*(GRID-1);
-    var pegs='', lines='';
-    for(var gy=0;gy<GRID;gy++){
-      for(var gx=0;gx<GRID;gx++){
-        var px=pad+gx*spacing, py=pad+gy*spacing;
-        var idx=picked.filter(function(p){return p.x===gx&&p.y===gy;}).length>0
-          ? picked.map(function(p){return p.x+'_'+p.y;}).indexOf(gx+'_'+gy) : -1;
-        var cls='geo-peg'+(idx===0?' first':(idx>0?' selected':''));
-        pegs+='<circle class="'+cls+'" cx="'+px+'" cy="'+py+'" r="7" data-x="'+gx+'" data-y="'+gy+'"/>';
+  function ccw(A,B,C){ return (C.y-A.y)*(B.x-A.x) > (B.y-A.y)*(C.x-A.x); }
+  function properIntersect(A,B,C,D){
+    if((A.x===C.x&&A.y===C.y)||(A.x===D.x&&A.y===D.y)||(B.x===C.x&&B.y===C.y)||(B.x===D.x&&B.y===D.y)) return false;
+    return (ccw(A,C,D) !== ccw(B,C,D)) && (ccw(A,B,C) !== ccw(A,B,D));
+  }
+  function wouldSelfIntersect(newPt){
+    var n=picked.length;
+    if(n<2) return false;
+    var last=picked[n-1];
+    for(var i=0;i<n-1;i++){
+      if(properIntersect(last, newPt, picked[i], picked[i+1])) return true;
+    }
+    if(n>=2){
+      for(var j=0;j<n-1;j++){
+        if(properIntersect(newPt, picked[0], picked[j], picked[j+1])) return true;
       }
     }
+    return false;
+  }
+
+  function svg(){
+    var size=pad*2+spacing*(GRID-1);
+    var gridLines='', polyFill='', lines='', pegs='';
+
+    for(var g=0;g<GRID;g++){
+      var pos=pad+g*spacing;
+      var endPos=pad+(GRID-1)*spacing;
+      gridLines+='<line x1="'+pos+'" y1="'+pad+'" x2="'+pos+'" y2="'+endPos+'" stroke="#e2e8f0" stroke-width="1.5"/>';
+      gridLines+='<line x1="'+pad+'" y1="'+pos+'" x2="'+endPos+'" y2="'+pos+'" stroke="#e2e8f0" stroke-width="1.5"/>';
+    }
+
+    if(picked.length>=3){
+      var ptsStr=picked.map(function(p){ return (pad+p.x*spacing)+','+(pad+p.y*spacing); }).join(' ');
+      polyFill+='<defs><clipPath id="geo-clip"><polygon points="'+ptsStr+'"/></clipPath></defs>';
+      polyFill+='<polygon points="'+ptsStr+'" fill="rgba(168,85,247,0.22)"/>';
+      var clippedGrid='';
+      for(var cg=0;cg<GRID;cg++){
+        var cpos=pad+cg*spacing;
+        var cend=pad+(GRID-1)*spacing;
+        clippedGrid+='<line x1="'+cpos+'" y1="'+pad+'" x2="'+cpos+'" y2="'+cend+'" stroke="#a855f7" stroke-opacity="0.45" stroke-width="1.5"/>';
+        clippedGrid+='<line x1="'+pad+'" y1="'+cpos+'" x2="'+cend+'" y2="'+cpos+'" stroke="#a855f7" stroke-opacity="0.45" stroke-width="1.5"/>';
+      }
+      polyFill+='<g clip-path="url(#geo-clip)">'+clippedGrid+'</g>';
+    }
+
     for(var i=0;i<picked.length-1;i++){
       var a=picked[i], b=picked[i+1];
-      lines+='<line x1="'+(pad+a.x*spacing)+'" y1="'+(pad+a.y*spacing)+'" x2="'+(pad+b.x*spacing)+'" y2="'+(pad+b.y*spacing)+'" stroke="#3355dd" stroke-width="3"/>';
+      lines+='<line x1="'+(pad+a.x*spacing)+'" y1="'+(pad+a.y*spacing)+'" x2="'+(pad+b.x*spacing)+'" y2="'+(pad+b.y*spacing)+'" stroke="#7c3aed" stroke-width="3.5" stroke-linecap="round"/>';
     }
     if(picked.length>=3){
       var f=picked[0], l=picked[picked.length-1];
-      lines+='<line x1="'+(pad+l.x*spacing)+'" y1="'+(pad+l.y*spacing)+'" x2="'+(pad+f.x*spacing)+'" y2="'+(pad+f.y*spacing)+'" stroke="#3355dd" stroke-width="3" stroke-dasharray="5,4"/>';
+      lines+='<line x1="'+(pad+l.x*spacing)+'" y1="'+(pad+l.y*spacing)+'" x2="'+(pad+f.x*spacing)+'" y2="'+(pad+f.y*spacing)+'" stroke="#7c3aed" stroke-width="3" stroke-dasharray="6,4" stroke-linecap="round"/>';
     }
-    return '<svg id="geo-svg" viewBox="0 0 '+size+' '+size+'">'+lines+pegs+'</svg>';
+
+    for(var gy=0;gy<GRID;gy++){
+      for(var gx=0;gx<GRID;gx++){
+        var px=pad+gx*spacing, py=pad+gy*spacing;
+        var idx=picked.map(function(p){return p.x+'_'+p.y;}).indexOf(gx+'_'+gy);
+        var cls='geo-peg'+(idx===0?' first':(idx>0?' selected':''));
+        pegs+='<circle class="'+cls+'" cx="'+px+'" cy="'+py+'" r="8" data-x="'+gx+'" data-y="'+gy+'"/>';
+      }
+    }
+
+    return '<svg id="geo-svg" viewBox="0 0 '+size+' '+size+'">'+gridLines+polyFill+lines+pegs+'</svg>';
   }
 
   function render(){
     var area=picked.length>=3?shoelaceArea(picked):0;
     var perim=picked.length>=2?perimeter(picked):0;
-    host.innerHTML=svg()
-      +'<div class="stat-row"><div class="stat-pill">Vertices: '+picked.length+'</div>'
-      +'<div class="stat-pill">Area: '+(picked.length>=3?area.toFixed(1):'—')+' sq units</div>'
-      +'<div class="stat-pill">Perimeter: '+(picked.length>=2?perim.toFixed(1):'—')+' units</div></div>'
-      +'<div class="stat-row"><button class="btn btn-ghost" id="geo-clear">Clear Shape</button>'
-      +'<span style="font-size:12px;color:#8896b3;align-self:center">Tap pegs in order to build your shape. It closes automatically once you have three or more points.</span></div>';
+    var areaStr = picked.length>=3 ? (Number.isInteger(area)?area:area.toFixed(1))+' sq units' : '—';
+
+    var presetsHtml = mode==='explore'
+      ? '<div class="ctrl-row" style="margin-bottom:10px">'
+          +'<button class="btn btn-ghost" id="geo-pre-sq">Square (4 sq units)</button>'
+          +'<button class="btn btn-ghost" id="geo-pre-rect">Rectangle (6 sq units)</button>'
+          +'<button class="btn btn-ghost" id="geo-pre-tri">Triangle (4.5 sq units)</button>'
+        +'</div>'
+      : '';
+
+    var warnHtml = warnMsg
+      ? '<div style="color:#e5484d;font-size:12.5px;font-weight:700;text-align:center;margin-top:8px">'+warnMsg+'</div>'
+      : '';
+
+    host.innerHTML=presetsHtml
+      +svg()
+      +warnHtml
+      +'<div class="stat-row"><div class="stat-pill">Corners: '+picked.length+'</div>'
+      +'<div class="stat-pill" style="color:#7c3aed">Area: '+areaStr+'</div>'
+      +'<div class="stat-pill">Perimeter: '+(picked.length>=2?perim.toFixed(1)+' units':'—')+'</div></div>'
+      +'<div class="stat-row">'
+        +'<button class="btn btn-ghost" id="geo-undo" '+(picked.length===0?'disabled':'')+'>Undo Peg</button>'
+        +'<button class="btn btn-ghost" id="geo-clear" '+(picked.length===0?'disabled':'')+'>Clear Shape</button>'
+      +'</div>'
+      +'<div style="font-size:12px;color:#8896b3;text-align:center;margin-top:8px">Tap pegs in order around your shape. Count the shaded grid squares inside to see the area!</div>';
+
     Array.prototype.forEach.call(host.querySelectorAll('.geo-peg'),function(p){
       p.addEventListener('click',function(){
         var x=parseInt(p.getAttribute('data-x'),10), y=parseInt(p.getAttribute('data-y'),10);
-        // Re-tapping any already-picked peg (including the first one) is a
-        // no-op — the shape already closes on its own once there are three
-        // or more points (see the dashed closing edge drawn in svg()), so
-        // there's nothing special left to do when they tap it again.
         var already=picked.some(function(pt){return pt.x===x&&pt.y===y;});
         if(already) return;
+        if(wouldSelfIntersect({x:x,y:y})){
+          warnMsg='Lines cannot cross over each other—pick a peg around the outside edge!';
+          render();
+          return;
+        }
+        warnMsg='';
         picked.push({x:x,y:y});
         render();
       });
     });
-    el('geo-clear').onclick=function(){ picked=[]; render(); };
+
+    el('geo-undo').onclick=function(){ warnMsg=''; picked.pop(); render(); };
+    el('geo-clear').onclick=function(){ warnMsg=''; picked=[]; render(); };
+
+    if(mode==='explore'){
+      el('geo-pre-sq').onclick=function(){ warnMsg=''; picked=[{x:1,y:1},{x:3,y:1},{x:3,y:3},{x:1,y:3}]; render(); };
+      el('geo-pre-rect').onclick=function(){ warnMsg=''; picked=[{x:1,y:1},{x:4,y:1},{x:4,y:3},{x:1,y:3}]; render(); };
+      el('geo-pre-tri').onclick=function(){ warnMsg=''; picked=[{x:1,y:1},{x:4,y:1},{x:1,y:4}]; render(); };
+    }
   }
   render();
 
   if(mode==='challenge'){
-    var achievable=[2,3,4,4.5,6,8,10,12];
-    function newTarget(){ target=achievable[rand(0,achievable.length-1)]; picked=[]; render(); }
+    var achievable=[2,3,4,4.5,6,8,9,10,12];
+    function newTarget(){ target=achievable[rand(0,achievable.length-1)]; picked=[]; warnMsg=''; render(); }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Build a closed shape with an area of exactly '+target+' square units.'; },
+    var barObj = buildChallengeBar(stage, function(){ return 'Build a closed shape with an area of exactly '+target+' square units.'; },
       function(){ if(picked.length<3) return false; return Math.abs(shoelaceArea(picked)-target)<0.05; }, newTarget);
+
+    el('chal-check').addEventListener('click',function(){
+      if(picked.length<3){
+        barObj.feedback.textContent='Tap at least 3 pegs to close a shape first!';
+        return;
+      }
+      var curArea=shoelaceArea(picked);
+      if(Math.abs(curArea-target)>=0.05){
+        barObj.feedback.textContent='Your shape covers '+curArea+' square units, but the target is '+target+' square units. Adjust your pegs!';
+      }
+    });
   }
 }
 
-/* ══════════════ 7. ARRAY BUILDER (multiplication & division) ══════════════ */
+/* ══════════════ 7. PICNIC & ARRAY BUILDER (multiplication & division) ══════════════ */
 function mountArray(stage, mode){
-  var rows=2, cols=2;
+  var FRIENDS=[
+    {name:'Leo',  avatar:'👦🏾'},
+    {name:'Mia',  avatar:'👧🏾'},
+    {name:'Sam',  avatar:'🧒🏾'},
+    {name:'Zoe',  avatar:'👧🏽'},
+    {name:'Tobi', avatar:'👦🏽'},
+    {name:'Ama',  avatar:'👧🏿'},
+    {name:'Kofi', avatar:'👦🏿'},
+    {name:'Zara', avatar:'🧒🏽'}
+  ];
+
+  var theme='apple';
+  var viewStyle='picnic';
+  var storyOp='mult';
+  var rows=3;
+  var cols=2;
+  var divTotal=11;
+  var prevTotal=null;
+  var highlightNew=false;
+
   var host=document.createElement('div');
   stage.appendChild(host);
-  var variant='mult', targetA=null, targetB=null, lockRows=false, lockCols=false;
+
+  var variant='mult', targetA=null, targetB=null, targetRem=0, lockRows=false, lockCols=false;
+
+  function stepAddFriend(){
+    if(rows>=8) return;
+    prevTotal=rows*cols;
+    rows++;
+    highlightNew=true;
+    render();
+  }
+
+  function renderMultView(){
+    var icon=objectIcon(theme);
+    var total=rows*cols;
+    var repeatParts=[];
+    for(var r=0;r<rows;r++){ repeatParts.push(cols); }
+    var repeatStr=repeatParts.join(' + ')+' = '+total;
+
+    var visualHtml='';
+    if(viewStyle==='picnic'){
+      var runningCount=0;
+      var cards='';
+      for(var f=0;f<rows;f++){
+        var isNew=highlightNew && f===rows-1;
+        var cardCls='friend-card'+(highlightNew ? (isNew?' new-step':' prev-group') : '');
+        var plateHtml='';
+        for(var item=0;item<cols;item++){
+          runningCount++;
+          plateHtml+='<span class="plate-item">'+icon+'<span class="plate-num">'+runningCount+'</span></span>';
+        }
+        cards+='<div class="'+cardCls+'">'
+          +'<div class="friend-avatar">'+FRIENDS[f].avatar+'</div>'
+          +'<div class="friend-name">'+FRIENDS[f].name+'</div>'
+          +'<div class="friend-plate">'+plateHtml+'</div>'
+          +'</div>';
+      }
+      visualHtml='<div class="picnic-blanket">'+cards+'</div>';
+    } else {
+      var cells='';
+      for(var gr=0;gr<rows;gr++){
+        var rowHighlight=highlightNew && gr===rows-1;
+        for(var gc=0;gc<cols;gc++){
+          cells+='<div class="arr-icon-cell'+(rowHighlight?' new-row':'')+'">'+icon+'</div>';
+        }
+      }
+      visualHtml='<div style="text-align:center"><div class="arr-grid" style="grid-template-columns:repeat('+cols+',28px)">'+cells+'</div></div>';
+    }
+
+    var isDivChallenge = (mode==='challenge' && (variant==='div' || variant==='div_rem'));
+    var unshared = isDivChallenge ? Math.max(0, targetB - total) : 0;
+    var remIcons='';
+    for(var ri=0;ri<unshared;ri++){ remIcons+='<span style="font-size:22px">'+icon+'</span>'; }
+
+    var divChallengeBasket = isDivChallenge
+      ? '<div class="remainder-box" style="'+(unshared===0?'border-color:#22b573;background:#e6f9f0;color:#15803d':'')+'">'
+        +'<span>Basket ('+unshared+' of '+targetB+' left):</span> '+remIcons
+        +'</div>'
+      : '';
+
+    var calloutHtml=(!isDivChallenge && highlightNew && prevTotal!==null && rows>1)
+      ? '<div class="step-callout">Step-by-step: Already had <strong>'+prevTotal+'</strong> + <strong>'+cols+'</strong> new = <strong>'+total+'</strong>!</div>'
+      : '';
+
+    var bridgeHtml = isDivChallenge
+      ? '<div class="equation-bridge">'
+        +'<div class="eq-words">Shared '+total+' out of '+targetB+' items among '+rows+' friends</div>'
+        +'<div class="eq-mult">'+targetB+' &divide; '+rows+' &rarr; '+cols+' each, '+unshared+' in basket</div>'
+        +'</div>'
+      : '<div class="equation-bridge">'
+        +'<div class="eq-words">'+rows+' '+(rows===1?'friend':'friends')+' &times; '+cols+' '+(cols===1?'item':'items')+' each</div>'
+        +(rows>1 ? '<div class="eq-repeat">'+repeatStr+'</div>' : '')
+        +'<div class="eq-mult">'+rows+' &times; '+cols+' = '+total+'</div>'
+        +'</div>';
+
+    var maxColsAllowed = isDivChallenge ? Math.floor(targetB / rows) : 8;
+
+    return visualHtml
+      +divChallengeBasket
+      +calloutHtml
+      +bridgeHtml
+      +'<div class="ctrl-row">'
+      +'<div class="ctrl-group"><div class="ctrl-label">'+(viewStyle==='picnic'?'Friends':'Rows')+'</div><div class="ctrl-btns">'
+        +'<button class="step-btn minus" id="ar-r-minus" '+(lockRows?'disabled':'')+'>&minus;</button>'
+        +'<button class="step-btn" id="ar-r-plus" '+(lockRows?'disabled':'')+'>+</button>'
+      +'</div></div>'
+      +'<div class="ctrl-group"><div class="ctrl-label">'+(viewStyle==='picnic'?'Items Each':'Columns')+'</div><div class="ctrl-btns">'
+        +'<button class="step-btn minus" id="ar-c-minus" '+(lockCols||cols<=0?'disabled':'')+'>&minus;</button>'
+        +'<button class="step-btn" id="ar-c-plus" '+(lockCols||cols>=maxColsAllowed?'disabled':'')+'>+</button>'
+      +'</div></div>'
+      +(!lockRows && mode==='explore'
+        ? '<div class="ctrl-group"><div class="ctrl-label">See Next Step</div>'
+          +'<button class="btn btn-primary" id="ar-step-friend" '+(rows>=8?'disabled':'')+'>+1 '+(viewStyle==='picnic'?'Friend':'Row')+' (+'+cols+')</button></div>'
+        : '')
+      +'</div>';
+  }
+
+  function renderDivView(){
+    var icon=objectIcon(theme);
+    var perFriend=Math.floor(divTotal/rows);
+    var remainder=divTotal%rows;
+    var running=0;
+    var cards='';
+    for(var f=0;f<rows;f++){
+      var plateHtml='';
+      for(var k=0;k<perFriend;k++){
+        running++;
+        plateHtml+='<span class="plate-item">'+icon+'<span class="plate-num">'+running+'</span></span>';
+      }
+      cards+='<div class="friend-card">'
+        +'<div class="friend-avatar">'+FRIENDS[f].avatar+'</div>'
+        +'<div class="friend-name">'+FRIENDS[f].name+' ('+perFriend+')</div>'
+        +'<div class="friend-plate">'+plateHtml+'</div>'
+        +'</div>';
+    }
+    var remIcons='';
+    for(var r=0;r<remainder;r++){ remIcons+='<span style="font-size:22px">'+icon+'</span>'; }
+
+    var remHtml=remainder>0
+      ? '<div class="remainder-box"><span>Leftover Basket (Remainder):</span> '+remIcons+' <strong>('+remainder+' left over)</strong></div>'
+      : '<div class="step-callout" style="border-color:#22b573;background:#e6f9f0;color:#15803d">Shared evenly! 0 left over.</div>';
+
+    return '<div class="picnic-blanket">'+cards+'</div>'
+      +remHtml
+      +'<div class="equation-bridge">'
+      +'<div class="eq-words">Share '+divTotal+' items equally among '+rows+' friends</div>'
+      +'<div class="eq-mult">'+divTotal+' &divide; '+rows+' = '+perFriend+(remainder>0?' R '+remainder:'')+'</div>'
+      +'<div class="eq-repeat">Check: ('+rows+' &times; '+perFriend+')'+(remainder>0?' + '+remainder:'')+' = '+divTotal+'</div>'
+      +'</div>'
+      +'<div class="ctrl-row">'
+      +'<div class="ctrl-group"><div class="ctrl-label">Total Items</div><div class="ctrl-btns">'
+        +'<button class="step-btn minus" id="dv-t-minus">&minus;</button>'
+        +'<button class="step-btn" id="dv-t-plus">+</button>'
+      +'</div></div>'
+      +'<div class="ctrl-group"><div class="ctrl-label">Friends</div><div class="ctrl-btns">'
+        +'<button class="step-btn minus" id="dv-f-minus">&minus;</button>'
+        +'<button class="step-btn" id="dv-f-plus">+</button>'
+      +'</div></div>'
+      +'</div>';
+  }
 
   function render(){
-    var dots='';
-    for(var i=0;i<rows*cols;i++){ dots+='<div class="arr-dot"></div>'; }
-    host.innerHTML='<div class="stat-row" style="margin-bottom:6px"><div class="stat-pill">Rows: '+rows+'</div><div class="stat-pill">Columns: '+cols+'</div></div>'
-      +'<div class="arr-grid" style="grid-template-columns:repeat('+cols+',22px)">'+dots+'</div>'
-      +'<div class="arr-fact">'+rows+' &times; '+cols+' = '+(rows*cols)+'</div>'
-      +'<div class="ctrl-row">'
-      +'<div class="ctrl-group"><div class="ctrl-label">Rows</div><div class="ctrl-btns"><button class="step-btn minus" id="ar-r-minus" '+(lockRows?'disabled':'')+'>&minus;</button><button class="step-btn" id="ar-r-plus" '+(lockRows?'disabled':'')+'>+</button></div></div>'
-      +'<div class="ctrl-group"><div class="ctrl-label">Columns</div><div class="ctrl-btns"><button class="step-btn minus" id="ar-c-minus" '+(lockCols?'disabled':'')+'>&minus;</button><button class="step-btn" id="ar-c-plus" '+(lockCols?'disabled':'')+'>+</button></div></div>'
-      +'</div>';
-    if(!lockRows){
-      el('ar-r-plus').onclick=function(){ rows=Math.min(10,rows+1); render(); };
-      el('ar-r-minus').onclick=function(){ rows=Math.max(1,rows-1); render(); };
+    var topControls='';
+    if(mode==='explore'){
+      topControls=objectThemePicker(theme)
+        +'<div class="picnic-tabs">'
+        +'<button class="picnic-tab'+(storyOp==='mult'?' on':'')+'" id="tab-mult">Multiply (Give Each)</button>'
+        +'<button class="picnic-tab'+(storyOp==='div'?' on':'')+'" id="tab-div">Divide (Share &amp; Leftovers)</button>'
+        +(storyOp==='mult'
+          ? '<button class="picnic-tab'+(viewStyle==='picnic'?' on':'')+'" id="tab-picnic">🧺 Picnic Story</button>'
+            +'<button class="picnic-tab'+(viewStyle==='grid'?' on':'')+'" id="tab-grid">▦ Array Grid</button>'
+          : '')
+        +'</div>';
+    } else {
+      topControls='<div class="picnic-tabs">'
+        +'<button class="picnic-tab'+(viewStyle==='picnic'?' on':'')+'" id="tab-picnic">🧺 Picnic Story</button>'
+        +'<button class="picnic-tab'+(viewStyle==='grid'?' on':'')+'" id="tab-grid">▦ Array Grid</button>'
+        +'</div>';
     }
-    if(!lockCols){
-      el('ar-c-plus').onclick=function(){ cols=Math.min(10,cols+1); render(); };
-      el('ar-c-minus').onclick=function(){ cols=Math.max(1,cols-1); render(); };
+
+    host.innerHTML=topControls + (storyOp==='mult' ? renderMultView() : renderDivView());
+
+    if(mode==='explore'){
+      wireThemePicker(host,function(id){ theme=id; render(); });
+      el('tab-mult').onclick=function(){ storyOp='mult'; highlightNew=false; render(); };
+      el('tab-div').onclick=function(){ storyOp='div'; highlightNew=false; render(); };
+    }
+    if(el('tab-picnic')) el('tab-picnic').onclick=function(){ viewStyle='picnic'; render(); };
+    if(el('tab-grid')) el('tab-grid').onclick=function(){ viewStyle='grid'; render(); };
+
+    if(storyOp==='mult'){
+      var isDivChallenge = (mode==='challenge' && (variant==='div' || variant==='div_rem'));
+      var minCols = isDivChallenge ? 0 : 1;
+      var maxColsAllowed = isDivChallenge ? Math.floor(targetB / rows) : 8;
+
+      if(!lockRows){
+        el('ar-r-plus').onclick=function(){ prevTotal=rows*cols; rows=Math.min(8,rows+1); highlightNew=true; render(); };
+        el('ar-r-minus').onclick=function(){ rows=Math.max(1,rows-1); highlightNew=false; prevTotal=null; render(); };
+      }
+      if(!lockCols){
+        el('ar-c-plus').onclick=function(){ cols=Math.min(maxColsAllowed,cols+1); highlightNew=false; prevTotal=null; render(); };
+        el('ar-c-minus').onclick=function(){ cols=Math.max(minCols,cols-1); highlightNew=false; prevTotal=null; render(); };
+      }
+      if(el('ar-step-friend')) el('ar-step-friend').onclick=stepAddFriend;
+    } else {
+      el('dv-t-plus').onclick=function(){ divTotal=Math.min(36,divTotal+1); render(); };
+      el('dv-t-minus').onclick=function(){ divTotal=Math.max(1,divTotal-1); render(); };
+      el('dv-f-plus').onclick=function(){ rows=Math.min(8,rows+1); render(); };
+      el('dv-f-minus').onclick=function(){ rows=Math.max(1,rows-1); render(); };
     }
   }
   render();
 
   if(mode==='challenge'){
+    storyOp='mult';
+    viewStyle='picnic';
     function newTarget(){
-      variant=Math.random()<0.5?'mult':'div';
+      var pick=rand(1,3);
+      variant = pick===1 ? 'mult' : (pick===2 ? 'div' : 'div_rem');
+      highlightNew=false;
+      prevTotal=null;
       if(variant==='mult'){
-        targetA=rand(2,9); targetB=rand(2,9);
+        targetA=rand(2,6); targetB=rand(2,6); targetRem=0;
         lockRows=false; lockCols=false;
         rows=1; cols=1;
-      } else {
-        var r=rand(2,9), c=rand(2,9);
-        targetA=r; targetB=r*c; // fixed rows, total items
+      } else if(variant==='div'){
+        var r=rand(2,6), c=rand(2,6);
+        targetA=r; targetB=r*c; targetRem=0;
         lockRows=true; lockCols=false;
-        rows=r; cols=1;
+        rows=r; cols=0;
+      } else {
+        var rRem=rand(3,6), qRem=rand(1,5);
+        targetRem=rand(1,rRem-1);
+        targetA=rRem;
+        targetB=(rRem*qRem)+targetRem;
+        lockRows=true; lockCols=false;
+        rows=rRem; cols=0;
       }
       render();
     }
     newTarget();
     buildChallengeBar(stage, function(){
-      return variant==='mult'
-        ? 'Build an array to show '+targetA+' × '+targetB+'.'
-        : 'Share '+targetB+' items into '+targetA+' equal rows. How many in each row?';
+      if(variant==='mult'){
+        return 'Set up the picnic for '+targetA+' friends with '+targetB+' '+theme+'s each (or '+targetB+' friends with '+targetA+' each).';
+      }
+      if(variant==='div'){
+        return 'Share '+targetB+' '+theme+'s equally among '+targetA+' friends so 0 remain in the basket.';
+      }
+      return 'Share '+targetB+' '+theme+'s equally among '+targetA+' friends. Give the maximum equal share and leave the remainder in the basket!';
     }, function(){
       if(variant==='mult'){
         return (rows===targetA && cols===targetB) || (rows===targetB && cols===targetA);
       }
-      return rows===targetA && rows*cols===targetB;
+      var expectedPerFriend=Math.floor(targetB/targetA);
+      var actualRemainder=targetB-(rows*cols);
+      return rows===targetA && cols===expectedPerFriend && actualRemainder===targetRem;
     }, newTarget);
   }
 }
 
 /* ══════════════ 8. UNIT CONVERTER ══════════════ */
-// Every category here uses a base unit (multiplier 1) so any-to-any
-// conversion is just: value * mult[from] / mult[to]. Liquid, solid and
-// money are all power-of-ten relationships (1000, 1000, 100), so ANY value
-// converts cleanly in both directions — no special handling needed. Time
-// is the exception: 60 and 24 and 7 are not powers of ten, so converting
-// an arbitrary value (say 100 minutes to hours) can land on a repeating
-// decimal, which would be a broken question for a primary student, not a
-// flexible one. Explore mode stays fully open across every unit regardless
-// — it is a calculator, an odd decimal there is just informational — but
-// Challenge mode only ever quizzes the curated pairs/generators below,
-// which are built to always resolve to a clean answer.
 var CONV_CATS={
   liquid:{ label:'Liquid (Capacity)', units:[
     {id:'ml',label:'millilitres (ml)',mult:1},
@@ -969,15 +1857,9 @@ function convValue(catId,fromId,toId,val){
   return val*f.mult/t.mult;
 }
 function roundClean(n){
-  // Kills floating-point residue (e.g. 0.1+0.2 style artifacts) without
-  // hiding genuine small decimals a student is meant to see.
   return Math.round(n*10000)/10000;
 }
 
-// Curated, always-clean challenge generators. Each returns
-// {cat, from, to, value, answer}. Liquid/solid/money use a single generic
-// generator per category since any value is safe; time uses one generator
-// per adjacent unit pair (see the comment above).
 function genLiquidChallenge(){
   var toL=Math.random()<0.5;
   if(toL){ var ml=rand(1,500)*10; return {cat:'liquid',from:'ml',to:'l',value:ml,answer:roundClean(ml/1000)}; }
@@ -1041,11 +1923,7 @@ function mountConvert(stage, mode){
     }).join('');
   }
 
-  // Only liquid and solid get the container visual — time and money
-  // already have their own dedicated, richer simulations elsewhere in the
-  // lab (Clock Explorer, Money and Coins), so duplicating a lesser version
-  // of those here would be redundant rather than useful.
-  var CONTAINER_CAPACITY={ liquid:5000, solid:5000000 }; // base units: ml, mg
+  var CONTAINER_CAPACITY={ liquid:5000, solid:5000000 };
   function containerVisualHtml(){
     if(cat!=='liquid' && cat!=='solid') return '';
     var baseUnit=CONV_CATS[cat].units[0].id;
@@ -1099,11 +1977,6 @@ function mountConvert(stage, mode){
       });
     });
     el('conv-val').addEventListener('input',function(){
-      // Deliberately NOT a full renderExplore() here — that rebuilds this
-      // very input's innerHTML on every keystroke, which destroys and
-      // recreates the DOM node and drops focus after each character typed,
-      // making multi-digit entry nearly unusable. Update only the result
-      // text instead, leaving the input itself untouched.
       var v=parseFloat(el('conv-val').value);
       inputVal=isNaN(v)?0:v;
       var resEl=host.querySelector('.conv-result');
@@ -1121,6 +1994,12 @@ function mountConvert(stage, mode){
     host.innerHTML='<div class="conv-row">'
       +'<div class="conv-field"><div class="ctrl-label">Your answer</div><input class="conv-input" type="number" id="conv-answer" placeholder="?"></div>'
       +'</div>';
+    var inp=el('conv-answer');
+    if(inp){
+      inp.addEventListener('keydown',function(e){
+        if(e.key==='Enter'){ var chk=el('chal-check'); if(chk) chk.click(); }
+      });
+    }
   }
 
   if(mode==='explore'){
@@ -1147,6 +2026,7 @@ function mountConvert(stage, mode){
 function mountAddSub(stage, mode){
   var theme='counter';
   var op='add';
+  var isMerged=false;
   var countA=3, countB=2;
   var startCount=8, takeAway=3;
   var host=document.createElement('div');
@@ -1160,6 +2040,7 @@ function mountAddSub(stage, mode){
     }
     return out;
   }
+
   function pvBlocksHtml(total){
     var hundreds=Math.floor(total/100), tens=Math.floor((total%100)/10), ones=total%10;
     function row(kind,c){ var o=''; for(var i=0;i<c;i++) o+='<div class="pv-'+kind+'"></div>'; return o; }
@@ -1169,51 +2050,84 @@ function mountAddSub(stage, mode){
       +'<div class="pv-col"><div class="pv-col-label">Ones</div><div class="pv-blocks">'+row('one',ones)+'</div></div>'
       +'</div>';
   }
+
   function currentTotal(){
     return op==='add' ? (countA+countB) : Math.max(0,startCount-takeAway);
   }
 
   function render(){
     var opControls = mode==='explore'
-      ? '<div class="stat-row"><button class="btn '+(op==='add'?'btn-primary':'btn-ghost')+'" id="as-op-add">Add</button><button class="btn '+(op==='sub'?'btn-primary':'btn-ghost')+'" id="as-op-sub">Subtract</button></div>'
+      ? '<div class="stat-row" style="margin-top:0;margin-bottom:14px">'
+          +'<button class="btn '+(op==='add'?'btn-primary':'btn-ghost')+'" id="as-op-add">Add (+)</button>'
+          +'<button class="btn '+(op==='sub'?'btn-primary':'btn-ghost')+'" id="as-op-sub">Subtract (&minus;)</button>'
+        +'</div>'
       : '';
-    var body;
+
+    var body='', eqText='';
     if(op==='add'){
-      body='<div class="as-groups">'
-        +'<div class="as-group"><div class="as-icons">'+iconRow(countA,null)+'</div>'
-        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-a-minus">&minus;</button><button class="step-btn" id="as-a-plus">+</button></div>'
-        +'<div class="ctrl-label">Group A: '+countA+'</div></div>'
-        +'<div class="as-op">+</div>'
-        +'<div class="as-group"><div class="as-icons">'+iconRow(countB,null)+'</div>'
-        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-b-minus">&minus;</button><button class="step-btn" id="as-b-plus">+</button></div>'
-        +'<div class="ctrl-label">Group B: '+countB+'</div></div>'
+      eqText = countA+' + '+countB+' = '+(countA+countB);
+      var mergeBtnHtml = '<div class="stat-row" style="margin-top:12px">'
+        +'<button class="btn '+(isMerged?'btn-ghost':'btn-primary')+'" id="as-merge-toggle">'
+          +(isMerged ? '↔ Split Back into Two Groups' : '🤝 Combine Groups Together')
+        +'</button>'
         +'</div>';
+
+      if(isMerged){
+        var mergedIcons='';
+        for(var ia=0;ia<countA;ia++) mergedIcons+='<span class="from-a" title="From Group A">'+objectIcon(theme)+'</span>';
+        for(var ib=0;ib<countB;ib++) mergedIcons+='<span class="from-b" title="From Group B">'+objectIcon(theme)+'</span>';
+        body='<div class="as-merged-tray">'
+          +'<div class="ctrl-label" style="color:#3355dd">Combined Group ('+countA+' Blue + '+countB+' Gold)</div>'
+          +'<div class="as-merged-icons">'+(mergedIcons || '<span style="font-size:13px;color:#8896b3">0 items</span>')+'</div>'
+          +'</div>'
+          +mergeBtnHtml;
+      } else {
+        body='<div class="as-groups">'
+          +'<div class="as-group"><div class="as-icons">'+iconRow(countA,null)+'</div>'
+          +'<div class="ctrl-btns"><button class="step-btn minus" id="as-a-minus" '+(countA<=0?'disabled':'')+'>&minus;</button><button class="step-btn" id="as-a-plus" '+(countA>=20?'disabled':'')+'>+</button></div>'
+          +'<div class="ctrl-label">Group A: '+countA+'</div></div>'
+          +'<div class="as-op">+</div>'
+          +'<div class="as-group"><div class="as-icons">'+iconRow(countB,null)+'</div>'
+          +'<div class="ctrl-btns"><button class="step-btn minus" id="as-b-minus" '+(countB<=0?'disabled':'')+'>&minus;</button><button class="step-btn" id="as-b-plus" '+(countB>=20?'disabled':'')+'>+</button></div>'
+          +'<div class="ctrl-label">Group B: '+countB+'</div></div>'
+          +'</div>'
+          +mergeBtnHtml;
+      }
     } else {
+      var rem=Math.max(0, startCount-takeAway);
+      eqText = startCount+' &minus; '+takeAway+' = '+rem;
       body='<div class="as-groups">'
-        +'<div class="as-group"><div class="as-icons">'+iconRow(startCount, startCount-takeAway)+'</div>'
-        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-start-minus">&minus;</button><button class="step-btn" id="as-start-plus">+</button></div>'
+        +'<div class="as-group"><div class="as-icons">'+iconRow(startCount, rem)+'</div>'
+        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-start-minus" '+(startCount<=0?'disabled':'')+'>&minus;</button><button class="step-btn" id="as-start-plus" '+(startCount>=30?'disabled':'')+'>+</button></div>'
         +'<div class="ctrl-label">Start: '+startCount+'</div></div>'
         +'<div class="as-op">&minus;</div>'
-        +'<div class="as-group"><div class="ctrl-btns"><button class="step-btn minus" id="as-take-minus">&minus;</button><button class="step-btn" id="as-take-plus">+</button></div>'
+        +'<div class="as-group">'
+        +'<div style="min-height:40px;display:flex;align-items:center;font-family:var(--fd);font-weight:800;color:#e5484d;font-size:15px">'+takeAway+' faded out</div>'
+        +'<div class="ctrl-btns"><button class="step-btn minus" id="as-take-minus" '+(takeAway<=0?'disabled':'')+'>&minus;</button><button class="step-btn" id="as-take-plus" '+(takeAway>=startCount?'disabled':'')+'>+</button></div>'
         +'<div class="ctrl-label">Take away: '+takeAway+'</div></div>'
         +'</div>';
     }
+
     host.innerHTML=(mode==='explore'?objectThemePicker(theme):'')
       +opControls
       +body
-      +'<div style="margin-top:18px">'+pvBlocksHtml(currentTotal())+'</div>'
+      +'<div class="as-eq-banner">'+eqText+'</div>'
+      +'<div style="margin-top:16px">'+pvBlocksHtml(currentTotal())+'</div>'
       +'<div class="stat-row"><div class="stat-pill">'+(op==='add'?'Total':'Remaining')+': '+currentTotal()+'</div></div>';
 
     if(mode==='explore'){
       wireThemePicker(host,function(id){ theme=id; render(); });
-      el('as-op-add').onclick=function(){ op='add'; render(); };
-      el('as-op-sub').onclick=function(){ op='sub'; render(); };
+      el('as-op-add').onclick=function(){ op='add'; isMerged=false; render(); };
+      el('as-op-sub').onclick=function(){ op='sub'; isMerged=false; render(); };
     }
     if(op==='add'){
-      el('as-a-plus').onclick=function(){ countA=Math.min(20,countA+1); render(); };
-      el('as-a-minus').onclick=function(){ countA=Math.max(0,countA-1); render(); };
-      el('as-b-plus').onclick=function(){ countB=Math.min(20,countB+1); render(); };
-      el('as-b-minus').onclick=function(){ countB=Math.max(0,countB-1); render(); };
+      el('as-merge-toggle').onclick=function(){ isMerged=!isMerged; render(); };
+      if(!isMerged){
+        el('as-a-plus').onclick=function(){ countA=Math.min(20,countA+1); render(); };
+        el('as-a-minus').onclick=function(){ countA=Math.max(0,countA-1); render(); };
+        el('as-b-plus').onclick=function(){ countB=Math.min(20,countB+1); render(); };
+        el('as-b-minus').onclick=function(){ countB=Math.max(0,countB-1); render(); };
+      }
     } else {
       el('as-start-plus').onclick=function(){ startCount=Math.min(30,startCount+1); if(takeAway>startCount) takeAway=startCount; render(); };
       el('as-start-minus').onclick=function(){ startCount=Math.max(0,startCount-1); if(takeAway>startCount) takeAway=startCount; render(); };
@@ -1224,11 +2138,9 @@ function mountAddSub(stage, mode){
   render();
 
   if(mode==='challenge'){
-    // Kept to small numbers deliberately — object-icon counting is the
-    // concrete stage meant for small quantities; Place Value Blocks is
-    // the right tool once numbers get big, not this one.
     function newTarget(){
       op=Math.random()<0.5?'add':'sub';
+      isMerged=false;
       if(op==='add'){
         countA=0; countB=0;
         target=rand(3,20);
@@ -1242,7 +2154,7 @@ function mountAddSub(stage, mode){
     newTarget();
     buildChallengeBar(stage, function(){
       return op==='add'
-        ? 'Using Group A and Group B, make a total of '+target+'.'
+        ? 'Using Group A and Group B, make a total of '+target+' (try Combine Groups to see them join!).'
         : 'Start with '+startCount+' and take away enough to leave exactly '+target+'.';
     }, function(){ return currentTotal()===target; }, newTarget);
   }
@@ -1254,40 +2166,53 @@ function mountCompare(stage, mode){
   stage.appendChild(host);
   var numA=3, numB=7;
 
-  // Plain characters for all internal logic — HTML entities only ever get
-  // introduced right at the point of inserting into innerHTML text, never
-  // stored in a variable that also gets compared against elsewhere (that
-  // exact split caused a real mismatch bug while writing this: a data
-  // attribute holding "&gt;" decodes back to ">" once read via
-  // getAttribute, but a plain string "&gt;" built in JS never does).
   function compareSymbol(a,b){ return a>b?'>':(a<b?'<':'='); }
-  function escSym(s){ return s==='<' ? '&lt;' : s; }
+  function escSym(s){ return s==='<' ? '&lt;' : (s==='>' ? '&gt;' : s); }
   function shuffle(arr){
     for(var i=arr.length-1;i>0;i--){
       var j=rand(0,i), t=arr[i]; arr[i]=arr[j]; arr[j]=t;
     }
     return arr;
   }
-  // A digit next to a digit is exactly the abstract-symbol comparison a
-  // student is meant to grow INTO — the concrete step first is seeing
-  // which pile is actually bigger. Bar height stands in for that pile:
-  // taller genuinely means more, visible before either number is read.
-  function barHeight(v){ return Math.min(200, 24+v*1.7); }
+
+  function barHeights(a, b){
+    var peak = Math.max(a, b, 10);
+    var maxH = 185;
+    return {
+      hA: Math.max(26, Math.round((a / peak) * maxH)),
+      hB: Math.max(26, Math.round((b / peak) * maxH))
+    };
+  }
 
   function renderExplore(){
+    var bh = barHeights(numA, numB);
     host.innerHTML='<div class="cmp-row">'
-      +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numA)+'px">'+numA+'</div>'
+      +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+bh.hA+'px">'+numA+'</div>'
       +'<div class="ctrl-label">Number A</div>'
-      +'<div class="ctrl-btns"><button class="step-btn minus" id="cmp-a-minus">&minus;</button><button class="step-btn" id="cmp-a-plus">+</button></div></div>'
+      +'<div class="ctrl-btns">'
+        +'<button class="step-btn minus" id="cmp-a-m10" style="font-size:13px">&minus;10</button>'
+        +'<button class="step-btn minus" id="cmp-a-minus">&minus;</button>'
+        +'<button class="step-btn" id="cmp-a-plus">+</button>'
+        +'<button class="step-btn" id="cmp-a-p10" style="font-size:13px">+10</button>'
+      +'</div></div>'
       +'<div class="cmp-sym-display">'+escSym(compareSymbol(numA,numB))+'</div>'
-      +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numB)+'px">'+numB+'</div>'
+      +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+bh.hB+'px">'+numB+'</div>'
       +'<div class="ctrl-label">Number B</div>'
-      +'<div class="ctrl-btns"><button class="step-btn minus" id="cmp-b-minus">&minus;</button><button class="step-btn" id="cmp-b-plus">+</button></div></div>'
+      +'<div class="ctrl-btns">'
+        +'<button class="step-btn minus" id="cmp-b-m10" style="font-size:13px">&minus;10</button>'
+        +'<button class="step-btn minus" id="cmp-b-minus">&minus;</button>'
+        +'<button class="step-btn" id="cmp-b-plus">+</button>'
+        +'<button class="step-btn" id="cmp-b-p10" style="font-size:13px">+10</button>'
+      +'</div></div>'
       +'</div>';
     el('cmp-a-plus').onclick=function(){ numA=Math.min(999,numA+1); renderExplore(); };
     el('cmp-a-minus').onclick=function(){ numA=Math.max(0,numA-1); renderExplore(); };
+    el('cmp-a-p10').onclick=function(){ numA=Math.min(999,numA+10); renderExplore(); };
+    el('cmp-a-m10').onclick=function(){ numA=Math.max(0,numA-10); renderExplore(); };
     el('cmp-b-plus').onclick=function(){ numB=Math.min(999,numB+1); renderExplore(); };
     el('cmp-b-minus').onclick=function(){ numB=Math.max(0,numB-1); renderExplore(); };
+    el('cmp-b-p10').onclick=function(){ numB=Math.min(999,numB+10); renderExplore(); };
+    el('cmp-b-m10').onclick=function(){ numB=Math.max(0,numB-10); renderExplore(); };
   }
 
   if(mode==='explore'){
@@ -1297,14 +2222,15 @@ function mountCompare(stage, mode){
     var SYM_MAP={gt:'>',lt:'<',eq:'='};
 
     function renderCompareChallenge(){
+      var bh = barHeights(numA, numB);
       host.innerHTML='<div class="cmp-row">'
-        +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numA)+'px">'+numA+'</div></div>'
+        +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+bh.hA+'px">'+numA+'</div></div>'
         +'<div class="cmp-sym-btns">'
         +'<button class="cmp-sym-btn'+(chosenSymbol==='>'?' on':'')+'" data-s="gt">&gt;</button>'
         +'<button class="cmp-sym-btn'+(chosenSymbol==='<'?' on':'')+'" data-s="lt">&lt;</button>'
         +'<button class="cmp-sym-btn'+(chosenSymbol==='='?' on':'')+'" data-s="eq">=</button>'
         +'</div>'
-        +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+barHeight(numB)+'px">'+numB+'</div></div>'
+        +'<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:'+bh.hB+'px">'+numB+'</div></div>'
         +'</div>';
       Array.prototype.forEach.call(host.querySelectorAll('.cmp-sym-btn'),function(b){
         b.addEventListener('click',function(){
@@ -1319,9 +2245,11 @@ function mountCompare(stage, mode){
           return '<button class="order-tile'+(p.used?' used':'')+'" data-i="'+i+'"'+(p.used?' disabled':'')+'>'+p.value+'</button>';
         }).join('')+'</div>'
         +'<div class="order-slots">'+correctOrder.map(function(_,i){
-          return '<div class="order-slot'+(builtOrder[i]!=null?' filled':'')+'">'+(builtOrder[i]!=null?builtOrder[i]:'?')+'</div>';
+          var filled = builtOrder[i]!=null;
+          return '<div class="order-slot'+(filled?' filled':'')+'" data-slot="'+i+'" style="'+(filled?'cursor:pointer':'')+'" title="'+(filled?'Tap to remove':'')+'">'+(filled?builtOrder[i]:'?')+'</div>';
         }).join('')+'</div>'
         +'<div class="stat-row"><button class="btn btn-ghost" id="cmp-order-reset">Reset Order</button></div>';
+
       Array.prototype.forEach.call(host.querySelectorAll('.order-tile'),function(b){
         b.addEventListener('click',function(){
           var i=parseInt(b.getAttribute('data-i'),10);
@@ -1331,6 +2259,16 @@ function mountCompare(stage, mode){
           renderOrderChallenge();
         });
       });
+
+      Array.prototype.forEach.call(host.querySelectorAll('.order-slot.filled'),function(s){
+        s.addEventListener('click',function(){
+          var slotIdx=parseInt(s.getAttribute('data-slot'),10);
+          var removedVal=builtOrder.splice(slotIdx,1)[0];
+          pool.forEach(function(p){ if(p.value===removedVal) p.used=false; });
+          renderOrderChallenge();
+        });
+      });
+
       el('cmp-order-reset').onclick=function(){
         pool.forEach(function(p){ p.used=false; });
         builtOrder=[];
@@ -1371,17 +2309,74 @@ function mountCounting(stage, mode){
   var host=document.createElement('div');
   stage.appendChild(host);
   var theme='counter';
-  var n=5;
+  var n=6;
+  var countedOrder=[];
+  var scatterOffsets=[];
+
+  function buildScatterOffsets(count){
+    var arr=[];
+    for(var i=0;i<count;i++){
+      arr.push({
+        mt: rand(-6, 10),
+        rot: rand(-12, 12)
+      });
+    }
+    return arr;
+  }
+
+  function toggleCounted(idx){
+    var pos=countedOrder.indexOf(idx);
+    if(pos===-1){
+      countedOrder.push(idx);
+    } else {
+      countedOrder.splice(pos,1);
+    }
+  }
+
+  function renderScatterBox(totalCount){
+    if(scatterOffsets.length!==totalCount) scatterOffsets=buildScatterOffsets(totalCount);
+    var icons='';
+    for(var i=0;i<totalCount;i++){
+      var orderPos=countedOrder.indexOf(i);
+      var isCounted=(orderPos!==-1);
+      var off=scatterOffsets[i];
+      icons+='<span class="scatter-item'+(isCounted?' counted':'')+'" data-idx="'+i+'" style="margin-top:'+off.mt+'px;transform:rotate('+off.rot+'deg)">'
+        +objectIcon(theme)
+        +(isCounted?'<span class="scatter-badge">'+(orderPos+1)+'</span>':'')
+        +'</span>';
+    }
+    return '<div class="count-scatter">'+(icons || '<span style="color:#8896b3;font-size:13px">Tap + to add objects</span>')+'</div>';
+  }
+
+  function wireScatterClicks(rerenderFn){
+    Array.prototype.forEach.call(host.querySelectorAll('.scatter-item'),function(s){
+      s.addEventListener('click',function(){
+        var idx=parseInt(s.getAttribute('data-idx'),10);
+        toggleCounted(idx);
+        rerenderFn();
+      });
+    });
+  }
 
   function renderExplore(){
-    var icons=''; for(var i=0;i<n;i++) icons+='<span>'+objectIcon(theme)+'</span>';
     host.innerHTML=objectThemePicker(theme)
-      +'<div class="count-scatter">'+icons+'</div>'
-      +'<div class="stat-row"><div class="stat-pill">Count: '+n+'</div></div>'
-      +'<div class="ctrl-row"><button class="step-btn minus" id="ct-minus">&minus;</button><button class="step-btn" id="ct-plus">+</button></div>';
+      +renderScatterBox(n)
+      +'<div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:8px">Tap each object to count them one by one!</div>'
+      +'<div class="stat-row">'
+        +'<div class="stat-pill">Total Objects: '+n+'</div>'
+        +'<div class="stat-pill" style="color:#15803d">Tapped: '+countedOrder.length+'</div>'
+      +'</div>'
+      +'<div class="ctrl-row">'
+        +'<button class="step-btn minus" id="ct-minus" '+(n<=0?'disabled':'')+'>&minus;</button>'
+        +'<button class="step-btn" id="ct-plus" '+(n>=20?'disabled':'')+'>+</button>'
+        +'<button class="btn btn-ghost" id="ct-clear-taps" '+(countedOrder.length===0?'disabled':'')+'>Reset Taps</button>'
+      +'</div>';
+
     wireThemePicker(host,function(id){ theme=id; renderExplore(); });
-    el('ct-plus').onclick=function(){ n=Math.min(20,n+1); renderExplore(); };
-    el('ct-minus').onclick=function(){ n=Math.max(0,n-1); renderExplore(); };
+    wireScatterClicks(renderExplore);
+    el('ct-plus').onclick=function(){ n=Math.min(20,n+1); scatterOffsets=buildScatterOffsets(n); renderExplore(); };
+    el('ct-minus').onclick=function(){ n=Math.max(0,n-1); countedOrder=countedOrder.filter(function(i){return i<n;}); scatterOffsets=buildScatterOffsets(n); renderExplore(); };
+    el('ct-clear-taps').onclick=function(){ countedOrder=[]; renderExplore(); };
   }
 
   function ordName(v){
@@ -1390,19 +2385,51 @@ function mountCounting(stage, mode){
   }
 
   if(mode==='explore'){
+    scatterOffsets=buildScatterOffsets(n);
     renderExplore();
   } else {
-    var variant='count', targetCount=0, ordinalTarget=0, ordinalCount=0, tappedIndex=null;
+    var variant='count', targetCount=0, ordinalTarget=0, ordinalCount=0, tappedIndex=null, revealOrdinals=false;
+
+    function renderCountChallenge(savedVal){
+      host.innerHTML=renderScatterBox(targetCount)
+        +'<div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:10px">Tip: Tap objects to mark them as you count!</div>'
+        +'<div class="conv-row"><div class="conv-field"><div class="ctrl-label">How many?</div>'
+        +'<input class="conv-input" type="number" id="ct-answer" placeholder="?" value="'+(savedVal||'')+'"></div></div>';
+
+      wireScatterClicks(function(){
+        var curInput=el('ct-answer') ? el('ct-answer').value : '';
+        renderCountChallenge(curInput);
+      });
+
+      var inp=el('ct-answer');
+      if(inp){
+        inp.addEventListener('keydown',function(e){
+          if(e.key==='Enter'){ var chk=el('chal-check'); if(chk) chk.click(); }
+        });
+      }
+    }
 
     function renderOrdinal(){
       var row='';
       for(var i=0;i<ordinalCount;i++){
-        row+='<span data-i="'+i+'" class="'+(tappedIndex===i?'picked':'')+'">'+objectIcon(theme)+'</span>';
+        var cls='ord-item';
+        if(revealOrdinals){
+          if(i===(ordinalTarget-1)) cls+=' reveal-right';
+          else if(tappedIndex===i) cls+=' reveal-wrong';
+        } else if(tappedIndex===i){
+          cls+=' picked';
+        }
+        row+='<div class="'+cls+'" data-i="'+i+'">'
+          +'<span style="font-size:28px">'+objectIcon(theme)+'</span>'
+          +(revealOrdinals ? '<span class="ord-tag">'+ordName(i+1)+'</span>' : '')
+          +'</div>';
       }
-      host.innerHTML='<div class="ord-row">'+row+'</div>';
-      Array.prototype.forEach.call(host.querySelectorAll('.ord-row span'),function(s){
+      host.innerHTML='<div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:8px">Count from left (1st) to right</div>'
+        +'<div class="ord-row">'+row+'</div>';
+      Array.prototype.forEach.call(host.querySelectorAll('.ord-item'),function(s){
         s.addEventListener('click',function(){
           tappedIndex=parseInt(s.getAttribute('data-i'),10);
+          revealOrdinals=false;
           renderOrdinal();
         });
       });
@@ -1411,12 +2438,12 @@ function mountCounting(stage, mode){
     function newTarget(){
       variant=Math.random()<0.5?'count':'ordinal';
       tappedIndex=null;
+      countedOrder=[];
+      revealOrdinals=false;
       if(variant==='count'){
-        targetCount=rand(3,20);
-        var icons=''; for(var i=0;i<targetCount;i++) icons+='<span>'+objectIcon(theme)+'</span>';
-        host.innerHTML='<div class="count-scatter">'+icons+'</div>'
-          +'<div class="conv-row"><div class="conv-field"><div class="ctrl-label">How many?</div>'
-          +'<input class="conv-input" type="number" id="ct-answer" placeholder="?"></div></div>';
+        targetCount=rand(4,20);
+        scatterOffsets=buildScatterOffsets(targetCount);
+        renderCountChallenge('');
       } else {
         ordinalCount=rand(5,10);
         ordinalTarget=rand(1,ordinalCount);
@@ -1427,12 +2454,14 @@ function mountCounting(stage, mode){
     buildChallengeBar(stage, function(){
       return variant==='count'
         ? 'Count the objects and type how many there are.'
-        : 'Tap the '+ordName(ordinalTarget)+' object in the row.';
+        : 'Tap the '+ordName(ordinalTarget)+' object in the row (starting from the left).';
     }, function(){
       if(variant==='count'){
         var v=parseInt(el('ct-answer').value,10);
         return !isNaN(v) && v===targetCount;
       }
+      revealOrdinals=true;
+      renderOrdinal();
       return tappedIndex===(ordinalTarget-1);
     }, newTarget);
   }
@@ -1442,85 +2471,277 @@ function mountCounting(stage, mode){
 function mountFractions(stage, mode){
   var host=document.createElement('div');
   stage.appendChild(host);
-  var denom=4, shaded=[];
 
-  function setDenom(d){
-    denom=d;
-    shaded=[];
-    for(var i=0;i<d;i++) shaded.push(false);
+  var showCompare=true;
+  var denom1=2, shaded1=[];
+  var denom2=4, shaded2=[];
+
+  function initBar(which, d){
+    var arr=[];
+    for(var i=0;i<d;i++) arr.push(false);
+    if(which===1){ denom1=d; shaded1=arr; }
+    else { denom2=d; shaded2=arr; }
   }
-  function numerator(){ return shaded.filter(Boolean).length; }
 
-  function render(){
-    var segs='';
-    for(var i=0;i<denom;i++){
-      segs+='<div class="frac-seg'+(shaded[i]?' shaded':'')+'" data-i="'+i+'"></div>';
+  function countShaded(arr){ return arr.filter(Boolean).length; }
+
+  function toggleSeg(arr, idx){
+    var currentlyFilled = countShaded(arr);
+    if(!arr[idx] && idx === currentlyFilled){
+      arr[idx] = true;
+    } else if(arr[idx] && idx === currentlyFilled - 1){
+      arr[idx] = false;
+    } else {
+      for(var k=0;k<arr.length;k++){
+        arr[k] = (k <= idx);
+      }
     }
-    host.innerHTML='<div class="frac-bar">'+segs+'</div>'
-      +'<div class="frac-label">'+numerator()+' / '+denom+'</div>'
-      +(mode==='explore'
-        ? '<div class="ctrl-row"><div class="ctrl-group"><div class="ctrl-label">Parts (denominator)</div>'
-          +'<div class="ctrl-btns"><button class="step-btn minus" id="fr-d-minus">&minus;</button><button class="step-btn" id="fr-d-plus">+</button></div></div></div>'
-        : '');
+  }
+
+  function barCardHtml(which, d, arr, isLocked, allowDenomChange){
+    var n=countShaded(arr);
+    var segs='';
+    for(var i=0;i<d;i++){
+      segs+='<div class="frac-seg'+(arr[i]?' shaded':'')+'" data-bar="'+which+'" data-i="'+i+'" style="'+(isLocked?'cursor:default':'')+'"></div>';
+    }
+    var pct=Math.round((n/d)*100);
+    return '<div class="frac-row-card'+(isLocked?' ref-locked':'')+'">'
+      +'<div class="frac-bar'+(which===2?' bar-b':'')+'">'+segs+'</div>'
+      +'<div class="frac-meta">'
+        +'<div class="frac-label" style="margin-top:0;font-size:22px">'+n+' / '+d+'</div>'
+        +'<div class="frac-sub">('+pct+'% of whole)</div>'
+        +(allowDenomChange
+          ? '<div class="ctrl-btns">'
+              +'<button class="step-btn minus" id="fr-d'+which+'-minus" '+(d<=2?'disabled':'')+'>&minus;</button>'
+              +'<button class="step-btn" id="fr-d'+which+'-plus" '+(d>=12?'disabled':'')+'>+</button>'
+            +'</div>'
+          : '')
+      +'</div>'
+      +'</div>';
+  }
+
+  function render(opts){
+    opts = opts || {};
+    var lockBar1 = !!opts.lockBar1;
+    var allowDenom1 = opts.allowDenom1 !== undefined ? opts.allowDenom1 : (mode==='explore');
+    var allowDenom2 = opts.allowDenom2 !== undefined ? opts.allowDenom2 : (mode==='explore');
+
+    var n1=countShaded(shaded1), n2=countShaded(shaded2);
+    var v1=n1/denom1, v2=n2/denom2;
+    var isEqual = Math.abs(v1 - v2) < 0.0001 && n1 > 0;
+    var relSym = Math.abs(v1 - v2) < 0.0001 ? '=' : (v1 > v2 ? '>' : '<');
+
+    var compareBadge = showCompare
+      ? '<div class="frac-badge'+(isEqual?' eq':'')+'">'
+        + n1+'/'+denom1 + ' ' + (relSym==='<'?'&lt;':(relSym==='>'?'&gt;':'=')) + ' ' + n2+'/'+denom2
+        + (isEqual ? ' &nbsp; Equivalent!' : '')
+        + '</div>'
+      : '';
+
+    var topToggle = mode==='explore'
+      ? '<div class="stat-row" style="margin-top:0;margin-bottom:14px">'
+        +'<button class="btn '+(showCompare?'btn-primary':'btn-ghost')+'" id="fr-toggle-cmp">'
+          +(showCompare ? 'Hide Compare Bar' : '+ Compare Equivalent Bar')
+        +'</button>'
+        +'</div>'
+      : '';
+
+    host.innerHTML = topToggle
+      +'<div class="frac-stack">'
+      +barCardHtml(1, denom1, shaded1, lockBar1, allowDenom1)
+      +(showCompare ? compareBadge + barCardHtml(2, denom2, shaded2, false, allowDenom2) : '')
+      +'</div>';
+
+    if(mode==='explore'){
+      el('fr-toggle-cmp').onclick=function(){ showCompare=!showCompare; render(); };
+    }
+
     Array.prototype.forEach.call(host.querySelectorAll('.frac-seg'),function(s){
       s.addEventListener('click',function(){
-        var i=parseInt(s.getAttribute('data-i'),10);
-        shaded[i]=!shaded[i];
-        render();
+        var bar=parseInt(s.getAttribute('data-bar'),10);
+        var idx=parseInt(s.getAttribute('data-i'),10);
+        if(bar===1 && !lockBar1){
+          toggleSeg(shaded1, idx);
+          render(opts);
+        } else if(bar===2){
+          toggleSeg(shaded2, idx);
+          render(opts);
+        }
       });
     });
-    if(mode==='explore'){
-      el('fr-d-plus').onclick=function(){ if(denom<10) setDenom(denom+1); render(); };
-      el('fr-d-minus').onclick=function(){ if(denom>2) setDenom(denom-1); render(); };
+
+    if(allowDenom1){
+      el('fr-d1-plus').onclick=function(){ if(denom1<12){ initBar(1, denom1+1); render(opts); } };
+      el('fr-d1-minus').onclick=function(){ if(denom1>2){ initBar(1, denom1-1); render(opts); } };
+    }
+    if(showCompare && allowDenom2){
+      el('fr-d2-plus').onclick=function(){ if(denom2<12){ initBar(2, denom2+1); render(opts); } };
+      el('fr-d2-minus').onclick=function(){ if(denom2>2){ initBar(2, denom2-1); render(opts); } };
     }
   }
-  setDenom(4);
+
+  initBar(1, 2);
+  shaded1[0] = true;
+  initBar(2, 4);
+  shaded2[0] = true; shaded2[1] = true;
   render();
 
   if(mode==='challenge'){
-    var targetNum=0, targetDenom=0;
+    var chalVariant='shade', targetNum=0, targetDenom=0;
+    var EQUIV_BASES=[
+      {n:1, d:2, mults:[2,3,4,5,6]},
+      {n:1, d:3, mults:[2,3,4]},
+      {n:2, d:3, mults:[2,3,4]},
+      {n:1, d:4, mults:[2,3]},
+      {n:3, d:4, mults:[2,3]}
+    ];
+
     function newTarget(){
-      targetDenom=rand(2,8);
-      targetNum=rand(1,targetDenom-1);
-      setDenom(targetDenom);
-      render();
+      chalVariant = Math.random()<0.5 ? 'shade' : 'equiv';
+      if(chalVariant==='shade'){
+        showCompare=false;
+        targetDenom=rand(2,8);
+        targetNum=rand(1,targetDenom-1);
+        initBar(1, targetDenom);
+        render({lockBar1:false, allowDenom1:false});
+      } else {
+        showCompare=true;
+        var base=EQUIV_BASES[rand(0,EQUIV_BASES.length-1)];
+        targetNum=base.n;
+        targetDenom=base.d;
+        initBar(1, targetDenom);
+        for(var k=0;k<targetNum;k++) shaded1[k]=true;
+        var startD = targetDenom===2 ? 3 : 2;
+        initBar(2, startD);
+        render({lockBar1:true, allowDenom1:false, allowDenom2:true});
+      }
     }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Shade the bar to show '+targetNum+'/'+targetDenom+'.'; },
-      function(){ return denom===targetDenom && numerator()===targetNum; }, newTarget);
+
+    var barObj = buildChallengeBar(stage, function(){
+      return chalVariant==='shade'
+        ? 'Shade the bar to show '+targetNum+'/'+targetDenom+'.'
+        : 'Use + or − on the bottom bar to slice it into different parts, then shade an equivalent fraction equal to '+targetNum+'/'+targetDenom+'.';
+    }, function(){
+      if(chalVariant==='shade'){
+        return denom1===targetDenom && countShaded(shaded1)===targetNum;
+      }
+      var n2=countShaded(shaded2);
+      return denom2 !== targetDenom && n2 > 0 && Math.abs((n2/denom2) - (targetNum/targetDenom)) < 0.0001;
+    }, newTarget);
+
+    el('chal-check').addEventListener('click', function(){
+      if(chalVariant==='equiv'){
+        var n2=countShaded(shaded2);
+        if(denom2===targetDenom && n2===targetNum){
+          barObj.feedback.textContent='That is the exact same fraction ('+targetNum+'/'+targetDenom+'). Change the number of parts on the bottom bar to make an equivalent fraction!';
+        }
+      }
+    });
   }
 }
 
 /* ══════════════ 12. SHAPE SORTER ══════════════ */
 var SHAPES=[
-  {id:'circle',name:'Circle',sides:0},
-  {id:'triangle',name:'Triangle',sides:3},
-  {id:'square',name:'Square',sides:4},
-  {id:'rectangle',name:'Rectangle',sides:4},
-  {id:'pentagon',name:'Pentagon',sides:5},
-  {id:'hexagon',name:'Hexagon',sides:6},
-  {id:'heptagon',name:'Heptagon',sides:7},
-  {id:'octagon',name:'Octagon',sides:8}
+  {id:'circle',    name:'Circle',    sides:0, clue:'Like a coin, clock face, or bicycle wheel — 1 curved edge, 0 corners'},
+  {id:'triangle',  name:'Triangle',  sides:3, clue:'Like a slice of pizza or a roof gable — 3 straight sides, 3 corners'},
+  {id:'square',    name:'Square',    sides:4, clue:'Like a chessboard tile — 4 equal sides, 4 square corners'},
+  {id:'rectangle', name:'Rectangle', sides:4, clue:'Like a door, book, or Naira note — 4 sides (opposite sides equal), 4 corners'},
+  {id:'pentagon',  name:'Pentagon',  sides:5, clue:'Like the black panels on a football — 5 straight sides, 5 corners'},
+  {id:'hexagon',   name:'Hexagon',   sides:6, clue:'Like a bee honeycomb cell — 6 straight sides, 6 corners'},
+  {id:'heptagon',  name:'Heptagon',  sides:7, clue:'A 7-sided polygon — 7 straight sides, 7 corners'},
+  {id:'octagon',   name:'Octagon',   sides:8, clue:'Like a red road STOP sign — 8 straight sides, 8 corners'}
 ];
-function regularPolygonPoints(sides,cx,cy,r){
-  var pts=[];
-  for(var i=0;i<sides;i++){
-    var a=(i*(360/sides)-90)*Math.PI/180; // -90 so the first vertex points straight up
-    pts.push((cx+r*Math.cos(a))+','+(cy+r*Math.sin(a)));
-  }
-  return pts.join(' ');
-}
-function shapeSvg(shapeId){
-  if(shapeId==='circle'){
-    return '<svg id="shape-svg" viewBox="0 0 180 180"><circle cx="90" cy="90" r="70" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>';
-  }
+
+function getShapeVertices(shapeId){
+  if(shapeId==='circle') return [];
   if(shapeId==='rectangle'){
-    return '<svg id="shape-svg" viewBox="0 0 180 180"><rect x="25" y="55" width="130" height="70" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>';
+    return [
+      {x:32,  y:56},
+      {x:168, y:56},
+      {x:168, y:144},
+      {x:32,  y:144}
+    ];
   }
   var shape=SHAPES.filter(function(s){return s.id===shapeId;})[0];
-  var pts=regularPolygonPoints(shape.sides,90,90,70);
-  return '<svg id="shape-svg" viewBox="0 0 180 180"><polygon points="'+pts+'" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>';
+  var pts=[];
+  var cx=100, cy=100, r=72;
+  for(var i=0;i<shape.sides;i++){
+    var a=(i*(360/shape.sides)-90)*Math.PI/180;
+    pts.push({
+      x: Math.round((cx+r*Math.cos(a))*10)/10,
+      y: Math.round((cy+r*Math.sin(a))*10)/10
+    });
+  }
+  return pts;
 }
+
+function shapeSvg(shapeId, opts){
+  opts = opts || {};
+  var activeCorners = opts.activeCorners || [];
+  var activeSides   = opts.activeSides   || [];
+  var interactive   = !!opts.interactive;
+  var showAll       = !!opts.showAll;
+
+  if(shapeId==='circle'){
+    return '<svg id="shape-svg" viewBox="0 0 200 200" style="width:200px;height:200px;display:block;margin:0 auto 10px">'
+      +'<circle cx="100" cy="100" r="72" fill="#fed7aa" stroke="#ea580c" stroke-width="4.5"/>'
+      +(showAll ? '<text x="100" y="104" font-size="12" font-weight="800" fill="#9a3412" text-anchor="middle">0 straight sides • 0 corners</text>' : '')
+      +'</svg>';
+  }
+
+  var verts=getShapeVertices(shapeId);
+  var ptsStr=verts.map(function(v){ return v.x+','+v.y; }).join(' ');
+  var edgesHtml='', cornersHtml='';
+
+  for(var i=0;i<verts.length;i++){
+    var a=verts[i], b=verts[(i+1)%verts.length];
+    var isEdgeLit = showAll || activeSides.indexOf(i)!==-1;
+    var midX=(a.x+b.x)/2, midY=(a.y+b.y)/2;
+    var dx=midX-100, dy=midY-100;
+    var dist=Math.sqrt(dx*dx+dy*dy)||1;
+    var lx=midX+(dx/dist)*14;
+    var ly=midY+(dy/dist)*14 + 4;
+
+    edgesHtml+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" '
+      +'stroke="'+(isEdgeLit?'#2563eb':'#ea580c')+'" stroke-width="'+(isEdgeLit?6:4.5)+'" stroke-linecap="round"/>';
+
+    if(interactive){
+      edgesHtml+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" '
+        +'stroke="transparent" stroke-width="18" data-edge="'+i+'" style="cursor:pointer"/>';
+    }
+    if(isEdgeLit){
+      var edgeLabel = showAll ? (i+1) : (activeSides.indexOf(i)+1);
+      edgesHtml+='<circle cx="'+lx.toFixed(1)+'" cy="'+(ly-4).toFixed(1)+'" r="9" fill="#2563eb"/>'
+        +'<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" font-size="10.5" font-weight="800" fill="#fff" text-anchor="middle" style="pointer-events:none">'+edgeLabel+'</text>';
+    }
+  }
+
+  for(var c=0;c<verts.length;c++){
+    var v=verts[c];
+    var isCornerLit = showAll || activeCorners.indexOf(c)!==-1;
+    var vdx=v.x-100, vdy=v.y-100;
+    var vdist=Math.sqrt(vdx*vdx+vdy*vdy)||1;
+    var vx=v.x+(vdx/vdist)*15;
+    var vy=v.y+(vdy/vdist)*15 + 3.5;
+
+    cornersHtml+='<circle cx="'+v.x+'" cy="'+v.y+'" r="'+(isCornerLit?8:5.5)+'" '
+      +'fill="'+(isCornerLit?'#16a34a':'#fff')+'" stroke="'+(isCornerLit?'#15803d':'#ea580c')+'" stroke-width="2.5" '
+      +(interactive?'data-corner="'+c+'" style="cursor:pointer"':'')+'/>';
+
+    if(isCornerLit){
+      var cornerLabel = showAll ? (c+1) : (activeCorners.indexOf(c)+1);
+      cornersHtml+='<text x="'+vx.toFixed(1)+'" y="'+vy.toFixed(1)+'" font-size="10.5" font-weight="800" fill="#15803d" text-anchor="middle" style="pointer-events:none">C'+cornerLabel+'</text>';
+    }
+  }
+
+  return '<svg id="shape-svg" viewBox="0 0 200 200" style="width:200px;height:200px;display:block;margin:0 auto 10px;user-select:none">'
+    +'<polygon points="'+ptsStr+'" fill="#fed7aa" stroke="none"/>'
+    +edgesHtml
+    +cornersHtml
+    +'</svg>';
+}
+
 function shuffleArr(arr){
   for(var i=arr.length-1;i>0;i--){ var j=rand(0,i), t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
   return arr;
@@ -1535,27 +2756,95 @@ function pickDistinctOptions(correctVal, pool, count){
   }
   return shuffleArr(opts);
 }
+
 function mountShapes(stage, mode){
   var host=document.createElement('div');
   stage.appendChild(host);
-  var browseIdx=0;
+  var browseIdx=1;
+  var activeCorners=[];
+  var activeSides=[];
+  var showAll=false;
+
+  function resetHighlights(){
+    activeCorners=[];
+    activeSides=[];
+    showAll=false;
+  }
 
   function renderExplore(){
     var s=SHAPES[browseIdx];
-    host.innerHTML=shapeSvg(s.id)
-      +'<div class="stat-row"><div class="stat-pill">'+s.name+'</div>'
-      +'<div class="stat-pill">'+(s.sides===0?'0 sides':s.sides+' sides, '+s.sides+' corners')+'</div></div>'
-      +'<div class="ctrl-row"><button class="btn btn-ghost" id="sh-prev">&larr; Prev</button><button class="btn btn-ghost" id="sh-next">Next &rarr;</button></div>';
-    el('sh-prev').onclick=function(){ browseIdx=(browseIdx+SHAPES.length-1)%SHAPES.length; renderExplore(); };
-    el('sh-next').onclick=function(){ browseIdx=(browseIdx+1)%SHAPES.length; renderExplore(); };
+    var isPolygon = s.sides > 0;
+
+    var interactiveHint = isPolygon
+      ? '<div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:8px">Tap the <span style="color:#16a34a">corners</span> or <span style="color:#2563eb">sides</span> on the shape to count them!</div>'
+      : '';
+
+    var countPills = isPolygon
+      ? '<div class="stat-pill" style="color:#2563eb">Sides Tapped: '+(showAll?s.sides:activeSides.length)+' / '+s.sides+'</div>'
+        +'<div class="stat-pill" style="color:#16a34a">Corners Tapped: '+(showAll?s.sides:activeCorners.length)+' / '+s.sides+'</div>'
+      : '<div class="stat-pill">0 straight sides • 0 corners</div>';
+
+    host.innerHTML=shapeSvg(s.id, {
+        activeCorners:activeCorners,
+        activeSides:activeSides,
+        interactive:isPolygon,
+        showAll:showAll
+      })
+      +interactiveHint
+      +'<div class="stat-row" style="margin-top:8px">'
+        +'<div class="stat-pill" style="font-size:17px;color:#ea580c">'+s.name+'</div>'
+        +countPills
+      +'</div>'
+      +'<div style="font-size:12.5px;color:var(--muted);text-align:center;margin:10px auto 0;max-width:440px;font-weight:600">'+s.clue+'</div>'
+      +'<div class="ctrl-row">'
+        +'<button class="btn btn-ghost" id="sh-prev">&larr; Prev</button>'
+        +(isPolygon
+          ? '<button class="btn '+(showAll?'btn-primary':'btn-ghost')+'" id="sh-toggle-all">'
+              +(showAll ? 'Clear Highlights' : '✨ Highlight All Corners & Sides')
+            +'</button>'
+          : '')
+        +'<button class="btn btn-ghost" id="sh-next">Next &rarr;</button>'
+      +'</div>';
+
+    if(isPolygon){
+      Array.prototype.forEach.call(host.querySelectorAll('[data-corner]'),function(c){
+        c.addEventListener('click',function(){
+          showAll=false;
+          var idx=parseInt(c.getAttribute('data-corner'),10);
+          var pos=activeCorners.indexOf(idx);
+          if(pos===-1) activeCorners.push(idx);
+          else activeCorners.splice(pos,1);
+          renderExplore();
+        });
+      });
+      Array.prototype.forEach.call(host.querySelectorAll('[data-edge]'),function(e){
+        e.addEventListener('click',function(){
+          showAll=false;
+          var idx=parseInt(e.getAttribute('data-edge'),10);
+          var pos=activeSides.indexOf(idx);
+          if(pos===-1) activeSides.push(idx);
+          else activeSides.splice(pos,1);
+          renderExplore();
+        });
+      });
+      el('sh-toggle-all').onclick=function(){
+        showAll=!showAll;
+        if(!showAll){ activeCorners=[]; activeSides=[]; }
+        renderExplore();
+      };
+    }
+
+    el('sh-prev').onclick=function(){ browseIdx=(browseIdx+SHAPES.length-1)%SHAPES.length; resetHighlights(); renderExplore(); };
+    el('sh-next').onclick=function(){ browseIdx=(browseIdx+1)%SHAPES.length; resetHighlights(); renderExplore(); };
   }
 
   if(mode==='explore'){
     renderExplore();
   } else {
-    var variant='name', current=null, options=[], selectedOpt=null;
+    var variant='name', current=null, options=[], selectedOpt=null, revealShape=false;
+
     function renderChallenge(){
-      var html=shapeSvg(current.id)+'<div class="shape-opts">';
+      var html=shapeSvg(current.id, {showAll:revealShape})+'<div class="shape-opts">';
       options.forEach(function(opt){
         html+='<button class="shape-opt-btn'+(selectedOpt===opt?' on':'')+'" data-v="'+opt+'">'+opt+'</button>';
       });
@@ -1568,10 +2857,13 @@ function mountShapes(stage, mode){
         });
       });
     }
+
     function newTarget(){
-      variant=Math.random()<0.5?'name':'sides';
+      var pick=rand(1,3);
+      variant = pick===1 ? 'name' : (pick===2 ? 'sides' : 'corners');
       current=SHAPES[rand(0,SHAPES.length-1)];
       selectedOpt=null;
+      revealShape=false;
       if(variant==='name'){
         options=pickDistinctOptions(current.name, SHAPES.map(function(s){return s.name;}), 4);
       } else {
@@ -1580,10 +2872,15 @@ function mountShapes(stage, mode){
       renderChallenge();
     }
     newTarget();
+
     buildChallengeBar(stage, function(){
-      return variant==='name' ? 'What is the name of this shape?' : 'How many sides does this shape have?';
+      if(variant==='name') return 'What is the name of this shape?';
+      if(variant==='sides') return 'How many sides does this shape have?';
+      return 'How many corners (vertices) does this shape have?';
     }, function(){
       if(selectedOpt==null) return false;
+      revealShape=true;
+      renderChallenge();
       return variant==='name' ? selectedOpt===current.name : parseInt(selectedOpt,10)===current.sides;
     }, newTarget);
   }
@@ -1594,56 +2891,185 @@ function mountRuler(stage, mode){
   var host=document.createElement('div');
   stage.appendChild(host);
   var MAXCM=20;
-  var lengthCm=7;
+  var startCm=0;
+  var lengthCm=7.5;
+  var objKind='pencil';
 
-  function rulerSvg(valueCm){
-    var w=680, h=110, padding=20, usable=w-padding*2;
+  var OBJECTS=[
+    {id:'pencil',      label:'Pencil',      icon:'✏️'},
+    {id:'crayon',      label:'Crayon',      icon:'🖍️'},
+    {id:'key',         label:'Key',         icon:'🔑'},
+    {id:'caterpillar', label:'Caterpillar', icon:'🐛'}
+  ];
+
+  function drawObjectSvg(kind, x0, x1, baseY){
+    var w=Math.max(12, x1-x0);
+    if(kind==='pencil'){
+      var tipW=Math.min(18, w*0.25);
+      var eraserW=Math.min(14, w*0.18);
+      var bodyX=x0+eraserW;
+      var bodyW=Math.max(2, w-eraserW-tipW);
+      var tipX=bodyX+bodyW;
+      var midY=baseY-11;
+      return '<g>'
+        +'<rect x="'+x0+'" y="'+(baseY-18)+'" width="'+eraserW+'" height="14" rx="3" fill="#f472b6" stroke="#be185d" stroke-width="1.5"/>'
+        +'<rect x="'+(x0+eraserW-4)+'" y="'+(baseY-18)+'" width="5" height="14" fill="#cbd5e1" stroke="#64748b" stroke-width="1"/>'
+        +'<rect x="'+bodyX+'" y="'+(baseY-18)+'" width="'+bodyW+'" height="14" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>'
+        +'<line x1="'+bodyX+'" y1="'+(baseY-13)+'" x2="'+(bodyX+bodyW)+'" y2="'+(baseY-13)+'" stroke="#eab308" stroke-width="1"/>'
+        +'<line x1="'+bodyX+'" y1="'+(baseY-9)+'" x2="'+(bodyX+bodyW)+'" y2="'+(baseY-9)+'" stroke="#eab308" stroke-width="1"/>'
+        +'<polygon points="'+tipX+','+(baseY-18)+' '+x1+','+midY+' '+tipX+','+(baseY-4)+'" fill="#fed7aa" stroke="#c2410c" stroke-width="1.5" stroke-linejoin="round"/>'
+        +'<polygon points="'+(x1-tipW*0.38)+','+(midY-2.6)+' '+x1+','+midY+' '+(x1-tipW*0.38)+','+(midY+2.6)+'" fill="#1e293b"/>'
+        +'</g>';
+    }
+    if(kind==='crayon'){
+      var noseW=Math.min(14, w*0.22);
+      var bodyW2=Math.max(4, w-noseW);
+      return '<g>'
+        +'<rect x="'+x0+'" y="'+(baseY-19)+'" width="'+bodyW2+'" height="16" rx="2" fill="#38bdf8" stroke="#0284c7" stroke-width="1.5"/>'
+        +'<rect x="'+(x0+Math.min(8,bodyW2*0.18))+'" y="'+(baseY-19)+'" width="'+Math.max(2,bodyW2*0.64)+'" height="16" fill="#bae6fd" stroke="#0284c7" stroke-width="1"/>'
+        +'<polygon points="'+(x0+bodyW2)+','+(baseY-17)+' '+x1+','+(baseY-13)+' '+x1+','+(baseY-9)+' '+(x0+bodyW2)+','+(baseY-5)+'" fill="#38bdf8" stroke="#0284c7" stroke-width="1.5" stroke-linejoin="round"/>'
+        +'</g>';
+    }
+    if(kind==='key'){
+      var bowR=9;
+      var bowCx=x0+bowR;
+      var shaftStart=Math.min(x1-4, x0+bowR*2-2);
+      var shaftW=Math.max(2, x1-shaftStart);
+      return '<g>'
+        +'<circle cx="'+bowCx+'" cy="'+(baseY-12)+'" r="'+bowR+'" fill="#fbbf24" stroke="#b45309" stroke-width="2"/>'
+        +'<circle cx="'+bowCx+'" cy="'+(baseY-12)+'" r="3.5" fill="#fff" stroke="#b45309" stroke-width="1.5"/>'
+        +'<rect x="'+shaftStart+'" y="'+(baseY-14.5)+'" width="'+shaftW+'" height="5" rx="1.5" fill="#fbbf24" stroke="#b45309" stroke-width="1.5"/>'
+        +(shaftW>12 ? '<rect x="'+(x1-10)+'" y="'+(baseY-9.5)+'" width="3.5" height="5" fill="#fbbf24" stroke="#b45309" stroke-width="1.2"/>' : '')
+        +(shaftW>6 ? '<rect x="'+(x1-4.5)+'" y="'+(baseY-9.5)+'" width="3.5" height="6.5" fill="#fbbf24" stroke="#b45309" stroke-width="1.2"/>' : '')
+        +'</g>';
+    }
+    var segCount=Math.max(2, Math.round(w/14));
+    var rSeg=Math.min(9, w/(segCount*1.4));
+    var segs='';
+    for(var i=0;i<segCount;i++){
+      var t=segCount===1?0.5:i/(segCount-1);
+      var cx=x0+rSeg + t*(w-rSeg*2);
+      var isHead=(i===segCount-1);
+      segs+='<circle cx="'+cx+'" cy="'+(baseY-rSeg-2)+'" r="'+rSeg+'" fill="'+(isHead?'#16a34a':'#4ade80')+'" stroke="#15803d" stroke-width="1.5"/>';
+      if(isHead){
+        segs+='<circle cx="'+(cx+rSeg*0.35)+'" cy="'+(baseY-rSeg-4)+'" r="1.6" fill="#fff"/>'
+             +'<circle cx="'+(cx+rSeg*0.42)+'" cy="'+(baseY-rSeg-4)+'" r="0.8" fill="#0f172a"/>';
+      }
+    }
+    return '<g>'+segs+'</g>';
+  }
+
+  function rulerSvg(sCm, lenCm, kind){
+    var w=680, h=148, padding=24, usable=w-padding*2;
     var pxPerCm=usable/MAXCM;
+    var rulerTop=62;
+    var rulerH=54;
+    var xStart=padding + sCm*pxPerCm;
+    var xEnd=padding + (sCm+lenCm)*pxPerCm;
+
     var ticks='';
     for(var mm=0; mm<=MAXCM*10; mm++){
       var cmPos=mm/10;
       var x=padding+cmPos*pxPerCm;
       var isCm=mm%10===0;
       var isHalf=mm%5===0;
-      var tickH=isCm?26:(isHalf?18:10);
-      ticks+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="'+(20+tickH)+'" stroke="#8896b3" stroke-width="'+(isCm?2:1)+'"/>';
-      if(isCm){ ticks+='<text x="'+x+'" y="'+(20+tickH+14)+'" font-size="11" fill="#6b7896" text-anchor="middle">'+cmPos+'</text>'; }
+      var tickH=isCm?25:(isHalf?17:10);
+      ticks+='<line x1="'+x+'" y1="'+rulerTop+'" x2="'+x+'" y2="'+(rulerTop+tickH)+'" stroke="'+(isCm?'#334155':'#94a3b8')+'" stroke-width="'+(isCm?2:1)+'"/>';
+      if(isCm){
+        ticks+='<text x="'+x+'" y="'+(rulerTop+tickH+16)+'" font-size="11.5" font-weight="700" fill="#475569" text-anchor="middle">'+cmPos+'</text>';
+      }
     }
-    var barWidth=Math.max(0,valueCm*pxPerCm);
+
+    var guides='<line x1="'+xStart+'" y1="24" x2="'+xStart+'" y2="'+(rulerTop+18)+'" stroke="#e5484d" stroke-width="1.8" stroke-dasharray="3,3"/>'
+      +'<line x1="'+xEnd+'" y1="24" x2="'+xEnd+'" y2="'+(rulerTop+18)+'" stroke="#0d9488" stroke-width="1.8" stroke-dasharray="3,3"/>';
+
     return '<svg id="ruler-svg" viewBox="0 0 '+w+' '+h+'">'
-      +'<rect x="'+padding+'" y="20" width="'+usable+'" height="52" fill="#fff" stroke="#0d9488" stroke-width="2"/>'
+      +drawObjectSvg(kind, xStart, xEnd, rulerTop-4)
+      +'<rect x="'+(padding-8)+'" y="'+rulerTop+'" width="'+(usable+16)+'" height="'+rulerH+'" rx="6" fill="#fefce8" stroke="#0d9488" stroke-width="2"/>'
       +ticks
-      +'<rect x="'+padding+'" y="66" width="'+barWidth+'" height="14" fill="#0d9488" opacity="0.75"/>'
+      +guides
+      +'<text x="'+(padding+usable-4)+'" y="'+(rulerTop+rulerH-6)+'" font-size="10" font-weight="800" fill="#0d9488" text-anchor="end">cm</text>'
       +'</svg>';
   }
 
   function renderExplore(){
-    host.innerHTML=rulerSvg(lengthCm)
-      +'<div class="stat-row"><div class="stat-pill">Length: '+lengthCm+' cm</div></div>'
-      +'<div class="ctrl-row"><button class="step-btn minus" id="ru-minus">&minus;</button><button class="step-btn" id="ru-plus">+</button></div>';
-    el('ru-plus').onclick=function(){ lengthCm=Math.min(MAXCM,lengthCm+0.5); renderExplore(); };
-    el('ru-minus').onclick=function(){ lengthCm=Math.max(0.5,lengthCm-0.5); renderExplore(); };
+    var endCm=Math.round((startCm+lengthCm)*10)/10;
+    var picker='<div class="theme-row">'+OBJECTS.map(function(o){
+      return '<button class="theme-btn'+(o.id===objKind?' on':'')+'" data-obj="'+o.id+'" title="'+o.label+'">'+o.icon+'</button>';
+    }).join('')+'</div>';
+
+    var formulaPill = startCm===0
+      ? '<div class="stat-pill" style="color:#0d9488">Length: '+lengthCm+' cm</div>'
+      : '<div class="stat-pill" style="color:#0d9488">End '+endCm+' cm &minus; Start '+startCm+' cm = <strong>'+lengthCm+' cm</strong></div>';
+
+    host.innerHTML=picker
+      +rulerSvg(startCm, lengthCm, objKind)
+      +'<div class="stat-row">'
+        +'<div class="stat-pill">Start: '+startCm+' cm</div>'
+        +'<div class="stat-pill">End: '+endCm+' cm</div>'
+        +formulaPill
+      +'</div>'
+      +'<div class="ctrl-row">'
+        +'<div class="ctrl-group"><div class="ctrl-label">Start Position</div><div class="ctrl-btns">'
+          +'<button class="step-btn minus" id="ru-s-minus" '+(startCm<=0?'disabled':'')+'>&minus;</button>'
+          +'<button class="step-btn" id="ru-s-plus" '+(startCm+lengthCm>=MAXCM?'disabled':'')+'>+</button>'
+        +'</div></div>'
+        +'<div class="ctrl-group"><div class="ctrl-label">Object Length</div><div class="ctrl-btns">'
+          +'<button class="step-btn minus" id="ru-l-minus" '+(lengthCm<=1?'disabled':'')+'>&minus;</button>'
+          +'<button class="step-btn" id="ru-l-plus" '+(startCm+lengthCm>=MAXCM?'disabled':'')+'>+</button>'
+        +'</div></div>'
+      +'</div>';
+
+    Array.prototype.forEach.call(host.querySelectorAll('[data-obj]'),function(b){
+      b.addEventListener('click',function(){ objKind=b.getAttribute('data-obj'); renderExplore(); });
+    });
+    el('ru-s-plus').onclick=function(){ if(startCm+lengthCm+0.5<=MAXCM){ startCm=Math.round((startCm+0.5)*10)/10; renderExplore(); } };
+    el('ru-s-minus').onclick=function(){ if(startCm>=0.5){ startCm=Math.round((startCm-0.5)*10)/10; renderExplore(); } };
+    el('ru-l-plus').onclick=function(){ if(startCm+lengthCm+0.5<=MAXCM){ lengthCm=Math.round((lengthCm+0.5)*10)/10; renderExplore(); } };
+    el('ru-l-minus').onclick=function(){ if(lengthCm>=1.5){ lengthCm=Math.round((lengthCm-0.5)*10)/10; renderExplore(); } };
   }
 
   if(mode==='explore'){
     renderExplore();
   } else {
-    var target=0;
+    var target=0, chalStart=0, chalObj='pencil';
     function renderChallenge(){
-      host.innerHTML=rulerSvg(target)
+      host.innerHTML=rulerSvg(chalStart, target, chalObj)
         +'<div class="conv-row"><div class="conv-field"><div class="ctrl-label">Length (cm)</div>'
         +'<input class="conv-input" type="number" step="0.5" id="ru-answer" placeholder="?"></div></div>';
+      var inp=el('ru-answer');
+      if(inp){
+        inp.addEventListener('keydown',function(e){
+          if(e.key==='Enter'){ var chk=el('chal-check'); if(chk) chk.click(); }
+        });
+      }
     }
     function newTarget(){
-      target=rand(1,2*MAXCM)/2; // half-cm steps, aligned exactly to a drawn tick
+      chalObj=OBJECTS[rand(0,OBJECTS.length-1)].id;
+      var shifted=Math.random()<0.5;
+      chalStart = shifted ? rand(1,12)/2 : 0;
+      var maxLenHalf = Math.floor((MAXCM - chalStart)*2);
+      target = rand(3, Math.min(26, maxLenHalf))/2;
       renderChallenge();
     }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Read the ruler and type the length of the bar, in centimetres.'; },
-      function(){
-        var v=parseFloat(el('ru-answer').value);
-        return !isNaN(v) && Math.abs(v-target)<0.05;
-      }, newTarget);
+    var barObj = buildChallengeBar(stage, function(){
+      var objLabel=OBJECTS.filter(function(o){return o.id===chalObj;})[0].label.toLowerCase();
+      return chalStart===0
+        ? 'Measure the '+objLabel+' and type its length in centimetres.'
+        : 'Look closely at where the '+objLabel+' starts and ends! How long is it in centimetres?';
+    }, function(){
+      var v=parseFloat(el('ru-answer').value);
+      return !isNaN(v) && Math.abs(v-target)<0.05;
+    }, newTarget);
+
+    el('chal-check').addEventListener('click',function(){
+      var v=parseFloat(el('ru-answer').value);
+      var endPos=Math.round((chalStart+target)*10)/10;
+      if(!isNaN(v) && chalStart>0 && Math.abs(v-endPos)<0.05){
+        barObj.feedback.textContent='Careful! It ends at '+endPos+' cm, but it started at '+chalStart+' cm. Subtract '+endPos+' − '+chalStart+'!';
+      }
+    });
   }
 }
 
@@ -1652,45 +3078,181 @@ function mountDataBar(stage, mode){
   var host=document.createElement('div');
   stage.appendChild(host);
   var CATS=[
-    {label:'Apples',  icon:'\u{1F34E}'},
-    {label:'Bananas', icon:'\u{1F34C}'},
-    {label:'Oranges', icon:'\u{1F34A}'}
+    {label:'Apples',  icon:'\u{1F34E}', color:'#e5484d'},
+    {label:'Bananas', icon:'\u{1F34C}', color:'#eab308'},
+    {label:'Oranges', icon:'\u{1F34A}', color:'#f97316'}
   ];
-  var tally=[3,5,2];
-  var bars=[0,0,0];
+  var tally=[6, 4, 8];
+  var bars=[0, 0, 0];
+  var showTallyNums=true;
 
-  function tallyIcons(count,icon){ var out=''; for(var i=0;i<count;i++) out+='<span>'+icon+'</span>'; return out; }
+  function tallySvg(count){
+    if(count<=0) return '<span style="color:#94a3b8;font-size:12px">0</span>';
+    var groups=Math.ceil(count/5);
+    var groupW=34, gap=10, h=26;
+    var totalW=groups*groupW + (groups-1)*gap;
+    var svg='<svg width="'+totalW+'" height="'+h+'" viewBox="0 0 '+totalW+' '+h+'" style="display:block">';
+    var rem=count;
+    for(var g=0; g<groups; g++){
+      var ox=g*(groupW+gap);
+      var strokes=Math.min(4, rem);
+      for(var s=0; s<strokes; s++){
+        var sx=ox + 4 + s*7;
+        svg+='<line x1="'+sx+'" y1="3" x2="'+sx+'" y2="23" stroke="#233047" stroke-width="2.6" stroke-linecap="round"/>';
+      }
+      if(rem>=5){
+        svg+='<line x1="'+(ox+1)+'" y1="20" x2="'+(ox+28)+'" y2="6" stroke="#e5484d" stroke-width="2.6" stroke-linecap="round"/>';
+      }
+      rem-=Math.min(5, rem);
+    }
+    svg+='</svg>';
+    return svg;
+  }
 
-  function render(){
+  function renderInteractive(allowEditBars, showCounts){
     var tallyHtml=CATS.map(function(c,i){
-      return '<div class="tally-line"><div class="tally-label">'+c.label+'</div><div class="tally-icons">'+tallyIcons(tally[i],c.icon)+'</div></div>';
+      return '<div class="tally-line">'
+        +'<div class="tally-label"><span>'+c.icon+'</span><span>'+c.label+'</span></div>'
+        +'<div class="tally-strokes">'+tallySvg(tally[i])+'</div>'
+        +(showCounts ? '<div class="tally-count-pill">'+tally[i]+'</div>' : '')
+        +'</div>';
     }).join('');
+
     var barsHtml=CATS.map(function(c,i){
-      return '<div class="bar-col"><div class="bar-rect" style="height:'+(bars[i]*16)+'px"></div><div class="bar-lbl">'+c.label+' ('+bars[i]+')</div>'
-        +'<div class="ctrl-btns"><button class="step-btn minus" id="db-minus-'+i+'">&minus;</button><button class="step-btn" id="db-plus-'+i+'">+</button></div></div>';
+      var hPx=bars[i]*16;
+      return '<div class="bar-col">'
+        +'<div class="bar-rect" style="height:'+hPx+'px;background:'+c.color+'">'+(bars[i]>0?bars[i]:'')+'</div>'
+        +'<div class="bar-lbl">'+c.label+'</div>'
+        +(allowEditBars
+          ? '<div class="ctrl-btns">'
+              +'<button class="step-btn minus" id="db-minus-'+i+'" '+(bars[i]<=0?'disabled':'')+'>&minus;</button>'
+              +'<button class="step-btn" id="db-plus-'+i+'" '+(bars[i]>=10?'disabled':'')+'>+</button>'
+            +'</div>'
+          : '')
+        +'</div>';
     }).join('');
-    host.innerHTML='<div class="tally-row">'+tallyHtml+'</div>'
-      +'<div class="bar-chart">'+barsHtml+'</div>'
-      +(mode==='explore'?'<div class="stat-row"><button class="btn btn-ghost" id="db-new">New Data</button></div>':'');
-    CATS.forEach(function(c,i){
-      el('db-plus-'+i).onclick=function(){ bars[i]=Math.min(10,bars[i]+1); render(); };
-      el('db-minus-'+i).onclick=function(){ bars[i]=Math.max(0,bars[i]-1); render(); };
-    });
+
+    var exploreControls = mode==='explore'
+      ? '<div class="stat-row">'
+          +'<button class="btn btn-ghost" id="db-new">New Tally Data</button>'
+          +'<button class="btn '+(showTallyNums?'btn-ghost':'btn-primary')+'" id="db-hide-nums">'
+            +(showTallyNums ? 'Hide Tally Numbers (Practice 5s)' : 'Show Tally Numbers')
+          +'</button>'
+        +'</div>'
+      : '';
+
+    host.innerHTML='<div class="tally-card">'+tallyHtml+'</div>'
+      +'<div class="bar-chart-wrap"><div class="bar-chart">'+barsHtml+'</div></div>'
+      +exploreControls;
+
+    if(allowEditBars){
+      CATS.forEach(function(c,i){
+        el('db-plus-'+i).onclick=function(){ bars[i]=Math.min(10,bars[i]+1); renderInteractive(allowEditBars, showCounts); };
+        el('db-minus-'+i).onclick=function(){ bars[i]=Math.max(0,bars[i]-1); renderInteractive(allowEditBars, showCounts); };
+      });
+    }
     if(mode==='explore'){
-      el('db-new').onclick=function(){ tally=CATS.map(function(){return rand(1,8);}); bars=[0,0,0]; render(); };
+      el('db-new').onclick=function(){ tally=CATS.map(function(){return rand(1,9);}); bars=[0,0,0]; renderInteractive(true, showTallyNums); };
+      el('db-hide-nums').onclick=function(){ showTallyNums=!showTallyNums; renderInteractive(true, showTallyNums); };
     }
   }
-  render();
 
-  if(mode==='challenge'){
+  if(mode==='explore'){
+    renderInteractive(true, showTallyNums);
+  } else {
+    var chalVariant='build';
+    var selectedCat=null;
+    var diffIdxA=0, diffIdxB=1, expectedAnswer=0;
+
+    function distinctTally(){
+      var pool=[1,2,3,4,5,6,7,8,9];
+      shuffleArr(pool);
+      return [pool[0], pool[1], pool[2]];
+    }
+
+    function renderReadChallenge(){
+      bars = tally.slice();
+      renderInteractive(false, false);
+
+      var extraHtml='';
+      if(chalVariant==='most'){
+        extraHtml='<div class="shape-opts" style="margin-top:14px">'
+          +CATS.map(function(c,i){
+            return '<button class="shape-opt-btn'+(selectedCat===i?' on':'')+'" data-ci="'+i+'">'+c.icon+' '+c.label+'</button>';
+          }).join('')
+          +'</div>';
+      } else {
+        extraHtml='<div class="conv-row" style="margin-top:14px">'
+          +'<div class="conv-field"><div class="ctrl-label">Your Answer</div>'
+          +'<input class="conv-input" type="number" id="db-num-ans" placeholder="?"></div>'
+          +'</div>';
+      }
+      var wrap=document.createElement('div');
+      wrap.innerHTML=extraHtml;
+      host.appendChild(wrap);
+
+      if(chalVariant==='most'){
+        Array.prototype.forEach.call(host.querySelectorAll('[data-ci]'),function(b){
+          b.addEventListener('click',function(){
+            selectedCat=parseInt(b.getAttribute('data-ci'),10);
+            renderReadChallenge();
+          });
+        });
+      } else {
+        var inp=el('db-num-ans');
+        if(inp){
+          inp.addEventListener('keydown',function(e){
+            if(e.key==='Enter'){ var chk=el('chal-check'); if(chk) chk.click(); }
+          });
+        }
+      }
+    }
+
     function newTarget(){
-      tally=CATS.map(function(){ return rand(1,8); });
-      bars=[0,0,0];
-      render();
+      var pick=rand(1,3);
+      chalVariant = pick===1 ? 'build' : (pick===2 ? 'most' : 'diff');
+      tally = distinctTally();
+      selectedCat = null;
+
+      if(chalVariant==='build'){
+        bars=[0,0,0];
+        renderInteractive(true, false);
+      } else if(chalVariant==='most'){
+        var maxVal=Math.max.apply(null, tally);
+        expectedAnswer=tally.indexOf(maxVal);
+        renderReadChallenge();
+      } else {
+        var idxs=[0,1,2];
+        shuffleArr(idxs);
+        if(tally[idxs[0]] > tally[idxs[1]]){
+          diffIdxA=idxs[0]; diffIdxB=idxs[1];
+        } else {
+          diffIdxA=idxs[1]; diffIdxB=idxs[0];
+        }
+        expectedAnswer = tally[diffIdxA] - tally[diffIdxB];
+        renderReadChallenge();
+      }
     }
     newTarget();
-    buildChallengeBar(stage, function(){ return 'Build a bar for each fruit to match the tally shown above.'; },
-      function(){ return bars.every(function(b,i){ return b===tally[i]; }); }, newTarget);
+
+    buildChallengeBar(stage, function(){
+      if(chalVariant==='build'){
+        return 'Count the tally marks (remember each crossed bundle is 5!) and build the matching bar graph.';
+      }
+      if(chalVariant==='most'){
+        return 'Look at the tally marks and bar graph. Which fruit has the MOST?';
+      }
+      return 'How many MORE '+CATS[diffIdxA].label.toLowerCase()+' are there than '+CATS[diffIdxB].label.toLowerCase()+'?';
+    }, function(){
+      if(chalVariant==='build'){
+        return bars.every(function(b,i){ return b===tally[i]; });
+      }
+      if(chalVariant==='most'){
+        return selectedCat===expectedAnswer;
+      }
+      var v=parseInt(el('db-num-ans').value,10);
+      return !isNaN(v) && v===expectedAnswer;
+    }, newTarget);
   }
 }
 
